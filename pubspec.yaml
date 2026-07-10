@@ -1,0 +1,24 @@
+name: mychopdi
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  build_runner: ^2.4.13
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  google_fonts: ^8.1.0
+  isar: ^3.1.0+1
+  isar_generator: ^3.1.0+1
+  permission_handler: ^12.0.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
