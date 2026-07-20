@@ -1,0 +1,29 @@
+# Dependencies
+/node_modules
+
+# Build output
+/dist
+/build
+
+# Test coverage
+/coverage
+
+# Environment (keep .env.example, never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea
+*.iml
+
+# TypeScript incremental build info
+*.tsbuildinfo

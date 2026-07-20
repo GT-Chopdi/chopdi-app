@@ -1,4 +1,22 @@
+# ===========================================================================
+# Monorepo-wide (applies to all apps under apps/*)
+# ===========================================================================
+
+# Node / NestJS (apps/api)
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment files — never commit secrets (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# ===========================================================================
 # Miscellaneous
+# ===========================================================================
 *.class
 *.lock
 *.log
