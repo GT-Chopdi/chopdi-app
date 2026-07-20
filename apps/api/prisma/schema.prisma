@@ -1,0 +1,17 @@
+// Prisma schema for the Chopdi API.
+//
+// Prisma 7 uses the `prisma-client` generator (no Rust engine) together with a
+// driver adapter. The connection URL lives in `prisma.config.ts`, not here.
+// Models are added under feature work — this file is intentionally model-free
+// at bootstrap.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
