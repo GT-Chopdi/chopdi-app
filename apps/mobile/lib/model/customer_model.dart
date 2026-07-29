@@ -1,13 +1,19 @@
-class Customer {
+class CustomerModel {
   final String name;
+  final String loan;
+  final String interest;
+  final String amount;
+  final bool received;
+  final String status;
   final String phone;
-  final double amount;
-  final bool isPending;
 
-  Customer({
+  CustomerModel({
     required this.name,
-    required this.phone,
+    required this.loan,
+    required this.interest,
     required this.amount,
-    required this.isPending,
+    required this.received,
+    required this.phone,
+    required this.status,
   });
 }

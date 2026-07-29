@@ -1,324 +1,353 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/view/home_screen.dart';
-import 'dart:async';
-import 'package:pinput/pinput.dart';
+import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/view/otp_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ChopdiOnboardingScreen extends StatefulWidget {
+  const ChopdiOnboardingScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ChopdiOnboardingScreen> createState() =>
+      _ChopdiOnboardingScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController otpController = TextEditingController();
+class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
+  // Controller for the phone number text field
+  final TextEditingController _phoneController = TextEditingController();
 
-  bool otpSent = false;
-
-  Color primaryColor = Color(0xFF223A5E);
-  Color secondaryColor = Color(0xFFAAB9CF);
-  Color accentColor = Color(0xFFC74C4C);
-  Color backgroundColor = Color(0xFFFAF8F5);
-
-  Timer? timer;
-  int secondsRemaining = 30;
-  bool canResend = false;
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: Stack(
-        children: [
-          Container(
-            height: 330,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  primaryColor,
-                  secondaryColor,
+      backgroundColor: ChopdiColors.navy,
+      body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: Column(
+                children: [
+                  SizedBox(height: 8),
+                  // ---------- TOP SECTION (logo + book image + heading) ----------
+                  Padding(
+                    padding: EdgeInsetsGeometry.only(left: 24, right: 24, top:10),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          top: -18,
+                          right: -48,
+                          child: Image.asset(
+                            'assets/book.png',
+                            width: 190,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+              
+                        // Logo + heading + subtitle, in front of the book image
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Logo row: app icon (from assets) + "Chopdi" wordmark
+                            const _ChopdiLogo(),
+            
+                            // const SizedBox(height: 2),
+            
+                            const Text(
+                              'Chopdi',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+            
+                            const SizedBox(height: 24),
+              
+                            // Main heading, split into two lines with two colors
+                            RichText(
+                              text: const TextSpan(
+                                style: TextStyle(
+                                  fontSize: 21,
+                                  height: 1.25,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                                children: [
+                                  TextSpan(text: 'Your lending records,\n'),
+                                  TextSpan(
+                                    text: 'digitally organized.',
+                                    style: TextStyle(color: ChopdiColors.lightBlue),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+              
+                            // Subtitle
+                            Text(
+                              'Track loans, interest and payments\nwith clarity and confidence.',
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 1.35,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                // height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+            
+                  SizedBox(height: 100),
+
+                  Container(
+                        width: 380,
+                        height: 390,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          children: [
+                            
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                color: const Color(0xFFF4F4F4),
+                                padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: const BoxDecoration(
+                                            color: ChopdiColors.mediumBlue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.phone_android_rounded,
+                                            color: ChopdiColors.navy,
+                                            size: 26,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Let's get started",
+                                                style: TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: ChopdiColors.navy,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                "Enter your mobile number to\ncontinue to Chopdi",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  height: 1.4,
+                                                  color: ChopdiColors.navy.withValues(alpha: .65),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+            
+                                    const SizedBox(height: 24),
+            
+                                    _PhoneInputField(controller: _phoneController),
+            
+                                    const SizedBox(height: 22),
+            
+                                    _ContinueButton(
+                                      onPressed: () {
+                                        debugPrint(
+                                          "Continue: ${_phoneController.text}",
+                                        );
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const OTPScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+            
+                                    const SizedBox(height: 24),
+            
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 22,
+                                          height: 22,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xffD7E3F5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.verified_user_outlined,
+                                            size: 14,
+                                            color: ChopdiColors.navy,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          "Your data is secure with us",
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: ChopdiColors.navy.withValues(alpha: .7),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+            
+                            Container(
+                              width: double.infinity,
+                              color: const Color(0xFFB7C6E0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 20,
+                              ),
+                              child: RichText(
+                                textAlign: TextAlign.center,
+                                text: const TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Color(0xFF33496F),
+                                    height: 1.5,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: "By continuing, you agree to our\n",
+                                    ),
+                                    TextSpan(
+                                      text: "Terms of Service",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    TextSpan(text: " and "),
+                                    TextSpan(
+                                      text: "Privacy Policy",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                 ],
               ),
             ),
           ),
+      ),
+    );
+  }
+}
 
-          Positioned(
-            top: 100,
-            left: 120,
-            right: 20,
-            child: Container(
-              height: 105,
-              width: 105,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Image.asset(
-                  "assets/images/chopdiLogo.png",
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
+class _ChopdiLogo extends StatelessWidget {
+  const _ChopdiLogo();
 
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 18, top: 10),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white24,
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Logo mark image asset
+        Image.asset(
+          'assets/applogo.png',
+          width: 66,
+          height: 83,
+          fit: BoxFit.cover,
+        ),
+      ],
+    );
+  }
+}
 
-          const Positioned(
-            left: 22,
-            top: 110,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+class _PhoneInputField extends StatelessWidget {
+  final TextEditingController controller;
+
+  const _PhoneInputField({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: ChopdiColors.navy.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
               children: [
                 Text(
-                  "MyChopdi",
+                  '+91',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: ChopdiColors.navy,
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  "Login with Mobile OTP",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: ChopdiColors.navy.withValues(alpha: 0.7),
                 ),
               ],
             ),
           ),
-
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).size.height * .68,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 30,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "Enter Mobile Number",
-                        prefixIcon: Icon(
-                          Icons.mail_outline,
-                          color: secondaryColor,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: backgroundColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide:
-                              BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    if (otpSent)
-                      Column(
-                        children: [
-                          Pinput(
-                            controller: otpController,
-                            length: 6,
-                            keyboardType: TextInputType.number,
-
-                            defaultPinTheme: PinTheme(
-                              width: 50,
-                              height: 55,
-                              textStyle: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                            ),
-
-                            focusedPinTheme: PinTheme(
-                              width: 50,
-                              height: 55,
-                              textStyle: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: primaryColor,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-
-                            submittedPinTheme: PinTheme(
-                              width: 50,
-                              height: 55,
-                              textStyle: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              decoration: BoxDecoration(
-                                color: backgroundColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: primaryColor),
-                              ),
-                            ),
-                          ),
-
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: canResend
-                                ? TextButton(
-                                    onPressed: resendOTP,
-                                    child: Text(
-                                      "Resend OTP",
-                                      style: TextStyle(
-                                        color: primaryColor,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )
-                                : Padding(
-                                    padding: const EdgeInsets.only(right: 12),
-                                    child: Text(
-                                      "Resend OTP in 00:${secondsRemaining.toString().padLeft(2, '0')}",
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 25),
-
-                    SizedBox(
-                      height: 55,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: accentColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (!otpSent) {
-
-                            setState(() {
-                              otpSent = true;
-                            });
-                            startTimer();
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomeScreen())
-                            );
-                          }
-                        },
-                        child: Text(
-                          otpSent ? "Verify OTP" : "Send OTP",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(color: Colors.grey.shade300),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text("Or"),
-                        ),
-                        Expanded(
-                          child: Divider(color: Colors.grey.shade300),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    Container(
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: secondaryColor),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            "assets/images/icon.jpg",
-                            height: 22,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            "Continue with Google",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+          
+          Container(
+            width: 1,
+            height: 24,
+            color: ChopdiColors.navy.withValues(alpha: 0.15),
+          ),
+          
+          Expanded(
+            child: SizedBox(
+              height: 58,
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
+                style: const TextStyle(fontSize: 15),
+                decoration: const InputDecoration(
+                  counterText: '', // hides the default character counter
+                  hintText: '98765 23564',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 ),
               ),
             ),
@@ -327,38 +356,43 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
 
-  void startTimer() {
-    secondsRemaining = 30;
-    canResend = false;
+class _ContinueButton extends StatelessWidget {
+  final VoidCallback onPressed;
 
-    timer?.cancel();
-
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (secondsRemaining > 0) {
-        setState(() {
-          secondsRemaining--;
-        });
-      } else {
-        setState(() {
-          canResend = true;
-        });
-        timer.cancel();
-      }
-    });
-  }
-
-  void resendOTP() {
-    // Call resend OTP API 
-
-    startTimer();
-  }
+  const _ContinueButton({required this.onPressed});
 
   @override
-  void dispose() {
-    timer?.cancel();
-    emailController.dispose();
-    otpController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: ChopdiColors.navy,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 0,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Continue',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize:20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+          ],
+        ),
+      ),
+    );
   }
 }

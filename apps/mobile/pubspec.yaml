@@ -8,14 +8,20 @@ environment:
 
 dependencies:
   build_runner: ^2.4.13
+  country_code_picker: ^3.4.1
   flutter:
     sdk: flutter
+  flutter_animate: ^4.5.2
   flutter_riverpod: ^2.6.1
+  gap: ^3.0.1
   google_fonts: ^8.1.0
+  intl: ^0.20.3
   isar: ^3.1.0+1
   isar_generator: ^3.1.0+1
+  path_provider: ^2.1.6
   permission_handler: ^12.0.3
   pinput: ^6.0.2
+  uuid: ^4.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -23,3 +29,27 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/book.png
+    - assets/app_logo.png
+    - assets/applogo.png
+    - assets/badge_seal.png
+    - assets/final_logo.png
+    - assets/secure_logo.png
+    - assets/frame_overlay.png
+    - assets/menu_logo.png
+    - assets/loan_summary.png
+    - assets/note_logo.png
+    - assets/edit_customer_logo.png
+    - assets/whatsapp_logo.png
+    - assets/export_pdf.png
+    - assets/delete_logo.png
+    - assets/right_arrow.png
+    - assets/iPhone 16 & 17 Pro Max - 1.png
+    - assets/iPhone 16 & 17 Pro Max - 11.png
+    - assets/Vector 3.png
+    - assets/home_screen_book.png
+    - assets/line_home.png
+    - assets/home_cream_loan.png
+    - assets/home_blue_loan.png
+    - assets/tabler_edit.png
