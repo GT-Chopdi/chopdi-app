@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/view/login_screen.dart';
+import 'package:mychopdi/view/splash_screen.dart';
+
 void main() {
-  runApp(const MainApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(const ChopdiApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class ChopdiApp extends StatelessWidget {
+  const ChopdiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      title: 'Chopdi',
+      theme: ThemeData(
+        useMaterial3: true,
+      ),
+      home: SplashScreen(),
     );
   }
 }

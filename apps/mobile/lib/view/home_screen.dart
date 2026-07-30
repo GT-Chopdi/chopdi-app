@@ -1,324 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/view/create_new_chopdi_screen.dart';
-import 'package:mychopdi/view/select_customer_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/model/customer_model.dart';
+import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/widgets/add_customer_button.dart';
+import 'package:mychopdi/widgets/home_header.dart';
+import 'package:mychopdi/widgets/loan_toggle.dart';
+import 'package:mychopdi/widgets/summary_card.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
 
-class _HomeScreenState extends State<HomeScreen> {
+  final customers = [
 
-  static const Color primaryColor = Color(0xFF223A5E);
-  static const Color secondaryColor = Color(0xFFAAB9CF);
-  static const Color accentColor = Color(0xFFC74C4C);
-  static const Color backgroundColor = Color(0xFFFAF8F5);
+    CustomerModel(
+      name: "Rahul",
+      loan: "₹12,000",
+      interest: "12%",
+      amount: "₹12,000",
+      received: false,
+      phone: "+91 7539412369",
+      status: "Pending"
+    ),
 
-  String selectedApp = "MyChopdi";
+    CustomerModel(
+      name: "Khushi",
+      loan: "₹8,500",
+      interest: "10%",
+      amount: "₹8,500",
+      received: false,
+      phone: "+91 9631457694",
+      status: "Completed"
+    ),
+
+    CustomerModel(
+      name: "Dada",
+      loan: "₹6,000",
+      interest: "9%",
+      amount: "₹1,000",
+      received: true,
+      phone: "+91 8463988453",
+      status: ""
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
+      backgroundColor: ChopdiColors.cream,
+      floatingActionButton: const AddCustomerButton(),
+      // bottomNavigationBar: const BottomNavbar(
+      //   currentIndex: 1,
+      // ),
 
-      backgroundColor: backgroundColor,
-
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: primaryColor,
-        title: InkWell(
-          onTap: () {
-            _showBusinessBottomSheet();
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                selectedApp,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+              const HomeHeader(),
+              const SizedBox(height: 18),
+              const LoanToggle(),
+              const SizedBox(height: 18),
+              const SummaryCard(),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // const Text(
+                  //   "Recent Customers",
+                  //   style: TextStyle(
+                  //       fontWeight: FontWeight.bold,
+                  //       fontSize: 17),
+                  // ),
+
+                  // TextButton(
+                  //     onPressed: () {},
+                  //     child: const Text("View All"))
+                ],
               ),
-              const SizedBox(width: 5),
-              const Icon(Icons.edit, color: Colors.white, size: 18),
-            ],
-          ),
-        ),
 
-        actions: [
+              // Expanded(
+              //   child: ListView.builder(
+              //     itemCount: customers.length,
+              //     itemBuilder: (_, index) {
+              //       return CustomerTile(
+              //         customer: customers[index],
+              //       );
+              //     },
+              //   ),
+              // )
 
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search,color: Colors.white),
-          ),
+              SizedBox(height: 30),
 
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert,color: Colors.white),
-          ),
-
-        ],
-      ),
-
-      body: Padding(
-
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-
-            const SizedBox(height: 15),
-
-            const Text(
-              "Welcome!!!",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              "Manage your daily loan records easily.",
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 50),
-
-            Expanded(
-
-              child: Center(
-
+              Center(
                 child: Column(
-
                   mainAxisAlignment: MainAxisAlignment.center,
-
                   children: [
-
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: secondaryColor.withValues(alpha: .35),
-                      child: const Icon(
-                        Icons.receipt_long,
-                        size: 50,
-                        color: primaryColor,
-                      ),
+                    SizedBox(
+                      height: 74,
+                      width: 82,
+                      child: Image.asset('assets/home_screen_book.png'),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "No Entries Yet",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
+                
+                    SizedBox(height: 6),
+                
                     Text(
-                      "Tap the Add Customers button\nand start recording loans.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
+                      'No customers yet!',
+                      style: GoogleFonts.manrope(
+                        color: ChopdiColors.navy,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                
+                    SizedBox(height: 3),
+                
+                    Text(
+                      'Start by adding a customer and\n\tkeep track of your loans easily',
+                      style: GoogleFonts.manrope(
+                        color: ChopdiColors.navy,
                         fontSize: 16,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
 
+                    SizedBox(height: 11),
+
+                    Row(
+                      children: [
+                        SizedBox(width:190),
+                        Image.asset('assets/line_home.png'),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: accentColor,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        icon: const Icon(Icons.person_add),
-        label: const Text(
-          "Add Customer",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SelectCustomerScreen(),
-            ),
-          );
-        }
-      ),
-    );
-  }
-
-  Future<void> _showCreateNameDialog() async {
-
-    TextEditingController controller = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-
-        return AlertDialog(
-
-          title: const Text("Create App Name"),
-
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: "Enter app name",
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-          actions: [
-
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Cancel"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showBusinessBottomSheet() {
-    final TextEditingController controller =
-        TextEditingController(text: selectedApp);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              const Text(
-                "Edit Business Name",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      selectedApp = controller.text;
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "SAVE",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              Center(
-                child: InkWell(
-                  onTap: () async {
-
-                    Navigator.pop(context);
-
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CreateChopdiScreen(),
-                      ),
-                    );
-
-                    if (result != null) {
-                      setState(() {
-                        selectedApp = result;
-                      });
-                    }
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Center(
-                child: InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "Choose another chopdi",
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
