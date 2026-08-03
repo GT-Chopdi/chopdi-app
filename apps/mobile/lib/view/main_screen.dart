@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/view/my_chopdi_screen.dart';
 import 'package:mychopdi/widgets/bottom_nav_bar.dart';
 import 'home_screen.dart';
-import 'customers_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,8 +16,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> pages = [
     HomeScreen(),
-    CustomersScreen(),
-    // MyChopdiScreen(),
+    MyChopdiScreen(),
   ];
 
   @override

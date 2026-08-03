@@ -29,10 +29,10 @@ class CustomerCard extends StatelessWidget {
       child: Container(
         height: 92,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color.fromRGBO(170, 185, 207, 0.2),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Colors.grey.shade300,
+            color: Color.fromRGBO(170, 185, 207, 1),
             width: 0.8,
           ),
           boxShadow: [

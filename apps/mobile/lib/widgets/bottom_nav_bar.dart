@@ -29,12 +29,6 @@ class BottomNavbar extends StatelessWidget {
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(Icons.groups_outlined),
-          activeIcon: Icon(Icons.groups),
-          label: "Customers",
-        ),
-
-        BottomNavigationBarItem(
           icon: Icon(Icons.menu_book_outlined),
           activeIcon: Icon(Icons.menu_book),
           label: "My Chopdi",

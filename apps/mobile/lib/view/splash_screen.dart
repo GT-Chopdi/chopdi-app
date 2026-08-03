@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/login_screen.dart';
+import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/page_peel_painter.dart';
 import 'package:mychopdi/widgets/red_intro_content.dart';
 
@@ -43,9 +45,35 @@ class _SplashScreenState extends State<SplashScreen>
   late final double _t5 = (_hold1 + _peel1 + _hold2 + _peel2 + _hold3).inMilliseconds / _totalMs;
   late final double _t6 = (_hold1 + _peel1 + _hold2 + _peel2 + _hold3 + _peel3).inMilliseconds / _totalMs;
 
+  void checkLogin() async {
+    bool isLogged = await AuthService.isLoggedIn();
+    if (!mounted) return;
+    if (isLogged) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        ),
+      );
+
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+
+    Future.delayed(
+      const Duration(seconds: 3),
+      checkLogin,
+    );
     _controller = AnimationController(
       vsync: this,
       duration: _computedTotal,
