@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String validPhone = "9875682324";
+  // static const String validPhone = "9875682324";
   static const String validOtp = "123456";
 
   static const String loginKey = "isLoggedIn";

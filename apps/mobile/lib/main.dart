@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
+import 'package:mychopdi/model/user_session.dart';
 import 'package:mychopdi/view/splash_screen.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+late Isar isar;
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final dir = await getApplicationDocumentsDirectory();
+
+  isar = await Isar.open(
+    [
+      UserSessionSchema,
+    ],
+    directory: dir.path,
+  );
 
   runApp(const ChopdiApp());
 }

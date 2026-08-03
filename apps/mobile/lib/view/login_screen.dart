@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
 
@@ -26,9 +25,8 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ChopdiColors.navy,
+       resizeToAvoidBottomInset: false,
       body: SafeArea(
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14,vertical: 18),
               child: SizedBox(
@@ -196,58 +194,79 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
             
                                           // }
 
-                                           final phone = _phoneController.text.trim();
+                                          //  final phone = _phoneController.text.trim();
 
-                                            // Empty mobile number
-                                            if (phone.isEmpty) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  backgroundColor: Colors.red,
-                                                  content: Text(
-                                                    "Please enter mobile number",
-                                                    style: GoogleFonts.manrope(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                              return;
-                                            }
+                                          //   // Empty mobile number
+                                          //   if (phone.isEmpty) {
+                                          //     ScaffoldMessenger.of(context).showSnackBar(
+                                          //       SnackBar(
+                                          //         backgroundColor: Colors.red,
+                                          //         content: Text(
+                                          //           "Please enter mobile number",
+                                          //           style: GoogleFonts.manrope(
+                                          //             color: Colors.white,
+                                          //             fontWeight: FontWeight.bold,
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     );
+                                          //     return;
+                                          //   }
 
-                                            // Invalid length
-                                            if (phone.length != 10) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  backgroundColor: Colors.red,
-                                                  content: Text(
-                                                    "Please enter a valid 10-digit mobile number",
-                                                    style: GoogleFonts.manrope(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                              return;
-                                            }
+                                          //   // Invalid length
+                                          //   if (phone.length != 10) {
+                                          //     ScaffoldMessenger.of(context).showSnackBar(
+                                          //       SnackBar(
+                                          //         backgroundColor: Colors.red,
+                                          //         content: Text(
+                                          //           "Please enter a valid 10-digit mobile number",
+                                          //           style: GoogleFonts.manrope(
+                                          //             color: Colors.white,
+                                          //             fontWeight: FontWeight.bold,
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     );
+                                          //     return;
+                                          //   }
 
                                             // Check hardcoded number
-                                            if (phone != AuthService.validPhone) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  backgroundColor: Colors.red,
-                                                  content: Text(
-                                                    "Invalid Mobile Number",
-                                                    style: GoogleFonts.manrope(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
+                                            // if (phone != AuthService.validPhone) {
+                                            //   ScaffoldMessenger.of(context).showSnackBar(
+                                            //     SnackBar(
+                                            //       backgroundColor: Colors.red,
+                                            //       content: Text(
+                                            //         "Invalid Mobile Number",
+                                            //         style: GoogleFonts.manrope(
+                                            //           color: Colors.white,
+                                            //           fontWeight: FontWeight.bold,
+                                            //         ),
+                                            //       ),
+                                            //     ),
+                                            //   );
+                                            //   return;
+                                            // }
+
+                                            final phone = _phoneController.text.trim();
+
+                                            if (phone.isEmpty) {
+                                              // Show SnackBar
                                               return;
                                             }
+
+                                            if (phone.length != 10) {
+                                              // Show SnackBar
+                                              return;
+                                            }
+
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => OTPScreen(
+                                                  phoneNumber: phone,
+                                                ),
+                                              ),
+                                            );
 
                                             // Navigate to OTP Screen
                                             Navigator.push(
@@ -339,7 +358,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                 ),
               ),
             ),
-          ),
       ),
     );
   }

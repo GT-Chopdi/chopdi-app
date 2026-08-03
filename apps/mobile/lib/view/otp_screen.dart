@@ -269,6 +269,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/main.dart';
+import 'package:mychopdi/model/user_session.dart';
 import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:pinput/pinput.dart';
@@ -491,7 +493,14 @@ class _OTPScreenState extends State<OTPScreen> {
                     onPressed: () async {
                       if (otpController.text ==
                           AuthService.validOtp) {
-                        await AuthService.saveLogin();
+                        // await AuthService.saveLogin();
+                        await isar.writeTxn(() async {
+                          await isar.userSessions.put(
+                            UserSession()
+                              ..phoneNumber = widget.phoneNumber
+                              ..isLoggedIn = true,
+                          );
+                        });
 
                         Navigator.pushAndRemoveUntil(
                           context,
