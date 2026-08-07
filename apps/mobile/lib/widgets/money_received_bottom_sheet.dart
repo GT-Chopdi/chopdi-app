@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/transaction_service.dart';
 
 class MoneyReceiveBottomSheet extends StatefulWidget {
-  const MoneyReceiveBottomSheet({super.key});
+
+  final Customer customer;
+  final VoidCallback onSaved;
+  const MoneyReceiveBottomSheet({super.key, required this.customer, required this.onSaved});
 
   @override
   State<MoneyReceiveBottomSheet> createState() => _MoneyReceiveBottomSheetState();
@@ -14,18 +20,20 @@ class _MoneyReceiveBottomSheetState extends State<MoneyReceiveBottomSheet> {
   final TextEditingController interestController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
 
-  DateTime selectedDate = DateTime(2026, 5, 10);
+  DateTime selectedDate = DateTime.now();
 
   // String interestType = "Simple Interest";
   // String interestFrequency = "Monthly";
   String paymentMode = "";
 
   Future<void> _pickDate() async {
+    final DateTime today = DateTime.now();
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      initialDate: selectedDate.isAfter(today) ? today : selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: today, // Future dates disabled
     );
 
     if (picked != null) {
@@ -259,7 +267,37 @@ class _MoneyReceiveBottomSheetState extends State<MoneyReceiveBottomSheet> {
                     child: SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () async{
+                          if(amountController.text.isEmpty){
+                            return;
+                          }
+
+                          // final tx = Transaction()
+                          //   ..customerId = widget.customer.id
+                          //   ..amount = double.parse(amountController.text)
+                          //   ..interest = 0
+                          //   ..date = selectedDate
+                          //   ..type = TransactionType.received;
+
+                          // await TransactionService.addTransaction(tx);
+
+                          final tx = Transaction()
+                            ..customerId = widget.customer.id
+                            ..amount = double.parse(amountController.text)
+                            ..interestRate = 0
+                            ..date = selectedDate
+                            ..type = TransactionType.received
+                            ..description = descriptionController.text
+                            ..paymentMode = paymentMode
+                            ..interestType = ""
+                            ..interestFrequency = "";
+
+                          await TransactionService.addTransaction(tx);
+
+                          widget.onSaved();
+
+                          Navigator.pop(context);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xff29406B),
                           elevation: 0,

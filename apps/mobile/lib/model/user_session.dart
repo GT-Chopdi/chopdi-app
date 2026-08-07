@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 part 'user_session.g.dart';
 
@@ -9,4 +9,6 @@ class UserSession {
   late String phoneNumber;
 
   late bool isLoggedIn;
+
+  late DateTime loginTime;
 }

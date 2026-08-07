@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/model/customer_model.dart';
+import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/customer_card.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
@@ -8,7 +8,7 @@ import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
 
 class CustomerListSection extends StatefulWidget {
 
-  final List<CustomerModel> customers;
+  final List<Customer> customers;
   const CustomerListSection({super.key,required this.customers,});
 
   @override
@@ -18,34 +18,30 @@ class CustomerListSection extends StatefulWidget {
 class _CustomerListSectionState extends State<CustomerListSection> {
   final TextEditingController searchController = TextEditingController();
 
-  late List<CustomerModel> customers;
-  late List<CustomerModel> filteredCustomers;
+  late List<Customer> customers;
+  late List<Customer> filteredCustomers;
 
   @override
   void initState() {
     super.initState();
 
-    customers = List.generate(
-      10,
-      (index) => CustomerModel(
-        name: index.isEven ? "Rahul" : "Amit",
-        phone: "+91 986754567$index",
-        amount: "${(index + 1) * 2000}",
-        interest: "12",
-        status: index.isEven ? "Pending" : "Received",
-        received: index.isOdd,
-        loan: "12000",
-      ),
-    );
+    // customers = List.from(widget.customers);
+    // filteredCustomers = List.from(widget.customers);
 
-    filteredCustomers = List.from(customers);
-    // customers = widget.customers;
-    // filteredCustomers = List.from(customers);
+    filteredCustomers = List.from(widget.customers);
   }
+
+  @override
+  void didUpdateWidget(CustomerListSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    filteredCustomers = List.from(widget.customers);
+  }
+
 
   void searchCustomer(String value) {
     setState(() {
-      filteredCustomers = customers.where((customer) {
+      filteredCustomers = widget.customers.where((customer) {
         return customer.name
                 .toLowerCase()
                 .contains(value.toLowerCase()) ||

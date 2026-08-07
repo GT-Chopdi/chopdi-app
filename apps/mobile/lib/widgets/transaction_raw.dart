@@ -1,35 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/model/transaction_model.dart';
+import 'package:intl/intl.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
+import 'package:mychopdi/view/customer_details_screen.dart';
 
 class TransactionRow extends StatelessWidget {
-  final TransactionModel transaction;
+  final Transaction transaction;
+  final double balance;
+  final VoidCallback? onChanged;
 
   const TransactionRow({
     super.key,
     required this.transaction,
+    required this.balance,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // onTap: () {
-      //   showTransactionDetailsBottomSheet(context, transaction);
-      // },
       onTap: () {
+        // showModalBottomSheet(
+        //   context: context,
+        //   isScrollControlled: true,
+        //   backgroundColor: Colors.transparent,
+        //   builder: (_) {
+        //     return TransactionDetailsScreen(
+        //       transaction: transaction,
+        //     );
+        //   },
+        // );
+
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) {
-            return TransactionDetailsScreen();
-          },
+          builder: (_) => TransactionDetailsScreen(
+            transaction: transaction,
+            onChanged: onChanged, customer: Customer(),
+          ),
         );
       },
-      child: Padding(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(
           horizontal: 8,
           vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8F0),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFFAAB9CF),
+          ),
         ),
         child: Row(
           children: [
@@ -37,23 +61,22 @@ class TransactionRow extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Text(
-                transaction.date,
+                DateFormat("dd MMM yyyy").format(transaction.date),
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.black87,
                 ),
               ),
             ),
-      
+
             /// Given
             Expanded(
               flex: 2,
-              child: transaction.given == null
-                  ? const Center(child: Text("-"))
-                  : Column(
+              child: transaction.type == TransactionType.gave
+                  ? Column(
                       children: [
                         Text(
-                          transaction.given!,
+                          "₹${transaction.amount.toStringAsFixed(0)}",
                           style: const TextStyle(
                             color: Color(0xFFC74C4C),
                             fontWeight: FontWeight.bold,
@@ -62,25 +85,30 @@ class TransactionRow extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          transaction.subtitle,
+                          transaction.description.isEmpty
+                              ? "Loan Given"
+                              : transaction.description,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 9,
-                            color: Color(0xFF000000),
+                            color: Colors.black,
                           ),
                         ),
                       ],
+                    )
+                  : const Center(
+                      child: Text("-"),
                     ),
             ),
-      
+
             /// Received
             Expanded(
               flex: 2,
-              child: transaction.received == null
-                  ? const Center(child: Text("-"))
-                  : Column(
+              child: transaction.type == TransactionType.received
+                  ? Column(
                       children: [
                         Text(
-                          transaction.received!,
+                          "₹${transaction.amount.toStringAsFixed(0)}",
                           style: const TextStyle(
                             color: Color(0xFF00901B),
                             fontWeight: FontWeight.bold,
@@ -89,27 +117,33 @@ class TransactionRow extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          transaction.subtitle,
+                          transaction.description.isEmpty
+                              ? "Payment Received"
+                              : transaction.description,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 9,
-                            color: Color(0xFF000000),
+                            color: Colors.black,
                           ),
                         ),
                       ],
+                    )
+                  : const Center(
+                      child: Text("-"),
                     ),
             ),
-      
+
             /// Balance
             Expanded(
               flex: 2,
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  transaction.balance,
+                  "₹${balance.toStringAsFixed(0)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: Color(0xFF000000),
+                    color: Colors.black,
                   ),
                 ),
               ),

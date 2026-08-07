@@ -1,159 +1,186 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/model/customer_model.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:isar_community/isar.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 
 
 class CustomerCard extends StatelessWidget {
-  final CustomerModel customer;
+  final Customer customer;
 
   const CustomerCard({
     super.key,
     required this.customer,
   });
 
+  Future<double> getBalance(int customerId) async {
+
+   final list = await IsarService.isar.transactions
+       .filter()
+       .customerIdEqualTo(customerId)
+       .findAll();
+
+   double balance = 0;
+
+   for(final tx in list){
+      if(tx.type == TransactionType.gave){
+         balance += tx.amount;
+      }else{
+         balance -= tx.amount;
+      }
+   }
+   return balance;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CustomerDetailsScreen(
-              customer: customer,
+    return StreamBuilder<List<Transaction>>(
+      stream: IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(customer.id)
+        .watch(fireImmediately: true),
+      builder: (context, snapshot) {
+        final transactions = snapshot.data ?? [];
+
+        double balance = 0;
+
+        for (final tx in transactions) {
+          if (tx.type == TransactionType.gave) {
+            balance += tx.amount;
+          } else {
+            balance -= tx.amount;
+          }
+        }
+
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CustomerDetailsScreen(
+                  customer: customer,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(170, 185, 207, 0.2),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color.fromRGBO(170, 185, 207, 1),
+              ),
+            ),
+            child: Row(
+              children: [
+
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: ChopdiColors.lightGray,
+                  child: Text(
+                    customer.name[0].toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: ChopdiColors.navy,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Text(
+                        customer.name,
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: ChopdiColors.navy,
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        customer.phone.isEmpty
+                            ? "No phone number"
+                            : customer.phone,
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+
+                          _chip(
+                            "Loan: ₹${balance.toStringAsFixed(0)}",
+                            const Color(0xffEEF3FA),
+                          ),
+
+                          // _chip(
+                          //   "Interest: ${customer.interest}%",
+                          //   const Color(0xffEEF3FA),
+                          // ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+
+                    Text(
+                      "₹${balance.toStringAsFixed(0)}",
+                      style: GoogleFonts.manrope(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: balance >= 0
+                            ? ChopdiColors.red
+                            : Colors.green,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      balance >= 0 ? "Pending" : "Settled",
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        color: balance >= 0
+                            ? ChopdiColors.red
+                            : Colors.green,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ],
             ),
           ),
         );
       },
-      child: Container(
-        height: 92,
-        decoration: BoxDecoration(
-          color: Color.fromRGBO(170, 185, 207, 0.2),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Color.fromRGBO(170, 185, 207, 1),
-            width: 0.8,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-          child: Row(
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: ChopdiColors.lightGray,
-                child: Text(
-                  customer.name[0],
-                  style: const TextStyle(
-                    color: ChopdiColors.navy,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-      
-              const SizedBox(width: 12),
-      
-              // Customer Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      customer.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: ChopdiColors.navy,
-                      ),
-                    ),
-      
-                    const SizedBox(height: 3),
-      
-                    Text(
-                      customer.phone,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 12,
-                      ),
-                    ),
-      
-                    const Spacer(),
-      
-                    Row(
-                      children: [
-                        _chip(
-                          "Loan: ₹${customer.amount}",
-                          const Color(0xffEEF3FA),
-                        ),
-                        const SizedBox(width: 6),
-                        _chip(
-                          "Interest: ${customer.interest}%",
-                          const Color(0xffEEF3FA),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-      
-              const SizedBox(width: 10),
-      
-              // Amount + Status + Arrow
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "₹${customer.amount}",
-                        style: const TextStyle(
-                          color: ChopdiColors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                  
-                      const SizedBox(height: 2),
-                  
-                      const Text(
-                        "Pending",
-                        style: TextStyle(
-                          color: ChopdiColors.red,
-                          fontSize: 11,
-                        ),
-                      ),
-                  
-                      const SizedBox(height: 6),
-                    ],
-                  ),
-      
-                  SizedBox(width: 7),
-      
-                  Icon(
-                    Icons.chevron_right,
-                    size: 22,
-                    color: ChopdiColors.navy,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

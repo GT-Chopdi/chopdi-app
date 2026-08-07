@@ -6,20 +6,20 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 
-class MoneyGaveBottomSheet extends StatefulWidget {
+class LoanGaveEditTransactions extends StatefulWidget {
 
   final Customer customer;
   final VoidCallback onSaved;
   final bool isEdit;
   final Transaction? transaction;
   
-  const MoneyGaveBottomSheet({super.key, required this.customer, required this.onSaved, required this.isEdit, this.transaction});
+  const LoanGaveEditTransactions({super.key, required this.customer, required this.onSaved, required this.isEdit, this.transaction});
 
   @override
-  State<MoneyGaveBottomSheet> createState() => _MoneyGaveBottomSheetState();
+  State<LoanGaveEditTransactions> createState() => _MoneyGaveBottomSheetState();
 }
 
-class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
+class _MoneyGaveBottomSheetState extends State<LoanGaveEditTransactions> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController interestController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();

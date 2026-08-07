@@ -1,8 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/model/customer_model.dart';
+import 'package:isar_community/isar.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
+import 'package:mychopdi/view/home_screen.dart';
+import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
@@ -10,7 +17,7 @@ import 'package:mychopdi/widgets/transaction_table.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
 
-  final CustomerModel customer;
+  final Customer customer;
 
   const CustomerDetailsScreen({
     super.key,
@@ -25,10 +32,143 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   int selectedTab = 0;
   int bottomIndex = 1; 
+  List<Transaction> transactions = [];
+  late Customer customer;
+
+  Future<void> loadCustomer() async {
+    final updatedCustomer =
+        await IsarService.isar.customers.get(widget.customer.id);
+
+    if (updatedCustomer != null) {
+      setState(() {
+        customer = updatedCustomer;
+      });
+    }
+  }
+
+  Future<void> loadTransactions() async {
+      transactions = await IsarService.isar.transactions
+          .filter()
+          .customerIdEqualTo(widget.customer.id)
+          .sortByDate()
+          .findAll();
+
+      for (final tx in transactions) {
+        print("----------------");
+        print("Amount: ${tx.amount}");
+        print("Rate: ${tx.interestRate}");
+        print("Type: ${tx.interestType}");
+        print("Frequency: ${tx.interestFrequency}");
+        print("Date: ${tx.date}");
+        print("Calculated Interest: ${calculateInterest(tx)}");
+      }
+
+      setState(() {});
+
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    customer = widget.customer;
+
+    loadCustomer();
+    loadTransactions();
+  }
+
+  double get totalGiven {
+    return transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  double get totalReceived {
+    return transactions
+        .where((e) => e.type == TransactionType.received)
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+
+  double get totalInterest {
+    return transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold(
+          0.0,
+          (sum, tx) =>
+              sum +
+              InterestCalculator.calculate(
+                principal: tx.amount,
+                rate: tx.interestRate,
+                startDate: tx.date,
+                interestType: tx.interestType,
+                frequency: tx.interestFrequency,
+              ),
+        );
+  }
+
+  double get outstanding {
+    return totalGiven + totalInterest - totalReceived;
+  }
+
+  double calculateInterest(Transaction tx) {
+    final days = DateTime.now().difference(tx.date).inDays;
+
+    double time;
+
+    if (tx.interestFrequency == "Monthly") {
+      time = days / 30;
+    } else {
+      time = days / 365;
+    }
+
+    if (tx.interestType == "Simple Interest") {
+      return tx.amount * tx.interestRate * time / 100;
+    } else {
+      return tx.amount *
+              (pow(1 + tx.interestRate / 100, time) - 1);
+    }
+  }
+  
+  Transaction? get lastReceivedTransaction {
+    final received = transactions
+        .where((e) => e.type == TransactionType.received)
+        .toList();
+
+    if (received.isEmpty) return null;
+
+    received.sort((a, b) => b.date.compareTo(a.date));
+
+    return received.first;
+  }
+
+  Transaction? get firstLoanTransaction {
+    final gave = transactions
+        .where((e) => e.type == TransactionType.gave)
+        .toList();
+
+    if (gave.isEmpty) return null;
+
+    gave.sort((a, b) => a.date.compareTo(b.date));
+
+    return gave.first;
+  }
+
+  int get loanDays {
+    if (firstLoanTransaction == null) return 0;
+
+    return DateTime.now()
+        .difference(firstLoanTransaction!.date)
+        .inDays;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final customer = widget.customer;
+    final size = MediaQuery.of(context).size;
+
+    final width = size.width;
+    final height = size.height;
+
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
 
@@ -74,7 +214,11 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: const MoneyGaveBottomSheet(),
+                          child: MoneyGaveBottomSheet(
+                            customer:widget.customer,
+                            onSaved:loadTransactions,
+                            isEdit:false,
+                          ),
                         );
                       },
                     );
@@ -110,7 +254,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: const MoneyReceiveBottomSheet(),
+                          child: MoneyReceiveBottomSheet(
+                            customer: widget.customer,
+                            onSaved: loadTransactions,
+                          ),
                         );
                       },
                     );
@@ -204,7 +351,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             const SizedBox(height: 22),
 
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
 
               decoration: BoxDecoration(
                 color: Color.fromRGBO(255, 248, 240, 1),
@@ -223,7 +370,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     child: _infoItem(
                       'assets/total_given.png',
                       "Total Given",
-                      "₹15,000",
+                      "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
                   ),
@@ -237,8 +384,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      "Interest Rate",
-                      "₹2,000",
+                      "Total Interest",
+                      "₹${totalInterest.toStringAsFixed(0)}",
                       Color(0xFF00901B),
                     ),
                   ),
@@ -252,8 +399,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/outstanding.png',
-                      "Total Received",
-                      "₹12,000",
+                      "Outstanding",
+                      "₹${outstanding.toStringAsFixed(0)}",
                       Color(0xFFC74C4C),
                     ),
                   ),
@@ -267,8 +414,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/uil_calender.png',
-                      "Outstanding",
-                      "15 days",
+                      "Since",
+                      "$loanDays Days",
                       ChopdiColors.navy,
                     ),
                   ),
@@ -280,7 +427,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             const SizedBox(height: 12),
 
-            const TransactionTable(),
+            TransactionTable(transactions:transactions, onChanged: loadTransactions,),
           ],
         ),
       ),
@@ -293,42 +440,51 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     String value,
     Color valueColor,
   ) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: Color.fromRGBO(255, 215, 190, 1),
-          child: Image.asset(
-            imagePath,
-            width: 22,
-            height: 22,
-            fit: BoxFit.contain,
+    return SizedBox(
+      height: 90,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: const Color(0xFFFFD7BE),
+            child: Image.asset(
+              imagePath,
+              width: 18,
+              height: 18,
+              fit: BoxFit.contain,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 6),
-
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.manrope(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: ChopdiColors.navy,
+          SizedBox(
+            height: 30,
+            child: Center(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.manrope(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: ChopdiColors.navy,
+                  height: 1.2,
+                ),
+              ),
+            ),
           ),
-        ),
 
-        const SizedBox(height: 4),
-
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-            fontSize: 18,
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -353,9 +509,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             });
           },
 
-          onWhatsapp: () {
-            Navigator.pop(context);
-            // Open WhatsApp
+          onSummary: () {
+            Navigator.pop(context); // Close first bottom sheet
+
+            Future.delayed(const Duration(milliseconds: 200), () {
+              return showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => AccountSummaryBottomSheet(
+                  totalGiven: totalGiven,
+                  totalOutstanding: outstanding,
+                  totalInterest: totalInterest,
+                  lastPayment: lastReceivedTransaction,
+                  firstLoan: firstLoanTransaction,
+                ),
+              );
+            });
           },
 
           onExport: () {
@@ -389,7 +559,14 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ),
       ),
       builder: (_) {
-        return const EditCustomerBottomSheet();
+        return EditCustomerBottomSheet(
+          customer: widget.customer,
+          onSaved: () async {
+            await loadCustomer();
+            await loadTransactions();
+            setState(() {});
+          },
+        );
       },
     );
   }
@@ -399,7 +576,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const ExportPdfBottomSheet(),
+      builder: (_) => ExportPdfBottomSheet(
+        customer: customer,
+        transactions: transactions,
+      ),
     );
   }
 
@@ -410,12 +590,34 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return DeleteCustomerBottomSheet(
-          customerName: "Rahul",
-          onDelete: () {
+          customerName: widget.customer.name,
+          onDelete: () async{
 
-            Navigator.pop(context);
+            // Navigator.pop(context);
 
             // Delete customer from database
+            await IsarService.isar.writeTxn(() async {
+
+              await IsarService.isar.transactions
+                  .filter()
+                  .customerIdEqualTo(widget.customer.id)
+                  .deleteAll();
+
+              await IsarService.isar.customers.delete(
+                  widget.customer.id);
+
+            });
+
+            if (mounted) {
+              // Navigator.pop(context); // Close delete sheet
+              // Navigator.pop(context); // Back to home
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (_) => const MainScreen(),
+                ),
+                (route) => false,
+              );
+            }
 
           },
         );

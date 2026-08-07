@@ -4,41 +4,27 @@ import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
-import 'package:mychopdi/utils/interest_calculator.dart';
 
-class MoneyGaveBottomSheet extends StatefulWidget {
+class LoanReceivedEditTransactions extends StatefulWidget {
 
   final Customer customer;
   final VoidCallback onSaved;
-  final bool isEdit;
-  final Transaction? transaction;
-  
-  const MoneyGaveBottomSheet({super.key, required this.customer, required this.onSaved, required this.isEdit, this.transaction});
+  const LoanReceivedEditTransactions({super.key, required this.customer, required this.onSaved});
 
   @override
-  State<MoneyGaveBottomSheet> createState() => _MoneyGaveBottomSheetState();
+  State<LoanReceivedEditTransactions> createState() => _MoneyReceiveBottomSheetState();
 }
 
-class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
+class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController interestController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
 
   DateTime selectedDate = DateTime.now();
 
-  String interestType = "Simple Interest";
-  String interestFrequency = "Monthly";
+  // String interestType = "Simple Interest";
+  // String interestFrequency = "Monthly";
   String paymentMode = "";
-
-  double get interestAmount {
-    final amount =
-        double.tryParse(amountController.text) ?? 0;
-
-    final percent =
-        double.tryParse(interestController.text) ?? 0;
-
-    return amount * percent / 100;
-  }
 
   Future<void> _pickDate() async {
     final DateTime today = DateTime.now();
@@ -107,36 +93,6 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
   }
 
   @override
-  void initState() {
-    super.initState();
- 
-    if(widget.transaction!=null){
-
-      amountController.text =
-          widget.transaction!.amount.toString();
-
-      interestController.text =
-          widget.transaction!.interestRate.toString();
-
-      descriptionController.text =
-          widget.transaction!.description;
-
-      paymentMode =
-          widget.transaction!.paymentMode;
-
-      selectedDate =
-          widget.transaction!.date;
-
-      interestType =
-          widget.transaction!.interestType;
-
-      interestFrequency =
-          widget.transaction!.interestFrequency;
-
-      }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
@@ -165,14 +121,14 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                 height: 72,
                 width: 72,
                 decoration: const BoxDecoration(
-                  color: Color.fromRGBO(199, 76, 76, 0.19),
+                  color: Color.fromRGBO(141, 208, 113, 0.34),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: CircleAvatar(
                     radius: 18,
                     backgroundColor: Colors.transparent,
-                    child: Image.asset('assets/you_gave.png'),
+                    child: Image.asset('assets/you_got.png'),
                   ),
                 ),
               ),
@@ -180,9 +136,9 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
               const SizedBox(height: 10),
 
               Text(
-                "You Gave",
+                "You Got",
                 style: GoogleFonts.manrope(
-                  color: Color.fromRGBO(199, 76, 76, 1),
+                  color: Color(0xFF00901B),
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
                 ),
@@ -196,7 +152,6 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
 
               TextField(
                 controller: amountController,
-                onChanged: (_) => setState(() {}),
                 keyboardType: TextInputType.number,
                 decoration: decoration(
                   hint: "Enter Amount",
@@ -218,75 +173,6 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                   hint: DateFormat("dd MMM yyyy").format(selectedDate),
                   suffix: const Icon(Icons.calendar_today_outlined),
                 ),
-              ),
-
-              const SizedBox(height: 18),
-
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Interest Rate (%)")),
-
-              TextField(
-                controller: interestController,
-                onChanged: (_) => setState(() {}),
-                keyboardType: TextInputType.number,
-                decoration: decoration(
-                  hint: "Enter Interest rate",
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Interest Type")),
-
-              DropdownButtonFormField<String>(
-                initialValue: interestType,
-                decoration: decoration(),
-                icon: const Icon(Icons.keyboard_arrow_down),
-                items: const [
-                  DropdownMenuItem(
-                    value: "Simple Interest",
-                    child: Text("Simple Interest"),
-                  ),
-                  DropdownMenuItem(
-                    value: "Compound Interest",
-                    child: Text("Compound Interest"),
-                  ),
-                ],
-                onChanged: (v) {
-                  setState(() {
-                    interestType = v!;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 18),
-
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Interest Frequency")),
-
-              DropdownButtonFormField<String>(
-                initialValue: interestFrequency,
-                decoration: decoration(),
-                icon: const Icon(Icons.keyboard_arrow_down),
-                items: const [
-                  DropdownMenuItem(
-                    value: "Monthly",
-                    child: Text("Monthly"),
-                  ),
-                  DropdownMenuItem(
-                    value: "Yearly",
-                    child: Text("Yearly"),
-                  ),
-                ],
-                onChanged: (v) {
-                  setState(() {
-                    interestFrequency = v!;
-                  });
-                },
               ),
 
               const SizedBox(height: 18),
@@ -386,28 +272,25 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                             return;
                           }
 
-                          final amount = double.parse(amountController.text);
-                          final rate = double.parse(interestController.text);
-                          // final interestAmount = amount * rate / 100;
-                          final interestAmount = InterestCalculator.calculate(
-                            principal: amount,
-                            rate: rate,
-                            startDate: selectedDate,
-                            interestType: interestType,
-                            frequency: interestFrequency,
-                          );
+                          // final tx = Transaction()
+                          //   ..customerId = widget.customer.id
+                          //   ..amount = double.parse(amountController.text)
+                          //   ..interest = 0
+                          //   ..date = selectedDate
+                          //   ..type = TransactionType.received;
+
+                          // await TransactionService.addTransaction(tx);
 
                           final tx = Transaction()
                             ..customerId = widget.customer.id
-                            ..amount = amount
-                            ..interest = interestAmount
-                            ..interestRate = rate
+                            ..amount = double.parse(amountController.text)
+                            ..interestRate = 0
                             ..date = selectedDate
-                            ..type = TransactionType.gave
+                            ..type = TransactionType.received
                             ..description = descriptionController.text
                             ..paymentMode = paymentMode
-                            ..interestType = interestType
-                            ..interestFrequency = interestFrequency;
+                            ..interestType = ""
+                            ..interestFrequency = "";
 
                           await TransactionService.addTransaction(tx);
 
