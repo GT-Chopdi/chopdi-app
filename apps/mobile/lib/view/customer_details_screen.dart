@@ -8,12 +8,12 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
-import 'package:mychopdi/view/home_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
 
@@ -160,6 +160,28 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     return DateTime.now()
         .difference(firstLoanTransaction!.date)
         .inDays;
+  }
+
+  Future<void> makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(
+        phoneUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open phone dialer'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -340,10 +362,15 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   const Spacer(),
 
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
-                    child: Image.asset('assets/call_logo.png')
+                  GestureDetector(
+                    onTap: () {
+                      makePhoneCall(customer.phone);
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
+                      child: Image.asset('assets/call_logo.png')
+                    ),
                   ),
               ],
             ),
@@ -405,20 +432,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     ),
                   ),
 
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
+                  // Container(
+                  //   width: 1,
+                  //   height: 55,
+                  //   color: Colors.grey.shade300,
+                  // ),
 
-                  Expanded(
-                    child: _infoItem(
-                      'assets/uil_calender.png',
-                      "Since",
-                      "$loanDays Days",
-                      ChopdiColors.navy,
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: _infoItem(
+                  //     'assets/uil_calender.png',
+                  //     "Since",
+                  //     "$loanDays Days",
+                  //     ChopdiColors.navy,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -427,7 +454,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             const SizedBox(height: 12),
 
-            TransactionTable(transactions:transactions, onChanged: loadTransactions,),
+            TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
           ],
         ),
       ),
@@ -624,7 +651,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       },
     );
   }
-
+ 
   void showAllNotesBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,

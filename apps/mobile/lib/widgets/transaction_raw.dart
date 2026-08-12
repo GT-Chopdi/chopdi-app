@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
 
 class TransactionRow extends StatelessWidget {
   final Transaction transaction;
   final double balance;
   final VoidCallback? onChanged;
+  final int customerId;
 
   const TransactionRow({
     super.key,
     required this.transaction,
     required this.balance,
     this.onChanged,
+    required this.customerId,
   });
 
   @override
@@ -37,8 +37,8 @@ class TransactionRow extends StatelessWidget {
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (_) => TransactionDetailsScreen(
-            transaction: transaction,
-            onChanged: onChanged, customer: Customer(),
+            transaction: transaction, customerId: customerId,
+            // onChanged: onChanged, customer: Customer(),
           ),
         );
       },

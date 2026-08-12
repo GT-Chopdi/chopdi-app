@@ -1,8 +1,518 @@
+// import 'package:flutter/material.dart';
+// import 'package:mychopdi/model/customer.dart';
+// import 'package:mychopdi/view/add_new_customer_screen.dart';
+// import 'package:mychopdi/view/customer_detail_add.dart';
+// import '../widgets/add_new_customer_card.dart';
+// import '../widgets/alphabet_index.dart';
+// import '../widgets/contact_tile.dart';
+// import '../widgets/search_box.dart';
+
+// class AddCustomerScreen extends StatefulWidget {
+//   const AddCustomerScreen({super.key});
+
+//   @override
+//   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
+// }
+
+// class _AddCustomerScreenState extends State<AddCustomerScreen> {
+//   final TextEditingController searchController = TextEditingController();
+
+//   final Customer customer = Customer();
+
+//   final List<Map<String, String>> contacts = List.generate(
+//     20,
+//     (index) => {
+//       "name": "Rahul",
+//       "phone": "+91 98675 45673",
+//     },
+//   );
+//   // List<Customer> customers = [];
+//   // List<Customer> filteredCustomers = [];
+
+//   List<Map<String, String>> filtered = [];
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     filtered = contacts;
+//   }
+
+//   // @override
+//   // void initState() {
+//   //   super.initState();
+//   //   loadCustomers();
+//   // }
+
+//   // Future<void> loadCustomers() async {
+//   //   customers = await IsarService.getCustomers();
+
+//   //   filteredCustomers = customers;
+
+//   //   setState(() {});
+//   // }
+
+//   void search(String value) {
+//     setState(() {
+//       filtered = contacts.where((e) {
+//         return e["name"]!
+//                 .toLowerCase()
+//                 .contains(value.toLowerCase()) ||
+//             e["phone"]!.contains(value);
+//       }).toList();
+//     });
+//   }
+
+//   // void search(String value) {
+//   //   setState(() {
+//   //     filteredCustomers = customers.where((customer) {
+//   //       return customer.name
+//   //               .toLowerCase()
+//   //               .contains(value.toLowerCase()) ||
+//   //           customer.phone.contains(value);
+//   //     }).toList();
+//   //   });
+//   // }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final size = MediaQuery.of(context).size;
+//     final width = size.width;
+//     final height = size.height;
+
+//     return Scaffold(
+//       backgroundColor: const Color(0xffF8EEDC),
+
+//       body: SafeArea(
+//         child: Stack(
+//           children: [
+//             Padding(
+//               padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const SizedBox(height: 16),
+//                   Row(
+//                     children: [
+//                       InkWell(
+//                         onTap: () => Navigator.pop(context),
+//                         child: const Icon(
+//                           Icons.arrow_back_ios_new,
+//                           size: 20,
+//                           color: Color(0xff223A5E),
+//                         ),
+//                       ),
+
+//                       const SizedBox(width: 12),
+
+//                       const Text(
+//                         "Add Customer",
+//                         style: TextStyle(
+//                           fontSize: 28,
+//                           fontWeight: FontWeight.w700,
+//                           color: Color(0xff223A5E),
+//                         ),
+//                       )
+//                     ],
+//                   ),
+
+//                   const SizedBox(height: 24),
+
+//                   SearchBox(
+//                     controller: searchController,
+//                     onChanged: search,
+//                   ),
+
+//                   const SizedBox(height: 18),
+
+//                   AddNewCustomerCard(
+//                     onTap: () async{
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (_) => const AddNewCustomerScreen(),
+//                         ),
+//                       );
+//                     //   final result = await Navigator.push(
+//                     //     context,
+//                     //     MaterialPageRoute(
+//                     //       builder: (_) => const AddNewCustomerScreen(),
+//                     //     ),
+//                     //   );
+
+//                     //   if (result == true) {
+//                     //     loadCustomers();
+//                     //   }
+//                     },
+//                   ),
+
+//                   const SizedBox(height: 22),
+
+//                   const Text(
+//                     "All Contacts",
+//                     style: TextStyle(
+//                       color: Color(0xff223A5E),
+//                       fontWeight: FontWeight.w700,
+//                       fontSize: 15,
+//                     ),
+//                   ),
+
+//                   const SizedBox(height: 8),
+
+//                   Expanded(
+//                     child: ListView.builder(
+//                       itemCount: filtered.length,
+//                       itemBuilder: (_, index) {
+//                         return ContactTile(
+//                           name: filtered[index].values.first,
+//                           phone: filtered[index].values.last,
+//                           onTap: () {
+//                             Navigator.push(
+//                               context,
+//                               MaterialPageRoute(
+//                                 builder: (_) => CustomerDetailsAdd(customer: customer),
+//                               ),
+//                             );
+//                           },
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             Positioned(
+//               right: 6,
+//               top: 260,
+//               child: SizedBox(
+//                 height: MediaQuery.of(context).size.height * 0.62,
+//                 child: const AlphabetIndex(),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+// import 'package:flutter/material.dart';
+// import 'package:flutter_contacts/flutter_contacts.dart';
+
+// import 'package:mychopdi/view/add_new_customer_screen.dart';
+// import 'package:mychopdi/view/customer_detail_add.dart';
+
+// import '../widgets/add_new_customer_card.dart';
+// import '../widgets/alphabet_index.dart';
+// import '../widgets/contact_tile.dart';
+// import '../widgets/search_box.dart';
+
+// class AddCustomerScreen extends StatefulWidget {
+//   const AddCustomerScreen({super.key});
+
+//   @override
+//   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
+// }
+
+// class _AddCustomerScreenState extends State<AddCustomerScreen> {
+//   final TextEditingController searchController = TextEditingController();
+
+//   List<Contact> contacts = [];
+//   List<Contact> filteredContacts = [];
+
+//   bool isLoading = true;
+//   bool permissionDenied = false;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     loadContacts();
+//   }
+
+//   Future<void> loadContacts() async {
+//     try {
+//       final permissionStatus =
+//           await FlutterContacts.permissions.request(
+//         PermissionType.read,
+//       );
+
+//       if (permissionStatus != PermissionStatus.granted) {
+//         setState(() {
+//           permissionDenied = true;
+//           isLoading = false;
+//         });
+//         return;
+//       }
+
+//       final deviceContacts = await FlutterContacts.getAll(
+//         properties: {
+//           ContactProperty.name,
+//           ContactProperty.phone,
+//         },
+//       );
+
+//       deviceContacts.sort(
+//         (a, b) => a.displayName.compareTo(
+//           b.displayName,
+//         ),
+//       );
+
+//       if (!mounted) return;
+
+//       setState(() {
+//         contacts = deviceContacts;
+//         filteredContacts = deviceContacts;
+//         isLoading = false;
+//       });
+//     } catch (e) {
+//       debugPrint("Error loading contacts: $e");
+
+//       if (!mounted) return;
+
+//       setState(() {
+//         isLoading = false;
+//       });
+//     }
+//   }
+
+//   void search(String value) {
+//     final query = value.trim().toLowerCase();
+
+//     setState(() {
+//       if (query.isEmpty) {
+//         filteredContacts = contacts;
+//         return;
+//       }
+
+//       filteredContacts = contacts.where((contact) {
+//         final name = contact.displayName?.toLowerCase();
+
+//         final phone = contact.phones.isNotEmpty
+//             ? contact.phones.first.number
+//             : '';
+
+//         return name.contains(query) ||
+//             phone.contains(query);
+//       }).toList();
+//     });
+//   }
+
+//   void selectContact(Contact contact) {
+//     if (contact.phones.isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text(
+//             'This contact does not have a phone number',
+//           ),
+//         ),
+//       );
+//       return;
+//     }
+
+//     final phoneNumber = contact.phones.first.number;
+
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => CustomerDetailsAdd(
+//           contactName: contact.displayName,
+//           contactPhone: phoneNumber,
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     searchController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final size = MediaQuery.of(context).size;
+//     final width = size.width;
+//     final height = size.height;
+
+//     return Scaffold(
+//       backgroundColor: const Color(0xffF8EEDC),
+//       body: SafeArea(
+//         child: Stack(
+//           children: [
+//             Padding(
+//               padding: EdgeInsets.symmetric(
+//                 horizontal: width * 0.05,
+//                 vertical: height * 0.02,
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const SizedBox(height: 16),
+
+//                   // HEADER
+//                   Row(
+//                     children: [
+//                       InkWell(
+//                         onTap: () => Navigator.pop(context),
+//                         child: const Icon(
+//                           Icons.arrow_back_ios_new,
+//                           size: 20,
+//                           color: Color(0xff223A5E),
+//                         ),
+//                       ),
+
+//                       const SizedBox(width: 12),
+
+//                       const Text(
+//                         "Add Customer",
+//                         style: TextStyle(
+//                           fontSize: 28,
+//                           fontWeight: FontWeight.w700,
+//                           color: Color(0xff223A5E),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+
+//                   const SizedBox(height: 24),
+
+//                   // SEARCH
+//                   SearchBox(
+//                     controller: searchController,
+//                     onChanged: search,
+//                   ),
+
+//                   const SizedBox(height: 18),
+
+//                   // ADD NEW CUSTOMER
+//                   AddNewCustomerCard(
+//                     onTap: () {
+//                       Navigator.push(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (_) =>
+//                               const AddNewCustomerScreen(),
+//                         ),
+//                       );
+//                     },
+//                   ),
+
+//                   const SizedBox(height: 22),
+
+//                   const Text(
+//                     "All Contacts",
+//                     style: TextStyle(
+//                       color: Color(0xff223A5E),
+//                       fontWeight: FontWeight.w700,
+//                       fontSize: 15,
+//                     ),
+//                   ),
+
+//                   const SizedBox(height: 8),
+
+//                   Expanded(
+//                     child: buildContactsList(),
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             Positioned(
+//               right: 6,
+//               top: 260,
+//               child: SizedBox(
+//                 height:
+//                     MediaQuery.of(context).size.height * 0.62,
+//                 child: const AlphabetIndex(),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget buildContactsList() {
+//     if (isLoading) {
+//       return const Center(
+//         child: CircularProgressIndicator(),
+//       );
+//     }
+
+//     if (permissionDenied) {
+//       return Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             const Icon(
+//               Icons.contacts_outlined,
+//               size: 50,
+//               color: Color(0xff223A5E),
+//             ),
+
+//             const SizedBox(height: 12),
+
+//             const Text(
+//               "Contacts permission is required",
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 fontWeight: FontWeight.w600,
+//                 color: Color(0xff223A5E),
+//               ),
+//             ),
+
+//             const SizedBox(height: 12),
+
+//             ElevatedButton(
+//               onPressed: loadContacts,
+//               child: const Text("Allow Contacts"),
+//             ),
+//           ],
+//         ),
+//       );
+//     }
+
+//     if (filteredContacts.isEmpty) {
+//       return const Center(
+//         child: Text(
+//           "No contacts found",
+//           style: TextStyle(
+//             color: Color(0xff223A5E),
+//             fontSize: 16,
+//           ),
+//         ),
+//       );
+//     }
+
+//     return ListView.builder(
+//       itemCount: filteredContacts.length,
+//       itemBuilder: (_, index) {
+//         final contact = filteredContacts[index];
+
+//         final phone = contact.phones.isNotEmpty
+//             ? contact.phones.first.number
+//             : "No phone number";
+
+//         return ContactTile(
+//           name: contact.displayName,
+//           phone: phone,
+//           onTap: () {
+//             selectContact(contact);
+//           },
+//         );
+//       },
+//     );
+//   }
+// }
+
 import 'package:flutter/material.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:mychopdi/service/isar_service.dart';
+
 import 'package:mychopdi/view/add_new_customer_screen.dart';
 import 'package:mychopdi/view/customer_detail_add.dart';
-import 'package:mychopdi/view/customers_screen.dart';
+import 'package:mychopdi/view/customer_details_screen.dart';
+
 import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
@@ -16,67 +526,280 @@ class AddCustomerScreen extends StatefulWidget {
 }
 
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
-  final TextEditingController searchController = TextEditingController();
+  final TextEditingController searchController =
+      TextEditingController();
 
-  final Customer customer = Customer();
+  List<Contact> contacts = [];
+  List<Contact> filteredContacts = [];
 
-  final List<Map<String, String>> contacts = List.generate(
-    20,
-    (index) => {
-      "name": "Rahul",
-      "phone": "+91 98675 45673",
-    },
-  );
-  // List<Customer> customers = [];
-  // List<Customer> filteredCustomers = [];
-
-  List<Map<String, String>> filtered = [];
+  bool isLoading = true;
+  bool permissionDenied = false;
 
   @override
   void initState() {
     super.initState();
-    filtered = contacts;
+    loadContacts();
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   loadCustomers();
-  // }
+  // LOAD REAL DEVICE CONTACTS
 
-  // Future<void> loadCustomers() async {
-  //   customers = await IsarService.getCustomers();
+  Future<void> loadContacts() async {
+    try {
+      setState(() {
+        isLoading = true;
+        permissionDenied = false;
+      });
 
-  //   filteredCustomers = customers;
+      // Request contacts permission
+      final permissionStatus =
+          await FlutterContacts.permissions.request(
+        PermissionType.read,
+      );
 
-  //   setState(() {});
-  // }
+      if (permissionStatus != PermissionStatus.granted) {
+        if (!mounted) return;
 
-  void search(String value) {
-    setState(() {
-      filtered = contacts.where((e) {
-        return e["name"]!
-                .toLowerCase()
-                .contains(value.toLowerCase()) ||
-            e["phone"]!.contains(value);
+        setState(() {
+          permissionDenied = true;
+          isLoading = false;
+        });
+
+        return;
+      }
+
+      // Get contacts WITH all their properties
+      final deviceContacts = await FlutterContacts.getAll(
+        properties: ContactProperties.all,
+      );
+
+      // Remove contacts that don't have a name
+      final validContacts = deviceContacts.where((contact) {
+        return contact.displayName != null &&
+            contact.displayName!.trim().isNotEmpty;
       }).toList();
-    });
+
+      // Sort alphabetically
+      validContacts.sort(
+        (a, b) {
+          final nameA = a.displayName ?? '';
+          final nameB = b.displayName ?? '';
+
+          return nameA.toLowerCase().compareTo(
+                nameB.toLowerCase(),
+              );
+        },
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        contacts = validContacts;
+        filteredContacts = validContacts;
+        isLoading = false;
+      });
+
+      debugPrint(
+        "Loaded ${validContacts.length} contacts",
+      );
+
+      // Debug first few contacts
+      for (final contact in validContacts.take(5)) {
+        debugPrint(
+          "NAME: ${contact.displayName}, "
+          "PHONE: ${contact.phones.map((p) => p.number).toList()}",
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Error loading contacts: $e");
+      debugPrint("$stackTrace");
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Unable to load contacts: $e",
+          ),
+        ),
+      );
+    }
   }
+
+  // ------------------------------------------------------------
+  // SEARCH CONTACTS
+  // ------------------------------------------------------------
 
   // void search(String value) {
+  //   final query = value.trim().toLowerCase();
+
   //   setState(() {
-  //     filteredCustomers = customers.where((customer) {
-  //       return customer.name
-  //               .toLowerCase()
-  //               .contains(value.toLowerCase()) ||
-  //           customer.phone.contains(value);
+  //     if (query.isEmpty) {
+  //       filteredContacts = contacts;
+  //       return;
+  //     }
+
+  //     // filteredContacts = contacts.where((contact) {
+  //     //   final name = contact.displayName.toLowerCase();
+
+  //     //   final phone = contact.phones.isNotEmpty
+  //     //       ? contact.phones.first.number.toLowerCase()
+  //     //       : '';
+
+  //     //   return name.contains(query) ||
+  //     //       phone.contains(query);
+  //     // }).toList();
+  //     filteredContacts = contacts.where((contact) {
+  //       final name = (contact.displayName ?? '').toLowerCase();
+
+  //       final phone = contact.phones.isNotEmpty
+  //           ? contact.phones.first.number.toLowerCase()
+  //           : '';
+
+  //       return name.contains(query) ||
+  //           phone.contains(query);
   //     }).toList();
   //   });
   // }
 
+  void search(String value) {
+    final query = value.trim().toLowerCase();
+
+    setState(() {
+      if (query.isEmpty) {
+        filteredContacts = contacts;
+        return;
+      }
+
+      filteredContacts = contacts.where((contact) {
+        final name =
+            (contact.displayName ?? '').toLowerCase();
+
+        final phone = contact.phones.isNotEmpty
+            ? contact.phones.first.number.toLowerCase()
+            : '';
+
+        return name.contains(query) ||
+            phone.contains(query);
+      }).toList();
+    });
+  }
+
+  // ------------------------------------------------------------
+  // SELECT CONTACT
+  // ------------------------------------------------------------
+
+  // void selectContact(Contact contact) {
+  //   if (contact.phones.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text(
+  //           'This contact does not have a phone number',
+  //         ),
+  //       ),
+  //     );
+
+  //     return;
+  //   }
+
+  //   final phoneNumber =
+  //       contact.phones.first.number;
+
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => CustomerDetailsAdd(
+  //         contactName: contact.displayName ?? 'Unknown',
+  //         contactPhone: phoneNumber,
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  String normalizePhoneNumber(String phone) {
+    String cleaned =
+        phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (cleaned.startsWith('91') &&
+        cleaned.length == 12) {
+      cleaned = cleaned.substring(2);
+    }
+
+    return cleaned;
+  }
+
+  Future<void> selectContact(Contact contact) async {
+  if (contact.phones.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'This contact does not have a phone number',
+        ),
+      ),
+    );
+    return;
+  }
+
+  final phoneNumber = normalizePhoneNumber(
+    contact.phones.first.number,
+  );
+
+  final contactName =
+      contact.displayName ?? 'Unknown';
+
+  // Check whether customer already exists
+  final existingCustomer =
+      await IsarService.getCustomerByPhone(phoneNumber);
+
+  if (!mounted) return;
+
+  if (existingCustomer != null) {
+    // CUSTOMER ALREADY EXISTS
+    // Open the existing customer directly
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerDetailsScreen(
+          customer: existingCustomer,
+        ),
+      ),
+    );
+
+    return;
+  }
+
+  // CUSTOMER DOES NOT EXIST
+  // Open Add Customer confirmation screen
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CustomerDetailsAdd(
+        contactName: contactName,
+        contactPhone: phoneNumber,
+      ),
+    ),
+  );
+}
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  // ------------------------------------------------------------
+  // BUILD
+  // ------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     final width = size.width;
     final height = size.height;
 
@@ -87,15 +810,29 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.05,
+                vertical: height * 0.02,
+              ),
+
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
                 children: [
                   const SizedBox(height: 16),
+
+                  // ------------------------------------------------
+                  // HEADER
+                  // ------------------------------------------------
+
                   Row(
                     children: [
                       InkWell(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+
                         child: const Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
@@ -112,11 +849,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           fontWeight: FontWeight.w700,
                           color: Color(0xff223A5E),
                         ),
-                      )
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 24),
+
+                  // ------------------------------------------------
+                  // SEARCH
+                  // ------------------------------------------------
 
                   SearchBox(
                     controller: searchController,
@@ -125,28 +866,27 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                   const SizedBox(height: 18),
 
+                  // ------------------------------------------------
+                  // ADD NEW CUSTOMER
+                  // ------------------------------------------------
+
                   AddNewCustomerCard(
-                    onTap: () async{
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const AddNewCustomerScreen(),
+                          builder: (_) =>
+                              const AddNewCustomerScreen(),
                         ),
                       );
-                    //   final result = await Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (_) => const AddNewCustomerScreen(),
-                    //     ),
-                    //   );
-
-                    //   if (result == true) {
-                    //     loadCustomers();
-                    //   }
                     },
                   ),
 
                   const SizedBox(height: 22),
+
+                  // ------------------------------------------------
+                  // ALL CONTACTS
+                  // ------------------------------------------------
 
                   const Text(
                     "All Contacts",
@@ -160,39 +900,120 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   const SizedBox(height: 8),
 
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (_, index) {
-                        return ContactTile(
-                          name: filtered[index].values.first,
-                          phone: filtered[index].values.last,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CustomerDetailsAdd(customer: customer),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                    child: buildContactsList(),
                   ),
                 ],
               ),
             ),
 
+            // ------------------------------------------------------
+            // ALPHABET INDEX
+            // ------------------------------------------------------
+
             Positioned(
               right: 6,
               top: 260,
+
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.62,
+                height:
+                    MediaQuery.of(context).size.height *
+                        0.62,
+
                 child: const AlphabetIndex(),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // CONTACT LIST
+  // ------------------------------------------------------------
+
+  Widget buildContactsList() {
+    // Loading
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    // Permission denied
+    if (permissionDenied) {
+      return Center(
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+
+          children: [
+            const Icon(
+              Icons.contacts_outlined,
+              size: 50,
+              color: Color(0xff223A5E),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              "Contacts permission is required",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xff223A5E),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            ElevatedButton(
+              onPressed: loadContacts,
+
+              child: const Text(
+                "Allow Contacts",
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // No contacts
+    if (filteredContacts.isEmpty) {
+      return const Center(
+        child: Text(
+          "No contacts found",
+          style: TextStyle(
+            color: Color(0xff223A5E),
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    // Contact list
+    return ListView.builder(
+      itemCount: filteredContacts.length,
+
+      itemBuilder: (_, index) {
+        final contact =
+            filteredContacts[index];
+
+        final phone =
+            contact.phones.isNotEmpty
+                ? contact.phones.first.number
+                : "No phone number";
+
+        return ContactTile(
+          name: contact.displayName ?? 'Unknown',
+          phone: phone,
+
+          onTap: () {
+            selectContact(contact);
+          },
+        );
+      },
     );
   }
 }
