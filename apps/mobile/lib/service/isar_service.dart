@@ -7,7 +7,7 @@ import '../model/user_session.dart';
 class IsarService {
   static late final Isar isar;
 
-  static get instance => null;
+  static Null get instance => null;
 
   static Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -24,6 +24,13 @@ class IsarService {
 
   static Future<List<Customer>> getCustomers() async {
     return await isar.customers.where().findAll();
+  }
+
+  static Future<Customer?> getCustomerByPhone(String phone) async {
+    return await isar.customers
+        .filter()
+        .phoneEqualTo(phone)
+        .findFirst();
   }
 
   static Future<SummaryData> getSummary() async {

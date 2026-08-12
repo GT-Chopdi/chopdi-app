@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
+  flutter_contacts: ^2.3.1
   flutter_launcher_icons: ^0.14.4
   flutter_riverpod: ^2.6.1
   gap: ^3.0.1
@@ -22,6 +23,7 @@ dependencies:
   permission_handler: ^12.0.3
   pinput: ^6.0.2
   shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
   uuid: ^4.6.0
 dev_dependencies:
   flutter_test:
@@ -81,3 +83,9 @@ flutter:
     - assets/secured_logo.png
     - assets/summary.png
     - assets/download_warning.png
+    - assets/currency_rupee_circle.png
+    - assets/arrow_up.png
+    - assets/calender_check.png
+    - assets/edit_outline_rounded_transactions.png
+    - assets/delete_outline_rounded_transactions.png
+    - assets/arrow_down.png

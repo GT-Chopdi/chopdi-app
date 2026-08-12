@@ -224,8 +224,11 @@ import 'package:mychopdi/view/customer_details_screen.dart';
 
 class CustomerDetailsAdd extends StatelessWidget {
 
-  Customer customer = Customer();
-  CustomerDetailsAdd({super.key, required this.customer});
+  final String contactName;
+  final String contactPhone;
+
+  // Customer customer = Customer();
+  CustomerDetailsAdd({super.key, required this.contactName, required this.contactPhone});
 
   final _formKey = GlobalKey<FormState>();
 
@@ -262,11 +265,26 @@ class CustomerDetailsAdd extends StatelessWidget {
                 children: [
 
                   /// Avatar
+                  // CircleAvatar(
+                  //   radius: 24,
+                  //   backgroundColor: Colors.grey.shade300,
+                  //   child: Text(
+                  //     "R",
+                  //     style: GoogleFonts.manrope(
+                  //       fontSize: 26,
+                  //       fontWeight: FontWeight.bold,
+                  //       color: primaryColor,
+                  //     ),
+                  //   ),
+                  // ),
+
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.grey.shade300,
                     child: Text(
-                      "R",
+                      contactName.isNotEmpty
+                          ? contactName[0].toUpperCase()
+                          : "?",
                       style: GoogleFonts.manrope(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -282,8 +300,8 @@ class CustomerDetailsAdd extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Rahul",
+                        Text(
+                          contactName,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -292,7 +310,7 @@ class CustomerDetailsAdd extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          "+91 98675 45673",
+                          contactPhone,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.black54,
@@ -323,12 +341,7 @@ class CustomerDetailsAdd extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    customer.name = "Rahul";
-                    customer.phone = "9876543210";
-                    customer.status = "Pending";
-                    customer.received = false;
-
-                    final phone = customer.phone.trim();
+                    final phone = contactPhone.trim();
 
                     if (phone.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -339,19 +352,38 @@ class CustomerDetailsAdd extends StatelessWidget {
                       return;
                     }
 
-                    if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                    // Remove spaces, +91, etc.
+                    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+                    String finalPhone = cleanedPhone;
+
+                    // If number contains country code +91
+                    if (finalPhone.startsWith('91') && finalPhone.length == 12) {
+                      finalPhone = finalPhone.substring(2);
+                    }
+
+                    if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Please enter a valid 10-digit phone number"),
+                          content: Text(
+                            "Please enter a valid 10-digit phone number",
+                          ),
                         ),
                       );
                       return;
                     }
 
+                    final customer = Customer()
+                      ..name = contactName.trim()
+                      ..phone = finalPhone
+                      ..status = "Pending"
+                      ..received = false;
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CustomerDetailsScreen(customer: customer),
+                        builder: (context) =>
+                            CustomerDetailsScreen(customer: customer),
                       ),
                     );
                   },

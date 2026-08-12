@@ -726,11 +726,13 @@ import 'package:mychopdi/widgets/transaction_raw.dart';
 class TransactionTable extends StatelessWidget {
   final List<Transaction> transactions;
   final VoidCallback onChanged;
+  final int customerId;
 
   const TransactionTable({
     super.key,
     required this.transactions,
     required this.onChanged,
+    required this.customerId,
   });
 
   @override
@@ -756,7 +758,7 @@ class TransactionTable extends StatelessWidget {
           return TransactionRow(
             transaction: tx,
             balance: runningBalance,
-            onChanged: onChanged,
+            onChanged: onChanged, customerId: customerId,
           );
         }),
       ],
