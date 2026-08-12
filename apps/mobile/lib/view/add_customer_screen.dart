@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/view/add_new_customer_screen.dart';
 import 'package:mychopdi/view/customer_detail_add.dart';
+import 'package:mychopdi/view/customers_screen.dart';
 import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
@@ -16,6 +18,8 @@ class AddCustomerScreen extends StatefulWidget {
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final TextEditingController searchController = TextEditingController();
 
+  final Customer customer = Customer();
+
   final List<Map<String, String>> contacts = List.generate(
     20,
     (index) => {
@@ -23,6 +27,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       "phone": "+91 98675 45673",
     },
   );
+  // List<Customer> customers = [];
+  // List<Customer> filteredCustomers = [];
 
   List<Map<String, String>> filtered = [];
 
@@ -31,6 +37,20 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     super.initState();
     filtered = contacts;
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   loadCustomers();
+  // }
+
+  // Future<void> loadCustomers() async {
+  //   customers = await IsarService.getCustomers();
+
+  //   filteredCustomers = customers;
+
+  //   setState(() {});
+  // }
 
   void search(String value) {
     setState(() {
@@ -43,8 +63,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     });
   }
 
+  // void search(String value) {
+  //   setState(() {
+  //     filteredCustomers = customers.where((customer) {
+  //       return customer.name
+  //               .toLowerCase()
+  //               .contains(value.toLowerCase()) ||
+  //           customer.phone.contains(value);
+  //     }).toList();
+  //   });
+  // }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xffF8EEDC),
 
@@ -52,7 +87,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -91,13 +126,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   const SizedBox(height: 18),
 
                   AddNewCustomerCard(
-                    onTap: () {
+                    onTap: () async{
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const AddNewCustomerScreen(),
                         ),
                       );
+                    //   final result = await Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //       builder: (_) => const AddNewCustomerScreen(),
+                    //     ),
+                    //   );
+
+                    //   if (result == true) {
+                    //     loadCustomers();
+                    //   }
                     },
                   ),
 
@@ -119,16 +164,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       itemCount: filtered.length,
                       itemBuilder: (_, index) {
                         return ContactTile(
-                          name: filtered[index]["name"]!,
-                          phone: filtered[index]["phone"]!,
+                          name: filtered[index].values.first,
+                          phone: filtered[index].values.last,
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => CustomerDetailsScreen(
-                                  name: filtered[index]["name"]!,
-                                  phone: filtered[index]["phone"]!,
-                                ),
+                                builder: (_) => CustomerDetailsAdd(customer: customer),
                               ),
                             );
                           },
@@ -140,11 +182,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
             ),
 
-            const Positioned(
+            Positioned(
               right: 6,
-              top: 220,
-              bottom: 0,
-              child: AlphabetIndex(),
+              top: 260,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.62,
+                child: const AlphabetIndex(),
+              ),
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
 
@@ -13,6 +14,7 @@ class ChopdiOnboardingScreen extends StatefulWidget {
 class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   // Controller for the phone number text field
   final TextEditingController _phoneController = TextEditingController();
+  String? errorText;
 
   @override
   void dispose() {
@@ -21,250 +23,352 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    _phoneController.addListener(() {
+      if (errorText != null) {
+        setState(() {
+          errorText = null;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ChopdiColors.navy,
+       resizeToAvoidBottomInset: false,
       body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height,
-              child: Column(
-                children: [
-                  SizedBox(height: 8),
-                  // ---------- TOP SECTION (logo + book image + heading) ----------
-                  Padding(
-                    padding: EdgeInsetsGeometry.only(left: 24, right: 24, top:10),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          top: -18,
-                          right: -48,
-                          child: Image.asset(
-                            'assets/book.png',
-                            width: 190,
-                            fit: BoxFit.contain,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14,vertical: 18),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                //  height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
+                child: Column(
+                  children: [
+                    SizedBox(height: 8),
+                    Padding(
+                      padding: EdgeInsetsGeometry.only(left: 24, right: 24, top:10),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            top: -18,
+                            right: -48,
+                            child: Image.asset(
+                              'assets/book.png',
+                              width: 180,
+                              fit: BoxFit.contain,
+                            ),
                           ),
-                        ),
+                
+                          // Logo + heading + subtitle, in front of the book image
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Logo row: app icon (from assets) + "Chopdi" wordmark
+                              const _ChopdiLogo(),
               
-                        // Logo + heading + subtitle, in front of the book image
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Logo row: app icon (from assets) + "Chopdi" wordmark
-                            const _ChopdiLogo(),
-            
-                            // const SizedBox(height: 2),
-            
-                            const Text(
-                              'Chopdi',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-            
-                            const SizedBox(height: 24),
+                              // const SizedBox(height: 2),
               
-                            // Main heading, split into two lines with two colors
-                            RichText(
-                              text: const TextSpan(
-                                style: TextStyle(
-                                  fontSize: 21,
-                                  height: 1.25,
+                              Text(
+                                'Chopdi',
+                                style: GoogleFonts.manrope(
+                                  color: ChopdiColors.cream,
+                                  fontSize: 36,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white,
                                 ),
-                                children: [
-                                  TextSpan(text: 'Your lending records,\n'),
-                                  TextSpan(
-                                    text: 'digitally organized.',
-                                    style: TextStyle(color: ChopdiColors.lightBlue),
-                                  ),
-                                ],
                               ),
-                            ),
-                            const SizedBox(height: 12),
               
-                            // Subtitle
-                            Text(
-                              'Track loans, interest and payments\nwith clarity and confidence.',
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 1.35,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white.withValues(alpha: 0.85),
-                                // height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-            
-                  SizedBox(height: 100),
-
-                  Container(
-                        width: 380,
-                        height: 390,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            
-                            Expanded(
-                              child: Container(
-                                width: double.infinity,
-                                color: const Color(0xFFF4F4F4),
-                                padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(height: 52),
+                
+                              RichText(
+                                text: TextSpan(
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 28,
+                                    height: 1.25,
+                                    fontWeight: FontWeight.w700,
+                                    color: ChopdiColors.cream,
+                                  ),
                                   children: [
-                                    Row(
+                                    TextSpan(text: 'Your lending records,\n'),
+                                    TextSpan(
+                                      text: 'digitally organized.',
+                                      style: GoogleFonts.manrope(color: Color(0xFF83A2CE),fontSize: 28),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                
+                              // Subtitle
+                              Text(
+                                'Track loans, interest and payments\nwith clarity and confidence.',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 16,
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w400,
+                                  color: ChopdiColors.cream,
+                                  // height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+              
+                    SizedBox(height: 40),
+            
+                    Expanded(
+                      child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              children: [
+                                
+                                Expanded(
+                                  child: Container(
+                                    width: double.infinity,
+                                    color: const Color(0xFFF4F4F4),
+                                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                                    child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: const BoxDecoration(
-                                            color: ChopdiColors.mediumBlue,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.phone_android_rounded,
-                                            color: ChopdiColors.navy,
-                                            size: 26,
-                                          ),
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              width: 56,
+                                              height: 56,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFFAAB9CF),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Image.asset('assets/mobile.png')
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Let's get started",
+                                                    style: GoogleFonts.manrope(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: ChopdiColors.navy,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    "Enter your mobile number to\ncontinue to Chopdi",
+                                                    style: GoogleFonts.manrope(
+                                                      fontSize: 14,
+                                                      height: 1.4,
+                                                      color: ChopdiColors.navy,
+                                                      fontWeight: FontWeight.w400,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                "Let's get started",
-                                                style: TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: ChopdiColors.navy,
+                                    
+                                        const SizedBox(height: 24),
+                                    
+                                        _PhoneInputField(controller: _phoneController, errorText: errorText),
+                                    
+                                        const SizedBox(height: 22),
+                                    
+                                        _ContinueButton(
+                                          onPressed: () {
+                                            // if (_phoneController.text == AuthService.validPhone) {
+                                  
+                                            //   Navigator.push(
+                                            //     context,
+                                            //     MaterialPageRoute(
+                                            //       builder: (_) => OTPScreen(
+                                            //         phoneNumber: _phoneController.text,
+                                            //       ),
+                                            //     ),
+                                            //   );
+                                  
+                                            // } else {
+                                  
+                                            //   ScaffoldMessenger.of(context).showSnackBar(
+                                            //     SnackBar(backgroundColor: Colors.red, content: Text("Invalid Mobile Number",style: GoogleFonts.manrope(fontSize: 14, color: Colors.white,fontWeight: FontWeight.bold),)),
+                                            //   );
+                                  
+                                            // }
+                      
+                                            //  final phone = _phoneController.text.trim();
+                      
+                                            //   // Empty mobile number
+                                            //   if (phone.isEmpty) {
+                                            //     ScaffoldMessenger.of(context).showSnackBar(
+                                            //       SnackBar(
+                                            //         backgroundColor: Colors.red,
+                                            //         content: Text(
+                                            //           "Please enter mobile number",
+                                            //           style: GoogleFonts.manrope(
+                                            //             color: Colors.white,
+                                            //             fontWeight: FontWeight.bold,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     );
+                                            //     return;
+                                            //   }
+                      
+                                            //   // Invalid length
+                                            //   if (phone.length != 10) {
+                                            //     ScaffoldMessenger.of(context).showSnackBar(
+                                            //       SnackBar(
+                                            //         backgroundColor: Colors.red,
+                                            //         content: Text(
+                                            //           "Please enter a valid 10-digit mobile number",
+                                            //           style: GoogleFonts.manrope(
+                                            //             color: Colors.white,
+                                            //             fontWeight: FontWeight.bold,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     );
+                                            //     return;
+                                            //   }
+                      
+                                              // Check hardcoded number
+                                              // if (phone != AuthService.validPhone) {
+                                              //   ScaffoldMessenger.of(context).showSnackBar(
+                                              //     SnackBar(
+                                              //       backgroundColor: Colors.red,
+                                              //       content: Text(
+                                              //         "Invalid Mobile Number",
+                                              //         style: GoogleFonts.manrope(
+                                              //           color: Colors.white,
+                                              //           fontWeight: FontWeight.bold,
+                                              //         ),
+                                              //       ),
+                                              //     ),
+                                              //   );
+                                              //   return;
+                                              // }
+                      
+                                              final phone = _phoneController.text.trim();
+                      
+                                              setState(() {
+                                                if (phone.isEmpty) {
+                                                  errorText = "Please enter your mobile number";
+                                                  return;
+                                                }
+                      
+                                                if (phone.length < 10) {
+                                                  errorText = "Please enter a valid 10-digit mobile number";
+                                                  return;
+                                                }
+                      
+                                                errorText = null;
+                                              });
+                      
+                                              if (phone.isEmpty || phone.length < 10) return;
+                      
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => OTPScreen(
+                                                    phoneNumber: phone,
+                                                  ),
                                                 ),
+                                              );
+                                          },
+                                        ),
+                                    
+                                        const SizedBox(height: 24),
+                                    
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              width: 30,
+                                              height: 30,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFFAAB9CF),
+                                                shape: BoxShape.circle,
                                               ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                "Enter your mobile number to\ncontinue to Chopdi",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  height: 1.4,
-                                                  color: ChopdiColors.navy.withValues(alpha: .65),
-                                                ),
+                                              child: Image.asset('assets/secured_logo.png',height: 20,width:20)
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              "Your data is secure with us",
+                                              style: GoogleFonts.manrope(
+                                                color: ChopdiColors.navy.withValues(alpha: .7),
+                                                fontWeight: FontWeight.w300
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-            
-                                    const SizedBox(height: 24),
-            
-                                    _PhoneInputField(controller: _phoneController),
-            
-                                    const SizedBox(height: 22),
-            
-                                    _ContinueButton(
-                                      onPressed: () {
-                                        debugPrint(
-                                          "Continue: ${_phoneController.text}",
-                                        );
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const OTPScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-            
-                                    const SizedBox(height: 24),
-            
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          width: 22,
-                                          height: 22,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xffD7E3F5),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.verified_user_outlined,
-                                            size: 14,
-                                            color: ChopdiColors.navy,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          "Your data is secure with us",
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: ChopdiColors.navy.withValues(alpha: .7),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-            
-                            Container(
-                              width: double.infinity,
-                              color: const Color(0xFFB7C6E0),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 18,
-                                horizontal: 20,
-                              ),
-                              child: RichText(
-                                textAlign: TextAlign.center,
-                                text: const TextSpan(
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF33496F),
-                                    height: 1.5,
                                   ),
-                                  children: [
-                                    TextSpan(
-                                      text: "By continuing, you agree to our\n",
-                                    ),
-                                    TextSpan(
-                                      text: "Terms of Service",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    TextSpan(text: " and "),
-                                    TextSpan(
-                                      text: "Privacy Policy",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ),
+                                    
+                                Container(
+                                  width: double.infinity,
+                                  color: const Color(0xFFB7C6E0),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 20,
+                                  ),
+                                  child: RichText(
+                                    textAlign: TextAlign.center,
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Color(0xFF33496F),
+                                        height: 1.5,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: "By continuing, you agree to our\n",
+                                          style: GoogleFonts.manrope(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12,
+                                          )
+                                        ),
+                                        TextSpan(
+                                          text: "Terms of Service",
+                                          style: GoogleFonts.manrope(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12
+                                          ),
+                                        ),
+                                        TextSpan(text: " and "),
+                                        TextSpan(
+                                          text: "Privacy Policy",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                ],
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
       ),
     );
   }
@@ -289,71 +393,171 @@ class _ChopdiLogo extends StatelessWidget {
   }
 }
 
+// class _PhoneInputField extends StatelessWidget {
+//   final TextEditingController controller;
+//   final String? errorText;
+
+//   const _PhoneInputField({required this.controller, this.errorText});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(10),
+//         border: Border.all(color: ChopdiColors.navy.withValues(alpha: 0.15)),
+//       ),
+//       child: Row(
+//         children: [
+          
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+//             child: Row(
+//               children: [
+//                 Text(
+//                   '+91',
+//                   style: TextStyle(
+//                     fontSize: 15,
+//                     fontWeight: FontWeight.w600,
+//                     color: ChopdiColors.navy,
+//                   ),
+//                 ),
+//                 const SizedBox(width: 4),
+//                 Icon(
+//                   Icons.keyboard_arrow_down,
+//                   size: 18,
+//                   color: ChopdiColors.navy.withValues(alpha: 0.7),
+//                 ),
+//               ],
+//             ),
+//           ),
+          
+//           Container(
+//             width: 1,
+//             height: 24,
+//             color: ChopdiColors.navy.withValues(alpha: 0.15),
+//           ),
+          
+//           Expanded(
+//             child: SizedBox(
+//               height: 58,
+//               child: TextField(
+//                 controller: controller,
+//                 keyboardType: TextInputType.phone,
+//                 maxLength: 10,
+//                 style: const TextStyle(fontSize: 15),
+//                 decoration: InputDecoration(
+//                   counterText: '', // hides the default character counter
+//                   hintText: '98765 23564',
+//                   hintStyle: TextStyle(color: Colors.grey),
+//                   border: InputBorder.none,
+//                   contentPadding:
+//                       EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+//                 ),
+//               ),
+//             ),
+//           ),
+//           if (errorText != null) ...[
+//           const SizedBox(height: 6),
+//           Padding(
+//             padding: const EdgeInsets.only(left: 12),
+//             child: Text(
+//               errorText!,
+//               style: const TextStyle(
+//                 color: Colors.red,
+//                 fontSize: 12,
+//               ),
+//             ),
+//           ),
+//         ],
+//         ],
+//       ),
+//     );
+//   }
+// }
+
 class _PhoneInputField extends StatelessWidget {
   final TextEditingController controller;
+  final String? errorText;
 
-  const _PhoneInputField({required this.controller});
+  const _PhoneInputField({
+    required this.controller,
+    this.errorText,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: ChopdiColors.navy.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            child: Row(
-              children: [
-                Text(
-                  '+91',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: ChopdiColors.navy,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 18,
-                  color: ChopdiColors.navy.withValues(alpha: 0.7),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: errorText != null
+                  ? Colors.red
+                  : ChopdiColors.navy.withValues(alpha: .15),
             ),
           ),
-          
-          Container(
-            width: 1,
-            height: 24,
-            color: ChopdiColors.navy.withValues(alpha: 0.15),
-          ),
-          
-          Expanded(
-            child: SizedBox(
-              height: 58,
-              child: TextField(
-                controller: controller,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                style: const TextStyle(fontSize: 15),
-                decoration: const InputDecoration(
-                  counterText: '', // hides the default character counter
-                  hintText: '98765 23564',
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              // +91 section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                child: Row(
+                  children: [
+                    Text(
+                      '+91',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: ChopdiColors.navy,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 18,
+                      color: ChopdiColors.navy.withValues(alpha: .7),
+                    ),
+                  ],
                 ),
+              ),
+
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  maxLength: 10,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    counterText: '',
+                    hintText: '98765 23564',
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        if (errorText != null) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              errorText!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 12,
               ),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 }

@@ -1,17 +1,24 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/widgets/summary_tile.dart';
 
 class CustomerOptionsBottomSheet extends StatelessWidget {
   const CustomerOptionsBottomSheet({
     super.key,
     required this.onEdit,
-    required this.onWhatsapp,
+    required this.onSummary,
     required this.onExport,
     required this.onDelete,
   });
 
   final VoidCallback onEdit;
-  final VoidCallback onWhatsapp;
+  final VoidCallback onSummary;
   final VoidCallback onExport;
   final VoidCallback onDelete;
 
@@ -35,13 +42,13 @@ class CustomerOptionsBottomSheet extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 "Customer Options",
-                style: TextStyle(
+                style: GoogleFonts.manrope(
                   fontSize: 13,
-                  color: Color(0xff5F6B7A),
+                  color: Color.fromRGBO(34, 58, 94, 0.62),
                 ),
               ),
             ),
@@ -58,10 +65,10 @@ class CustomerOptionsBottomSheet extends StatelessWidget {
             const SizedBox(height: 10),
 
             _OptionTile(
-              image: 'assets/whatsapp_logo.png',
-              title: "WhatsApp Customer",
-              subtitle: "Chat with customer",
-              onTap: onWhatsapp,
+              image: 'assets/summary.png',
+              title: "Account Summary",
+              subtitle: "Overview and summary",
+              onTap: onSummary,
             ),
 
             const SizedBox(height: 10),
@@ -87,11 +94,11 @@ class CustomerOptionsBottomSheet extends StatelessWidget {
 
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 "Cancel",
-                style: TextStyle(
-                  color: Color(0xff243B63),
-                  fontWeight: FontWeight.w600,
+                style: GoogleFonts.manrope(
+                  color: ChopdiColors.navy,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             )
@@ -108,7 +115,7 @@ class _OptionTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.titleColor = const Color(0xff243B63),
+    this.titleColor = ChopdiColors.navy,
   });
 
   final String image;
@@ -129,7 +136,7 @@ class _OptionTile extends StatelessWidget {
           color: Color.fromRGBO(255, 248, 240, 1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xffD6DEE8),
+            color: Color.fromRGBO(170, 185, 207, 1),
           ),
         ),
         child: Row(
@@ -162,7 +169,7 @@ class _OptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: titleColor,
@@ -171,9 +178,9 @@ class _OptionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 12,
-                      color: Colors.black54,
+                      color: Color.fromRGBO(34, 58, 94, 0.86),
                     ),
                   ),
                 ],
@@ -194,7 +201,10 @@ class _OptionTile extends StatelessWidget {
 
 
 class EditCustomerBottomSheet extends StatefulWidget {
-  const EditCustomerBottomSheet({super.key});
+
+  final Customer customer;
+  final VoidCallback onSaved;
+  const EditCustomerBottomSheet({super.key, required this.customer, required this.onSaved});
 
   @override
   State<EditCustomerBottomSheet> createState() =>
@@ -202,21 +212,26 @@ class EditCustomerBottomSheet extends StatefulWidget {
 }
 
 class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
-  final TextEditingController nameController = TextEditingController(text: "Rahul");
-  final TextEditingController phoneController = TextEditingController(text: "+91 9867545673");
-  final TextEditingController amountController = TextEditingController(text: "15000");
-  final TextEditingController interestController = TextEditingController(text: "12");
+  late TextEditingController nameController = TextEditingController();
+  late TextEditingController phoneController = TextEditingController();
 
-  String interestType = "Simple Interest";
-  String loanDuration = "12 Months";
-  String interestFrequency = "Monthly";
+  @override
+  void initState() {
+    super.initState();
+
+    nameController = TextEditingController(
+      text: widget.customer.name,
+    );
+
+    phoneController = TextEditingController(
+      text: widget.customer.phone,
+    );
+  }
 
   @override
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
-    amountController.dispose();
-    interestController.dispose();
     super.dispose();
   }
 
@@ -242,27 +257,20 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: .90,
-      maxChildSize: .95,
-      minChildSize: .70,
-      builder: (context, controller) {
-        return Container(
+    return SafeArea(
+        child :Container(
           decoration: const BoxDecoration(
             color: Color.fromRGBO(255, 248, 240, 1),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(30),
             ),
           ),
+          padding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
-            controller: controller,
-            padding: const EdgeInsets.all(20),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                /// drag handle
                 Center(
                   child: Container(
                     width: 55,
@@ -291,11 +299,23 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 const SizedBox(height: 14),
 
-                const Center(
+                Center(
                   child: Text(
-                    "Edit Customer",
-                    style: TextStyle(
-                      fontSize: 22,
+                    "Edit Customer Details",
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Center(
+                  child: Text(
+                    "Edit name, phone or loan details",
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -303,10 +323,11 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 const SizedBox(height: 28),
 
-                const Text(
-                  "Customer Name",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                Text(
+                  "Name",
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromRGBO(34, 58, 94, 0.62),
                   ),
                 ),
 
@@ -319,10 +340,11 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 const SizedBox(height: 18),
 
-                const Text(
+                Text(
                   "Phone Number",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromRGBO(34, 58, 94, 0.62),
                   ),
                 ),
 
@@ -332,210 +354,6 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: inputDecoration("Phone Number"),
-                ),
-
-                const SizedBox(height: 18),
-
-                Row(
-                  children: [
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-
-                          const Text(
-                            "Loan Amount",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          TextField(
-                            controller: amountController,
-                            keyboardType: TextInputType.number,
-                            decoration:
-                                inputDecoration("Loan Amount"),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-
-                          const Text(
-                            "Interest Rate",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          TextField(
-                            controller: interestController,
-                            keyboardType: TextInputType.number,
-                            decoration:
-                                inputDecoration("12%"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 22),
-
-                                /// Interest Type
-                const Text(
-                  "Interest Type",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(255, 248, 240, 1),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: interestType,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "Simple Interest",
-                          child: Text("Simple Interest"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Compound Interest",
-                          child: Text("Compound Interest"),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          interestType = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                /// Loan Duration
-                const Text(
-                  "Loan Duration",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(255, 248, 240, 1),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: loanDuration,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "3 Months",
-                          child: Text("3 Months"),
-                        ),
-                        DropdownMenuItem(
-                          value: "6 Months",
-                          child: Text("6 Months"),
-                        ),
-                        DropdownMenuItem(
-                          value: "12 Months",
-                          child: Text("12 Months"),
-                        ),
-                        DropdownMenuItem(
-                          value: "24 Months",
-                          child: Text("24 Months"),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          loanDuration = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                /// Interest Frequency
-                const Text(
-                  "Interest Frequency",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(255, 248, 240, 1),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: interestFrequency,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "Daily",
-                          child: Text("Daily"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Weekly",
-                          child: Text("Weekly"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Monthly",
-                          child: Text("Monthly"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Yearly",
-                          child: Text("Yearly"),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          interestFrequency = value!;
-                        });
-                      },
-                    ),
-                  ),
                 ),
 
                 const SizedBox(height: 34),
@@ -578,10 +396,16 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async{
+                          widget.customer
+                              ..name = nameController.text
+                              ..phone = phoneController.text;
 
-                          // TODO:
-                          // Save customer details here
+                            await IsarService.isar.writeTxn(() async {
+                              await IsarService.isar.customers.put(widget.customer);
+                            });
+
+                            widget.onSaved();
 
                           Navigator.pop(context);
                         },
@@ -600,34 +424,220 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
               ],
             ),
           ),
-        );
-      },
+        ),
+    );
+  }
+}
+
+class AccountSummaryBottomSheet extends StatelessWidget {
+
+  final double totalGiven;
+  final double totalOutstanding;
+  final double totalInterest;
+  final Transaction? lastPayment;
+  final Transaction? firstLoan;
+  
+  const AccountSummaryBottomSheet({
+    super.key,
+    required this.totalGiven,
+    required this.totalOutstanding,
+    required this.totalInterest,
+    required this.lastPayment,
+    required this.firstLoan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xffFFF8F0),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(30),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 22,
+          vertical: 18,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+
+            /// Drag Handle
+            Container(
+              width: 55,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            /// Icon
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: const Color(0xffDCE4F2),
+              child: const Icon(
+                Icons.fact_check_outlined,
+                size: 30,
+                color: Color(0xff3564A8),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            Text(
+              "Account Summary",
+              style: GoogleFonts.manrope(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xff223A5E),
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              "Overview of this customer's account",
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                color: const Color(0xff6E7A8A),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            SummaryTile(
+              icon: Icons.account_balance_wallet_outlined,
+              title: "Total Amount Given",
+              value: "₹${totalGiven.toStringAsFixed(0)}",
+              valueColor: const Color(0xff223A5E),
+            ),
+
+            SummaryTile(
+              icon: Icons.location_on_outlined,
+              title: "Current Outstanding",
+              value: "₹${totalOutstanding.toStringAsFixed(0)}",
+              valueColor: Colors.red,
+            ),
+
+            SummaryTile(
+              icon: Icons.percent,
+              title: "Total Interest",
+              value: "₹${totalInterest.toStringAsFixed(0)}",
+              valueColor: Colors.green,
+            ),
+
+            SummaryTile(
+              icon: Icons.calendar_month_outlined,
+              title: "Last Payment",
+              value: lastPayment == null
+                ? "-"
+                : DateFormat("dd MMM yyyy").format(lastPayment!.date),
+
+              subtitle: lastPayment == null
+                  ? null
+                  : "(₹${lastPayment!.amount.toStringAsFixed(0)} received)",
+              valueColor: const Color(0xff223A5E),
+            ),
+
+            SummaryTile(
+              icon: Icons.calendar_today_outlined,
+              title: "Loan Given On",
+              value: firstLoan == null
+                ? "-"
+                : DateFormat("dd MMM yyyy").format(firstLoan!.date),
+              valueColor: const Color(0xff223A5E),
+            ),
+
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
     );
   }
 }
 
 
 class ExportPdfBottomSheet extends StatelessWidget {
-  const ExportPdfBottomSheet({super.key});
+
+  double calculateInterest(Transaction tx) {
+    final days = DateTime.now().difference(tx.date).inDays;
+
+    double time;
+
+    if (tx.interestFrequency == "Monthly") {
+      time = days / 30;
+    } else {
+      time = days / 365;
+    }
+
+    if (tx.interestType == "Simple Interest") {
+      return tx.amount * tx.interestRate * time / 100;
+    } else {
+      return tx.amount *
+          (pow(1 + tx.interestRate / 100, time) - 1);
+    }
+  }
+
+  final Customer customer;
+  final List<Transaction> transactions;
+  const ExportPdfBottomSheet({
+    super.key,
+    required this.customer,
+    required this.transactions,
+  });
+
+  Future<void> generatePdf() async {
+
+    final totalGiven = transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+
+    final totalReceived = transactions
+        .where((e) => e.type == TransactionType.received)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+
+    final totalInterest = transactions.fold<double>(
+        0, (sum, e) => sum + calculateInterest(e));
+
+    final outstanding =
+        totalGiven + totalInterest - totalReceived;
+
+    // Use these values in your PDF
+
+    print(customer.name);
+    print(customer.phone);
+    print(totalGiven);
+    print(totalReceived);
+    print(totalInterest);
+    print(outstanding);
+
+    for (final tx in transactions) {
+      print(tx.amount);
+      print(tx.date);
+      print(tx.paymentMode);
+    }
+
+    // Generate pdf...
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: .86,
-      maxChildSize: .90,
-      minChildSize: .70,
-      builder: (context, controller) {
-        return Container(
+    return SafeArea(
+      child : Container(
           decoration: BoxDecoration(
             color: Color.fromRGBO(255, 248, 240, 1),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(30),
             ),
           ),
+          padding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
-            controller: controller,
-            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
 
@@ -645,34 +655,101 @@ class ExportPdfBottomSheet extends StatelessWidget {
 
                 /// icon
                 CircleAvatar(
-                  radius: 34,
+                  radius: 24,
                   backgroundColor: const Color.fromRGBO(170, 185, 207, 0.6),
-                  child: Image.asset('assets/export_pdf.png',height: 100, width: 100),
+                  child: Image.asset('assets/export_pdf.png',height: 150, width: 150),
                 ),
 
                 const SizedBox(height: 14),
 
-                const Text(
+                Text(
                   "Export PDF",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xff29416A),
+                  style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ChopdiColors.navy,
                   ),
                 ),
 
                 const SizedBox(height: 4),
 
-                const Text(
-                  "Download ledger as PDF",
-                  style: TextStyle(
-                    color: Colors.grey,
+                Text(
+                  "Download this customer's chopdi as PDF",
+                  style: GoogleFonts.manrope(
+                    color: ChopdiColors.navy,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700
                   ),
                 ),
 
                 const SizedBox(height: 25),
 
-                _ledgerPreview(),
+                // _ledgerPreview(),
+
+                Center(
+                  child: Row(
+                    children: [
+                      SizedBox(width: 95),
+                      SizedBox(
+                        height: 60,
+                        width: 60,
+                        child: Image.asset("assets/app_logo.png")
+                      ),
+
+                      // const SizedBox(width: 5),
+
+                      Text(
+                        "Chopdi",
+                        style: GoogleFonts.manrope(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: ChopdiColors.navy
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(253, 237, 217, 1),
+                    border: Border.all(
+                      color: Color.fromRGBO(177, 95, 39, 0.23),
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Image.asset("assets/download_warning.png"),
+
+                      const SizedBox(width: 14),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+
+                            Text(
+                              "This will export all transactions and details of this\ncustomer’s chopdi.",
+                              style: GoogleFonts.manrope(
+                                color: Color.fromRGBO(34, 58, 94, 1),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 28),
 
@@ -697,6 +774,7 @@ class ExportPdfBottomSheet extends StatelessWidget {
                     onPressed: () {
 
                       /// generate pdf here
+                      generatePdf();
 
                     },
                   ),
@@ -706,121 +784,120 @@ class ExportPdfBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-        );
-      },
+        ),
     );
   }
 
-  Widget _ledgerPreview() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(255, 248, 240, 1),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color.fromRGBO(170, 185, 207, 1)),
-      ),
-      child: Column(
-        children: [
+  // Widget _ledgerPreview() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(18),
+  //     decoration: BoxDecoration(
+  //       color: Color.fromRGBO(255, 248, 240, 1),
+  //       borderRadius: BorderRadius.circular(18),
+  //       border: Border.all(color: Color.fromRGBO(170, 185, 207, 1)),
+  //     ),
+  //     child: Column(
+  //       children: [
 
-          Row(
-            children: [
+  //         Row(
+  //           children: [
 
-              Image.asset('assets/app_logo.png',height: 50,width: 50),
+  //             Image.asset('assets/app_logo.png',height: 50,width: 50),
 
-              SizedBox(width: 10),
+  //             SizedBox(width: 10),
 
-              Text(
-                "Chopdi",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+  //             Text(
+  //               "Chopdi",
+  //               style: TextStyle(
+  //                 fontSize: 28,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
 
-              Spacer(),
+  //             Spacer(),
 
-              Text(
-                "Ledger Summary",
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            ],
-          ),
+  //             Text(
+  //               "Ledger Summary",
+  //               style: TextStyle(
+  //                 fontWeight: FontWeight.w600,
+  //               ),
+  //             )
+  //           ],
+  //         ),
 
-          const SizedBox(height: 18),
+  //         const SizedBox(height: 18),
 
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Customer Details",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+  //         const Align(
+  //           alignment: Alignment.centerLeft,
+  //           child: Text(
+  //             "Customer Details",
+  //             style: TextStyle(
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //           ),
+  //         ),
 
-          const SizedBox(height: 8),
+  //         const SizedBox(height: 8),
 
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Rahul",
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+  //         const Align(
+  //           alignment: Alignment.centerLeft,
+  //           child: Text(
+  //             "Rahul",
+  //             style: TextStyle(
+  //               fontSize: 26,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //         ),
 
-          const SizedBox(height: 5),
+  //         const SizedBox(height: 5),
 
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "+91 98675 45673",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
+  //         const Align(
+  //           alignment: Alignment.centerLeft,
+  //           child: Text(
+  //             "+91 98675 45673",
+  //             style: TextStyle(color: Colors.grey),
+  //           ),
+  //         ),
 
-          const SizedBox(height: 20),
+  //         const SizedBox(height: 20),
 
-          _row("Loan Amount", "₹15,000"),
+  //         _row("Loan Amount", "₹15,000"),
 
-          _row("Interest Rate", "12%"),
+  //         _row("Interest Rate", "12%"),
 
-          _row("Total Received", "₹3000",
-              valueColor: Colors.green),
+  //         _row("Total Received", "₹3000",
+  //             valueColor: Colors.green),
 
-          _row("Outstanding", "₹12,150",
-              valueColor: Colors.red),
+  //         _row("Outstanding", "₹12,150",
+  //             valueColor: Colors.red),
 
-          const SizedBox(height: 28),
+  //         const SizedBox(height: 28),
 
-          const Divider(),
+  //         const Divider(),
 
-          const SizedBox(height: 15),
+  //         const SizedBox(height: 15),
 
-          const Text(
-            "Generated on 27 July 2026",
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-            ),
-          ),
+  //         const Text(
+  //           "Generated on 27 July 2026",
+  //           style: TextStyle(
+  //             fontSize: 11,
+  //             color: Colors.grey,
+  //           ),
+  //         ),
 
-          const SizedBox(height: 6),
+  //         const SizedBox(height: 6),
 
-          const Text(
-            "Thank You for using Chopdi",
-            style: TextStyle(
-              color: Color(0xff29416A),
-            ),
-          )
-        ],
-      ),
-    );
-  }
+  //         const Text(
+  //           "Thank You for using Chopdi",
+  //           style: TextStyle(
+  //             color: Color(0xff29416A),
+  //           ),
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _row(
     String title,
@@ -868,22 +945,16 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: .78,
-      maxChildSize: .85,
-      minChildSize: .65,
-      builder: (context, controller) {
-        return Container(
+    return SafeArea(
+        child :Container(
           decoration: const BoxDecoration(
             color: Color.fromRGBO(255, 248, 240, 1),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(30),
             ),
           ),
+          padding: const EdgeInsets.all(22),
           child: SingleChildScrollView(
-            controller: controller,
-            padding: const EdgeInsets.all(22),
             child: Column(
               children: [
 
@@ -914,20 +985,21 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
 
                 Text(
                   "Delete ${widget.customerName}?",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xff2F477A),
+                  style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ChopdiColors.navy,
                   ),
                 ),
 
                 const SizedBox(height: 6),
 
-                const Text(
+                Text(
                   "This action cannot be undone",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                  style: GoogleFonts.manrope(
+                    color: ChopdiColors.navy,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
 
@@ -938,9 +1010,9 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Color.fromRGBO(255, 248, 240, 1),
                     border: Border.all(
-                      color: const Color(0xffF26C63),
+                      color: const Color(0xFFC74C4C),
                     ),
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -965,9 +1037,9 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
                               CrossAxisAlignment.start,
                           children: [
 
-                            const Text(
+                            Text(
                               "All customer data will be permanently deleted including:",
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Color(0xffE4554B),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -975,36 +1047,36 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
 
                             const SizedBox(height: 10),
 
-                            const Text(
+                            Text(
                               "• Customer Details",
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Color(0xffE4554B),
                               ),
                             ),
 
                             const SizedBox(height: 5),
 
-                            const Text(
+                            Text(
                               "• Ledger and Transactions",
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Color(0xffE4554B),
                               ),
                             ),
 
                             const SizedBox(height: 5),
 
-                            const Text(
+                            Text(
                               "• Notes and reminders",
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Color(0xffE4554B),
                               ),
                             ),
 
                             const SizedBox(height: 5),
 
-                            const Text(
+                            Text(
                               "• Loan information",
-                              style: TextStyle(
+                              style: GoogleFonts.manrope(
                                 color: Color(0xffE4554B),
                               ),
                             ),
@@ -1018,31 +1090,44 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
                 const SizedBox(height: 22),
 
                 /// Checkbox
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
-                  child: CheckboxListTile(
-                    value: agreed,
-                    activeColor: Colors.red,
-                    controlAffinity:
-                        ListTileControlAffinity.leading,
-                    title: const Text(
-                      "I understand this action cannot be undone.",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xff2F477A),
+                Material(
+                  color: const Color.fromRGBO(255, 248, 240, 1),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
                       ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        agreed = value!;
-                      });
-                    },
+                    child: CheckboxListTile(
+                      value: agreed,
+                      activeColor: Colors.red,
+                      checkboxShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      title: Text(
+                        "I understand this action cannot be undone.",
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.w700,
+                          color: ChopdiColors.navy,
+                          fontSize: 14
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          agreed = value ?? false;
+                        });
+                      },
+                    ),
                   ),
                 ),
 
@@ -1110,8 +1195,7 @@ class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
               ],
             ),
           ),
-        );
-      },
+        ),
     );
   }
 }

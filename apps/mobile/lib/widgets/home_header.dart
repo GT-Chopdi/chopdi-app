@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/view/notifications_screen.dart';
 import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -59,7 +60,18 @@ class HomeHeader extends StatelessWidget {
         ),
 
         const Spacer(),
-        const Icon(Icons.notifications_none,size:28)
+        // const Icon(Icons.notifications_none,size:28)
+        GestureDetector(
+          child: Image.asset('assets/notifications.png',height: 25,width:25),
+          onTap:() {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NotificationsScreen(),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mychopdi/model/customer_model.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
 
 class CustomerTile extends StatelessWidget {
-  final CustomerModel customer;
+  final Customer customer;
+  final Transaction transaction;
 
   const CustomerTile({
     super.key,
     required this.customer,
+    required this.transaction,
   });
 
   @override
@@ -54,7 +57,7 @@ class CustomerTile extends StatelessWidget {
                 const SizedBox(height: 3),
 
                 Text(
-                  "Loan: ${customer.loan}  •  Interest: ${customer.interest}",
+                  "Loan: ₹${transaction.amount.toStringAsFixed(0)} • Rate: ${transaction.interestRate}%",
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 12,
@@ -69,7 +72,7 @@ class CustomerTile extends StatelessWidget {
             children: [
 
               Text(
-                customer.amount,
+                "₹${transaction.amount.toStringAsFixed(2)}",
                 style: TextStyle(
                   color: customer.received
                       ? Colors.green

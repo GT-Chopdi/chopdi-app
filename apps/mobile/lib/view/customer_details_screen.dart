@@ -1,17 +1,23 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:mychopdi/model/customer_model.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:isar_community/isar.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/widgets/add_entry_bottom_sheet.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
+import 'package:mychopdi/view/home_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
-import 'package:mychopdi/widgets/bottom_nav_bar.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
-import 'package:mychopdi/widgets/overview_widget.dart';
+import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
+import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
 
-  final CustomerModel customer;
+  final Customer customer;
 
   const CustomerDetailsScreen({
     super.key,
@@ -26,10 +32,143 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   int selectedTab = 0;
   int bottomIndex = 1; 
+  List<Transaction> transactions = [];
+  late Customer customer;
+
+  Future<void> loadCustomer() async {
+    final updatedCustomer =
+        await IsarService.isar.customers.get(widget.customer.id);
+
+    if (updatedCustomer != null) {
+      setState(() {
+        customer = updatedCustomer;
+      });
+    }
+  }
+
+  Future<void> loadTransactions() async {
+      transactions = await IsarService.isar.transactions
+          .filter()
+          .customerIdEqualTo(widget.customer.id)
+          .sortByDate()
+          .findAll();
+
+      for (final tx in transactions) {
+        print("----------------");
+        print("Amount: ${tx.amount}");
+        print("Rate: ${tx.interestRate}");
+        print("Type: ${tx.interestType}");
+        print("Frequency: ${tx.interestFrequency}");
+        print("Date: ${tx.date}");
+        print("Calculated Interest: ${calculateInterest(tx)}");
+      }
+
+      setState(() {});
+
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    customer = widget.customer;
+
+    loadCustomer();
+    loadTransactions();
+  }
+
+  double get totalGiven {
+    return transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  double get totalReceived {
+    return transactions
+        .where((e) => e.type == TransactionType.received)
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+
+  double get totalInterest {
+    return transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold(
+          0.0,
+          (sum, tx) =>
+              sum +
+              InterestCalculator.calculate(
+                principal: tx.amount,
+                rate: tx.interestRate,
+                startDate: tx.date,
+                interestType: tx.interestType,
+                frequency: tx.interestFrequency,
+              ),
+        );
+  }
+
+  double get outstanding {
+    return totalGiven + totalInterest - totalReceived;
+  }
+
+  double calculateInterest(Transaction tx) {
+    final days = DateTime.now().difference(tx.date).inDays;
+
+    double time;
+
+    if (tx.interestFrequency == "Monthly") {
+      time = days / 30;
+    } else {
+      time = days / 365;
+    }
+
+    if (tx.interestType == "Simple Interest") {
+      return tx.amount * tx.interestRate * time / 100;
+    } else {
+      return tx.amount *
+              (pow(1 + tx.interestRate / 100, time) - 1);
+    }
+  }
+  
+  Transaction? get lastReceivedTransaction {
+    final received = transactions
+        .where((e) => e.type == TransactionType.received)
+        .toList();
+
+    if (received.isEmpty) return null;
+
+    received.sort((a, b) => b.date.compareTo(a.date));
+
+    return received.first;
+  }
+
+  Transaction? get firstLoanTransaction {
+    final gave = transactions
+        .where((e) => e.type == TransactionType.gave)
+        .toList();
+
+    if (gave.isEmpty) return null;
+
+    gave.sort((a, b) => a.date.compareTo(b.date));
+
+    return gave.first;
+  }
+
+  int get loanDays {
+    if (firstLoanTransaction == null) return 0;
+
+    return DateTime.now()
+        .difference(firstLoanTransaction!.date)
+        .inDays;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final customer = widget.customer;
+    final size = MediaQuery.of(context).size;
+
+    final width = size.width;
+    final height = size.height;
+
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
 
@@ -59,18 +198,103 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ),
       ),
 
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          color: AppColors.background,
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.82, // Change this value
+                          child: MoneyGaveBottomSheet(
+                            customer:widget.customer,
+                            onSaved:loadTransactions,
+                            isEdit:false,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFC74C4C),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "You Gave ₹",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.82, // Change this value
+                          child: MoneyReceiveBottomSheet(
+                            customer: widget.customer,
+                            onSaved: loadTransactions,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF00901B),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "You Got ₹",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Row(
               children: [
-
                 CircleAvatar(
-                  radius: 26,
+                  radius: 30,
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
                     customer.name[0],
@@ -84,8 +308,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                 const SizedBox(width: 14),
 
-                Expanded(
-                  child: Column(
+                Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
@@ -99,7 +322,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 1),
 
                       Row(
                         children: [
@@ -109,25 +332,26 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                               color: Colors.black54,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          // const Icon(
-                          //   Icons.call_outlined,
-                          //   size: 18,
-                          //   color: ChopdiColors.navy,
-                          // )
+                          const SizedBox(width: 4),      
                         ],
                       ),
                     ],
                   ),
-                ),
+
+                  const Spacer(),
+
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
+                    child: Image.asset('assets/call_logo.png')
+                  ),
               ],
             ),
 
             const SizedBox(height: 22),
 
-            /// SUMMARY CARD
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
 
               decoration: BoxDecoration(
                 color: Color.fromRGBO(255, 248, 240, 1),
@@ -135,7 +359,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     BorderRadius.circular(16),
 
                 border: Border.all(
-                  color: Colors.grey.shade300,
+                  color: Color(0xFFAAB9CF),
                 ),
               ),
 
@@ -144,9 +368,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   Expanded(
                     child: _infoItem(
-                      Icons.account_balance_wallet_outlined,
-                      "Loan Amount",
-                      "₹15,000",
+                      'assets/total_given.png',
+                      "Total Given",
+                      "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
                   ),
@@ -159,10 +383,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   Expanded(
                     child: _infoItem(
-                      Icons.percent,
-                      "Interest Rate",
-                      "12%",
-                      ChopdiColors.navy,
+                      'assets/total_interest.png',
+                      "Total Interest",
+                      "₹${totalInterest.toStringAsFixed(0)}",
+                      Color(0xFF00901B),
                     ),
                   ),
 
@@ -174,25 +398,25 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   Expanded(
                     child: _infoItem(
-                      Icons.check_circle_outline,
-                      "Total Received",
-                      "₹3,000",
-                      Colors.green,
-                    ),
-                  ),
-
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
-
-                  Expanded(
-                    child: _infoItem(
-                      Icons.warning_amber_rounded,
+                      'assets/outstanding.png',
                       "Outstanding",
-                      "₹12,150",
-                      Colors.red,
+                      "₹${outstanding.toStringAsFixed(0)}",
+                      Color(0xFFC74C4C),
+                    ),
+                  ),
+
+                  Container(
+                    width: 1,
+                    height: 55,
+                    color: Colors.grey.shade300,
+                  ),
+
+                  Expanded(
+                    child: _infoItem(
+                      'assets/uil_calender.png',
+                      "Since",
+                      "$loanDays Days",
+                      ChopdiColors.navy,
                     ),
                   ),
                 ],
@@ -200,314 +424,67 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             ),
 
             const SizedBox(height: 20),
-
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: ChopdiColors.cream,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xffFFB5A5),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-
-                  /// Header
-                  Row(
-                    children: [
-
-                      Image.asset(
-                        "assets/note_logo.png",
-                        width: 22,
-                        height: 22,
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      const Text(
-                        "Important Note",
-                        style: TextStyle(
-                          color: Color(0xffF25B42),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      const Text(
-                        "24 July 2026",
-                        style: TextStyle(
-                          color: Color(0xffA8A8A8),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-
-                      const Expanded(
-                        child: Text(
-                          "Customer requested payment\nextension until 30 July 2026",
-                          maxLines: 2,
-                          style: TextStyle(
-                            fontSize: 11,
-                            height: 1.25,
-                            color: Color(0xff2D2D2D),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-
-                      InkWell(
-                        onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) => const AllNotesScreen(),
-                          //   ),
-                          // );
-                          showAllNotesBottomSheet(context);
-                        },
-                        child: const Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            "View all notes >",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff5A4AA6),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            selectedTab = 0;
-                          });
-                        },
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.compare_arrows,
-                                  size: 16,
-                                  color: selectedTab == 0
-                                      ? ChopdiColors.navy
-                                      : Colors.grey,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Transactions",
-                                  style: TextStyle(
-                                    color: selectedTab == 0
-                                        ? ChopdiColors.navy
-                                        : Colors.grey,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              width: 120, 
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: selectedTab == 0
-                                    ? ChopdiColors.navy
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            selectedTab = 1;
-                          });
-                        },
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.list_alt,
-                                  size: 16,
-                                  color: selectedTab == 1
-                                      ? ChopdiColors.navy
-                                      : Colors.grey,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "Overview",
-                                  style: TextStyle(
-                                    color: selectedTab == 1
-                                        ? ChopdiColors.navy
-                                        : Colors.grey,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              width: 100,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: selectedTab == 1
-                                    ? ChopdiColors.navy
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Colors.grey.shade300,
-                ),
-              ],
-            ),
 
             const SizedBox(height: 12),
 
-            // const TransactionTable(),
-            selectedTab == 0
-              ? const TransactionTable()
-              : const OverviewWidget(),
-
-            const SizedBox(height: 120),
+            TransactionTable(transactions:transactions, onChanged: loadTransactions,),
           ],
         ),
       ),
-
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: ChopdiColors.navy,
-        foregroundColor: ChopdiColors.cream,
-        onPressed: () {
-          showAddEntryBottomSheet(context);
-        },
-        icon: const Icon(Icons.add),
-        label: Text("Add Entry",
-          style: TextStyle(
-            color: ChopdiColors.cream,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-
-      bottomNavigationBar: BottomNavbar(
-        currentIndex: bottomIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const MainScreen(),
-                ),
-              );
-              break;
-
-            case 1:
-              Navigator.pop(context);
-              break;
-
-            case 2:
-              // Open My Chopdi page
-              break;
-          }
-        },
-      ),
     );
   }
-  
+
   Widget _infoItem(
-      IconData icon,
-      String title,
-      String value,
-      Color valueColor) {
-    return Column(
-      children: [
-
-        CircleAvatar(
-          radius: 16,
-          backgroundColor:
-              const Color(0xffFFF1E8),
-          child: Icon(
-            icon,
-            size: 16,
-            color: Colors.orange,
+    String imagePath,
+    String title,
+    String value,
+    Color valueColor,
+  ) {
+    return SizedBox(
+      height: 90,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: const Color(0xFFFFD7BE),
+            child: Image.asset(
+              imagePath,
+              width: 18,
+              height: 18,
+              fit: BoxFit.contain,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 6),
-
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.grey,
+          SizedBox(
+            height: 30,
+            child: Center(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.manrope(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: ChopdiColors.navy,
+                  height: 1.2,
+                ),
+              ),
+            ),
           ),
-        ),
 
-        const SizedBox(height: 4),
-
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-            fontSize: 14,
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -532,9 +509,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             });
           },
 
-          onWhatsapp: () {
-            Navigator.pop(context);
-            // Open WhatsApp
+          onSummary: () {
+            Navigator.pop(context); // Close first bottom sheet
+
+            Future.delayed(const Duration(milliseconds: 200), () {
+              return showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => AccountSummaryBottomSheet(
+                  totalGiven: totalGiven,
+                  totalOutstanding: outstanding,
+                  totalInterest: totalInterest,
+                  lastPayment: lastReceivedTransaction,
+                  firstLoan: firstLoanTransaction,
+                ),
+              );
+            });
           },
 
           onExport: () {
@@ -568,7 +559,14 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ),
       ),
       builder: (_) {
-        return const EditCustomerBottomSheet();
+        return EditCustomerBottomSheet(
+          customer: widget.customer,
+          onSaved: () async {
+            await loadCustomer();
+            await loadTransactions();
+            setState(() {});
+          },
+        );
       },
     );
   }
@@ -578,7 +576,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const ExportPdfBottomSheet(),
+      builder: (_) => ExportPdfBottomSheet(
+        customer: customer,
+        transactions: transactions,
+      ),
     );
   }
 
@@ -589,12 +590,34 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return DeleteCustomerBottomSheet(
-          customerName: "Rahul",
-          onDelete: () {
+          customerName: widget.customer.name,
+          onDelete: () async{
 
-            Navigator.pop(context);
+            // Navigator.pop(context);
 
             // Delete customer from database
+            await IsarService.isar.writeTxn(() async {
+
+              await IsarService.isar.transactions
+                  .filter()
+                  .customerIdEqualTo(widget.customer.id)
+                  .deleteAll();
+
+              await IsarService.isar.customers.delete(
+                  widget.customer.id);
+
+            });
+
+            if (mounted) {
+              // Navigator.pop(context); // Close delete sheet
+              // Navigator.pop(context); // Back to home
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (_) => const MainScreen(),
+                ),
+                (route) => false,
+              );
+            }
 
           },
         );
@@ -610,15 +633,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       builder: (_) {
         return const AllNotesBottomSheet();
       },
-    );
-  }
-
-  void showAddEntryBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddEntryBottomSheet(),
     );
   }
 }

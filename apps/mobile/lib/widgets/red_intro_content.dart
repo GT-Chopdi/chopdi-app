@@ -11,17 +11,18 @@ class RedIntroContent extends StatelessWidget {
       children: [
         Image.asset(
           'assets/frame_overlay.png',
-          fit: BoxFit.fill,
+          fit: BoxFit.cover,
         ),
         Center(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 70),
             child: Text(
               'Chopdi',
-              style: GoogleFonts.greatVibes(
+              style: GoogleFonts.styleScript(
                 fontSize: 96,
                 color: Color(0XFF223A5E),
                 height: 1,
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
@@ -34,28 +35,28 @@ class RedIntroContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/badge_seal.png',
-                width: 54,
-                height: 54,
+                'assets/secure.png',
+                width: 108,
+                height: 114,
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'SECURE . SIMPLE',
-                style: TextStyle(
-                  color: Color(0xFFFFF8F0),
-                  fontSize: 12,
+                style: GoogleFonts.manrope(
+                  color: Color(0xFFFDEDD9),
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 2.2,
+                  letterSpacing: 0.0,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'YOUR LEDGER, ALWAYS SAFE',
-                style: TextStyle(
-                  color: const Color(0xFFFFF8F0).withValues(alpha: 0.85),
-                  fontSize: 10,
+                style: GoogleFonts.manrope(
+                  color: const Color(0xFFFDEDD9),
+                  fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 1.6,
+                  letterSpacing: 0.0,
                 ),
               ),
             ],
