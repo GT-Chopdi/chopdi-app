@@ -526,8 +526,8 @@ class AddCustomerScreen extends StatefulWidget {
 }
 
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
-  final TextEditingController searchController =
-      TextEditingController();
+  final TextEditingController searchController = TextEditingController();
+  final ScrollController _contactsScrollController = ScrollController();
 
   List<Contact> contacts = [];
   List<Contact> filteredContacts = [];
@@ -629,41 +629,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     }
   }
 
-  // ------------------------------------------------------------
   // SEARCH CONTACTS
-  // ------------------------------------------------------------
-
-  // void search(String value) {
-  //   final query = value.trim().toLowerCase();
-
-  //   setState(() {
-  //     if (query.isEmpty) {
-  //       filteredContacts = contacts;
-  //       return;
-  //     }
-
-  //     // filteredContacts = contacts.where((contact) {
-  //     //   final name = contact.displayName.toLowerCase();
-
-  //     //   final phone = contact.phones.isNotEmpty
-  //     //       ? contact.phones.first.number.toLowerCase()
-  //     //       : '';
-
-  //     //   return name.contains(query) ||
-  //     //       phone.contains(query);
-  //     // }).toList();
-  //     filteredContacts = contacts.where((contact) {
-  //       final name = (contact.displayName ?? '').toLowerCase();
-
-  //       final phone = contact.phones.isNotEmpty
-  //           ? contact.phones.first.number.toLowerCase()
-  //           : '';
-
-  //       return name.contains(query) ||
-  //           phone.contains(query);
-  //     }).toList();
-  //   });
-  // }
 
   void search(String value) {
     final query = value.trim().toLowerCase();
@@ -688,36 +654,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     });
   }
 
-  // ------------------------------------------------------------
   // SELECT CONTACT
-  // ------------------------------------------------------------
-
-  // void selectContact(Contact contact) {
-  //   if (contact.phones.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text(
-  //           'This contact does not have a phone number',
-  //         ),
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   final phoneNumber =
-  //       contact.phones.first.number;
-
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) => CustomerDetailsAdd(
-  //         contactName: contact.displayName ?? 'Unknown',
-  //         contactPhone: phoneNumber,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   String normalizePhoneNumber(String phone) {
     String cleaned =
@@ -732,59 +669,104 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   }
 
   Future<void> selectContact(Contact contact) async {
-  if (contact.phones.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'This contact does not have a phone number',
+    if (contact.phones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This contact does not have a phone number',
+          ),
         ),
-      ),
-    );
-    return;
-  }
+      );
 
-  final phoneNumber = normalizePhoneNumber(
-    contact.phones.first.number,
-  );
+      return;
+    }
 
-  final contactName =
-      contact.displayName ?? 'Unknown';
+    final phoneNumber =
+        normalizePhoneNumber(contact.phones.first.number);
 
-  // Check whether customer already exists
-  final existingCustomer =
-      await IsarService.getCustomerByPhone(phoneNumber);
+    final contactName =
+        contact.displayName ?? 'Unknown';
 
-  if (!mounted) return;
+    // Check existing customer
+    final existingCustomer =
+        await IsarService.getCustomerByPhone(phoneNumber);
 
-  if (existingCustomer != null) {
-    // CUSTOMER ALREADY EXISTS
-    // Open the existing customer directly
+    if (!mounted) return;
 
+    // Existing customer
+    if (existingCustomer != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CustomerDetailsScreen(
+            customer: existingCustomer,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // New customer
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CustomerDetailsScreen(
-          customer: existingCustomer,
+        builder: (_) => CustomerDetailsAdd(
+          contactName: contactName,
+          contactPhone: phoneNumber,
         ),
       ),
     );
-
-    return;
   }
 
-  // CUSTOMER DOES NOT EXIST
-  // Open Add Customer confirmation screen
+  void _scrollToLetter(String letter) {
+    if (filteredContacts.isEmpty) {
+      return;
+    }
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CustomerDetailsAdd(
-        contactName: contactName,
-        contactPhone: phoneNumber,
+    // '#' means contacts that don't start with A-Z
+    if (letter == '#') {
+      _contactsScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+
+    final index = filteredContacts.indexWhere(
+      (contact) {
+        final name =
+            (contact.displayName ?? '').trim();
+
+        if (name.isEmpty) {
+          return false;
+        }
+
+        return name.toUpperCase().startsWith(letter);
+      },
+    );
+
+    if (index == -1) {
+      return;
+    }
+
+    // Approximate height of each ContactTile.
+    const double itemHeight = 65;
+
+    final offset = index * itemHeight;
+
+    _contactsScrollController.animateTo(
+      offset.clamp(
+        0.0,
+        _contactsScrollController
+            .position
+            .maxScrollExtent,
       ),
-    ),
-  );
-}
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   void dispose() {
@@ -792,9 +774,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     super.dispose();
   }
 
-  // ------------------------------------------------------------
-  // BUILD
-  // ------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -906,9 +885,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
             ),
 
-            // ------------------------------------------------------
             // ALPHABET INDEX
-            // ------------------------------------------------------
 
             Positioned(
               right: 6,
@@ -919,7 +896,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     MediaQuery.of(context).size.height *
                         0.62,
 
-                child: const AlphabetIndex(),
+                // child: const AlphabetIndex(),
+                child: AlphabetIndex(
+                  onLetterSelected: _scrollToLetter,
+                ),
               ),
             ),
           ],
@@ -993,27 +973,47 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     }
 
     // Contact list
+    // return ListView.builder(
+    //   itemCount: filteredContacts.length,
+
+    //   itemBuilder: (_, index) {
+    //     final contact =
+    //         filteredContacts[index];
+
+    //     final phone =
+    //         contact.phones.isNotEmpty
+    //             ? contact.phones.first.number
+    //             : "No phone number";
+
+    //     return ContactTile(
+    //       name: contact.displayName ?? 'Unknown',
+    //       phone: phone,
+
+    //       onTap: () {
+    //         selectContact(contact);
+    //       },
+    //     );
+    //   },
+    // );
+
     return ListView.builder(
-      itemCount: filteredContacts.length,
+  controller: _contactsScrollController,
+  itemCount: filteredContacts.length,
+  itemBuilder: (_, index) {
+    final contact = filteredContacts[index];
 
-      itemBuilder: (_, index) {
-        final contact =
-            filteredContacts[index];
+    final phone = contact.phones.isNotEmpty
+        ? contact.phones.first.number
+        : "No phone number";
 
-        final phone =
-            contact.phones.isNotEmpty
-                ? contact.phones.first.number
-                : "No phone number";
-
-        return ContactTile(
-          name: contact.displayName ?? 'Unknown',
-          phone: phone,
-
-          onTap: () {
-            selectContact(contact);
-          },
-        );
+    return ContactTile(
+      name: contact.displayName ?? 'Unknown',
+      phone: phone,
+      onTap: () {
+        selectContact(contact);
       },
     );
+  },
+);
   }
 }

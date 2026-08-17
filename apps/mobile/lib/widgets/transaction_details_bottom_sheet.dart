@@ -1875,20 +1875,170 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-
+// import 'package:mychopdi/service/transaction_service.dart';
+// import 'package:mychopdi/widgets/delete_transaction_bottom_sheet.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/edit_transaction_bottom_sheet.dart';
+import 'package:mychopdi/widgets/delete_transactions_bottom_sheet.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
   final int customerId;
+   final VoidCallback? onChanged;
 
   const TransactionDetailsScreen({
     super.key,
     required this.transaction,
-    required this.customerId
+    required this.customerId,
+    required this.onChanged,
   });
+
+  String _getFullDescription() {
+  final startDate =
+      DateFormat("dd MMM yyyy").format(transaction.date);
+
+  final endDate =
+      DateFormat("dd MMM yyyy").format(DateTime.now());
+
+  final rate =
+      transaction.interestRate.toStringAsFixed(0);
+
+  final frequency =
+      transaction.interestFrequency.isEmpty
+          ? "Monthly"
+          : transaction.interestFrequency;
+
+  final interestType =
+      transaction.interestType.isEmpty
+          ? "Simple Interest"
+          : transaction.interestType;
+
+  return "$startDate → $endDate "
+      "$rate% $frequency $interestType";
+}
+
+String _getInterestDescription() {
+  final startDate = transaction.date;
+
+  final endDate = DateTime.now();
+
+  final start =
+      DateFormat("dd MMM yyyy").format(startDate);
+
+  final end =
+      DateFormat("dd MMM yyyy").format(endDate);
+
+  final rate =
+      transaction.interestRate.toStringAsFixed(0);
+
+  final frequency =
+      transaction.interestFrequency.isEmpty
+          ? "Monthly"
+          : transaction.interestFrequency;
+
+  final interestType =
+      transaction.interestType.isEmpty
+          ? "Simple Interest"
+          : transaction.interestType;
+
+  return "$start → $end\n"
+      "$rate% $frequency $interestType";
+}
+
+// String _getTransactionDescription() {
+//   final now = DateTime.now();
+
+//   final days = now.difference(transaction.date).inDays;
+
+//   // No interest calculation if the transaction date
+//   // is today or in the future.
+//   if (days <= 0) {
+//     return transaction.description.isEmpty
+//         ? "No interest calculated yet."
+//         : transaction.description;
+//   }
+
+//   final interest = InterestCalculator.calculate(
+//     principal: transaction.amount,
+//     rate: transaction.interestRate,
+//     startDate: transaction.date,
+//     interestType: transaction.interestType,
+//     frequency: transaction.interestFrequency,
+//   );
+
+//   final startDate =
+//       DateFormat("dd MMM yyyy").format(transaction.date);
+
+//   final endDate =
+//       DateFormat("dd MMM yyyy").format(now);
+
+//   final rate =
+//       transaction.interestRate.toStringAsFixed(0);
+
+//   final frequency =
+//       transaction.interestFrequency.toLowerCase();
+
+//   final interestType =
+//       transaction.interestType
+//           .replaceAll(" Interest", "")
+//           .toLowerCase();
+
+//   return "₹${interest.toStringAsFixed(0)} interest "
+//       "from $startDate to $endDate at $rate% "
+//       "$frequency $interestType interest.";
+// }
+
+  String _getTransactionDescription() {
+    final startDate =
+        DateFormat("dd MMM yyyy").format(transaction.date);
+
+    final endDate =
+        DateFormat("dd MMM yyyy").format(DateTime.now());
+
+    // PAYMENT RECEIVED
+
+    if (transaction.type == TransactionType.received) {
+      return "Payment received from $startDate to $endDate.";
+    }
+
+    // LOAN GIVEN
+
+    final days = DateTime.now()
+        .difference(transaction.date)
+        .inDays;
+
+    if (days <= 0) {
+      return transaction.description.isEmpty
+          ? "Loan given."
+          : transaction.description;
+    }
+
+    final interest = InterestCalculator.calculate(
+      principal: transaction.amount,
+      rate: transaction.interestRate,
+      startDate: transaction.date,
+      interestType: transaction.interestType,
+      frequency: transaction.interestFrequency,
+    );
+
+    final rate =
+        transaction.interestRate.toStringAsFixed(0);
+
+    final frequency =
+        transaction.interestFrequency.toLowerCase();
+
+    final interestType =
+        transaction.interestType
+            .replaceAll(" Interest", "")
+            .toLowerCase();
+
+    return "₹${interest.toStringAsFixed(0)} interest "
+        "from $startDate to $endDate at $rate% "
+        "$frequency $interestType interest.";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2235,11 +2385,22 @@ class TransactionDetailsScreen extends StatelessWidget {
         // Description
         Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            transaction.description.isEmpty
-                ? "No description"
-                : transaction.description,
-            maxLines: 2,
+          // child: Text(
+          //   transaction.description.isEmpty
+          //       ? "No description"
+          //       : transaction.description,
+          //   maxLines: 2,
+          //   overflow: TextOverflow.ellipsis,
+          //   style: GoogleFonts.manrope(
+          //     color: Colors.grey.shade500,
+          //     fontSize: 12,
+          //     height: 1.3,
+          //     fontWeight: FontWeight.w500,
+          //   ),
+          // ),
+          child:Text(
+            _getTransactionDescription(),
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.manrope(
               color: Colors.grey.shade500,
@@ -2358,19 +2519,25 @@ class TransactionDetailsScreen extends StatelessWidget {
           width: double.infinity,
           height: 40,
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Delete transaction
-              // showModalBottomSheet(
-              //   context: context,
-              //   isScrollControlled: true,
-              //   backgroundColor: Colors.transparent,
-              //   builder: (context) {
-              //     return DeleteBottomSheet(
-              //       // transaction: transaction,
-              //     );
-              //   },
-              // );
-              
+            onPressed: () async {
+              final result = await showDeleteTransactionBottomSheet(
+                context,
+                title: "Delete Transaction?",
+                subtitle: "This action cannot be undone",
+                onDelete: () async {
+                  await IsarService.isar.writeTxn(() async {
+                    await IsarService.isar.transactions.delete(
+                      transaction.id,
+                    );
+                  });
+
+                  onChanged?.call();
+                },
+              );
+
+              if (result == true && context.mounted) {
+                Navigator.pop(context);
+              }
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color.fromRGBO(
@@ -2541,21 +2708,35 @@ class TransactionDetailsScreen extends StatelessWidget {
         const SizedBox(height: 10),
 
         // Description
+        // Align(
+        //   alignment: Alignment.centerLeft,
+        //   child: Text(
+        //     transaction.description.isEmpty
+        //         ? "No description"
+        //         : transaction.description,
+        //     maxLines: 2,
+        //     overflow: TextOverflow.ellipsis,
+        //     style: GoogleFonts.manrope(
+        //       color: Colors.grey.shade500,
+        //       fontSize: 12,
+        //       height: 1.3,
+        //       fontWeight: FontWeight.w500,
+        //     ),
+        //   ),
+        // ),
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            transaction.description.isEmpty
-                ? "No description"
-                : transaction.description,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.manrope(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-              height: 1.3,
-              fontWeight: FontWeight.w500,
-            ),
+          _getTransactionDescription(),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.manrope(
+            color: Colors.grey.shade500,
+            fontSize: 12,
+            height: 1.3,
+            fontWeight: FontWeight.w500,
           ),
+        ),
         ),
 
         const SizedBox(height: 60),
@@ -2601,9 +2782,26 @@ class TransactionDetailsScreen extends StatelessWidget {
           width: double.infinity,
           height: 40,
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Delete transaction
-            },
+            onPressed: () async {
+            final result = await showDeleteTransactionBottomSheet(
+              context,
+              title: "Delete Transaction?",
+              subtitle: "This action cannot be undone",
+              onDelete: () async {
+                await IsarService.isar.writeTxn(() async {
+                  await IsarService.isar.transactions.delete(
+                    transaction.id,
+                  );
+                });
+
+                onChanged?.call();
+              },
+            );
+
+            if (result == true && context.mounted) {
+              Navigator.pop(context);
+            }
+          },
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color.fromRGBO(
                 199,

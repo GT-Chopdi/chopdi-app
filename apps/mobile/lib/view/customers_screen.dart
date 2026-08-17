@@ -24,10 +24,6 @@ class _CustomerListSectionState extends State<CustomerListSection> {
   @override
   void initState() {
     super.initState();
-
-    // customers = List.from(widget.customers);
-    // filteredCustomers = List.from(widget.customers);
-
     filteredCustomers = List.from(widget.customers);
   }
 
@@ -61,6 +57,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         /// Header
         Row(
@@ -87,30 +84,6 @@ class _CustomerListSectionState extends State<CustomerListSection> {
               ],
             ),
             const Spacer(),
-            // SizedBox(
-            //   height: 42,
-            //   child: ElevatedButton.icon(
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: ChopdiColors.navy,
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(25),
-            //       ),
-            //     ),
-            //     onPressed: () {
-            //       Navigator.push(
-            //         context,
-            //         MaterialPageRoute(
-            //           builder: (_) => const AddCustomerScreen(),
-            //         ),
-            //       );
-            //     },
-            //     icon: const Icon(Icons.add, color: Colors.white),
-            //     label: const Text(
-            //       "Add Customer",
-            //       style: TextStyle(color: Colors.white),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
 
@@ -193,16 +166,16 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
         const SizedBox(height: 10),
 
-        Expanded(
-          child: ListView.separated(
-            itemCount: filteredCustomers.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (_, index) {
-              return CustomerCard(
+        ...List.generate(
+          filteredCustomers.length,
+          (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: CustomerCard(
                 customer: filteredCustomers[index],
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ],
     );
