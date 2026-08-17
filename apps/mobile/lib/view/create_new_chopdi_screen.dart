@@ -10,8 +10,7 @@ class CreateChopdiScreen extends StatefulWidget {
 class _CreateChopdiScreenState extends State<CreateChopdiScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController businessController =
-      TextEditingController();
+  final TextEditingController businessController = TextEditingController();
 
   static const Color primary = Color(0xFF223A5E);
   static const Color secondary = Color(0xFFAAB9CF);

@@ -460,11 +460,23 @@ class _AddNewCustomerScreenState
     final phone = phoneController.text.trim();
 
     // Check for duplicate customer
-    final existingCustomer = await IsarService.isar.customers
-        .filter()
-        .nameEqualTo(name)
-        .phoneEqualTo(phone)
-        .findFirst();
+    // final existingCustomer = await IsarService.isar.customers
+    //     .filter()
+    //     .nameEqualTo(name)
+    //     .phoneEqualTo(phone)
+    //     .findFirst();
+
+    // Check for duplicate customer only
+// when phone number is provided.
+    Customer? existingCustomer;
+
+    if (phone.isNotEmpty) {
+      existingCustomer = await IsarService.isar.customers
+          .filter()
+          .nameEqualTo(name)
+          .phoneEqualTo(phone)
+          .findFirst();
+    }
 
     if (existingCustomer != null) {
       if (!mounted) return;
@@ -694,7 +706,44 @@ class _AddNewCustomerScreenState
                       //   keyboardType: TextInputType.phone,
                       // ),
 
-                      _label("Phone Number*"),
+                      // _label("Phone Number*"),
+
+                      // const SizedBox(height: 6),
+
+                      // _textField(
+                      //   controller: phoneController,
+                      //   hint: "Mobile Number",
+                      //   icon: Icons.phone_outlined,
+                      //   keyboardType: TextInputType.phone,
+                      //   // validator: (value) {
+                      //   //   if (value == null || value.trim().isEmpty) {
+                      //   //     return "Enter phone number";
+                      //   //   }
+
+                      //   //   final phone = value.trim();
+
+                      //   //   if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                      //   //     return "Enter a valid 10-digit phone number";
+                      //   //   }
+
+                      //   //   return null;
+                      //   // },
+                      //   validator: (value) {
+                      //     if (value == null || value.trim().isEmpty) {
+                      //       return "Enter phone number";
+                      //     }
+
+                      //     final phone = value.trim();
+
+                      //     if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                      //       return "Enter a valid 10-digit phone number";
+                      //     }
+
+                      //     return null;
+                      //   },
+                      // ),
+
+                      _label("Phone Number (Optional)"),
 
                       const SizedBox(height: 6),
 
@@ -703,26 +752,16 @@ class _AddNewCustomerScreenState
                         hint: "Mobile Number",
                         icon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
-                        // validator: (value) {
-                        //   if (value == null || value.trim().isEmpty) {
-                        //     return "Enter phone number";
-                        //   }
 
-                        //   final phone = value.trim();
-
-                        //   if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
-                        //     return "Enter a valid 10-digit phone number";
-                        //   }
-
-                        //   return null;
-                        // },
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Enter phone number";
+                          final phone = value?.trim() ?? '';
+
+                          // Phone number is optional
+                          if (phone.isEmpty) {
+                            return null;
                           }
 
-                          final phone = value.trim();
-
+                          // If user enters something, it must be exactly 10 digits
                           if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
                             return "Enter a valid 10-digit phone number";
                           }
