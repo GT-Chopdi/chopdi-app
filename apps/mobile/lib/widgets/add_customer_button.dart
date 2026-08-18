@@ -53,14 +53,21 @@ import 'package:flutter/material.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/view/add_customer_screen.dart';
 
-class AddCustomerButton extends StatelessWidget {
+class AddCustomerButton extends StatefulWidget {
+  final int chopdiId;
   final Function(Customer) onCustomerAdded;
 
   const AddCustomerButton({
     super.key,
     required this.onCustomerAdded,
+    required this.chopdiId,
   });
 
+  @override
+  State<AddCustomerButton> createState() => _AddCustomerButtonState();
+}
+
+class _AddCustomerButtonState extends State<AddCustomerButton> {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
@@ -70,7 +77,9 @@ class AddCustomerButton extends StatelessWidget {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => const AddCustomerScreen(),
+            builder: (_) => AddCustomerScreen(
+              chopdiId: widget.chopdiId,
+            ),
           ),
         );
       },

@@ -12,14 +12,16 @@ import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class CustomerDetailsScreen extends StatefulWidget {
+class TookLoanCustomerDetailsScreen extends StatefulWidget {
 
   final Customer customer;
 
-  const CustomerDetailsScreen({
+  const TookLoanCustomerDetailsScreen({
     super.key,
     required this.customer,
   });
@@ -28,7 +30,7 @@ class CustomerDetailsScreen extends StatefulWidget {
   State createState() => _CustomerDetailsScreenState();
 }
 
-class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
+class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
   int selectedTab = 0;
   int bottomIndex = 1; 
@@ -45,6 +47,27 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       });
     }
   }
+
+  // Future<void> loadTransactions() async {
+  //     transactions = await IsarService.isar.transactions
+  //         .filter()
+  //         .customerIdEqualTo(widget.customer.id)
+  //         .sortByDate()
+  //         .findAll();
+
+  //     for (final tx in transactions) {
+  //       print("----------------");
+  //       print("Amount: ${tx.amount}");
+  //       print("Rate: ${tx.interestRate}");
+  //       print("Type: ${tx.interestType}");
+  //       print("Frequency: ${tx.interestFrequency}");
+  //       print("Date: ${tx.date}");
+  //       print("Calculated Interest: ${calculateInterest(tx)}");
+  //     }
+
+  //     setState(() {});
+
+  // }
 
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
@@ -77,20 +100,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   double get totalGiven {
     return transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
   double get totalReceived {
     return transactions
-        .where((e) => e.type == TransactionType.received)
+        .where((e) => e.type == TransactionType.paid)
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
 
   double get totalInterest {
     return transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .fold(
           0.0,
           (sum, tx) =>
@@ -130,7 +153,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   
   Transaction? get lastReceivedTransaction {
     final received = transactions
-        .where((e) => e.type == TransactionType.received)
+        .where((e) => e.type == TransactionType.paid)
         .toList();
 
     if (received.isEmpty) return null;
@@ -142,7 +165,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   Transaction? get firstLoanTransaction {
     final gave = transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .toList();
 
     if (gave.isEmpty) return null;
@@ -234,7 +257,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: MoneyGaveBottomSheet(
+                          child: TookLoanMoneyGaveBottomSheet(
                             customer:widget.customer,
                             onSaved:loadTransactions,
                             isEdit:false,
@@ -274,7 +297,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: MoneyReceiveBottomSheet(
+                          child: TookLoanMoneyReceivedBottomSheet(
                             customer: widget.customer,
                             onSaved: loadTransactions,
                           ),
@@ -429,6 +452,21 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       Color(0xFFC74C4C),
                     ),
                   ),
+
+                  // Container(
+                  //   width: 1,
+                  //   height: 55,
+                  //   color: Colors.grey.shade300,
+                  // ),
+
+                  // Expanded(
+                  //   child: _infoItem(
+                  //     'assets/uil_calender.png',
+                  //     "Since",
+                  //     "$loanDays Days",
+                  //     ChopdiColors.navy,
+                  //   ),
+                  // ),
                 ],
               ),
             ),

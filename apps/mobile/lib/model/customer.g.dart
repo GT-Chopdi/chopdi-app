@@ -17,10 +17,11 @@ const CustomerSchema = CollectionSchema(
   name: r'Customer',
   id: -7623823084711604343,
   properties: {
-    r'name': PropertySchema(id: 0, name: r'name', type: IsarType.string),
-    r'phone': PropertySchema(id: 1, name: r'phone', type: IsarType.string),
-    r'received': PropertySchema(id: 2, name: r'received', type: IsarType.bool),
-    r'status': PropertySchema(id: 3, name: r'status', type: IsarType.string),
+    r'chopdiId': PropertySchema(id: 0, name: r'chopdiId', type: IsarType.long),
+    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
+    r'phone': PropertySchema(id: 2, name: r'phone', type: IsarType.string),
+    r'received': PropertySchema(id: 3, name: r'received', type: IsarType.bool),
+    r'status': PropertySchema(id: 4, name: r'status', type: IsarType.string),
   },
 
   estimateSize: _customerEstimateSize,
@@ -56,10 +57,11 @@ void _customerSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.name);
-  writer.writeString(offsets[1], object.phone);
-  writer.writeBool(offsets[2], object.received);
-  writer.writeString(offsets[3], object.status);
+  writer.writeLong(offsets[0], object.chopdiId);
+  writer.writeString(offsets[1], object.name);
+  writer.writeString(offsets[2], object.phone);
+  writer.writeBool(offsets[3], object.received);
+  writer.writeString(offsets[4], object.status);
 }
 
 Customer _customerDeserialize(
@@ -69,11 +71,12 @@ Customer _customerDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Customer();
+  object.chopdiId = reader.readLong(offsets[0]);
   object.id = id;
-  object.name = reader.readString(offsets[0]);
-  object.phone = reader.readString(offsets[1]);
-  object.received = reader.readBool(offsets[2]);
-  object.status = reader.readString(offsets[3]);
+  object.name = reader.readString(offsets[1]);
+  object.phone = reader.readString(offsets[2]);
+  object.received = reader.readBool(offsets[3]);
+  object.status = reader.readString(offsets[4]);
   return object;
 }
 
@@ -85,12 +88,14 @@ P _customerDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readBool(offset)) as P;
+    case 4:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -189,6 +194,65 @@ extension CustomerQueryWhere on QueryBuilder<Customer, Customer, QWhereClause> {
 
 extension CustomerQueryFilter
     on QueryBuilder<Customer, Customer, QFilterCondition> {
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'chopdiId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'chopdiId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -702,6 +766,18 @@ extension CustomerQueryLinks
     on QueryBuilder<Customer, Customer, QFilterCondition> {}
 
 extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -753,6 +829,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
 
 extension CustomerQuerySortThenBy
     on QueryBuilder<Customer, Customer, QSortThenBy> {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -816,6 +904,12 @@ extension CustomerQuerySortThenBy
 
 extension CustomerQueryWhereDistinct
     on QueryBuilder<Customer, Customer, QDistinct> {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chopdiId');
+    });
+  }
+
   QueryBuilder<Customer, Customer, QDistinct> distinctByName({
     bool caseSensitive = true,
   }) {
@@ -852,6 +946,12 @@ extension CustomerQueryProperty
   QueryBuilder<Customer, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Customer, int, QQueryOperations> chopdiIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chopdiId');
     });
   }
 

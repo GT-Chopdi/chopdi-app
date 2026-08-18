@@ -702,7 +702,7 @@ class _DeleteBottomSheetState
               widget.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFFD14D4D),
               ),
@@ -718,7 +718,7 @@ class _DeleteBottomSheetState
               widget.subtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 8.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF263A5A),
               ),
@@ -795,7 +795,7 @@ class _DeleteBottomSheetState
                         child: Text(
                           'I understand this action cannot be undone.',
                           style: TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w400,
                             color: Color(0xFF263A5A),
                           ),
@@ -852,7 +852,7 @@ class _DeleteBottomSheetState
                         child: const Text(
                           'Cancel',
                           style: TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: Color(0xFF263A5A),
                           ),
@@ -910,7 +910,7 @@ class _DeleteBottomSheetState
                             : const Text(
                                 'Delete',
                                 style: TextStyle(
-                                  fontSize: 9.5,
+                                  fontSize: 12,
                                   fontWeight:
                                       FontWeight.w500,
                                   color: Colors.white,

@@ -3,87 +3,30 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/widgets/transaction_raw.dart';
 
-class TransactionTable extends StatelessWidget {
+class TookLoanTransactionTable extends StatelessWidget {
   final List<Transaction> transactions;
   final VoidCallback onChanged;
   final int customerId;
 
-  const TransactionTable({
+  const TookLoanTransactionTable({
     super.key,
     required this.transactions,
     required this.onChanged,
     required this.customerId,
   });
 
-  List<Widget> _buildInterestRows(Transaction tx) {
-  final List<Widget> rows = [];
-
-  final today = DateTime.now();
-
-  final startDate = DateTime(
-    tx.date.year,
-    tx.date.month,
-    tx.date.day,
-  );
-
-  final todayDate = DateTime(
-    today.year,
-    today.month,
-    today.day,
-  );
-
-  final totalDays = todayDate.difference(startDate).inDays;
-
-  if (totalDays <= 0) {
-    return rows;
-  }
-
-  // Show newest interest day first
-  for (int day = totalDays; day >= 1; day--) {
-    final endDate = startDate.add(
-      Duration(days: day),
-    );
-
-    final interest = InterestCalculator.calculate(
-      principal: tx.amount,
-      rate: tx.interestRate,
-      startDate: startDate,
-      interestType: tx.interestType,
-      frequency: tx.interestFrequency,
-      endDate: endDate,
-    );
-
-    rows.add(
-      _InterestRow(
-        startDate: startDate.add(
-          Duration(days: day - 1),
-        ),
-        endDate: endDate,
-        interest: interest,
-      ),
-    );
-
-    rows.add(
-      const SizedBox(height: 8),
-    );
-  }
-
-  return rows;
-}
-
  List<Widget> _buildTransactionRows(
   List<Transaction> sortedTransactions,
-  ) {
+) {
   final List<Widget> rows = [];
 
   double runningBalance = 0;
 
   for (final tx in sortedTransactions) {
     // Calculate normal transaction balance
-    if (tx.type == TransactionType.gave) {
+    if (tx.type == TransactionType.took) {
       runningBalance += tx.amount;
     } else {
       runningBalance -= tx.amount;
@@ -97,12 +40,18 @@ class TransactionTable extends StatelessWidget {
       "Interest Frequency: '${tx.interestFrequency}'",
     );
 
-    if (tx.type == TransactionType.gave &&
+    // ==========================================
+    // MONTHLY INTEREST
+    // ==========================================
+
+    if (tx.type == TransactionType.took &&
         tx.interestRate > 0) {
+      
       rows.addAll(
-        _buildInterestRows(tx),
+        _buildMonthlyInterestRows(tx),
       );
     }
+
     // ==========================================
     // ACTUAL TRANSACTION
     // ==========================================
@@ -123,61 +72,6 @@ class TransactionTable extends StatelessWidget {
 
   return rows;
 }
-
-  List<Widget> _buildDailyInterestRows(Transaction tx) {
-    final List<Widget> rows = [];
-
-    final today = DateTime.now();
-
-    final startDate = DateTime(
-      tx.date.year,
-      tx.date.month,
-      tx.date.day,
-    );
-
-    final todayDate = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    );
-
-    final totalDays = todayDate.difference(startDate).inDays;
-
-    if (totalDays <= 0) {
-      return rows;
-    }
-
-    // Show latest day first
-    for (int day = totalDays; day >= 1; day--) {
-      final endDate = startDate.add(
-        Duration(days: day),
-      );
-
-      // Calculate cumulative interest up to this day
-      final interest = InterestCalculator.calculate(
-        principal: tx.amount,
-        rate: tx.interestRate,
-        startDate: startDate,
-        interestType: tx.interestType,
-        frequency: tx.interestFrequency,
-        endDate: endDate,
-      );
-
-      rows.add(
-        _InterestRow(
-          startDate: startDate,
-          endDate: endDate,
-          interest: interest,
-        ),
-      );
-
-      rows.add(
-        const SizedBox(height: 8),
-      );
-    }
-
-    return rows;
-  }
 
   List<Widget> _buildMonthlyInterestRows(Transaction tx) {
     final List<Widget> rows = [];
@@ -249,6 +143,24 @@ class TransactionTable extends StatelessWidget {
       children: [
         _tableHeader(),
         const SizedBox(height: 8),
+
+        // ...transactions.map((tx) {
+        //   for (final tx in transactions) {
+
+        //     if (tx.type == TransactionType.gave) {
+        //       runningBalance += tx.amount;
+        //     } else {
+        //       runningBalance -= tx.amount;
+        //     }
+
+        //   }
+
+        //   return TransactionRow(
+        //     transaction: tx,
+        //     balance: runningBalance,
+        //     onChanged: onChanged, customerId: customerId,
+        //   );
+        // }),
 
         ..._buildTransactionRows(
           sortedTransactions,
@@ -355,7 +267,8 @@ class _InterestRow extends StatelessWidget {
                   horizontal: 8,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       "${dateFormat.format(startDate)} - "
@@ -378,7 +291,6 @@ class _InterestRow extends StatelessWidget {
                 ),
               ),
 
-              // Given
               const Center(
                 child: Text(
                   "-",
@@ -388,17 +300,6 @@ class _InterestRow extends StatelessWidget {
                 ),
               ),
 
-              // Received
-              const Center(
-                child: Text(
-                  "-",
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-
-              // Balance = Interest
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 10,
@@ -410,6 +311,15 @@ class _InterestRow extends StatelessWidget {
                     color: Color(0xFF00901B),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
+                  ),
+                ),
+              ),
+
+              const Center(
+                child: Text(
+                  "-",
+                  style: TextStyle(
+                    color: Colors.black,
                   ),
                 ),
               ),

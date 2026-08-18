@@ -4,12 +4,12 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 
-class CustomerDetailsAdd extends StatefulWidget {
+class TookLoanCustomerDetailAdd extends StatefulWidget {
   final String contactName;
   final String contactPhone;
   final int chopdiId;
 
-  const CustomerDetailsAdd({
+  const TookLoanCustomerDetailAdd({
     super.key,
     required this.contactName,
     required this.contactPhone,
@@ -17,14 +17,109 @@ class CustomerDetailsAdd extends StatefulWidget {
   });
 
   @override
-  State<CustomerDetailsAdd> createState() => _CustomerDetailsAddState();
+  State<TookLoanCustomerDetailAdd> createState() => _CustomerDetailsAddState();
 }
 
-class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
+class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
   static const Color primaryColor = Color(0xFF233B63);
   static const Color backgroundColor = Color(0xFFFDF0DE);
 
   bool isSaving = false;
+
+  // Future<void> addCustomer() async {
+  //   final phone = widget.contactPhone.trim();
+
+  //   if (phone.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text("Please enter phone number"),
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   // Remove +91, spaces, -, etc.
+  //   final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+
+  //   String finalPhone = cleanedPhone;
+
+  //   // Remove Indian country code
+  //   if (finalPhone.startsWith('91') &&
+  //       finalPhone.length == 12) {
+  //     finalPhone = finalPhone.substring(2);
+  //   }
+
+  //   // Validate 10 digit number
+  //   if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text(
+  //           "Please enter a valid 10-digit phone number",
+  //         ),
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     isSaving = true;
+  //   });
+
+  //   try {
+  //     // Check duplicate again
+  //     final existingCustomer =
+  //         await IsarService.getCustomerByPhone(finalPhone);
+
+  //     if (existingCustomer != null) {
+  //       if (!mounted) return;
+
+  //       setState(() {
+  //         isSaving = false;
+  //       });
+
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text(
+  //             "This customer already exists",
+  //           ),
+  //         ),
+  //       );
+
+  //       return;
+  //     }
+
+  //     // Create customer
+  //     final customer = Customer()
+  //       ..name = widget.contactName.trim()
+  //       ..phone = finalPhone
+  //       ..status = "Pending"
+  //       ..received = false;
+
+  //     // SAVE CUSTOMER TO ISAR
+  //     await IsarService.isar.writeTxn(() async {
+  //       await IsarService.isar.customers.put(customer);
+  //     });
+
+  //     if (!mounted) return;
+
+  //     // Tell previous screen that customer was added
+  //     Navigator.pop(context, true);
+  //   } catch (e) {
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       isSaving = false;
+  //     });
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           "Failed to add customer: $e",
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> addCustomer() async {
     final phone = widget.contactPhone.trim();
@@ -78,7 +173,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("This customer already exists"),
+            content: Text("This lender already exists"),
           ),
         );
 
@@ -118,7 +213,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Failed to add customer: $e"),
+          content: Text("Failed to add lender: $e"),
         ),
       );
     }
@@ -236,7 +331,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                           ),
                         )
                       : const Text(
-                          "Add Customer",
+                          "Add Lender",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,

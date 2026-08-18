@@ -332,23 +332,23 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 
-class MoneyReceiveBottomSheet extends StatefulWidget {
+class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
   final Customer customer;
   final VoidCallback onSaved;
 
-  const MoneyReceiveBottomSheet({
+  const TookLoanMoneyReceivedBottomSheet({
     super.key,
     required this.customer,
     required this.onSaved,
   });
 
   @override
-  State<MoneyReceiveBottomSheet> createState() =>
+  State<TookLoanMoneyReceivedBottomSheet> createState() =>
       _MoneyReceiveBottomSheetState();
 }
 
 class _MoneyReceiveBottomSheetState
-    extends State<MoneyReceiveBottomSheet> {
+    extends State<TookLoanMoneyReceivedBottomSheet> {
 
   final TextEditingController amountController =
       TextEditingController();
@@ -528,7 +528,7 @@ class _MoneyReceiveBottomSheetState
       ..amount = amount
       ..interestRate = 0
       ..date = selectedDate
-      ..type = TransactionType.received
+      ..type = TransactionType.paid
       ..description =
           descriptionController.text.trim()
       ..paymentMode = paymentMode

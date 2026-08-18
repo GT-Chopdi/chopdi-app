@@ -7,7 +7,9 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 
 class SummaryCard extends StatelessWidget {
-  const SummaryCard({super.key});
+  final int chopdiId;
+  final bool isGaveLoanSelected;
+  const SummaryCard({super.key, required this.chopdiId,required this.isGaveLoanSelected,});
 
   String formatAmount(double amount) {
     return NumberFormat.currency(
@@ -21,7 +23,8 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
-          .where()
+          .filter()
+          .chopdiIdEqualTo(chopdiId)
           .watch(fireImmediately: true),
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? <Transaction>[];
@@ -98,10 +101,20 @@ class SummaryCard extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
+                    // Text(
+                    //   formatAmount(outstanding),
+                    //   style: const TextStyle(
+                    //     color: Color(0xff68E04D),
+                    //     fontSize: 28,
+                    //     fontWeight: FontWeight.bold,
+                    //   ),
+                    // ),
                     Text(
                       formatAmount(outstanding),
-                      style: const TextStyle(
-                        color: Color(0xff68E04D),
+                      style: TextStyle(
+                        color: isGaveLoanSelected
+                            ? Color.fromRGBO(141, 208, 113, 1) // Green for I Gave Loan
+                            : Color.fromRGBO(199, 76, 76, 1),             // Red for I Took Loan
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -130,10 +143,17 @@ class SummaryCard extends StatelessWidget {
                         const SizedBox(width: 20),
 
                         Expanded(
+                          // child: _SummaryItem(
+                          //   title: "Total Interest Earned",
+                          //   value: formatAmount(totalInterest),
+                          //   valueColor: const Color(0xff68E04D),
+                          // ),
                           child: _SummaryItem(
                             title: "Total Interest Earned",
                             value: formatAmount(totalInterest),
-                            valueColor: const Color(0xff68E04D),
+                            valueColor: isGaveLoanSelected
+                                ? Color.fromRGBO(141, 208, 113, 1) // Green
+                                : Color.fromRGBO(199, 76, 76, 1),             // Red
                           ),
                         ),
                       ],
