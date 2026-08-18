@@ -1,0 +1,153 @@
+# Render Blueprint for the Chopdi API.
+#
+# Only `apps/api` is built. `buildFilter` means a commit touching only the
+# Flutter app does not trigger a redeploy — which is the whole answer to
+# "does the monorepo make deployment heavier". It does not.
+#
+# The Flutter app is NOT deployed here. It ships to the Play Store / App Store
+# as an installable build, compiled against this service's public URL.
+
+services:
+  - type: web
+    name: chopdi-api
+    runtime: node
+    plan: starter
+    region: singapore # closest Render region to an India-based user base
+    rootDir: apps/api
+
+    # `npm ci` (not `install`) so the lockfile is authoritative and a deploy
+    # can never silently resolve different versions than were tested.
+    # `postinstall` runs `prisma generate`.
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+
+    # Terminus already allows 5s here for Neon cold starts.
+    healthCheckPath: /api/health
+
+    # Migrations run once per deploy, before the new instance takes traffic.
+    # Prisma takes a Postgres advisory lock, so concurrent instances are safe.
+    # NOTE: preDeployCommand requires a paid instance type. On the free plan,
+    # run `npm run prisma:deploy` manually against DIRECT_URL after deploying.
+    preDeployCommand: npm run prisma:deploy
+
+    buildFilter:
+      paths:
+        - apps/api/**
+        - render.yaml
+
+    envVars:
+      # Prisma 7 requires ^20.19 || ^22.12 || >=24.
+      - key: NODE_VERSION
+        value: 22.12.0
+
+      - key: NODE_ENV
+        value: production
+
+      # ---- secrets: set in the Render dashboard, never in this file ----
+      # sync: false means "prompt me, don't store it in git".
+
+      # Neon POOLED endpoint (the host containing `-pooler`).
+      - key: DATABASE_URL
+        sync: false
+
+      # Neon DIRECT endpoint — migrations only.
+      - key: DIRECT_URL
+        sync: false
+
+      # Generate with:
+      #   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      # ---- auth tuning ----
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: 30
+      - key: OTP_TTL_SECONDS
+        value: 300
+      - key: OTP_MAX_ATTEMPTS
+        value: 5
+      - key: OTP_RESEND_COOLDOWN_SECONDS
+        value: 60
+
+      # Dev mode CANNOT be enabled here: Joi refuses to boot when
+      # NODE_ENV=production and AUTH_DEV_MODE=true. Stated explicitly so nobody
+      # tries it and spends an afternoon on the crash loop.
+      - key: AUTH_DEV_MODE
+        value: false
+
+      # ---- sync limits ----
+      - key: SYNC_MAX_BATCH_SIZE
+        value: 200
+      - key: SYNC_MAX_PULL_LIMIT
+        value: 500
+      - key: SYNC_BODY_LIMIT
+        value: 1mb
+
+  # ---------------------------------------------------------------------------
+  # Staging — identical code, dev-mode auth, separate Neon branch.
+  #
+  # Runs NODE_ENV=staging rather than production specifically so AUTH_DEV_MODE
+  # is permitted. Point this at a Neon *branch*, never at the production
+  # database: this service lets anyone holding AUTH_DEV_KEY sign in as any
+  # phone number.
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: chopdi-api-staging
+    runtime: node
+    plan: starter
+    region: singapore
+    rootDir: apps/api
+
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    preDeployCommand: npm run prisma:deploy
+
+    buildFilter:
+      paths:
+        - apps/api/**
+        - render.yaml
+
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: NODE_ENV
+        value: staging
+
+      # A Neon BRANCH connection string, not production.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      # Any phone number authenticates with AUTH_DEV_OTP. No SMS is sent, so
+      # no DLT registration is needed to exercise the full flow.
+      - key: AUTH_DEV_MODE
+        value: true
+      - key: AUTH_DEV_OTP
+        value: '123456'
+
+      # Gates the bypass. Set a real random value in the dashboard — without
+      # it, anyone who finds this URL can sign in as any number.
+      - key: AUTH_DEV_KEY
+        generateValue: true
+
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: 30
+      - key: SYNC_MAX_BATCH_SIZE
+        value: 200
+      - key: SYNC_MAX_PULL_LIMIT
+        value: 500
+      - key: SYNC_BODY_LIMIT
+        value: 1mb
