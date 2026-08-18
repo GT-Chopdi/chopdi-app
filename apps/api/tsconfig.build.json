@@ -1,4 +1,17 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "prisma.config.ts", "**/*spec.ts"]
+  "comment": [
+    "`api` is excluded because it is the Vercel entry point and imports from",
+    "`dist/`, which does not exist yet when this build starts. Including it",
+    "would make a clean build fail on a chicken-and-egg. Vercel compiles that",
+    "file itself, after this build has produced `dist/`."
+  ],
+  "exclude": [
+    "node_modules",
+    "test",
+    "dist",
+    "api",
+    "prisma.config.ts",
+    "**/*spec.ts"
+  ]
 }
