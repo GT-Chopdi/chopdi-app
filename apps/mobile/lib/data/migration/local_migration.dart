@@ -266,12 +266,19 @@ class LocalMigration {
     final dir = Directory(directory);
     if (!dir.existsSync()) return;
 
-    final backups = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.contains('.pre-migration-'))
-        .toList()
-      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    final List<File> backups;
+    try {
+      backups = dir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.contains('.pre-migration-'))
+          .toList()
+        ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    } catch (_) {
+      // An unreadable directory is not worth failing over — the caller is
+      // deleting old files, not doing anything the app depends on.
+      return;
+    }
 
     final cutoff = DateTime.now().subtract(Duration(days: keepDays));
 

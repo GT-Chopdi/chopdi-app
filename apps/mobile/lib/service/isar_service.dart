@@ -57,7 +57,16 @@ class IsarService {
       }
 
       // Housekeeping only, and never allowed to break startup.
-      unawaited(LocalMigration.pruneBackups(dir.path));
+      //
+      // `unawaited` does NOT route errors to the catch below — an async failure
+      // in a detached future becomes an unhandled error, which is a crash on
+      // some configurations. Deleting old backups is the least important thing
+      // this method does; it must never be the reason the app fails to open.
+      unawaited(
+        LocalMigration.pruneBackups(dir.path).catchError(
+          (Object e) => debugPrint('[chopdi] backup pruning skipped: $e'),
+        ),
+      );
     } catch (error, stack) {
       migrationError = error;
       debugPrint('[chopdi] migration failed: $error\n$stack');
