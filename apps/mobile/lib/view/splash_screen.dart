@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:isar_community/isar.dart';
-import 'package:mychopdi/model/user_session.dart';
-import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 
@@ -56,11 +54,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void checkLogin() async {
-    final session = await IsarService.isar.userSessions.where().findFirst();
+    // Keyed on the presence of a real refresh token in secure storage, not on
+    // the local `isLoggedIn` flag this used to read. That flag lived in the
+    // database alongside ordinary data: on a rooted device it was a one-value
+    // edit away from a bypassed login, and it could also go stale — surviving
+    // a server-side sign-out or a revoked device and dropping the user into a
+    // session whose every request would 401.
+    final loggedIn = await AuthService.instance.isLoggedIn();
 
     if (!mounted) return;
 
-    if (session != null && session.isLoggedIn) {
+    if (loggedIn) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

@@ -150,6 +150,18 @@ let session;
   check('consumed challenge cannot be reused', replay.status === 401);
 }
 
+// Everything past this point needs a real session. Without the guard, a
+// failure above surfaces as a TypeError deep in a later assertion, which hides
+// the actual first failure behind a stack trace.
+if (!session?.accessToken) {
+  console.log('\n' + '='.repeat(46));
+  console.log('  ABORTED: step 5 produced no session.');
+  console.log('  Later checks depend on it and cannot run.');
+  console.log(`  ${pass} passed, ${fail} failed so far`);
+  console.log('='.repeat(46));
+  process.exit(1);
+}
+
 console.log('\n6a. Resend cooldown blocks UNCONSUMED challenges (SMS bombing)');
 {
   const first = await call('/v1/auth/otp/request', {

@@ -5,6 +5,7 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
+import 'package:mychopdi/utils/money.dart';
 
 class MoneyGaveBottomSheet extends StatefulWidget {
 
@@ -1041,9 +1042,10 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                             final tx = Transaction()
                               ..customerId =
                                   widget.customer.id
-                              ..amount = amount
+                              ..amountPaise = Money.toPaise(amount)
                               ..interest = interestAmount
-                              ..interestRate = rate
+                              ..interestRateBp =
+                                  Money.rateToBasisPoints(rate)
                               ..date = selectedDate
                               ..type = TransactionType.gave
                               ..description =

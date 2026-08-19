@@ -1877,12 +1877,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 // import 'package:mychopdi/service/transaction_service.dart';
 // import 'package:mychopdi/widgets/delete_transaction_bottom_sheet.dart';
-import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/edit_transaction_bottom_sheet.dart';
 import 'package:mychopdi/widgets/delete_transactions_bottom_sheet.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
@@ -2525,11 +2525,13 @@ String _getInterestDescription() {
                 title: "Delete Transaction?",
                 subtitle: "This action cannot be undone",
                 onDelete: () async {
-                  await IsarService.isar.writeTxn(() async {
-                    await IsarService.isar.transactions.delete(
-                      transaction.id,
-                    );
-                  });
+                  // Voided, not removed: a hard delete cannot reach another
+                  // device and destroys the audit history. Every read filters
+                  // voidedAt, so it disappears from the UI just the same.
+                  await Repositories.ledger.voidEntry(
+                    transaction,
+                    reason: 'Deleted by user',
+                  );
 
                   onChanged?.call();
                 },
@@ -2788,11 +2790,10 @@ String _getInterestDescription() {
               title: "Delete Transaction?",
               subtitle: "This action cannot be undone",
               onDelete: () async {
-                await IsarService.isar.writeTxn(() async {
-                  await IsarService.isar.transactions.delete(
-                    transaction.id,
-                  );
-                });
+                await Repositories.ledger.voidEntry(
+                  transaction,
+                  reason: 'Deleted by user',
+                );
 
                 onChanged?.call();
               },

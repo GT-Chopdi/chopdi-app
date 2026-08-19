@@ -14,6 +14,7 @@ import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
 
@@ -50,6 +51,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       transactions = await IsarService.isar.transactions
           .filter()
           .customerIdEqualTo(widget.customer.id)
+          .voidedAtIsNull()
           .sortByDate()
           .findAll();
 
@@ -622,18 +624,11 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             // Navigator.pop(context);
 
-            // Delete customer from database
-            await IsarService.isar.writeTxn(() async {
-
-              await IsarService.isar.transactions
-                  .filter()
-                  .customerIdEqualTo(widget.customer.id)
-                  .deleteAll();
-
-              await IsarService.isar.customers.delete(
-                  widget.customer.id);
-
-            });
+            // Customer and entries are voided together in one transaction,
+            // each queued for sync. Deleting them separately would leave a
+            // window where a crash orphans entries against a deleted parent.
+            await Repositories.customers
+                .softDeleteWithEntries(widget.customer);
 
             if (mounted) {
               // Navigator.pop(context); // Close delete sheet

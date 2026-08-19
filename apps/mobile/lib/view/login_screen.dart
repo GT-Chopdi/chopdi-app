@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/data/remote/api_exception.dart';
+import 'package:mychopdi/data/remote/error_code.dart';
+import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
 
@@ -15,11 +18,72 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   // Controller for the phone number text field
   final TextEditingController _phoneController = TextEditingController();
   String? errorText;
+  bool _requesting = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
+  }
+
+  /// Asks the server to send a verification code, then moves to the OTP screen
+  /// carrying the challenge it issued.
+  ///
+  /// The code itself never reaches this app — only an identifier for the
+  /// attempt. That is what makes the OTP meaningful: a modified build cannot
+  /// learn or bypass it.
+  Future<void> _requestOtp() async {
+    final phone = _phoneController.text.trim();
+
+    if (phone.isEmpty) {
+      setState(() => errorText = "Please enter your mobile number");
+      return;
+    }
+
+    if (phone.length < 10) {
+      setState(() => errorText = "Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setState(() {
+      errorText = null;
+      _requesting = true;
+    });
+
+    try {
+      final challenge = await AuthService.instance.requestOtp(phone);
+
+      if (!mounted) return;
+      setState(() => _requesting = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            phoneNumber: phone,
+            challengeId: challenge.challengeId,
+          ),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = switch (error.code) {
+          ApiErrorCode.rateLimited =>
+            "A code was already sent. Please wait a moment.",
+          'NETWORK_UNAVAILABLE' =>
+            "Can't reach the server. Check your connection.",
+          _ => error.message,
+        };
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = "Something went wrong. Please try again.";
+      });
+    }
   }
 
   @override
@@ -261,33 +325,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                               //   return;
                                               // }
                       
-                                              final phone = _phoneController.text.trim();
-                      
-                                              setState(() {
-                                                if (phone.isEmpty) {
-                                                  errorText = "Please enter your mobile number";
-                                                  return;
-                                                }
-                      
-                                                if (phone.length < 10) {
-                                                  errorText = "Please enter a valid 10-digit mobile number";
-                                                  return;
-                                                }
-                      
-                                                errorText = null;
-                                              });
-                      
-                                              if (phone.isEmpty || phone.length < 10) return;
-                      
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) => OTPScreen(
-                                                    phoneNumber: phone,
-                                                  ),
-                                                ),
-                                              );
+                                              _requestOtp();
                                           },
+                                          loading: _requesting,
                                         ),
                                     
                                         const SizedBox(height: 24),
@@ -565,7 +605,13 @@ class _PhoneInputField extends StatelessWidget {
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const _ContinueButton({required this.onPressed});
+  /// Disables the button and shows a spinner while the code is being sent.
+  /// Requesting an OTP is a network round trip, and without this the user can
+  /// tap repeatedly — each tap another SMS, and the later ones rejected by the
+  /// server's resend cooldown anyway.
+  final bool loading;
+
+  const _ContinueButton({required this.onPressed, this.loading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -573,15 +619,25 @@ class _ContinueButton extends StatelessWidget {
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: ChopdiColors.navy,
+          disabledBackgroundColor: ChopdiColors.navy.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
           elevation: 0,
         ),
-        child: const Row(
+        child: loading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(

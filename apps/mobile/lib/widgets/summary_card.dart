@@ -21,7 +21,8 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
-          .where()
+          .filter()
+          .voidedAtIsNull()
           .watch(fireImmediately: true),
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? <Transaction>[];

@@ -42,8 +42,27 @@ model AppUser {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  devices       Device[]
-  refreshTokens RefreshToken[]
+  /// Per-tenant monotonic sync cursor — the single source of ordering truth.
+  ///
+  /// Assigned inside the same transaction as the mutation, via
+  /// `UPDATE app_user SET change_seq = change_seq + 1 ... RETURNING`. That
+  /// statement takes a row-exclusive lock held until commit, so two concurrent
+  /// writes for one user serialise here: the second gets a higher sequence AND
+  /// commits later. Sequence order therefore matches commit-visibility order,
+  /// which is exactly what a cursor needs and what neither a timestamp nor a
+  /// plain BIGSERIAL can promise — both allocate before commit, so a reader can
+  /// skip a row that committed late and never see it again.
+  ///
+  /// Different users take different row locks, so cross-tenant throughput is
+  /// unaffected.
+  changeSeq BigInt @default(0) @map("change_seq")
+
+  devices        Device[]
+  refreshTokens  RefreshToken[]
+  customers      Customer[]
+  ledgerEntries  LedgerEntry[]
+  syncOperations SyncOperation[]
+  changeLog      SyncChangeLog[]
 
   @@map("app_user")
 }
@@ -135,4 +154,206 @@ model RefreshToken {
   @@index([userId])
   @@index([deviceId])
   @@map("refresh_token")
+}
+
+// ---------------------------------------------------------------------------
+// Domain — Phase 1
+// ---------------------------------------------------------------------------
+
+/// A borrower in someone's ledger.
+///
+/// `id` is a client-generated UUIDv7: the row must have a permanent identity
+/// from the moment it is created offline, because a ledger entry may reference
+/// it long before either row reaches the server.
+model Customer {
+  id     String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  name      String
+  phoneE164 String? @map("phone_e164")
+  notes     String  @default("")
+
+  /// Optimistic-concurrency guard. Server-owned: a client never sends it as
+  /// data, only as `expectedVersion` on an update. A mismatch is a conflict,
+  /// which is reported rather than silently merged.
+  version Int @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// Soft delete. Hard deletes are invisible to other devices — the row simply
+  /// stops appearing in a pull, with no way to distinguish "deleted" from
+  /// "never seen" — and they destroy the audit trail.
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user    AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries LedgerEntry[]
+
+  @@index([userId])
+  @@map("customer")
+}
+
+/// One movement of money: a loan given, or a repayment received.
+///
+/// Entries are facts, not state. Two devices creating entries offline produce a
+/// union rather than a conflict, and balances are derived by folding them — so
+/// there is no shared mutable number for two devices to disagree about. That
+/// property is what makes offline sync tractable here, and it is why no
+/// `balance` column exists on Customer.
+model LedgerEntry {
+  id         String @id @db.Uuid
+  userId     String @map("user_id") @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+
+  /// Money as an integer count of paise — never a float.
+  ///
+  /// IEEE-754 cannot represent 0.1 exactly; over months of interest accrual the
+  /// error compounds and is unauditable. BIGINT also maps to a Dart `int`,
+  /// which is exact on mobile, so no conversion layer can silently reintroduce
+  /// a double. Always positive: direction carries the sign, which makes a
+  /// negative amount structurally unrepresentable.
+  amountPaise BigInt @map("amount_paise")
+
+  /// gave | received — enforced by CHECK constraint.
+  direction String
+
+  /// Interest rate in basis points: 12.5% is 1250. Integer for the same reason
+  /// as the amount.
+  interestRateBp Int @default(0) @map("interest_rate_bp")
+
+  /// none | simple | compound — enforced by CHECK constraint.
+  interestType String @default("none") @map("interest_type")
+
+  /// daily | weekly | monthly | yearly — enforced by CHECK constraint.
+  interestFrequency String @default("monthly") @map("interest_frequency")
+
+  /// The business date, deliberately a DATE and not an instant.
+  ///
+  /// "I lent ₹5,000 on 3 March" is a calendar fact. Storing an instant means a
+  /// user in IST who records an entry at 02:00 sees it dated the previous day
+  /// wherever it renders in UTC — and interest day-counts must run on calendar
+  /// days regardless.
+  entryDate DateTime @map("entry_date") @db.Date
+
+  description String @default("")
+  paymentMode String @default("") @map("payment_mode")
+
+  version Int @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// Soft delete for a financial record: the row is never removed, so the audit
+  /// trail survives and a `create` carrying a voided id collides with the
+  /// existing primary key instead of resurrecting it.
+  voidedAt     DateTime? @map("voided_at") @db.Timestamptz(6)
+  voidedReason String?   @map("voided_reason")
+
+  user     AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId, entryDate(sort: Desc)])
+  @@index([userId])
+  @@map("ledger_entry")
+}
+
+// ---------------------------------------------------------------------------
+// Sync infrastructure — Phase 1
+// ---------------------------------------------------------------------------
+
+/// The idempotency ledger: every accepted operation, recorded exactly once.
+///
+/// This exists for one failure that defines mobile sync — the server commits
+/// and the response is lost in a tunnel. The client cannot tell that apart from
+/// "it never arrived": retry and you duplicate a ₹5,000 loan, don't retry and
+/// you lose it. Only the server holds the information to resolve it.
+///
+/// Written in the *same transaction* as the mutation. Keeping this in Redis
+/// instead would break the guarantee at the exact moment it matters: a crash
+/// between the two writes could record the key without the row, and the retry
+/// would then be told "already applied" for an entry that does not exist.
+model SyncOperation {
+  id       BigInt @id @default(autoincrement())
+  userId   String @map("user_id") @db.Uuid
+  /// Client-generated UUIDv7, created with the row and never regenerated on
+  /// retry. Regenerating it is the single mistake that reintroduces duplicates.
+  opId     String @map("op_id") @db.Uuid
+  deviceId String @map("device_id") @db.Uuid
+
+  entity   String
+  entityId String @map("entity_id") @db.Uuid
+  opType   String @map("op_type")
+
+  /// SHA-256 of the canonical payload. Same key with a different payload means
+  /// either a client bug reusing keys or an attacker splicing a new amount onto
+  /// a known-good key — both rejected rather than applied.
+  payloadHash String @map("payload_hash")
+
+  /// applied | duplicate | conflict | rejected
+  resultStatus String @map("result_status")
+
+  /// The response replayed verbatim when the same op arrives again.
+  resultBody Json @map("result_body")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Scoped per user, never global. A global unique index would let anyone who
+  /// learns a victim's opId submit it first and silently swallow the victim's
+  /// real operation — and would leak whether a given key exists at all.
+  @@unique([userId, opId])
+  @@index([createdAt])
+  @@map("sync_operation")
+}
+
+/// Append-only change log. Serves three jobs at once: the pull cursor, the
+/// audit trail, and conflict forensics.
+///
+/// Getting all three from one table is why the audit requirement costs a column
+/// rather than a subsystem. The application role holds only INSERT and SELECT
+/// here — enforced by GRANT in the migration, not by convention — so no code
+/// path, bug, or injection can rewrite history.
+model SyncChangeLog {
+  id     BigInt @id @default(autoincrement())
+  userId String @map("user_id") @db.Uuid
+
+  /// Per-user sequence copied from `AppUser.changeSeq`. This, not `id` and not
+  /// a timestamp, is the pull cursor. See the note on that column.
+  seq BigInt
+
+  entity   String
+  entityId String @map("entity_id") @db.Uuid
+
+  /// create | update | void | conflict
+  opType String @map("op_type")
+
+  /// Full row after the change.
+  snapshot Json
+
+  /// Full row before it. Null on create. This is what makes the log an audit
+  /// trail rather than a change feed.
+  previous Json?
+
+  deviceId String? @map("device_id") @db.Uuid
+  opId     String? @map("op_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  /// Restrict, not Cascade — deliberately.
+  ///
+  /// Cascading would let `DELETE FROM app_user` quietly destroy the audit
+  /// trail, which is the one thing an audit trail must survive. It also could
+  /// not work: the append-only trigger refuses to delete recent rows, so the
+  /// cascade fails mid-statement with a confusing constraint error.
+  ///
+  /// Restricting makes account deletion an explicit procedure that has to
+  /// decide what happens to the history — anonymise the subject, or archive and
+  /// then prune with the trigger disabled. Both are defensible; silently losing
+  /// it is not.
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, seq])
+  @@index([userId, seq])
+  @@map("sync_change_log")
 }

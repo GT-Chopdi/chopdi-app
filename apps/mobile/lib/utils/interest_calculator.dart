@@ -1,6 +1,7 @@
 // import 'dart:math';
 
 // class InterestCalculator {
+
 //   static double calculate({
 //     required double principal,
 //     required double rate,
@@ -78,6 +79,27 @@ import 'dart:math';
 
 
 class InterestCalculator {
+  /// Whole calendar days between two dates.
+  ///
+  /// Deliberately not `end.difference(start).inDays`, which measures elapsed
+  /// time and truncates. Entry dates carry a time and the end date defaults to
+  /// `DateTime.now()`, so elapsed-time counting made a loan recorded at 6pm
+  /// show zero interest the next morning — then jump as soon as it synced,
+  /// because the server counts calendar days. A ledger amount that changes on
+  /// its own is worse than one that is slightly wrong.
+  ///
+  /// Mirrors `InterestService.daysBetween` on the server. Both must agree; the
+  /// shared fixture in docs/rnd/interest-vectors.json is what keeps them
+  /// agreeing.
+  static int daysBetween(DateTime from, DateTime to) {
+    // Compare calendar dates in each value's own zone: a business date is the
+    // user's day, not a UTC instant.
+    final start = DateTime.utc(from.year, from.month, from.day);
+    final end = DateTime.utc(to.year, to.month, to.day);
+
+    return end.difference(start).inDays;
+  }
+
   static double calculate({
     required double principal,
     required double rate,
@@ -88,7 +110,7 @@ class InterestCalculator {
   }) {
     final end = endDate ?? DateTime.now();
 
-    final days = end.difference(startDate).inDays;
+    final days = daysBetween(startDate, end);
 
     if (days <= 0) {
       return 0;

@@ -344,6 +344,7 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class AddNewCustomerScreen extends StatefulWidget {
   const AddNewCustomerScreen({super.key});
@@ -473,6 +474,7 @@ class _AddNewCustomerScreenState
     if (phone.isNotEmpty) {
       existingCustomer = await IsarService.isar.customers
           .filter()
+          .deletedAtIsNull()
           .nameEqualTo(name)
           .phoneEqualTo(phone)
           .findFirst();
@@ -571,17 +573,14 @@ class _AddNewCustomerScreenState
       return;
     }
 
-    // Create new customer
-    final customer = Customer()
-      ..name = name
-      ..phone = phone
-      ..status = "Pending"
-      ..received = false;
-
-    // Save customer
-    await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.customers.put(customer);
-    });
+    // Created through the repository so the row and its sync operation are
+    // written in one transaction. A direct put would save the customer locally
+    // and never queue it — invisible until the phone is lost.
+    final customer = await Repositories.customers.create(
+      name: name,
+      phone: phone,
+      status: "Pending",
+    );
 
     if (!mounted) return;
 
