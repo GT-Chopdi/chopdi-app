@@ -3,7 +3,7 @@ import { randomInt } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
-import { v7 as uuidv7 } from 'uuid';
+import { uuidv7 } from '../../common/utils/uuid';
 
 import { AppException, ErrorCode } from '../../common/errors/app.exception';
 import { PrismaService } from '../../common/prisma/prisma.service';

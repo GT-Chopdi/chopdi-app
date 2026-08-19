@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { v7 as uuidv7 } from 'uuid';
+import { uuidv7 } from '../../common/utils/uuid';
 
 import { AppException, ErrorCode } from '../../common/errors/app.exception';
 import { PrismaService } from '../../common/prisma/prisma.service';
