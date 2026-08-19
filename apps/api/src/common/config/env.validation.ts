@@ -11,14 +11,28 @@ import * as Joi from 'joi';
 export const envValidationSchema = Joi.object({
   // ---------------------------------------------------------------- runtime
   /**
-   * `staging` exists as a distinct value so a deployed, internet-reachable
-   * environment can still run the fixed-OTP dev mode while `production`
-   * cannot. Without it, staging would have to claim NODE_ENV=production —
-   * which the interlock below would then (correctly) refuse to boot.
+   * Node's build-mode flag. Platforms own this — Vercel forces it to
+   * `production` on every deployment and will not let you override it — so it
+   * is deliberately NOT what any security decision keys on. See APP_ENV.
    */
   NODE_ENV: Joi.string()
     .valid('development', 'test', 'staging', 'production')
     .default('development'),
+
+  /**
+   * Which environment this deployment *is*, as opposed to how Node was built.
+   *
+   * These are genuinely different questions, and conflating them is what broke
+   * the first Vercel deploy: Vercel legitimately owns NODE_ENV, but only we
+   * know whether a given deployment is staging or production. APP_ENV is ours,
+   * so no platform can claim it.
+   *
+   * Defaults to NODE_ENV when unset, so local development and Render behave
+   * exactly as before and the protection below cannot be lost by omission.
+   */
+  APP_ENV: Joi.string()
+    .valid('development', 'test', 'staging', 'production')
+    .default(() => process.env.NODE_ENV ?? 'development'),
   PORT: Joi.number().port().default(3000),
 
   // --------------------------------------------------------------- database
@@ -68,15 +82,19 @@ export const envValidationSchema = Joi.object({
    * to start if dev mode is enabled in production. A bypass that can reach
    * production is the same vulnerability as the hardcoded client-side OTP it
    * replaces.
+   *
+   * Keyed on APP_ENV, not NODE_ENV — a deployed staging environment needs
+   * NODE_ENV=production for sane runtime behaviour while still being staging.
    */
   AUTH_DEV_MODE: Joi.boolean()
     .default(false)
-    .when('NODE_ENV', {
+    .when('APP_ENV', {
       is: 'production',
       then: Joi.valid(false).messages({
         'any.only':
-          'AUTH_DEV_MODE must be false when NODE_ENV=production. ' +
-          'Dev mode lets any phone number authenticate with a fixed code.',
+          'AUTH_DEV_MODE must be false when APP_ENV=production. ' +
+          'Dev mode lets any phone number authenticate with a fixed code. ' +
+          'For an internet-reachable test environment set APP_ENV=staging.',
       }),
     }),
 

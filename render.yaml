@@ -43,6 +43,11 @@ services:
       - key: NODE_ENV
         value: production
 
+      # What the AUTH_DEV_MODE interlock checks. Kept separate from NODE_ENV
+      # because platforms own that one.
+      - key: APP_ENV
+        value: production
+
       # ---- secrets: set in the Render dashboard, never in this file ----
       # sync: false means "prompt me, don't store it in git".
 
@@ -116,6 +121,10 @@ services:
       - key: NODE_VERSION
         value: 22.12.0
       - key: NODE_ENV
+        value: production
+      # Staging by intent, production by build mode — that is exactly the
+      # distinction APP_ENV exists to express.
+      - key: APP_ENV
         value: staging
 
       # A Neon BRANCH connection string, not production.
