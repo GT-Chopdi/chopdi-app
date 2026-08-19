@@ -56,6 +56,43 @@ export default async function handler(
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<void> {
-  const express = await getHandler();
-  express(req, res);
+  try {
+    const express = await getHandler();
+    express(req, res);
+  } catch (error) {
+    // A bootstrap failure never reaches Nest's exception filter — the app does
+    // not exist yet. Without this, Vercel reports only
+    // FUNCTION_INVOCATION_FAILED, which is indistinguishable between a missing
+    // env var, an unbundled file, and a dead database.
+    //
+    // Details are withheld once APP_ENV=production, where an opaque 500 is the
+    // correct answer and the stack belongs only in the logs.
+    const isProduction = process.env.APP_ENV === 'production';
+    const err = error as { message?: string; stack?: string };
+
+    // Always log in full — this is what shows up in `vercel logs`.
+    console.error('Bootstrap failed:', error);
+
+    res.statusCode = 500;
+    res.setHeader('content-type', 'application/json');
+    res.end(
+      JSON.stringify({
+        error: {
+          code: 'BOOTSTRAP_FAILED',
+          message: isProduction
+            ? 'Service unavailable.'
+            : (err?.message ?? String(error)),
+          ...(isProduction
+            ? {}
+            : {
+                appEnv: process.env.APP_ENV ?? '(unset)',
+                nodeEnv: process.env.NODE_ENV ?? '(unset)',
+                stack: String(err?.stack ?? '')
+                  .split('\n')
+                  .slice(0, 15),
+              }),
+        },
+      }),
+    );
+  }
 }
