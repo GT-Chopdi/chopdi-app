@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { v7 as uuidv7 } from 'uuid';
+import { uuidv7 } from '../../common/utils/uuid';
 
 import { AppException, ErrorCode } from '../../common/errors/app.exception';
 import { PrismaService } from '../../common/prisma/prisma.service';
