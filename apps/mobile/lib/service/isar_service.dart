@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:mychopdi/data/migration/local_migration.dart';
+import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:isar_community/isar.dart';
@@ -40,6 +42,8 @@ class IsarService {
         UserSessionSchema,
         SyncOpSchema,
         SyncMetaSchema,
+        ChopdiSchema,
+        NotificationModelSchema,
       ],
       directory: dir.path,
     );
@@ -84,6 +88,18 @@ class IsarService {
         .filter()
         .phoneEqualTo(phone)
         .deletedAtIsNull()
+        .findFirst();
+  }
+
+  static Future<Customer?> getCustomerByPhoneAndChopdi(
+    String phone,
+    int chopdiId,
+  ) async {
+    return await isar.customers
+        .filter()
+        .phoneEqualTo(phone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
         .findFirst();
   }
 

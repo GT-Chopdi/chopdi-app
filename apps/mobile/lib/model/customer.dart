@@ -73,4 +73,7 @@ class Customer {
 
   @enumerated
   SyncStatus syncStatus = SyncStatus.pending;
+  late int chopdiId;
+
+  late String loanType;
 }

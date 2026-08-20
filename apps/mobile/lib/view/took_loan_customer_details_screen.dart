@@ -10,17 +10,16 @@ import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
-import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
-import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
-import 'package:mychopdi/widgets/transaction_table.dart';
+import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:mychopdi/data/repository/repositories.dart';
 
-class CustomerDetailsScreen extends StatefulWidget {
+class TookLoanCustomerDetailsScreen extends StatefulWidget {
 
   final Customer customer;
 
-  const CustomerDetailsScreen({
+  const TookLoanCustomerDetailsScreen({
     super.key,
     required this.customer,
   });
@@ -29,7 +28,7 @@ class CustomerDetailsScreen extends StatefulWidget {
   State createState() => _CustomerDetailsScreenState();
 }
 
-class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
+class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
   int selectedTab = 0;
   int bottomIndex = 1; 
@@ -47,13 +46,33 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     }
   }
 
+  // Future<void> loadTransactions() async {
+  //     transactions = await IsarService.isar.transactions
+  //         .filter()
+  //         .customerIdEqualTo(widget.customer.id)
+  //         .sortByDate()
+  //         .findAll();
+
+  //     for (final tx in transactions) {
+  //       print("----------------");
+  //       print("Amount: ${tx.amount}");
+  //       print("Rate: ${tx.interestRate}");
+  //       print("Type: ${tx.interestType}");
+  //       print("Frequency: ${tx.interestFrequency}");
+  //       print("Date: ${tx.date}");
+  //       print("Calculated Interest: ${calculateInterest(tx)}");
+  //     }
+
+  //     setState(() {});
+
+  // }
+
   Future<void> loadTransactions() async {
-      transactions = await IsarService.isar.transactions
-          .filter()
-          .customerIdEqualTo(widget.customer.id)
-          .voidedAtIsNull()
-          .sortByDate()
-          .findAll();
+    final loadedTransactions = await IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(widget.customer.id)
+        .sortByDate()
+        .findAll();
 
     // Newest transaction first
     loadedTransactions.sort(
@@ -79,20 +98,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   double get totalGiven {
     return transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
   double get totalReceived {
     return transactions
-        .where((e) => e.type == TransactionType.received)
+        .where((e) => e.type == TransactionType.paid)
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
 
   double get totalInterest {
     return transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .fold(
           0.0,
           (sum, tx) =>
@@ -108,7 +127,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   double get outstanding {
-    return totalGiven + totalInterest - totalReceived;
+    // return totalGiven + totalInterest - totalReceived;
+    return (totalGiven + totalInterest - totalReceived)
+        .clamp(0.0, double.infinity);
   }
 
   double calculateInterest(Transaction tx) {
@@ -132,7 +153,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   
   Transaction? get lastReceivedTransaction {
     final received = transactions
-        .where((e) => e.type == TransactionType.received)
+        .where((e) => e.type == TransactionType.paid)
         .toList();
 
     if (received.isEmpty) return null;
@@ -144,7 +165,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   Transaction? get firstLoanTransaction {
     final gave = transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where((e) => e.type == TransactionType.took)
         .toList();
 
     if (gave.isEmpty) return null;
@@ -236,7 +257,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: MoneyGaveBottomSheet(
+                          child: TookLoanMoneyGaveBottomSheet(
                             customer:widget.customer,
                             onSaved:loadTransactions,
                             isEdit:false,
@@ -255,7 +276,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     ),
                   ),
                   child: const Text(
-                    "You Gave ₹",
+                    "You Took ₹",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -276,7 +297,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       builder: (context) {
                         return FractionallySizedBox(
                           heightFactor: 0.82, // Change this value
-                          child: MoneyReceiveBottomSheet(
+                          child: TookLoanMoneyReceivedBottomSheet(
                             customer: widget.customer,
                             onSaved: loadTransactions,
                           ),
@@ -294,7 +315,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     ),
                   ),
                   child: const Text(
-                    "You Got ₹",
+                    "You Paid ₹",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -320,7 +341,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
                     customer.name[0],
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: ChopdiColors.navy,
@@ -337,7 +358,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                       Text(
                         customer.name,
-                        style: const TextStyle(
+                        style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 22,
                           color: ChopdiColors.navy,
@@ -350,7 +371,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                         children: [
                           Text(
                             customer.phone,
-                            style: const TextStyle(
+                            style: GoogleFonts.manrope(
                               color: Colors.black54,
                             ),
                           ),
@@ -396,7 +417,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
-                      "Total Given",
+                      "Total Taken",
                       "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
@@ -411,7 +432,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      "Total Interest",
+                      "Interest Due",
                       "₹${totalInterest.toStringAsFixed(0)}",
                       Color(0xFF00901B),
                     ),
@@ -431,6 +452,21 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       Color(0xFFC74C4C),
                     ),
                   ),
+
+                  // Container(
+                  //   width: 1,
+                  //   height: 55,
+                  //   color: Colors.grey.shade300,
+                  // ),
+
+                  // Expanded(
+                  //   child: _infoItem(
+                  //     'assets/uil_calender.png',
+                  //     "Since",
+                  //     "$loanDays Days",
+                  //     ChopdiColors.navy,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -439,7 +475,12 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             const SizedBox(height: 12),
 
-            TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+            // TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+            TookLoanTransactionTable(
+              transactions: transactions,
+              onChanged: loadTransactions,
+              customerId: customer.id,
+            ),
           ],
         ),
       ),
@@ -607,11 +648,18 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             // Navigator.pop(context);
 
-            // Customer and entries are voided together in one transaction,
-            // each queued for sync. Deleting them separately would leave a
-            // window where a crash orphans entries against a deleted parent.
-            await Repositories.customers
-                .softDeleteWithEntries(widget.customer);
+            // Delete customer from database
+            await IsarService.isar.writeTxn(() async {
+
+              await IsarService.isar.transactions
+                  .filter()
+                  .customerIdEqualTo(widget.customer.id)
+                  .deleteAll();
+
+              await IsarService.isar.customers.delete(
+                  widget.customer.id);
+
+            });
 
             if (mounted) {
               // Navigator.pop(context); // Close delete sheet

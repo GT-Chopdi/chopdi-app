@@ -7,6 +7,8 @@ part 'transaction.g.dart';
 enum TransactionType {
   gave,
   received,
+  took,
+  paid,
 }
 
 // @collection
@@ -117,6 +119,7 @@ class Transaction {
       interestRateBp != 0 ? interestRateBp / 100.0 : legacyInterestRate;
 
   late DateTime date;
+  late int chopdiId;
 
   @enumerated
   late TransactionType type;
