@@ -1,29 +1,24 @@
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
 
-import { AppModule } from './app.module';
+import { createApp } from './app.factory';
 
+/**
+ * Long-lived server entry point — local development and any container host
+ * (Render, Cloud Run, a VPS).
+ *
+ * The app itself is assembled in {@link createApp}; this file owns only what is
+ * specific to running as a persistent process. The Vercel serverless entry
+ * point (`api/index.ts`) shares the same factory.
+ */
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
-
-  // Namespace every route under /api so the mobile client has a stable base path.
-  app.setGlobalPrefix('api');
-
-  // Reject unknown/invalid payloads globally; DTOs opt into their own rules.
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  const app = await createApp();
 
   // Flush in-flight work on SIGTERM/SIGINT (clean container shutdowns).
+  // Meaningless under serverless, which is why it lives here and not in the
+  // factory.
   app.enableShutdownHooks();
 
-  const port = config.get<number>('app.port', 3000);
+  const port = app.get(ConfigService).get<number>('app.port', 3000);
   await app.listen(port);
 }
 

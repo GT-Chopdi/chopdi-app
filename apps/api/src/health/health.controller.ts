@@ -4,7 +4,9 @@ import {
   HealthCheckService,
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
+import { SkipThrottle } from '@nestjs/throttler';
 
+import { Public } from '../common/decorators/public.decorator';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 /**
@@ -20,6 +22,13 @@ export class HealthController {
     private readonly prisma: PrismaService,
   ) {}
 
+  /**
+   * Unauthenticated and unthrottled by necessity: Render's health check, load
+   * balancers, and uptime monitors have no credentials and poll frequently.
+   * It exposes only up/down, never any user data.
+   */
+  @Public()
+  @SkipThrottle()
   @Get()
   @HealthCheck()
   check() {
