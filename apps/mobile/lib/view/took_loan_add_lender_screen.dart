@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/view/took_loan_add_new_lender_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_detail_add.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
+import 'package:mychopdi/widgets/took_loan_add_new_lender_card.dart';
 
-import 'package:mychopdi/view/add_new_customer_screen.dart';
-import 'package:mychopdi/view/customer_detail_add.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
-
-import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
 
-class AddCustomerScreen extends StatefulWidget {
+class TookLoanAddLenderScreen extends StatefulWidget {
   final int chopdiId;
-  const AddCustomerScreen({super.key,required this.chopdiId});
+  const TookLoanAddLenderScreen({super.key,required this.chopdiId});
 
   @override
-  State<AddCustomerScreen> createState() => _AddCustomerScreenState();
+  State<TookLoanAddLenderScreen> createState() => _TookLoanAddLenderScreen();
 }
 
-class _AddCustomerScreenState extends State<AddCustomerScreen> {
+class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
   final TextEditingController searchController = TextEditingController();
   final ScrollController _contactsScrollController = ScrollController();
 
@@ -197,7 +196,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CustomerDetailsScreen(
+          builder: (_) => TookLoanCustomerDetailsScreen(
             customer: existingCustomer,
           ),
         ),
@@ -210,7 +209,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CustomerDetailsAdd(
+        builder: (_) => TookLoanCustomerDetailAdd(
           contactName: contactName,
           contactPhone: phoneNumber,
           chopdiId: widget.chopdiId,
@@ -322,7 +321,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       const SizedBox(width: 12),
 
                       const Text(
-                        "Add Customer",
+                        "Add Lender",
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
@@ -348,12 +347,24 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   // ------------------------------------------------
                   // ADD NEW CUSTOMER
                   // ------------------------------------------------
-                  AddNewCustomerCard(
+
+                  // AddNewCustomerCard(
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //         builder: (_) =>
+                  //             const AddNewCustomerScreen(),
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
+                  AddNewLenderCard(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => AddNewCustomerScreen(
+                          builder: (_) => AddNewLenderScreen(
                             chopdiId: widget.chopdiId,
                           ),
                         ),
@@ -471,6 +482,30 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         ),
       );
     }
+
+    // Contact list
+    // return ListView.builder(
+    //   itemCount: filteredContacts.length,
+
+    //   itemBuilder: (_, index) {
+    //     final contact =
+    //         filteredContacts[index];
+
+    //     final phone =
+    //         contact.phones.isNotEmpty
+    //             ? contact.phones.first.number
+    //             : "No phone number";
+
+    //     return ContactTile(
+    //       name: contact.displayName ?? 'Unknown',
+    //       phone: phone,
+
+    //       onTap: () {
+    //         selectContact(contact);
+    //       },
+    //     );
+    //   },
+    // );
 
     return ListView.builder(
       controller: _contactsScrollController,

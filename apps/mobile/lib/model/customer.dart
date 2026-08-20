@@ -31,4 +31,8 @@ class Customer {
   late String status;
 
   late bool received;
+
+  late int chopdiId;
+
+  late String loanType;
 }

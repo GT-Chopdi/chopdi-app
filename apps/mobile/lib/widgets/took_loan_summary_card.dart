@@ -1,15 +1,21 @@
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:isar_community/isar.dart';
+
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 
-class SummaryCard extends StatelessWidget {
+class TookLoanSummaryCard extends StatelessWidget {
   final int chopdiId;
-  final bool isGaveLoanSelected;
-  const SummaryCard({super.key, required this.chopdiId,required this.isGaveLoanSelected,});
+
+  const TookLoanSummaryCard({
+    super.key,
+    required this.chopdiId,
+  });
 
   String formatAmount(double amount) {
     return NumberFormat.currency(
@@ -29,38 +35,57 @@ class SummaryCard extends StatelessWidget {
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? <Transaction>[];
 
-        final totalLoanGiven = transactions
-            .where((tx) => tx.type == TransactionType.gave)
-            .fold<double>(0, (sum, tx) => sum + tx.amount);
+        // ==========================================
+        // TOTAL LOAN TAKEN
+        // ==========================================
 
-        final totalReceived = transactions
-            .where((tx) => tx.type == TransactionType.received)
-            .fold<double>(0, (sum, tx) => sum + tx.amount);
+        final totalLoanTaken = transactions
+            .where((tx) => tx.type == TransactionType.took)
+            .fold<double>(
+              0,
+              (sum, tx) => sum + tx.amount,
+            );
 
-        // final totalInterest = transactions
-        //     .where((tx) => tx.type == TransactionType.gave)
-        //     .fold<double>(
-        //       0,
-        //       (sum, tx) => sum + InterestCalculator.calculate(tx),
-        //     );
+        // ==========================================
+        // TOTAL PAID
+        // ==========================================
 
-        final totalInterest = transactions
-        .where((tx) => tx.type == TransactionType.gave)
-        .fold<double>(
-          0,
-          (sum, tx) =>
-              sum +
-              InterestCalculator.calculate(
-                principal: tx.amount,
-                rate: tx.interestRate,
-                startDate: tx.date,
-                interestType: tx.interestType,
-                frequency: tx.interestFrequency,
-              ),
-        );
+        final totalPaid = transactions
+            .where((tx) => tx.type == TransactionType.paid)
+            .fold<double>(
+              0,
+              (sum, tx) => sum + tx.amount,
+            );
+
+        // ==========================================
+        // TOTAL INTEREST DUE
+        // ==========================================
+
+        final totalInterestDue = transactions
+            .where((tx) => tx.type == TransactionType.took)
+            .fold<double>(
+              0,
+              (sum, tx) =>
+                  sum +
+                  InterestCalculator.calculate(
+                    principal: tx.amount,
+                    rate: tx.interestRate,
+                    startDate: tx.date,
+                    interestType: tx.interestType,
+                    frequency: tx.interestFrequency,
+                  ),
+            );
+
+        // ==========================================
+        // OUTSTANDING
+        // ==========================================
+
+        // final outstanding =
+        //     totalLoanTaken + totalInterestDue - totalPaid;
 
         final outstanding =
-            totalLoanGiven + totalInterest - totalReceived;
+          (totalLoanTaken + totalInterestDue - totalPaid)
+              .clamp(0.0, double.infinity);
 
         return Container(
           height: 165,
@@ -71,7 +96,10 @@ class SummaryCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              /// Decorative Image
+              // ==========================================
+              // DECORATIVE IMAGE
+              // ==========================================
+
               Positioned(
                 right: -12,
                 top: -8,
@@ -91,9 +119,13 @@ class SummaryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    // ==========================================
+                    // TITLE
+                    // ==========================================
+
+                    Text(
                       "Total Outstanding Amount",
-                      style: TextStyle(
+                      style: GoogleFonts.manrope(
                         color: Colors.white70,
                         fontSize: 12,
                       ),
@@ -101,20 +133,15 @@ class SummaryCard extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
-                    // Text(
-                    //   formatAmount(outstanding),
-                    //   style: const TextStyle(
-                    //     color: Color(0xff68E04D),
-                    //     fontSize: 28,
-                    //     fontWeight: FontWeight.bold,
-                    //   ),
-                    // ),
+                    // ==========================================
+                    // OUTSTANDING AMOUNT
+                    // I TOOK LOAN = RED
+                    // ==========================================
+
                     Text(
                       formatAmount(outstanding),
-                      style: TextStyle(
-                        color: isGaveLoanSelected
-                            ? Color.fromRGBO(141, 208, 113, 1) // Green for I Gave Loan
-                            : Color.fromRGBO(199, 76, 76, 1),             // Red for I Took Loan
+                      style: GoogleFonts.manrope(
+                        color: Color.fromRGBO(199, 76, 76, 1),
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -130,12 +157,16 @@ class SummaryCard extends StatelessWidget {
 
                     const Spacer(),
 
+                    // ==========================================
+                    // BOTTOM SUMMARY
+                    // ==========================================
+
                     Row(
                       children: [
                         Expanded(
                           child: _SummaryItem(
-                            title: "Total Loan Given",
-                            value: formatAmount(totalLoanGiven),
+                            title: "Total Loan Taken",
+                            value: formatAmount(totalLoanTaken),
                             valueColor: Colors.white,
                           ),
                         ),
@@ -143,17 +174,15 @@ class SummaryCard extends StatelessWidget {
                         const SizedBox(width: 20),
 
                         Expanded(
-                          // child: _SummaryItem(
-                          //   title: "Total Interest Earned",
-                          //   value: formatAmount(totalInterest),
-                          //   valueColor: const Color(0xff68E04D),
-                          // ),
                           child: _SummaryItem(
-                            title: "Total Interest Earned",
-                            value: formatAmount(totalInterest),
-                            valueColor: isGaveLoanSelected
-                                ? Color.fromRGBO(141, 208, 113, 1) // Green
-                                : Color.fromRGBO(199, 76, 76, 1),             // Red
+                            title: "Total Interest Due",
+                            value: formatAmount(totalInterestDue),
+                            valueColor: const Color.fromRGBO(
+                              199,
+                              76,
+                              76,
+                              1,
+                            ),
                           ),
                         ),
                       ],
@@ -187,15 +216,17 @@ class _SummaryItem extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: GoogleFonts.manrope(
             color: Colors.white70,
             fontSize: 13,
           ),
         ),
+
         const SizedBox(height: 4),
+
         Text(
           value,
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             color: valueColor,
             fontWeight: FontWeight.bold,
             fontSize: 16,

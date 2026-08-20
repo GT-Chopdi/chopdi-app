@@ -334,23 +334,23 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 
-class MoneyReceiveBottomSheet extends StatefulWidget {
+class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
   final Customer customer;
   final VoidCallback onSaved;
 
-  const MoneyReceiveBottomSheet({
+  const TookLoanMoneyReceivedBottomSheet({
     super.key,
     required this.customer,
     required this.onSaved,
   });
 
   @override
-  State<MoneyReceiveBottomSheet> createState() =>
+  State<TookLoanMoneyReceivedBottomSheet> createState() =>
       _MoneyReceiveBottomSheetState();
 }
 
 class _MoneyReceiveBottomSheetState
-    extends State<MoneyReceiveBottomSheet> {
+    extends State<TookLoanMoneyReceivedBottomSheet> {
 
   final TextEditingController amountController =
       TextEditingController();
@@ -530,7 +530,7 @@ class _MoneyReceiveBottomSheetState
       ..amount = amount
       ..interestRate = 0
       ..date = selectedDate
-      ..type = TransactionType.received
+      ..type = TransactionType.paid
       ..description =
           descriptionController.text.trim()
       ..paymentMode = paymentMode
@@ -539,11 +539,12 @@ class _MoneyReceiveBottomSheetState
 
     await TransactionService.addTransaction(tx);
 
-    final notificationService = NotificationService(IsarService.isar);
+    final notificationService =
+        NotificationService(IsarService.isar);
 
     await notificationService.createLoanNotification(
       chopdiId: widget.customer.chopdiId,
-      loanType: "received",
+      loanType: "paid",
       customerName: widget.customer.name,
       amount: amount,
       customerId: widget.customer.id,
@@ -676,7 +677,7 @@ class _MoneyReceiveBottomSheetState
                       const SizedBox(height: 10),
 
                       Text(
-                        "You Got",
+                        "You Paid",
                         style: GoogleFonts.manrope(
                           color:
                               const Color(0xFF00901B),

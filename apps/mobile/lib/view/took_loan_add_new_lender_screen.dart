@@ -5,18 +5,18 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
-class AddNewCustomerScreen extends StatefulWidget {
-  const AddNewCustomerScreen({super.key, required int chopdiId});
+class AddNewLenderScreen extends StatefulWidget {
+  const AddNewLenderScreen({super.key, required int chopdiId});
 
   @override
-  State<AddNewCustomerScreen> createState() =>
+  State<AddNewLenderScreen> createState() =>
       _AddNewCustomerScreenState();
 }
 
 class _AddNewCustomerScreenState
-    extends State<AddNewCustomerScreen> {
+    extends State<AddNewLenderScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController();
@@ -38,8 +38,6 @@ class _AddNewCustomerScreenState
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
 
-    // Check for duplicate customer only
-    // when phone number is provided.
     Customer? existingCustomer;
 
     if (phone.isNotEmpty) {
@@ -81,7 +79,7 @@ class _AddNewCustomerScreenState
 
                 Expanded(
                   child: Text(
-                    "Customer Already Exists",
+                    "Lender Already Exists",
                     style: GoogleFonts.manrope(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -93,7 +91,7 @@ class _AddNewCustomerScreenState
             ),
 
             content: Text(
-              "A customer with the same name and phone number is already added.",
+              "A lender with the same name and phone number is already added.",
               style: GoogleFonts.manrope(
                 fontSize: 13,
                 color: const Color(0xff6E7D93),
@@ -143,7 +141,8 @@ class _AddNewCustomerScreenState
       return;
     }
 
-    final currentChopdi = await ChopdiService.getCurrentChopdi();
+    final currentChopdi =
+            await ChopdiService.getCurrentChopdi();
     // Create new customer
     final customer = Customer()
       ..name = name
@@ -151,7 +150,7 @@ class _AddNewCustomerScreenState
       ..chopdiId = currentChopdi.id
       ..status = "Pending"
       ..received = false
-      ..loanType = "gave";
+      ..loanType = "took";
      
 
     // Save customer
@@ -165,7 +164,7 @@ class _AddNewCustomerScreenState
       context,
       MaterialPageRoute(
         builder: (context) {
-          return CustomerDetailsScreen(
+          return TookLoanCustomerDetailsScreen(
             customer: customer,
           );
         },
@@ -213,7 +212,7 @@ class _AddNewCustomerScreenState
                     const SizedBox(width: 8),
 
                     Text(
-                      "Add New Customer",
+                      "Add New Lender",
                       style: GoogleFonts.manrope(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -242,7 +241,7 @@ class _AddNewCustomerScreenState
                     children: [
 
                       Text(
-                        "Customer Details",
+                        "Lender Details",
                         style: GoogleFonts.manrope(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -258,18 +257,66 @@ class _AddNewCustomerScreenState
 
                       _textField(
                         controller: nameController,
-                        hint: "Customer Name",
+                        hint: "Lender Name",
                         icon: Icons.person_outline,
                         validator: (value) {
                           if (value == null ||
                               value.trim().isEmpty) {
-                            return "Enter customer name";
+                            return "Enter lender name";
                           }
                           return null;
                         },
                       ),
 
                       const SizedBox(height: 12),
+
+                      // _label("Phone Number (Optional)"),
+
+                      // const SizedBox(height: 6),
+
+                      // _textField(
+                      //   controller: phoneController,
+                      //   hint: "Mobile Number",
+                      //   icon: Icons.phone_outlined,
+                      //   keyboardType: TextInputType.phone,
+                      // ),
+
+                      // _label("Phone Number*"),
+
+                      // const SizedBox(height: 6),
+
+                      // _textField(
+                      //   controller: phoneController,
+                      //   hint: "Mobile Number",
+                      //   icon: Icons.phone_outlined,
+                      //   keyboardType: TextInputType.phone,
+                      //   // validator: (value) {
+                      //   //   if (value == null || value.trim().isEmpty) {
+                      //   //     return "Enter phone number";
+                      //   //   }
+
+                      //   //   final phone = value.trim();
+
+                      //   //   if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                      //   //     return "Enter a valid 10-digit phone number";
+                      //   //   }
+
+                      //   //   return null;
+                      //   // },
+                      //   validator: (value) {
+                      //     if (value == null || value.trim().isEmpty) {
+                      //       return "Enter phone number";
+                      //     }
+
+                      //     final phone = value.trim();
+
+                      //     if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                      //       return "Enter a valid 10-digit phone number";
+                      //     }
+
+                      //     return null;
+                      //   },
+                      // ),
 
                       _label("Phone Number (Optional)"),
 
@@ -319,7 +366,7 @@ class _AddNewCustomerScreenState
                       ),
                     ),
                     child: Text(
-                      "Add Customer",
+                      "Add Lender",
                       style: GoogleFonts.manrope(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -374,6 +421,54 @@ class _AddNewCustomerScreenState
     );
   }
 
+  // Widget _textField({
+  //   required TextEditingController controller,
+  //   required String hint,
+  //   required IconData icon,
+  //   TextInputType? keyboardType,
+  //   String? Function(String?)? validator,
+  // }) {
+  //   return TextFormField(
+  //     controller: controller,
+  //     keyboardType: keyboardType,
+  //     validator: validator,
+  //     style: GoogleFonts.manrope(
+  //       fontSize: 13,
+  //     ),
+  //     decoration: InputDecoration(
+  //       isDense: true,
+  //       hintText: hint,
+  //       hintStyle: GoogleFonts.manrope(
+  //         fontSize: 12,
+  //         color: ChopdiColors.navy,
+  //       ),
+  //       prefixIcon: Icon(
+  //         icon,
+  //         size: 18,
+  //         color: ChopdiColors.navy,
+  //       ),
+  //       filled: true,
+  //       fillColor: Color(0xFFFFF8F0),
+  //       contentPadding: const EdgeInsets.symmetric(
+  //         vertical: 12,
+  //         horizontal: 12,
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: const BorderSide(
+  //           color: Color(0xFFAAB9CF),
+  //         ),
+  //       ),
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: const BorderSide(
+  //           color: ChopdiColors.navy,
+  //           width: 1.2,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _textField({
     required TextEditingController controller,

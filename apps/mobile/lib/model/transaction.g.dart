@@ -18,44 +18,45 @@ const TransactionSchema = CollectionSchema(
   id: 5320225499417954855,
   properties: {
     r'amount': PropertySchema(id: 0, name: r'amount', type: IsarType.double),
+    r'chopdiId': PropertySchema(id: 1, name: r'chopdiId', type: IsarType.long),
     r'customerId': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'customerId',
       type: IsarType.long,
     ),
-    r'date': PropertySchema(id: 2, name: r'date', type: IsarType.dateTime),
+    r'date': PropertySchema(id: 3, name: r'date', type: IsarType.dateTime),
     r'description': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'description',
       type: IsarType.string,
     ),
     r'interest': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'interest',
       type: IsarType.double,
     ),
     r'interestFrequency': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'interestFrequency',
       type: IsarType.string,
     ),
     r'interestRate': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'interestRate',
       type: IsarType.double,
     ),
     r'interestType': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'interestType',
       type: IsarType.string,
     ),
     r'paymentMode': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'paymentMode',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'type',
       type: IsarType.byte,
       enumMap: _TransactiontypeEnumValueMap,
@@ -97,15 +98,16 @@ void _transactionSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.amount);
-  writer.writeLong(offsets[1], object.customerId);
-  writer.writeDateTime(offsets[2], object.date);
-  writer.writeString(offsets[3], object.description);
-  writer.writeDouble(offsets[4], object.interest);
-  writer.writeString(offsets[5], object.interestFrequency);
-  writer.writeDouble(offsets[6], object.interestRate);
-  writer.writeString(offsets[7], object.interestType);
-  writer.writeString(offsets[8], object.paymentMode);
-  writer.writeByte(offsets[9], object.type.index);
+  writer.writeLong(offsets[1], object.chopdiId);
+  writer.writeLong(offsets[2], object.customerId);
+  writer.writeDateTime(offsets[3], object.date);
+  writer.writeString(offsets[4], object.description);
+  writer.writeDouble(offsets[5], object.interest);
+  writer.writeString(offsets[6], object.interestFrequency);
+  writer.writeDouble(offsets[7], object.interestRate);
+  writer.writeString(offsets[8], object.interestType);
+  writer.writeString(offsets[9], object.paymentMode);
+  writer.writeByte(offsets[10], object.type.index);
 }
 
 Transaction _transactionDeserialize(
@@ -116,17 +118,18 @@ Transaction _transactionDeserialize(
 ) {
   final object = Transaction();
   object.amount = reader.readDouble(offsets[0]);
-  object.customerId = reader.readLong(offsets[1]);
-  object.date = reader.readDateTime(offsets[2]);
-  object.description = reader.readString(offsets[3]);
+  object.chopdiId = reader.readLong(offsets[1]);
+  object.customerId = reader.readLong(offsets[2]);
+  object.date = reader.readDateTime(offsets[3]);
+  object.description = reader.readString(offsets[4]);
   object.id = id;
-  object.interest = reader.readDouble(offsets[4]);
-  object.interestFrequency = reader.readString(offsets[5]);
-  object.interestRate = reader.readDouble(offsets[6]);
-  object.interestType = reader.readString(offsets[7]);
-  object.paymentMode = reader.readString(offsets[8]);
+  object.interest = reader.readDouble(offsets[5]);
+  object.interestFrequency = reader.readString(offsets[6]);
+  object.interestRate = reader.readDouble(offsets[7]);
+  object.interestType = reader.readString(offsets[8]);
+  object.paymentMode = reader.readString(offsets[9]);
   object.type =
-      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[9])] ??
+      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[10])] ??
       TransactionType.gave;
   return object;
 }
@@ -143,20 +146,22 @@ P _transactionDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 4:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
-    case 6:
       return (reader.readDouble(offset)) as P;
-    case 7:
+    case 6:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readDouble(offset)) as P;
     case 8:
       return (reader.readString(offset)) as P;
     case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
       return (_TransactiontypeValueEnumMap[reader.readByteOrNull(offset)] ??
               TransactionType.gave)
           as P;
@@ -165,10 +170,17 @@ P _transactionDeserializeProp<P>(
   }
 }
 
-const _TransactiontypeEnumValueMap = {'gave': 0, 'received': 1};
+const _TransactiontypeEnumValueMap = {
+  'gave': 0,
+  'received': 1,
+  'took': 2,
+  'paid': 3,
+};
 const _TransactiontypeValueEnumMap = {
   0: TransactionType.gave,
   1: TransactionType.received,
+  2: TransactionType.took,
+  3: TransactionType.paid,
 };
 
 Id _transactionGetId(Transaction object) {
@@ -341,6 +353,61 @@ extension TransactionQueryFilter
           includeUpper: includeUpper,
 
           epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'chopdiId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  chopdiIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  chopdiIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'chopdiId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
         ),
       );
     });
@@ -1314,6 +1381,18 @@ extension TransactionQuerySortBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'customerId', Sort.asc);
@@ -1438,6 +1517,18 @@ extension TransactionQuerySortThenBy
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByAmountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'amount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
     });
   }
 
@@ -1574,6 +1665,12 @@ extension TransactionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chopdiId');
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QDistinct> distinctByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'customerId');
@@ -1650,6 +1747,12 @@ extension TransactionQueryProperty
   QueryBuilder<Transaction, double, QQueryOperations> amountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'amount');
+    });
+  }
+
+  QueryBuilder<Transaction, int, QQueryOperations> chopdiIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chopdiId');
     });
   }
 

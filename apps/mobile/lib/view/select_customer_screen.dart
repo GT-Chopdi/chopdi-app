@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mychopdi/view/add_customer_screen.dart';
 
 class SelectCustomerScreen extends StatefulWidget {
-  const SelectCustomerScreen({super.key});
+  final int chopdiId;
+  const SelectCustomerScreen({super.key, required this.chopdiId,});
 
   @override
   State<SelectCustomerScreen> createState() => _SelectCustomerScreenState();
@@ -99,6 +100,14 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
                 onTap: () {
 
                   //Open Add Customer
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddCustomerScreen(
+                        chopdiId: widget.chopdiId,
+                      ),
+                    ),
+                  );
 
                 },
                 child: Container(
@@ -175,7 +184,9 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const AddCustomerScreen(),
+                              builder: (_) => AddCustomerScreen(
+                                chopdiId: widget.chopdiId,
+                              ),
                             ),
                           );
                         },

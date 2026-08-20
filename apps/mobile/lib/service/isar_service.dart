@@ -1,4 +1,6 @@
+import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:isar_community/isar.dart';
@@ -17,6 +19,8 @@ class IsarService {
         CustomerSchema,
         TransactionSchema,
         UserSessionSchema,
+        ChopdiSchema,
+        NotificationModelSchema,
       ],
       directory: dir.path,
     );
@@ -30,6 +34,18 @@ class IsarService {
     return await isar.customers
         .filter()
         .phoneEqualTo(phone)
+        .findFirst();
+  }
+
+  static Future<Customer?> getCustomerByPhoneAndChopdi(
+    String phone,
+    int chopdiId,
+  ) async {
+    return await isar.customers
+        .filter()
+        .phoneEqualTo(phone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
         .findFirst();
   }
 
