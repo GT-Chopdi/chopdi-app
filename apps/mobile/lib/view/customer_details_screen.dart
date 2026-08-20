@@ -48,12 +48,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   Future<void> loadTransactions() async {
-      transactions = await IsarService.isar.transactions
-          .filter()
-          .customerIdEqualTo(widget.customer.id)
-          .voidedAtIsNull()
-          .sortByDate()
-          .findAll();
+    final loadedTransactions = await IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(widget.customer.id)
+        // Deleted entries are voided rather than removed so the deletion can
+        // reach other devices; they must not appear here.
+        .voidedAtIsNull()
+        .findAll();
 
     // Newest transaction first
     loadedTransactions.sort(

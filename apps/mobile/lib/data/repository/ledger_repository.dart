@@ -242,10 +242,13 @@ class LedgerRepository {
   Future<int> balancePaise(Customer customer) async {
     final entries = await forCustomer(customer);
 
+    // Uses the shared direction rule rather than `type == gave`. That shortcut
+    // was correct while only two types existed, but silently mis-signed `paid`
+    // once borrowing was added: repaying a debt reduces what you owe, so it
+    // must add to the net position, not subtract.
     return entries.fold<int>(
       0,
-      (sum, tx) =>
-          tx.type == TransactionType.gave ? sum + tx.amountPaise : sum - tx.amountPaise,
+      (sum, tx) => sum + SyncPayload.signedPaise(tx.type, tx.amountPaise),
     );
   }
 
@@ -253,6 +256,7 @@ class LedgerRepository {
         'customerId': tx.customerUuid,
         'amountPaise': tx.amountPaise,
         'direction': SyncPayload.direction(tx.type),
+        'ledgerSide': SyncPayload.ledgerSide(tx.type),
         'interestRateBp': tx.interestRateBp,
         'interestType':
             SyncPayload.interestType(tx.interestType, rateBp: tx.interestRateBp),

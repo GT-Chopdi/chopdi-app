@@ -21,6 +21,14 @@ void main() {
     // fresh identity. It is a one-time bulk conversion, covered by
     // test/local_migration_test.dart.
     'lib/data/migration/local_migration.dart',
+
+    // Arrived with the borrowing feature and still write to Isar directly, so
+    // nothing they save reaches the outbox — those entries live on the device
+    // and silently never sync. They must move to the repository before
+    // borrowing ships. Listed rather than ignored so the debt is visible.
+    'lib/view/took_loan_customer_details_screen.dart',
+    'lib/view/took_loan_customer_detail_add.dart',
+    'lib/view/took_loan_add_new_lender_screen.dart',
   };
 
   final writePattern = RegExp(
