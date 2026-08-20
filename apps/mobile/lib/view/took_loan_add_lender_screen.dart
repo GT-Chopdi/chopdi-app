@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:mychopdi/service/isar_service.dart';
-
-import 'package:mychopdi/view/add_new_customer_screen.dart';
-import 'package:mychopdi/view/customer_detail_add.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/view/took_loan_add_new_lender_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_detail_add.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 import 'package:mychopdi/widgets/took_loan_add_new_lender_card.dart';
 
-import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
@@ -199,7 +196,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CustomerDetailsScreen(
+          builder: (_) => TookLoanCustomerDetailsScreen(
             customer: existingCustomer,
           ),
         ),
@@ -212,7 +209,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CustomerDetailsAdd(
+        builder: (_) => TookLoanCustomerDetailAdd(
           contactName: contactName,
           contactPhone: phoneNumber,
           chopdiId: widget.chopdiId,

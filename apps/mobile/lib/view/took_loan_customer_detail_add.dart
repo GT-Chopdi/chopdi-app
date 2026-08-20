@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/isar_service.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 class TookLoanCustomerDetailAdd extends StatefulWidget {
   final String contactName;
@@ -186,7 +186,8 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
         ..phone = finalPhone
         ..chopdiId = widget.chopdiId
         ..status = "Pending"
-        ..received = false;
+        ..received = false
+        ..loanType = "took";
 
       // SAVE CUSTOMER TO ISAR
       await IsarService.isar.writeTxn(() async {
@@ -199,7 +200,7 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => CustomerDetailsScreen(
+          builder: (_) => TookLoanCustomerDetailsScreen(
             customer: customer,
           ),
         ),

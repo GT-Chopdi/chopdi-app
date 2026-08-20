@@ -10,11 +10,9 @@ import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
-import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
-import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
-import 'package:mychopdi/widgets/transaction_table.dart';
+import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TookLoanCustomerDetailsScreen extends StatefulWidget {
@@ -129,7 +127,9 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
   }
 
   double get outstanding {
-    return totalGiven + totalInterest - totalReceived;
+    // return totalGiven + totalInterest - totalReceived;
+    return (totalGiven + totalInterest - totalReceived)
+        .clamp(0.0, double.infinity);
   }
 
   double calculateInterest(Transaction tx) {
@@ -276,7 +276,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                     ),
                   ),
                   child: const Text(
-                    "You Gave ₹",
+                    "You Took ₹",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -315,7 +315,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                     ),
                   ),
                   child: const Text(
-                    "You Got ₹",
+                    "You Paid ₹",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -341,7 +341,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
                     customer.name[0],
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: ChopdiColors.navy,
@@ -358,7 +358,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
                       Text(
                         customer.name,
-                        style: const TextStyle(
+                        style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 22,
                           color: ChopdiColors.navy,
@@ -371,7 +371,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                         children: [
                           Text(
                             customer.phone,
-                            style: const TextStyle(
+                            style: GoogleFonts.manrope(
                               color: Colors.black54,
                             ),
                           ),
@@ -417,7 +417,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
-                      "Total Given",
+                      "Total Taken",
                       "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
@@ -432,7 +432,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      "Total Interest",
+                      "Interest Due",
                       "₹${totalInterest.toStringAsFixed(0)}",
                       Color(0xFF00901B),
                     ),
@@ -475,7 +475,12 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
             const SizedBox(height: 12),
 
-            TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+            // TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+            TookLoanTransactionTable(
+              transactions: transactions,
+              onChanged: loadTransactions,
+              customerId: customer.id,
+            ),
           ],
         ),
       ),

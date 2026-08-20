@@ -91,7 +91,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
         ..phone = finalPhone
         ..chopdiId = widget.chopdiId
         ..status = "Pending"
-        ..received = false;
+        ..received = false
+        ..loanType = "gave";
 
       // SAVE CUSTOMER TO ISAR
       await IsarService.isar.writeTxn(() async {

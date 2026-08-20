@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     currentChopdi = chopdi;
                   });
-                },
+                }, 
               ),
 
               const SizedBox(height: 18),
@@ -215,40 +215,80 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(),
                   )
+                // : StreamBuilder<List<Customer>>(
+                //     stream: IsarService.isar.customers
+                //         .filter()
+                //         .chopdiIdEqualTo(currentChopdi!.id)
+                //         .watch(fireImmediately: true),
+
+                //     builder: (context, snapshot) {
+                //       final customers = snapshot.data ?? [];
+
+                //       return ListView(
+                //         physics: const BouncingScrollPhysics(),
+                //         padding: const EdgeInsets.only(bottom: 100),
+                //         children: [
+                //           // const SummaryCard(),
+                //           SummaryCard(
+                //             chopdiId: currentChopdi!.id,
+                //             isGaveLoanSelected: isGaveLoanSelected,
+                //           ),
+
+                //           const SizedBox(height: 18),
+
+                //           if (customers.isEmpty)
+                //             SizedBox(
+                //               height: 350,
+                //               child: _buildEmptyState(),
+                //             )
+                //           else
+                //             CustomerListSection(
+                //               customers: customers,
+                //             ),
+                //         ],
+                //       );
+                //     },
+                //   ),
                 : StreamBuilder<List<Customer>>(
-                    stream: IsarService.isar.customers
-                        .filter()
-                        .chopdiIdEqualTo(currentChopdi!.id)
-                        .watch(fireImmediately: true),
+                  stream: IsarService.isar.customers
+                      .filter()
+                      .chopdiIdEqualTo(currentChopdi!.id)
+                      .watch(fireImmediately: true),
 
-                    builder: (context, snapshot) {
-                      final customers = snapshot.data ?? [];
+                  builder: (context, snapshot) {
+                    final allCustomers = snapshot.data ?? [];
 
-                      return ListView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 100),
-                        children: [
-                          // const SummaryCard(),
-                          SummaryCard(
-                            chopdiId: currentChopdi!.id,
-                            isGaveLoanSelected: isGaveLoanSelected,
+                    // ONLY customers belonging to I GAVE LOAN
+                    final customers = allCustomers
+                        .where(
+                          (customer) => customer.loanType == "gave",
+                        )
+                        .toList();
+
+                    return ListView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 100),
+                      children: [
+                        SummaryCard(
+                          chopdiId: currentChopdi!.id,
+                          isGaveLoanSelected: isGaveLoanSelected,
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        if (customers.isEmpty)
+                          SizedBox(
+                            height: 350,
+                            child: _buildEmptyState(),
+                          )
+                        else
+                          CustomerListSection(
+                            customers: customers,
                           ),
-
-                          const SizedBox(height: 18),
-
-                          if (customers.isEmpty)
-                            SizedBox(
-                              height: 350,
-                              child: _buildEmptyState(),
-                            )
-                          else
-                            CustomerListSection(
-                              customers: customers,
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                      ],
+                    );
+                  },
+                )
                 )
                 // : TookLoanHomeContent(
                 //     chopdiId: currentChopdi!.id,

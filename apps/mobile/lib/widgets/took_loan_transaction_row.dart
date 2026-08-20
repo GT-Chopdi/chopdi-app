@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
@@ -30,11 +31,11 @@ class TookLoanTransactionRow extends StatelessWidget {
   // TRANSACTION TYPE
 
   String _getGivenDescription() {
-    return "Loan Given";
+    return "Loan Took";
   }
 
   String _getReceivedDescription() {
-    return "Payment received";
+    return "Amount Paid";
   }
 
   String _getRowDescription() {
@@ -124,7 +125,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                   Text(
                     DateFormat("dd MMM yyyy")
                         .format(transaction.date),
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 12,
                       color: Colors.black87,
                     ),
@@ -137,7 +138,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                     _getDescription(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 10,
                       color: Color(0xff8A93A6),
                     ),
@@ -171,22 +172,22 @@ class TookLoanTransactionRow extends StatelessWidget {
                         const SizedBox(height: 2),
 
                         // Loan Given
-                        const Text(
+                        Text(
                           "Loan Given",
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: GoogleFonts.manrope(
                             fontSize: 10,
                             color: Colors.black87,
                           ),
                         ),
                       ],
                     )
-                  : const Center(
+                  : Center(
                       child: Text(
                         "-",
-                        style: TextStyle(
+                        style: GoogleFonts.manrope(
                           fontSize: 12,
                         ),
                       ),
@@ -206,7 +207,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                         Text(
                           "₹${transaction.amount.toStringAsFixed(0)}",
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: GoogleFonts.manrope(
                             color: Color(0xFF00901B),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -216,22 +217,22 @@ class TookLoanTransactionRow extends StatelessWidget {
                         const SizedBox(height: 2),
 
                         // Payment Received
-                        const Text(
+                        Text(
                           "Payment received",
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: GoogleFonts.manrope(
                             fontSize: 9,
                             color: Colors.black87,
                           ),
                         ),
                       ],
                     )
-                  : const Center(
+                  : Center(
                       child: Text(
                         "-",
-                        style: TextStyle(
+                        style: GoogleFonts.manrope(
                           fontSize: 12,
                         ),
                       ),
@@ -248,7 +249,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   "₹${balance.toStringAsFixed(0)}",
-                  style: const TextStyle(
+                  style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                     color: Colors.black,

@@ -18,10 +18,15 @@ const CustomerSchema = CollectionSchema(
   id: -7623823084711604343,
   properties: {
     r'chopdiId': PropertySchema(id: 0, name: r'chopdiId', type: IsarType.long),
-    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
-    r'phone': PropertySchema(id: 2, name: r'phone', type: IsarType.string),
-    r'received': PropertySchema(id: 3, name: r'received', type: IsarType.bool),
-    r'status': PropertySchema(id: 4, name: r'status', type: IsarType.string),
+    r'loanType': PropertySchema(
+      id: 1,
+      name: r'loanType',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(id: 2, name: r'name', type: IsarType.string),
+    r'phone': PropertySchema(id: 3, name: r'phone', type: IsarType.string),
+    r'received': PropertySchema(id: 4, name: r'received', type: IsarType.bool),
+    r'status': PropertySchema(id: 5, name: r'status', type: IsarType.string),
   },
 
   estimateSize: _customerEstimateSize,
@@ -45,6 +50,7 @@ int _customerEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.loanType.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.phone.length * 3;
   bytesCount += 3 + object.status.length * 3;
@@ -58,10 +64,11 @@ void _customerSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.chopdiId);
-  writer.writeString(offsets[1], object.name);
-  writer.writeString(offsets[2], object.phone);
-  writer.writeBool(offsets[3], object.received);
-  writer.writeString(offsets[4], object.status);
+  writer.writeString(offsets[1], object.loanType);
+  writer.writeString(offsets[2], object.name);
+  writer.writeString(offsets[3], object.phone);
+  writer.writeBool(offsets[4], object.received);
+  writer.writeString(offsets[5], object.status);
 }
 
 Customer _customerDeserialize(
@@ -73,10 +80,11 @@ Customer _customerDeserialize(
   final object = Customer();
   object.chopdiId = reader.readLong(offsets[0]);
   object.id = id;
-  object.name = reader.readString(offsets[1]);
-  object.phone = reader.readString(offsets[2]);
-  object.received = reader.readBool(offsets[3]);
-  object.status = reader.readString(offsets[4]);
+  object.loanType = reader.readString(offsets[1]);
+  object.name = reader.readString(offsets[2]);
+  object.phone = reader.readString(offsets[3]);
+  object.received = reader.readBool(offsets[4]);
+  object.status = reader.readString(offsets[5]);
   return object;
 }
 
@@ -94,8 +102,10 @@ P _customerDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
+      return (reader.readBool(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -306,6 +316,152 @@ extension CustomerQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'loanType',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'loanType',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'loanType',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'loanType', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> loanTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'loanType', value: ''),
       );
     });
   }
@@ -778,6 +934,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLoanType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLoanTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -853,6 +1021,18 @@ extension CustomerQuerySortThenBy
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLoanType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLoanTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -910,6 +1090,14 @@ extension CustomerQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Customer, Customer, QDistinct> distinctByLoanType({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'loanType', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QDistinct> distinctByName({
     bool caseSensitive = true,
   }) {
@@ -952,6 +1140,12 @@ extension CustomerQueryProperty
   QueryBuilder<Customer, int, QQueryOperations> chopdiIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'chopdiId');
+    });
+  }
+
+  QueryBuilder<Customer, String, QQueryOperations> loanTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'loanType');
     });
   }
 

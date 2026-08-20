@@ -5,7 +5,6 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 class AddNewLenderScreen extends StatefulWidget {
@@ -30,89 +29,6 @@ class _AddNewCustomerScreenState
     super.dispose();
   }
 
-  // Future<void> saveCustomer() async {
-  //   if (!_formKey.currentState!.validate()) return;
-
-  //   final customer = Customer()
-  //     ..name = nameController.text.trim()
-  //     ..phone = phoneController.text.trim()
-  //     ..status = "Pending"
-  //     ..received = false;
-  //     // ..amount = ""
-  //     // ..interest = ""
-  //     // ..loan = "";
-
-  //   await IsarService.isar.writeTxn(() async {
-  //     await IsarService.isar.customers.put(customer);
-  //   });
-
-  //   if (mounted) {
-  //     Navigator.pushReplacement(
-  //       context, 
-  //       MaterialPageRoute(
-  //         builder: (context) {
-  //           return CustomerDetailsScreen(
-  //             customer: customer,
-  //           );
-  //         }
-  //       ),
-  //     );   
-  //   }
-  // }
-
-  // Future<void> saveCustomer() async {
-  //   if (!_formKey.currentState!.validate()) return;
-
-  //   final name = nameController.text.trim();
-  //   final phone = phoneController.text.trim();
-
-  //   // Check if customer already exists
-  //   final existingCustomer = await IsarService.isar.customers
-  //       .filter()
-  //       .nameEqualTo(name)
-  //       .phoneEqualTo(phone)
-  //       .findFirst();
-
-  //   if (existingCustomer != null) {
-  //     if (!mounted) return;
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text(
-  //           "Customer with the same name and phone number already exists.",
-  //         ),
-  //         behavior: SnackBarBehavior.floating,
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   // Create new customer
-  //   final customer = Customer()
-  //     ..name = name
-  //     ..phone = phone
-  //     ..status = "Pending"
-  //     ..received = false;
-
-  //   // Save customer
-  //   await IsarService.isar.writeTxn(() async {
-  //     await IsarService.isar.customers.put(customer);
-  //   });
-
-  //   if (!mounted) return;
-
-  //   Navigator.pushReplacement(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) {
-  //         return CustomerDetailsScreen(
-  //           customer: customer,
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
 
   Future<void> saveCustomer() async {
     if (!_formKey.currentState!.validate()) {
@@ -122,15 +38,6 @@ class _AddNewCustomerScreenState
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
 
-    // Check for duplicate customer
-    // final existingCustomer = await IsarService.isar.customers
-    //     .filter()
-    //     .nameEqualTo(name)
-    //     .phoneEqualTo(phone)
-    //     .findFirst();
-
-    // Check for duplicate customer only
-// when phone number is provided.
     Customer? existingCustomer;
 
     if (phone.isNotEmpty) {
@@ -242,7 +149,8 @@ class _AddNewCustomerScreenState
       ..phone = phone
       ..chopdiId = currentChopdi.id
       ..status = "Pending"
-      ..received = false;
+      ..received = false
+      ..loanType = "took";
      
 
     // Save customer

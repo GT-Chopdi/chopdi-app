@@ -6,7 +6,7 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 class TookLoanCustomerCard extends StatelessWidget {
   final Customer customer;
@@ -26,15 +26,27 @@ class TookLoanCustomerCard extends StatelessWidget {
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
+        // double balance = 0;
+
+        // for (final tx in transactions) {
+        //   if (tx.type == TransactionType.took) {
+        //     balance += tx.amount;
+        //   } else {
+        //     balance -= tx.amount;
+        //   }
+        // }
+
         double balance = 0;
 
         for (final tx in transactions) {
-          if (tx.type == TransactionType.gave) {
+          if (tx.type == TransactionType.took) {
             balance += tx.amount;
-          } else {
+          } else if (tx.type == TransactionType.paid) {
             balance -= tx.amount;
           }
         }
+
+        balance = balance.clamp(0.0, double.infinity);
 
         return InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -42,7 +54,7 @@ class TookLoanCustomerCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => CustomerDetailsScreen(
+                builder: (_) => TookLoanCustomerDetailsScreen(
                   customer: customer,
                 ),
               ),
@@ -129,22 +141,41 @@ class TookLoanCustomerCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Text(
+                    //   "₹${balance.toStringAsFixed(0)}",
+                    //   style: GoogleFonts.manrope(
+                    //     fontSize: 17,
+                    //     fontWeight: FontWeight.bold,
+                    //     color: Colors.green,
+                    //   ),
+                    // ),
                     Text(
                       "₹${balance.toStringAsFixed(0)}",
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: balance > 0
+                            ? Colors.green
+                            : Colors.grey,
                       ),
                     ),
 
                     const SizedBox(height: 3),
 
+                    // Text(
+                    //   balance >= 0 ? "Pending" : "Settled",
+                    //   style: GoogleFonts.manrope(
+                    //     fontSize: 12,
+                    //     color: Colors.green,
+                    //   ),
+                    // ),
                     Text(
-                      balance >= 0 ? "Pending" : "Settled",
+                      balance > 0 ? "Pending" : "Settled",
                       style: GoogleFonts.manrope(
                         fontSize: 12,
-                        color: Colors.green,
+                        color: balance > 0
+                            ? Colors.green
+                            : Colors.grey,
                       ),
                     ),
                   ],

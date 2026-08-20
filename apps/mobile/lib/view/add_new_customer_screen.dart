@@ -150,7 +150,8 @@ class _AddNewCustomerScreenState
       ..phone = phone
       ..chopdiId = currentChopdi.id
       ..status = "Pending"
-      ..received = false;
+      ..received = false
+      ..loanType = "gave";
      
 
     // Save customer

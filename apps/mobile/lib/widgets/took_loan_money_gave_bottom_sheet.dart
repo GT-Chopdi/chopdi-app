@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 
@@ -279,7 +281,7 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                       const SizedBox(height: 10),
 
                       Text(
-                        "You Gave",
+                        "You Took",
                         style: GoogleFonts.manrope(
                           color: const Color.fromRGBO(
                             199,
@@ -611,24 +613,58 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               frequency: interestFrequency,
                             );
 
+                            // final tx = Transaction()
+                            //   ..customerId =
+                            //       widget.customer.id
+                            //   ..chopdiId = widget.customer.chopdiId
+                            //   ..amount = amount
+                            //   ..interest = interestAmount
+                            //   ..interestRate = rate
+                            //   ..date = selectedDate
+                            //   ..type = TransactionType.took
+                            //   ..description =
+                            //       descriptionController.text
+                            //   ..paymentMode = paymentMode
+                            //   ..interestType = interestType
+                            //   ..interestFrequency =
+                            //       interestFrequency;
+
+                            // await TransactionService
+                            //     .addTransaction(tx);
+
+                            // widget.onSaved();
+
+                            // if (mounted) {
+                            //   Navigator.pop(context);
+                            // }
+
                             final tx = Transaction()
-                              ..customerId =
-                                  widget.customer.id
+                              ..customerId = widget.customer.id
                               ..chopdiId = widget.customer.chopdiId
                               ..amount = amount
-                              ..interest = interestAmount
-                              ..interestRate = rate
+                              ..interestRate = double.tryParse(
+                                    interestController.text.trim(),
+                                  ) ??
+                                  0
                               ..date = selectedDate
                               ..type = TransactionType.took
-                              ..description =
-                                  descriptionController.text
+                              ..description = descriptionController.text.trim()
                               ..paymentMode = paymentMode
                               ..interestType = interestType
-                              ..interestFrequency =
-                                  interestFrequency;
+                              ..interestFrequency = interestFrequency;
 
-                            await TransactionService
-                                .addTransaction(tx);
+                            await TransactionService.addTransaction(tx);
+
+                            final notificationService =
+                                NotificationService(IsarService.isar);
+
+                            await notificationService.createLoanNotification(
+                              chopdiId: widget.customer.chopdiId,
+                              loanType: "took",
+                              customerName: widget.customer.name,
+                              amount: amount,
+                              customerId: widget.customer.id,
+                            );
 
                             widget.onSaved();
 

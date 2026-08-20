@@ -330,6 +330,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 
 class MoneyReceiveBottomSheet extends StatefulWidget {
@@ -536,6 +538,16 @@ class _MoneyReceiveBottomSheetState
       ..interestFrequency = "";
 
     await TransactionService.addTransaction(tx);
+
+    final notificationService = NotificationService(IsarService.isar);
+
+    await notificationService.createLoanNotification(
+      chopdiId: widget.customer.chopdiId,
+      loanType: "received",
+      customerName: widget.customer.name,
+      amount: amount,
+      customerId: widget.customer.id,
+    );
 
     widget.onSaved();
 
