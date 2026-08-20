@@ -333,6 +333,7 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
+import 'package:mychopdi/utils/money.dart';
 
 class MoneyReceiveBottomSheet extends StatefulWidget {
   final Customer customer;
@@ -526,9 +527,8 @@ class _MoneyReceiveBottomSheetState
 
     final tx = Transaction()
       ..customerId = widget.customer.id
-      ..chopdiId = widget.customer.chopdiId
-      ..amount = amount
-      ..interestRate = 0
+      ..amountPaise = Money.toPaise(amount)
+      ..interestRateBp = 0
       ..date = selectedDate
       ..type = TransactionType.received
       ..description =

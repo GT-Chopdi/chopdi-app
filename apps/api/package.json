@@ -23,7 +23,10 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "verify:auth": "node test/verify-auth.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "verify:schema": "node test/verify-schema.mjs",
+    "verify:change-log": "node test/verify-change-log.mjs",
+    "verify:db": "npm run verify:schema && npm run verify:change-log"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

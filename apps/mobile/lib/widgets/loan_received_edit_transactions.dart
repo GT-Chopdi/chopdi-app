@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
+import 'package:mychopdi/utils/money.dart';
 
 class LoanReceivedEditTransactions extends StatefulWidget {
 
@@ -283,8 +284,9 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
 
                           final tx = Transaction()
                             ..customerId = widget.customer.id
-                            ..amount = double.parse(amountController.text)
-                            ..interestRate = 0
+                            ..amountPaise =
+                                Money.toPaise(double.parse(amountController.text))
+                            ..interestRateBp = 0
                             ..date = selectedDate
                             ..type = TransactionType.received
                             ..description = descriptionController.text

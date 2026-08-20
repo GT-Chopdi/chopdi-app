@@ -3,8 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import 'package:mychopdi/model/transaction.dart';
-import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/money.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class EditTransactionBottomSheet extends StatefulWidget {
   final Transaction transaction;
@@ -615,8 +616,8 @@ class _EditTransactionBottomSheetState
     // Update existing Isar object
     final transaction = widget.transaction;
 
-    transaction.amount = amount;
-    transaction.interestRate = interestRate;
+    transaction.amountPaise = Money.toPaise(amount);
+    transaction.interestRateBp = Money.rateToBasisPoints(interestRate);
     transaction.date = selectedDate;
 
     transaction.interestType =
@@ -631,12 +632,16 @@ class _EditTransactionBottomSheetState
     transaction.description =
         descriptionController.text.trim();
 
-    // Save to Isar
-    await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.transactions.put(
-        transaction,
-      );
-    });
+    // Through the repository: validated, version-guarded, and enqueued in the
+    // same transaction as the row.
+    await Repositories.ledger.update(
+      transaction,
+      amountPaise: transaction.amountPaise,
+      interestRateBp: transaction.interestRateBp,
+      date: transaction.date,
+      description: transaction.description,
+      paymentMode: transaction.paymentMode,
+    );
 
     if (!mounted) return;
 

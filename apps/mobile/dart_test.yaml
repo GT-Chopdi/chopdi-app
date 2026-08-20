@@ -1,0 +1,18 @@
+# Test tags.
+#
+# `integration` tests make real network calls to a deployed API. They are
+# excluded from the default run so CI and pre-commit checks stay hermetic and
+# fast — a unit suite that fails because staging is cold-starting teaches
+# people to ignore red builds.
+#
+# Run them deliberately:
+#   flutter test --tags integration \
+#     --dart-define=API_BASE_URL=https://chopdi-app.vercel.app/api \
+#     --dart-define=DEV_KEY=<AUTH_DEV_KEY>
+tags:
+  integration:
+    skip: false
+  # Opens a real Isar database and downloads the native core on first run.
+  # Kept out of the default suite so a plain `flutter test` needs no network.
+  isar:
+    skip: false

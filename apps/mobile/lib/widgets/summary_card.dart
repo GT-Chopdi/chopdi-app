@@ -24,6 +24,7 @@ class SummaryCard extends StatelessWidget {
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
           .filter()
+          .voidedAtIsNull()
           .chopdiIdEqualTo(chopdiId)
           .watch(fireImmediately: true),
       builder: (context, snapshot) {
