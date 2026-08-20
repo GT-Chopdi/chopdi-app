@@ -18,74 +18,84 @@ const TransactionSchema = CollectionSchema(
   id: 5320225499417954855,
   properties: {
     r'amount': PropertySchema(id: 0, name: r'amount', type: IsarType.double),
-    r'chopdiId': PropertySchema(id: 1, name: r'chopdiId', type: IsarType.long),
+    r'amountPaise': PropertySchema(
+      id: 1,
+      name: r'amountPaise',
+      type: IsarType.long,
+    ),
+    r'chopdiId': PropertySchema(id: 2, name: r'chopdiId', type: IsarType.long),
     r'customerId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'customerId',
       type: IsarType.long,
     ),
-    r'date': PropertySchema(id: 3, name: r'date', type: IsarType.dateTime),
-    r'description': PropertySchema(
+    r'customerUuid': PropertySchema(
       id: 4,
+      name: r'customerUuid',
+      type: IsarType.string,
+    ),
+    r'date': PropertySchema(id: 5, name: r'date', type: IsarType.dateTime),
+    r'description': PropertySchema(
+      id: 6,
       name: r'description',
       type: IsarType.string,
     ),
     r'interest': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'interest',
       type: IsarType.double,
     ),
     r'interestFrequency': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'interestFrequency',
       type: IsarType.string,
     ),
     r'interestRate': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'interestRate',
       type: IsarType.double,
     ),
     r'interestRateBp': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'interestRateBp',
       type: IsarType.long,
     ),
     r'interestType': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'interestType',
       type: IsarType.string,
     ),
     r'paymentMode': PropertySchema(
-      id: 9,
+      id: 12,
       name: r'paymentMode',
       type: IsarType.string,
     ),
     r'syncStatus': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'syncStatus',
       type: IsarType.byte,
       enumMap: _TransactionsyncStatusEnumValueMap,
     ),
     r'type': PropertySchema(
-      id: 10,
+      id: 14,
       name: r'type',
       type: IsarType.byte,
       enumMap: _TransactiontypeEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'uuid': PropertySchema(id: 15, name: r'uuid', type: IsarType.string),
-    r'version': PropertySchema(id: 16, name: r'version', type: IsarType.long),
+    r'uuid': PropertySchema(id: 16, name: r'uuid', type: IsarType.string),
+    r'version': PropertySchema(id: 17, name: r'version', type: IsarType.long),
     r'voidedAt': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'voidedAt',
       type: IsarType.dateTime,
     ),
     r'voidedReason': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'voidedReason',
       type: IsarType.string,
     ),
@@ -160,17 +170,26 @@ void _transactionSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDouble(offsets[0], object.amount);
-  writer.writeLong(offsets[1], object.chopdiId);
-  writer.writeLong(offsets[2], object.customerId);
-  writer.writeDateTime(offsets[3], object.date);
-  writer.writeString(offsets[4], object.description);
-  writer.writeDouble(offsets[5], object.interest);
-  writer.writeString(offsets[6], object.interestFrequency);
-  writer.writeDouble(offsets[7], object.interestRate);
-  writer.writeString(offsets[8], object.interestType);
-  writer.writeString(offsets[9], object.paymentMode);
-  writer.writeByte(offsets[10], object.type.index);
+  writer.writeDouble(offsets[0], object.legacyAmount);
+  writer.writeLong(offsets[1], object.amountPaise);
+  writer.writeLong(offsets[2], object.chopdiId);
+  writer.writeLong(offsets[3], object.customerId);
+  writer.writeString(offsets[4], object.customerUuid);
+  writer.writeDateTime(offsets[5], object.date);
+  writer.writeString(offsets[6], object.description);
+  writer.writeDouble(offsets[7], object.interest);
+  writer.writeString(offsets[8], object.interestFrequency);
+  writer.writeDouble(offsets[9], object.legacyInterestRate);
+  writer.writeLong(offsets[10], object.interestRateBp);
+  writer.writeString(offsets[11], object.interestType);
+  writer.writeString(offsets[12], object.paymentMode);
+  writer.writeByte(offsets[13], object.syncStatus.index);
+  writer.writeByte(offsets[14], object.type.index);
+  writer.writeDateTime(offsets[15], object.updatedAt);
+  writer.writeString(offsets[16], object.uuid);
+  writer.writeLong(offsets[17], object.version);
+  writer.writeDateTime(offsets[18], object.voidedAt);
+  writer.writeString(offsets[19], object.voidedReason);
 }
 
 Transaction _transactionDeserialize(
@@ -180,25 +199,31 @@ Transaction _transactionDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Transaction();
-  object.amount = reader.readDouble(offsets[0]);
-  object.chopdiId = reader.readLong(offsets[1]);
-  object.customerId = reader.readLong(offsets[2]);
-  object.date = reader.readDateTime(offsets[3]);
-  object.description = reader.readString(offsets[4]);
+  object.legacyAmount = reader.readDouble(offsets[0]);
+  object.amountPaise = reader.readLong(offsets[1]);
+  object.chopdiId = reader.readLong(offsets[2]);
+  object.customerId = reader.readLong(offsets[3]);
+  object.customerUuid = reader.readString(offsets[4]);
+  object.date = reader.readDateTime(offsets[5]);
+  object.description = reader.readString(offsets[6]);
   object.id = id;
-  object.interest = reader.readDouble(offsets[5]);
-  object.interestFrequency = reader.readString(offsets[6]);
-  object.interestRate = reader.readDouble(offsets[7]);
-  object.interestType = reader.readString(offsets[8]);
-  object.paymentMode = reader.readString(offsets[9]);
+  object.interest = reader.readDouble(offsets[7]);
+  object.interestFrequency = reader.readString(offsets[8]);
+  object.legacyInterestRate = reader.readDouble(offsets[9]);
+  object.interestRateBp = reader.readLong(offsets[10]);
+  object.interestType = reader.readString(offsets[11]);
+  object.paymentMode = reader.readString(offsets[12]);
+  object.syncStatus =
+      _TransactionsyncStatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+      SyncStatus.pending;
   object.type =
-      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[10])] ??
+      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
       TransactionType.gave;
-  object.updatedAt = reader.readDateTime(offsets[14]);
-  object.uuid = reader.readString(offsets[15]);
-  object.version = reader.readLong(offsets[16]);
-  object.voidedAt = reader.readDateTimeOrNull(offsets[17]);
-  object.voidedReason = reader.readStringOrNull(offsets[18]);
+  object.updatedAt = reader.readDateTime(offsets[15]);
+  object.uuid = reader.readString(offsets[16]);
+  object.version = reader.readLong(offsets[17]);
+  object.voidedAt = reader.readDateTimeOrNull(offsets[18]);
+  object.voidedReason = reader.readStringOrNull(offsets[19]);
   return object;
 }
 
@@ -216,32 +241,44 @@ P _transactionDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
       return (reader.readDouble(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
-    case 9:
       return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readDouble(offset)) as P;
     case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
+      return (_TransactionsyncStatusValueEnumMap[reader.readByteOrNull(
+                offset,
+              )] ??
+              SyncStatus.pending)
+          as P;
+    case 14:
       return (_TransactiontypeValueEnumMap[reader.readByteOrNull(offset)] ??
               TransactionType.gave)
           as P;
-    case 14:
-      return (reader.readDateTime(offset)) as P;
     case 15:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 16:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 17:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 18:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 19:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -260,7 +297,12 @@ const _TransactionsyncStatusValueEnumMap = {
   2: SyncStatus.conflicted,
   3: SyncStatus.deadLettered,
 };
-const _TransactiontypeEnumValueMap = {'gave': 0, 'received': 1};
+const _TransactiontypeEnumValueMap = {
+  'gave': 0,
+  'received': 1,
+  'took': 2,
+  'paid': 3,
+};
 const _TransactiontypeValueEnumMap = {
   0: TransactionType.gave,
   1: TransactionType.received,
@@ -553,61 +595,6 @@ extension TransactionQueryFilter
     });
   }
 
-  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdEqualTo(
-    int value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'chopdiId', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
-  chopdiIdGreaterThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'chopdiId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
-  chopdiIdLessThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'chopdiId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'chopdiId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
-
   QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
   amountPaiseEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -654,6 +641,61 @@ extension TransactionQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'amountPaise',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'chopdiId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  chopdiIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  chopdiIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> chopdiIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'chopdiId',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -2386,6 +2428,18 @@ extension TransactionQuerySortBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'customerId', Sort.asc);
@@ -2623,6 +2677,18 @@ extension TransactionQuerySortThenBy
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByAmountPaiseDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'amountPaise', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
     });
   }
 
@@ -2865,6 +2931,12 @@ extension TransactionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chopdiId');
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QDistinct> distinctByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'customerId');
@@ -3002,6 +3074,12 @@ extension TransactionQueryProperty
   QueryBuilder<Transaction, int, QQueryOperations> amountPaiseProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'amountPaise');
+    });
+  }
+
+  QueryBuilder<Transaction, int, QQueryOperations> chopdiIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chopdiId');
     });
   }
 

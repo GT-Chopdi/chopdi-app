@@ -214,8 +214,21 @@ model LedgerEntry {
   /// negative amount structurally unrepresentable.
   amountPaise BigInt @map("amount_paise")
 
-  /// gave | received — enforced by CHECK constraint.
+  /// Which way the money moved: gave (out) | received (in).
+  /// Enforced by CHECK constraint.
   direction String
+
+  /// Whose ledger this belongs to: lent | borrowed.
+  ///
+  /// Direction and side are stored separately because they are independent
+  /// facts. Borrowing reverses the cash direction — taking a loan is money
+  /// *received*, repaying it is money *gave* — so a single combined column
+  /// would force every reader to remember that. Splitting them means one
+  /// signing rule covers all four cases the client can express.
+  ///
+  /// Defaults to `lent`: every row that existed before borrowing was added is
+  /// a loan the user made.
+  ledgerSide String @default("lent") @map("ledger_side")
 
   /// Interest rate in basis points: 12.5% is 1250. Integer for the same reason
   /// as the amount.

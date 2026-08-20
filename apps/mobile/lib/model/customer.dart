@@ -73,7 +73,15 @@ class Customer {
 
   @enumerated
   SyncStatus syncStatus = SyncStatus.pending;
-  late int chopdiId;
+  /// Defaulted, not `late`.
+  ///
+  /// Isar adds a new column to existing rows with no value, and a `late`
+  /// non-nullable field throws `LateInitializationError` the moment such a row
+  /// is read — which is every row already on a user's device. The app could not
+  /// load a single existing customer. A default is readable; code that
+  /// needs the real value sets it explicitly.
+  int chopdiId = 0;
 
-  late String loanType;
+  /// See [chopdiId] for why this is not `late`.
+  String loanType = '';
 }

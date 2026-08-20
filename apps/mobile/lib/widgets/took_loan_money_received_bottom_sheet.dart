@@ -333,6 +333,7 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
+import 'package:mychopdi/utils/money.dart';
 
 class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
   final Customer customer;
@@ -527,8 +528,10 @@ class _MoneyReceiveBottomSheetState
     final tx = Transaction()
       ..customerId = widget.customer.id
       ..chopdiId = widget.customer.chopdiId
-      ..amount = amount
-      ..interestRate = 0
+      // Money is stored as integer paise; `amount` is now a read-only rupee
+      // view of it.
+      ..amountPaise = Money.toPaise(amount)
+      ..interestRateBp = 0
       ..date = selectedDate
       ..type = TransactionType.paid
       ..description =

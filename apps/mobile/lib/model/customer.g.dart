@@ -17,29 +17,35 @@ const CustomerSchema = CollectionSchema(
   name: r'Customer',
   id: -7623823084711604343,
   properties: {
+    r'chopdiId': PropertySchema(id: 0, name: r'chopdiId', type: IsarType.long),
     r'deletedAt': PropertySchema(
-      id: 0,
+      id: 1,
       name: r'deletedAt',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
-    r'notes': PropertySchema(id: 2, name: r'notes', type: IsarType.string),
-    r'phone': PropertySchema(id: 3, name: r'phone', type: IsarType.string),
-    r'received': PropertySchema(id: 4, name: r'received', type: IsarType.bool),
-    r'status': PropertySchema(id: 5, name: r'status', type: IsarType.string),
+    r'loanType': PropertySchema(
+      id: 2,
+      name: r'loanType',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(id: 3, name: r'name', type: IsarType.string),
+    r'notes': PropertySchema(id: 4, name: r'notes', type: IsarType.string),
+    r'phone': PropertySchema(id: 5, name: r'phone', type: IsarType.string),
+    r'received': PropertySchema(id: 6, name: r'received', type: IsarType.bool),
+    r'status': PropertySchema(id: 7, name: r'status', type: IsarType.string),
     r'syncStatus': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'syncStatus',
       type: IsarType.byte,
       enumMap: _CustomersyncStatusEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'uuid': PropertySchema(id: 8, name: r'uuid', type: IsarType.string),
-    r'version': PropertySchema(id: 9, name: r'version', type: IsarType.long),
+    r'uuid': PropertySchema(id: 10, name: r'uuid', type: IsarType.string),
+    r'version': PropertySchema(id: 11, name: r'version', type: IsarType.long),
   },
 
   estimateSize: _customerEstimateSize,
@@ -92,16 +98,18 @@ void _customerSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.deletedAt);
-  writer.writeString(offsets[1], object.name);
-  writer.writeString(offsets[2], object.notes);
-  writer.writeString(offsets[3], object.phone);
-  writer.writeBool(offsets[4], object.received);
-  writer.writeString(offsets[5], object.status);
-  writer.writeByte(offsets[6], object.syncStatus.index);
-  writer.writeDateTime(offsets[7], object.updatedAt);
-  writer.writeString(offsets[8], object.uuid);
-  writer.writeLong(offsets[9], object.version);
+  writer.writeLong(offsets[0], object.chopdiId);
+  writer.writeDateTime(offsets[1], object.deletedAt);
+  writer.writeString(offsets[2], object.loanType);
+  writer.writeString(offsets[3], object.name);
+  writer.writeString(offsets[4], object.notes);
+  writer.writeString(offsets[5], object.phone);
+  writer.writeBool(offsets[6], object.received);
+  writer.writeString(offsets[7], object.status);
+  writer.writeByte(offsets[8], object.syncStatus.index);
+  writer.writeDateTime(offsets[9], object.updatedAt);
+  writer.writeString(offsets[10], object.uuid);
+  writer.writeLong(offsets[11], object.version);
 }
 
 Customer _customerDeserialize(
@@ -111,19 +119,21 @@ Customer _customerDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Customer();
-  object.deletedAt = reader.readDateTimeOrNull(offsets[0]);
+  object.chopdiId = reader.readLong(offsets[0]);
+  object.deletedAt = reader.readDateTimeOrNull(offsets[1]);
   object.id = id;
-  object.name = reader.readString(offsets[1]);
-  object.notes = reader.readString(offsets[2]);
-  object.phone = reader.readString(offsets[3]);
-  object.received = reader.readBool(offsets[4]);
-  object.status = reader.readString(offsets[5]);
+  object.loanType = reader.readString(offsets[2]);
+  object.name = reader.readString(offsets[3]);
+  object.notes = reader.readString(offsets[4]);
+  object.phone = reader.readString(offsets[5]);
+  object.received = reader.readBool(offsets[6]);
+  object.status = reader.readString(offsets[7]);
   object.syncStatus =
-      _CustomersyncStatusValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+      _CustomersyncStatusValueEnumMap[reader.readByteOrNull(offsets[8])] ??
       SyncStatus.pending;
-  object.updatedAt = reader.readDateTime(offsets[7]);
-  object.uuid = reader.readString(offsets[8]);
-  object.version = reader.readLong(offsets[9]);
+  object.updatedAt = reader.readDateTime(offsets[9]);
+  object.uuid = reader.readString(offsets[10]);
+  object.version = reader.readLong(offsets[11]);
   return object;
 }
 
@@ -135,26 +145,30 @@ P _customerDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (_CustomersyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
               SyncStatus.pending)
           as P;
-    case 7:
-      return (reader.readDateTime(offset)) as P;
-    case 8:
-      return (reader.readString(offset)) as P;
     case 9:
+      return (reader.readDateTime(offset)) as P;
+    case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -318,6 +332,65 @@ extension CustomerQueryWhere on QueryBuilder<Customer, Customer, QWhereClause> {
 
 extension CustomerQueryFilter
     on QueryBuilder<Customer, Customer, QFilterCondition> {
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdEqualTo(
+    int value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'chopdiId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'chopdiId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> chopdiIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'chopdiId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterFilterCondition> deletedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1521,6 +1594,18 @@ extension CustomerQueryLinks
     on QueryBuilder<Customer, Customer, QFilterCondition> {}
 
 extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByDeletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deletedAt', Sort.asc);
@@ -1530,6 +1615,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByDeletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLoanType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLoanTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'loanType', Sort.desc);
     });
   }
 
@@ -1644,6 +1741,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
 
 extension CustomerQuerySortThenBy
     on QueryBuilder<Customer, Customer, QSortThenBy> {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByChopdiIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chopdiId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByDeletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'deletedAt', Sort.asc);
@@ -1791,9 +1900,23 @@ extension CustomerQuerySortThenBy
 
 extension CustomerQueryWhereDistinct
     on QueryBuilder<Customer, Customer, QDistinct> {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByChopdiId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chopdiId');
+    });
+  }
+
   QueryBuilder<Customer, Customer, QDistinct> distinctByDeletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct> distinctByLoanType({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'loanType', caseSensitive: caseSensitive);
     });
   }
 
@@ -1870,9 +1993,21 @@ extension CustomerQueryProperty
     });
   }
 
+  QueryBuilder<Customer, int, QQueryOperations> chopdiIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chopdiId');
+    });
+  }
+
   QueryBuilder<Customer, DateTime?, QQueryOperations> deletedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<Customer, String, QQueryOperations> loanTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'loanType');
     });
   }
 

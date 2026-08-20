@@ -181,6 +181,7 @@ class LocalMigration {
           'customerId': tx.customerUuid,
           'amountPaise': tx.amountPaise,
           'direction': SyncPayload.direction(tx.type),
+          'ledgerSide': SyncPayload.ledgerSide(tx.type),
           'interestRateBp': tx.interestRateBp,
           'interestType': SyncPayload.interestType(tx.interestType,
               rateBp: tx.interestRateBp),

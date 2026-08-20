@@ -119,7 +119,14 @@ class Transaction {
       interestRateBp != 0 ? interestRateBp / 100.0 : legacyInterestRate;
 
   late DateTime date;
-  late int chopdiId;
+  /// Defaulted, not `late`.
+  ///
+  /// Isar adds a new column to existing rows with no value, and a `late`
+  /// non-nullable field throws `LateInitializationError` the moment such a row
+  /// is read — which is every row already on a user's device. The app could not
+  /// load a single existing entry. A default is readable; code that
+  /// needs the real value sets it explicitly.
+  int chopdiId = 0;
 
   @enumerated
   late TransactionType type;
