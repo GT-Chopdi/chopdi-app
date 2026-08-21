@@ -267,7 +267,9 @@
 //   }
 // }
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/data/remote/api_exception.dart';
 import 'package:mychopdi/data/remote/error_code.dart';
@@ -349,7 +351,15 @@ class _OTPScreenState extends State<OTPScreen> {
         _verifying = false;
         otpError = _messageFor(error);
       });
-    } catch (_) {
+    } on ApiConfigException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _verifying = false;
+        otpError = error.message;
+      });
+    } catch (error, stack) {
+      debugPrint('[chopdi] OTP verify failed: $error\n$stack');
+
       if (!mounted) return;
       setState(() {
         _verifying = false;

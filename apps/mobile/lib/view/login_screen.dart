@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/data/remote/api_exception.dart';
 import 'package:mychopdi/data/remote/error_code.dart';
@@ -77,7 +79,21 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
           _ => error.message,
         };
       });
-    } catch (_) {
+    } on ApiConfigException catch (error) {
+      // A build-time mistake, not a runtime failure. Saying "try again" here
+      // sends someone retyping their number against a build that can never
+      // work, so the real reason is shown instead.
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = error.message;
+      });
+    } catch (error, stack) {
+      // Anything else is genuinely unexpected. The user gets a plain message,
+      // but the real error goes to the log — without it, every distinct
+      // failure looks identical in a bug report.
+      debugPrint('[chopdi] OTP request failed: $error\n$stack');
+
       if (!mounted) return;
       setState(() {
         _requesting = false;

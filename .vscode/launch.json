@@ -1,28 +1,42 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "mobile",
-            "cwd": "apps\\mobile",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "mobile (profile mode)",
-            "cwd": "apps\\mobile",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "mobile (release mode)",
-            "cwd": "apps\\mobile",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-        }
-    ]
+  // The API address is compiled into the binary, so every launch must name an
+  // env file. The previous configurations passed no defines at all, which
+  // produced an app that built fine and then failed at login with an empty
+  // base URL — the failure surfacing far from the mistake.
+  //
+  // See apps/mobile/env/example.env. Copy it to local.env / staging.env; those
+  // are gitignored because they hold real keys.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "mobile — local API",
+      "cwd": "apps/mobile",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": ["--dart-define-from-file=env/local.env"]
+    },
+    {
+      "name": "mobile — staging API",
+      "cwd": "apps/mobile",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": ["--dart-define-from-file=env/staging.env"]
+    },
+    {
+      "name": "mobile — staging API (profile)",
+      "cwd": "apps/mobile",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "toolArgs": ["--dart-define-from-file=env/staging.env"]
+    },
+    {
+      "name": "mobile — staging API (release)",
+      "cwd": "apps/mobile",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "toolArgs": ["--dart-define-from-file=env/staging.env"]
+    }
+  ]
 }
