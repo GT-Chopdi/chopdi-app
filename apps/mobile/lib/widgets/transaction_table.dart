@@ -20,71 +20,6 @@ class TransactionTable extends StatelessWidget {
   });
 
 
-  // List<Widget> _buildInterestRows(Transaction tx) {
-  //   final List<Widget> rows = [];
-
-  //   final now = DateTime.now();
-
-  //   final startDate = DateTime(
-  //     tx.date.year,
-  //     tx.date.month,
-  //     tx.date.day,
-  //   );
-
-  //   final today = DateTime(
-  //     now.year,
-  //     now.month,
-  //     now.day,
-  //   );
-
-  //   if (!today.isAfter(startDate)) {
-  //     return rows;
-  //   }
-
-  //   // ==========================================
-  //   // CALCULATE CURRENT MONTHLY PERIOD
-  //   // ==========================================
-
-  //   DateTime periodStart = startDate;
-  //   DateTime periodEnd = _addOneMonth(periodStart);
-
-  //   while (!today.isBefore(periodEnd)) {
-  //     periodStart = periodEnd;
-  //     periodEnd = _addOneMonth(periodStart);
-  //   }
-
-  //   // ==========================================
-  //   // INTEREST UP TO TODAY
-  //   // ==========================================
-
-  //   final interest = InterestCalculator.calculate(
-  //     principal: tx.amount,
-  //     rate: tx.interestRate,
-  //     startDate: startDate,
-  //     interestType: tx.interestType,
-  //     frequency: tx.interestFrequency,
-  //     endDate: today,
-  //   );
-
-  //   // ==========================================
-  //   // ONLY ONE INTEREST ROW
-  //   // ==========================================
-
-  //   rows.add(
-  //     _InterestRow(
-  //       startDate: periodStart,
-  //       endDate: periodEnd,
-  //       interest: interest,
-  //     ),
-  //   );
-
-  //   rows.add(
-  //     const SizedBox(height: 8),
-  //   );
-
-  //   return rows;
-  // }
-
   List<Widget> _buildInterestRows(Transaction tx) {
     final List<Widget> rows = [];
 
@@ -102,53 +37,25 @@ class TransactionTable extends StatelessWidget {
       now.day,
     );
 
-    // No interest if transaction is today
     if (!today.isAfter(startDate)) {
       return rows;
     }
 
-    // ==========================================================
-    // FIND INTEREST FREQUENCY
-    // ==========================================================
-
-    final frequency = tx.interestFrequency
-        .trim()
-        .toLowerCase();
+    // ==========================================
+    // CALCULATE CURRENT MONTHLY PERIOD
+    // ==========================================
 
     DateTime periodStart = startDate;
-    DateTime periodEnd;
+    DateTime periodEnd = _addOneMonth(periodStart);
 
-    // ==========================================================
-    // YEARLY
-    // ==========================================================
-
-    if (frequency.contains("year")) {
-      periodEnd = _addOneYear(periodStart);
-
-      // Move to the current yearly period
-      while (!today.isBefore(periodEnd)) {
-        periodStart = periodEnd;
-        periodEnd = _addOneYear(periodStart);
-      }
-    }
-
-    // ==========================================================
-    // MONTHLY
-    // ==========================================================
-
-    else {
+    while (!today.isBefore(periodEnd)) {
+      periodStart = periodEnd;
       periodEnd = _addOneMonth(periodStart);
-
-      // Move to the current monthly period
-      while (!today.isBefore(periodEnd)) {
-        periodStart = periodEnd;
-        periodEnd = _addOneMonth(periodStart);
-      }
     }
 
-    // ==========================================================
-    // CALCULATE INTEREST UP TO TODAY
-    // ==========================================================
+    // ==========================================
+    // INTEREST UP TO TODAY
+    // ==========================================
 
     final interest = InterestCalculator.calculate(
       principal: tx.amount,
@@ -159,9 +66,9 @@ class TransactionTable extends StatelessWidget {
       endDate: today,
     );
 
-    // ==========================================================
-    // ONE INTEREST ROW
-    // ==========================================================
+    // ==========================================
+    // ONLY ONE INTEREST ROW
+    // ==========================================
 
     rows.add(
       _InterestRow(
@@ -199,28 +106,45 @@ class TransactionTable extends StatelessWidget {
     );
   }
 
+
   List<Widget> _buildTransactionRows(
     List<Transaction> sortedTransactions,
-    ) {
+  ) {
     final List<Widget> rows = [];
+
+    // --------------------------------------------------
+    // 1. Sort OLD → NEW for balance calculation
+    // --------------------------------------------------
+
+    final balanceTransactions = [...sortedTransactions]
+      ..sort(
+        (a, b) => a.date.compareTo(b.date),
+      );
+
+    // Transaction balance for each transaction
+    final Map<int, double> balanceMap = {};
 
     double runningBalance = 0;
 
-    for (final tx in sortedTransactions) {
-      // Calculate normal transaction balance
+    for (final tx in balanceTransactions) {
       if (tx.type == TransactionType.gave) {
         runningBalance += tx.amount;
-      } else {
+      } else if (tx.type == TransactionType.received) {
         runningBalance -= tx.amount;
       }
 
-      // DEBUG
-      debugPrint(
-        "Transaction: ${tx.date} | "
-        "Type: ${tx.type} | "
-        "Interest Rate: ${tx.interestRate} | "
-        "Interest Frequency: '${tx.interestFrequency}'",
-      );
+      balanceMap[tx.id] = runningBalance;
+    }
+
+    // --------------------------------------------------
+    // 2. Display NEW → OLD
+    // --------------------------------------------------
+
+    for (final tx in sortedTransactions) {
+
+      // -----------------------------------------------
+      // Interest row
+      // -----------------------------------------------
 
       if (tx.type == TransactionType.gave &&
           tx.interestRate > 0) {
@@ -228,14 +152,15 @@ class TransactionTable extends StatelessWidget {
           _buildInterestRows(tx),
         );
       }
-      // ==========================================
-      // ACTUAL TRANSACTION
-      // ==========================================
+
+      // -----------------------------------------------
+      // Actual transaction row
+      // -----------------------------------------------
 
       rows.add(
         TransactionRow(
           transaction: tx,
-          balance: runningBalance,
+          balance: balanceMap[tx.id] ?? 0,
           onChanged: onChanged,
           customerId: customerId,
         ),
@@ -445,110 +370,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-// class _InterestRow extends StatelessWidget {
-//   final DateTime startDate;
-//   final DateTime endDate;
-//   final double interest;
-
-//   const _InterestRow({
-//     required this.startDate,
-//     required this.endDate,
-//     required this.interest,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final dateFormat = DateFormat("dd MMM yyyy");
-
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: Color.fromRGBO(255, 248, 240, 1),
-//         border: Border.all(
-//           color: Color.fromRGBO(170, 185, 207, 1),
-//         ),
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//       child: Table(
-//         columnWidths: const {
-//           0: FlexColumnWidth(1.8),
-//           1: FlexColumnWidth(1.2),
-//           2: FlexColumnWidth(1.2),
-//           3: FlexColumnWidth(1.2),
-//         },
-//         children: [
-//           TableRow(
-//             children: [
-//               Padding(
-//                 padding: const EdgeInsets.symmetric(
-//                   vertical: 10,
-//                   horizontal: 8,
-//                 ),
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text(
-//                       "${dateFormat.format(startDate)} - "
-//                       "${dateFormat.format(endDate)}",
-//                       style: GoogleFonts.manrope(
-//                         fontSize: 10,
-//                         fontWeight: FontWeight.w700,
-//                         color: ChopdiColors.navy,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 2),
-//                     const Text(
-//                       "Interest Added",
-//                       style: TextStyle(
-//                         fontSize: 9,
-//                         color: Colors.grey,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-
-//               // Given
-//               const Center(
-//                 child: Text(
-//                   "-",
-//                   style: TextStyle(
-//                     color: Colors.black,
-//                   ),
-//                 ),
-//               ),
-
-//               // Received
-//               const Center(
-//                 child: Text(
-//                   "-",
-//                   style: TextStyle(
-//                     color: Colors.black,
-//                   ),
-//                 ),
-//               ),
-
-//               // Balance = Interest
-//               Padding(
-//                 padding: const EdgeInsets.symmetric(
-//                   vertical: 10,
-//                 ),
-//                 child: Text(
-//                   "₹${interest.toStringAsFixed(0)}",
-//                   textAlign: TextAlign.center,
-//                   style: const TextStyle(
-//                     color: Color(0xFF00901B),
-//                     fontWeight: FontWeight.bold,
-//                     fontSize: 12,
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 
 class _InterestRow extends StatelessWidget {
   final Transaction transaction;
@@ -565,135 +386,160 @@ class _InterestRow extends StatelessWidget {
     required this.interest,
     required this.customerId,
     required this.onChanged,
+
   });
 
-  void _openTransactionDetails(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return TransactionDetailsScreen(
-          transaction: transaction,
-          customerId: customerId,
-          onChanged: onChanged,
-        );
-      },
-    );
-  }
+
+  String _getInterestDescription() {
+  final start = DateFormat("dd MMM yyyy").format(startDate);
+  final end = DateFormat("dd MMM yyyy").format(endDate);
+
+  final rate = transaction.interestRate.toStringAsFixed(0);
+
+  final frequency = transaction.interestFrequency.isEmpty
+      ? "Monthly"
+      : transaction.interestFrequency;
+
+  final interestType = transaction.interestType.isEmpty
+      ? "Simple Interest"
+      : transaction.interestType;
+
+  return "₹${interest.toStringAsFixed(0)} interest "
+      "from $start to $end at $rate% "
+      "$frequency $interestType interest.";
+}
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat("dd MMM yyyy");
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 248, 240, 1),
+        // Same background as normal transaction row
+        color: const Color(0xFFFFF8F0),
+
+        // Same border as normal transaction row
         border: Border.all(
-          color: const Color.fromRGBO(170, 185, 207, 1),
+          color: const Color(0xFFAAB9CF),
         ),
+
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(1.8),
-          1: FlexColumnWidth(1.2),
-          2: FlexColumnWidth(1.2),
-          3: FlexColumnWidth(1.2),
-        },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          TableRow(
-            children: [
-              // ==================================================
-              // DATE + DESCRIPTION
-              // ==================================================
+          // ==================================
+          // DATE + DESCRIPTION
+          // ==================================
 
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 8,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${dateFormat.format(startDate)} - "
-                      "${dateFormat.format(endDate)}",
-                      style: GoogleFonts.manrope(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: ChopdiColors.navy,
-                      ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    // CLICKABLE DESCRIPTION
-                    GestureDetector(
-                      onTap: () {
-                        _openTransactionDetails(context);
-                      },
-                      child: Text(
-                        "Interest Added",
-                        style: GoogleFonts.manrope(
-                          fontSize: 9,
-                          color: Colors.grey,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ==================================================
-              // GIVEN
-              // ==================================================
-
-              const Center(
-                child: Text(
-                  "-",
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-
-              // ==================================================
-              // RECEIVED
-              // ==================================================
-
-              const Center(
-                child: Text(
-                  "-",
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-
-              // ==================================================
-              // BALANCE / INTEREST
-              // ==================================================
-
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                ),
-                child: Text(
-                  "₹${interest.toStringAsFixed(0)}",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFF00901B),
-                    fontWeight: FontWeight.bold,
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${dateFormat.format(startDate)} - "
+                  "${dateFormat.format(endDate)}",
+                  style: GoogleFonts.manrope(
                     fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: ChopdiColors.navy,
                   ),
                 ),
+
+                const SizedBox(height: 3),
+
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) {
+                        return TransactionDetailsScreen(
+                          transaction: transaction,
+                          customerId: customerId,
+                          onChanged: onChanged,
+                        );
+                      },
+                    );
+                  },
+                  child: Text(
+                    _getInterestDescription(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xff8A93A6),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ==================================
+          // GIVEN
+          // ==================================
+
+          const Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                "-",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
               ),
-            ],
+            ),
+          ),
+
+          // ==================================
+          // RECEIVED
+          // ==================================
+
+          const Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                "-",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ),
+
+          // ==================================
+          // BALANCE / INTEREST
+          // ==================================
+
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                "₹${interest.toStringAsFixed(0)}",
+                style: const TextStyle(
+                  color: Color(0xFF00901B),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
+

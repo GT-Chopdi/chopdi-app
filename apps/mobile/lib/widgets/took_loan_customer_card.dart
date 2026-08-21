@@ -26,15 +26,6 @@ class TookLoanCustomerCard extends StatelessWidget {
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
-        // double balance = 0;
-
-        // for (final tx in transactions) {
-        //   if (tx.type == TransactionType.took) {
-        //     balance += tx.amount;
-        //   } else {
-        //     balance -= tx.amount;
-        //   }
-        // }
 
         double balance = 0;
 

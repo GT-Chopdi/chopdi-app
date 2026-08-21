@@ -594,13 +594,11 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               return;
                             }
 
-                            final amount =
-                                double.parse(
+                            final amount = double.parse(
                               amountController.text,
                             );
 
-                            final rate =
-                                double.parse(
+                            final rate = double.parse(
                               interestController.text,
                             );
 
@@ -613,58 +611,41 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               frequency: interestFrequency,
                             );
 
-                            // final tx = Transaction()
-                            //   ..customerId =
-                            //       widget.customer.id
-                            //   ..chopdiId = widget.customer.chopdiId
-                            //   ..amount = amount
-                            //   ..interest = interestAmount
-                            //   ..interestRate = rate
-                            //   ..date = selectedDate
-                            //   ..type = TransactionType.took
-                            //   ..description =
-                            //       descriptionController.text
-                            //   ..paymentMode = paymentMode
-                            //   ..interestType = interestType
-                            //   ..interestFrequency =
-                            //       interestFrequency;
-
-                            // await TransactionService
-                            //     .addTransaction(tx);
-
-                            // widget.onSaved();
-
-                            // if (mounted) {
-                            //   Navigator.pop(context);
-                            // }
-
                             final tx = Transaction()
                               ..customerId = widget.customer.id
                               ..chopdiId = widget.customer.chopdiId
                               ..amount = amount
-                              ..interestRate = double.tryParse(
-                                    interestController.text.trim(),
-                                  ) ??
-                                  0
+                              ..interest = interestAmount
+                              ..interestRate = rate
                               ..date = selectedDate
                               ..type = TransactionType.took
-                              ..description = descriptionController.text.trim()
+                              ..description =
+                                  descriptionController.text.trim()
                               ..paymentMode = paymentMode
                               ..interestType = interestType
-                              ..interestFrequency = interestFrequency;
+                              ..interestFrequency =
+                                  interestFrequency;
 
                             await TransactionService.addTransaction(tx);
 
-                            final notificationService =
-                                NotificationService(IsarService.isar);
+                            // ==================================================
+                            // INTEREST NOTIFICATION
+                            // ==================================================
 
-                            await notificationService.createLoanNotification(
-                              chopdiId: widget.customer.chopdiId,
-                              loanType: "took",
-                              customerName: widget.customer.name,
-                              amount: amount,
-                              customerId: widget.customer.id,
-                            );
+                            if (interestAmount > 0) {
+                              final notificationService =
+                                  NotificationService(
+                                IsarService.isar,
+                              );
+
+                              await notificationService
+                                  .createInterestNotification(
+                                chopdiId: widget.customer.chopdiId,
+                                customerName: widget.customer.name,
+                                interestAmount: interestAmount,
+                                customerId: widget.customer.id,
+                              );
+                            }
 
                             widget.onSaved();
 

@@ -80,9 +80,6 @@ class TookLoanSummaryCard extends StatelessWidget {
         // OUTSTANDING
         // ==========================================
 
-        // final outstanding =
-        //     totalLoanTaken + totalInterestDue - totalPaid;
-
         final outstanding =
           (totalLoanTaken + totalInterestDue - totalPaid)
               .clamp(0.0, double.infinity);

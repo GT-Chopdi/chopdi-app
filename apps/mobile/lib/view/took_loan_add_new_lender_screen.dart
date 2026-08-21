@@ -270,54 +270,6 @@ class _AddNewCustomerScreenState
 
                       const SizedBox(height: 12),
 
-                      // _label("Phone Number (Optional)"),
-
-                      // const SizedBox(height: 6),
-
-                      // _textField(
-                      //   controller: phoneController,
-                      //   hint: "Mobile Number",
-                      //   icon: Icons.phone_outlined,
-                      //   keyboardType: TextInputType.phone,
-                      // ),
-
-                      // _label("Phone Number*"),
-
-                      // const SizedBox(height: 6),
-
-                      // _textField(
-                      //   controller: phoneController,
-                      //   hint: "Mobile Number",
-                      //   icon: Icons.phone_outlined,
-                      //   keyboardType: TextInputType.phone,
-                      //   // validator: (value) {
-                      //   //   if (value == null || value.trim().isEmpty) {
-                      //   //     return "Enter phone number";
-                      //   //   }
-
-                      //   //   final phone = value.trim();
-
-                      //   //   if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
-                      //   //     return "Enter a valid 10-digit phone number";
-                      //   //   }
-
-                      //   //   return null;
-                      //   // },
-                      //   validator: (value) {
-                      //     if (value == null || value.trim().isEmpty) {
-                      //       return "Enter phone number";
-                      //     }
-
-                      //     final phone = value.trim();
-
-                      //     if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
-                      //       return "Enter a valid 10-digit phone number";
-                      //     }
-
-                      //     return null;
-                      //   },
-                      // ),
-
                       _label("Phone Number (Optional)"),
 
                       const SizedBox(height: 6),
@@ -420,55 +372,6 @@ class _AddNewCustomerScreenState
       ),
     );
   }
-
-  // Widget _textField({
-  //   required TextEditingController controller,
-  //   required String hint,
-  //   required IconData icon,
-  //   TextInputType? keyboardType,
-  //   String? Function(String?)? validator,
-  // }) {
-  //   return TextFormField(
-  //     controller: controller,
-  //     keyboardType: keyboardType,
-  //     validator: validator,
-  //     style: GoogleFonts.manrope(
-  //       fontSize: 13,
-  //     ),
-  //     decoration: InputDecoration(
-  //       isDense: true,
-  //       hintText: hint,
-  //       hintStyle: GoogleFonts.manrope(
-  //         fontSize: 12,
-  //         color: ChopdiColors.navy,
-  //       ),
-  //       prefixIcon: Icon(
-  //         icon,
-  //         size: 18,
-  //         color: ChopdiColors.navy,
-  //       ),
-  //       filled: true,
-  //       fillColor: Color(0xFFFFF8F0),
-  //       contentPadding: const EdgeInsets.symmetric(
-  //         vertical: 12,
-  //         horizontal: 12,
-  //       ),
-  //       enabledBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(8),
-  //         borderSide: const BorderSide(
-  //           color: Color(0xFFAAB9CF),
-  //         ),
-  //       ),
-  //       focusedBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(8),
-  //         borderSide: const BorderSide(
-  //           color: ChopdiColors.navy,
-  //           width: 1.2,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _textField({
     required TextEditingController controller,
