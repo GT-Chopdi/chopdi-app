@@ -43,6 +43,20 @@ export const ErrorCode = {
   SMS_NOT_CONFIGURED: 'SMS_NOT_CONFIGURED',
   USER_SUSPENDED: 'USER_SUSPENDED',
 
+  // --- sync ---
+  /** A create arrived for an id that already exists under this user. */
+  ID_EXISTS: 'ID_EXISTS',
+  /** The row moved on since the client last saw it; `serverState` is attached. */
+  STALE_VERSION: 'STALE_VERSION',
+  /** An entry arrived before the customer it belongs to. */
+  PARENT_NOT_FOUND: 'PARENT_NOT_FOUND',
+  /** An update or void targeted a row that is already voided or deleted. */
+  ENTITY_VOIDED: 'ENTITY_VOIDED',
+  /** Same idempotency key, different payload — a client bug, or a spliced request. */
+  IDEMPOTENCY_KEY_REUSE: 'IDEMPOTENCY_KEY_REUSE',
+  /** More operations or bytes than one request may carry. */
+  BATCH_TOO_LARGE: 'BATCH_TOO_LARGE',
+
   // --- generic ---
   NOT_FOUND: 'NOT_FOUND',
   RATE_LIMITED: 'RATE_LIMITED',

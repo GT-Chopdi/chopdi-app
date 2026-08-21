@@ -76,6 +76,16 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
             "A code was already sent. Please wait a moment.",
           'NETWORK_UNAVAILABLE' =>
             "Can't reach the server. Check your connection.",
+          // The server is right to reject this, but relaying its message sends
+          // someone hunting a server problem when the cause is a build flag.
+          // Distinguish "no key was compiled in" from "the key is wrong".
+          ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
+            "This build has no DEV_KEY compiled in.\n\n"
+                "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
+                "--dart-define-from-file=env/staging.env",
+          ApiErrorCode.devKeyRequired =>
+            "The DEV_KEY in this build was rejected. Check it matches "
+                "AUTH_DEV_KEY on the server.",
           _ => error.message,
         };
       });
