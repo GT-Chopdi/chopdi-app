@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/model/customer.dart';
 
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 
 class EditTransactionBottomSheet extends StatefulWidget {
   final Transaction transaction;
@@ -600,7 +603,9 @@ class _EditTransactionBottomSheetState
     );
 
     if (amount == null || amount <= 0) {
-      _showError('Please enter a valid amount');
+      _showError(
+        'Please enter a valid amount',
+      );
       return;
     }
 
@@ -612,12 +617,23 @@ class _EditTransactionBottomSheetState
       return;
     }
 
-    // Update existing Isar object
+    // ============================================================
+    // EXISTING TRANSACTION
+    // ============================================================
+
     final transaction = widget.transaction;
 
+    // ============================================================
+    // UPDATE TRANSACTION VALUES
+    // ============================================================
+
     transaction.amount = amount;
-    transaction.interestRate = interestRate;
-    transaction.date = selectedDate;
+
+    transaction.interestRate =
+        interestRate;
+
+    transaction.date =
+        selectedDate;
 
     transaction.interestType =
         selectedInterestType ?? '';
@@ -631,16 +647,98 @@ class _EditTransactionBottomSheetState
     transaction.description =
         descriptionController.text.trim();
 
-    // Save to Isar
-    await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.transactions.put(
-        transaction,
+    // ============================================================
+    // CALCULATE UPDATED INTEREST
+    // ============================================================
+
+    double calculatedInterest = 0;
+
+    final interestType =
+        selectedInterestType ?? '';
+
+    final interestFrequency =
+        selectedInterestFrequency ?? '';
+
+    if (interestType.isNotEmpty &&
+        interestFrequency.isNotEmpty &&
+        interestRate > 0) {
+      calculatedInterest =
+          InterestCalculator.calculate(
+        principal: amount,
+        rate: interestRate,
+        startDate: selectedDate,
+        interestType: interestType,
+        frequency: interestFrequency,
       );
-    });
+    }
 
-    if (!mounted) return;
+    // Save recalculated interest
+    transaction.interest =
+        calculatedInterest;
 
-    Navigator.pop(context, true);
+    // ============================================================
+    // SAVE TRANSACTION
+    // ============================================================
+
+    await IsarService.isar.writeTxn(
+      () async {
+        await IsarService.isar.transactions.put(
+          transaction,
+        );
+      },
+    );
+
+    // ============================================================
+    // GET CUSTOMER
+    // ============================================================
+
+    final customer =
+        await IsarService.isar.customers.get(
+      transaction.customerId,
+    );
+
+    final customerName =
+        customer?.name ?? "Customer";
+
+    // ============================================================
+    // CREATE INTEREST UPDATED NOTIFICATION
+    // ============================================================
+
+    if (calculatedInterest > 0 &&
+        interestFrequency.isNotEmpty) {
+      final interestPeriod =
+          InterestCalculator.getInterestPeriod(
+        startDate: selectedDate,
+        frequency: interestFrequency,
+      );
+
+      final notificationService =
+          NotificationService(
+        IsarService.isar,
+      );
+
+      await notificationService
+          .createInterestUpdatedNotification(
+        chopdiId: transaction.chopdiId,
+        customerName: customerName,
+        interestAmount: calculatedInterest,
+        interestPeriod: interestPeriod,
+        customerId: transaction.customerId,
+      );
+    }
+
+    // ============================================================
+    // CLOSE
+    // ============================================================
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(
+      context,
+      true,
+    );
   }
 
   void _showError(String message) {

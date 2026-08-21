@@ -9,6 +9,7 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/edit_transaction_bottom_sheet.dart';
 import 'package:mychopdi/widgets/delete_transactions_bottom_sheet.dart';
+import 'package:mychopdi/widgets/edit_transaction_details.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
@@ -801,6 +802,16 @@ String _getInterestDescription() {
           child: ElevatedButton.icon(
             onPressed: () {
               // Edit transaction
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) {
+                  return EditTransactionReceivedBottomSheet(
+                    transaction: transaction,
+                  );
+                },
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF213F68),

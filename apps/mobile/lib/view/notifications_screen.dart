@@ -1277,12 +1277,15 @@ class NotificationsScreen extends StatelessWidget {
   // ICON
   // ============================================================
 
-  IconData _getNotificationIcon(
+ IconData _getNotificationIcon(
     String type,
   ) {
     switch (type) {
       case "interest_calculated":
         return Icons.percent_rounded;
+
+      case "interest_updated":
+        return Icons.currency_rupee_rounded;
 
       case "app_update":
         return Icons.system_update_rounded;
@@ -1296,12 +1299,15 @@ class NotificationsScreen extends StatelessWidget {
   // COLOR
   // ============================================================
 
-  Color _getNotificationColor(
+ Color _getNotificationColor(
     String type,
   ) {
     switch (type) {
       case "interest_calculated":
         return Colors.green;
+
+      case "interest_updated":
+        return Colors.orange;
 
       case "app_update":
         return Colors.blue;

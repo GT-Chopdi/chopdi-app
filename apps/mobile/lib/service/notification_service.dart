@@ -1,157 +1,3 @@
-// import 'package:isar_community/isar.dart';
-// import 'package:mychopdi/model/notification.dart';
-
-// class NotificationService {
-//   final Isar isar;
-
-//   NotificationService(this.isar);
-
-//   // ============================================================
-//   // APP UPDATE NOTIFICATION
-//   // ============================================================
-
-//   Future<int> createAppUpdateNotification({
-//     required int chopdiId,
-//     required String version,
-//     String? message,
-//   }) async {
-//     final notification = NotificationModel()
-//       ..title = "App Update"
-//       ..subtitle = message ??
-//           "A new version of Chopdi ($version) is available."
-//       ..type = "app_update"
-//       ..createdAt = DateTime.now()
-//       ..isRead = false
-//       ..chopdiId = chopdiId;
-
-//     return await isar.writeTxn(() async {
-//       return await isar.notificationModels.put(notification);
-//     });
-//   }
-
-//   // ============================================================
-//   // INTEREST CALCULATED NOTIFICATION
-//   // ============================================================
-
-//   Future<int> createInterestNotification({
-//     required int chopdiId,
-//     required String customerName,
-//     required double interestAmount,
-//     required DateTime startDate,
-//     DateTime? endDate,
-//     int? customerId,
-//   }) async {
-//     final notification = NotificationModel()
-//       ..title = "Interest Calculated"
-//       ..subtitle =
-//           "₹${interestAmount.toStringAsFixed(2)} interest calculated for $customerName."
-//       ..type = "interest_calculated"
-//       ..createdAt = DateTime.now()
-//       ..isRead = false
-//       ..customerId = customerId
-//       ..customerName = customerName
-//       ..amount = interestAmount
-//       ..chopdiId = chopdiId;
-
-//     return await isar.writeTxn(() async {
-//       return await isar.notificationModels.put(notification);
-//     });
-//   }
-
-//   // ============================================================
-//   // ALL NOTIFICATIONS
-//   // ============================================================
-
-//   Stream<List<NotificationModel>> watchNotifications(
-//     int chopdiId,
-//   ) {
-//     return isar.notificationModels
-//         .filter()
-//         .chopdiIdEqualTo(chopdiId)
-//         .sortByCreatedAtDesc()
-//         .watch(
-//           fireImmediately: true,
-//         );
-//   }
-
-//   // ============================================================
-//   // UNREAD COUNT
-//   // ============================================================
-
-//   Stream<int> watchUnreadCount(int chopdiId) {
-//     return isar.notificationModels
-//         .filter()
-//         .chopdiIdEqualTo(chopdiId)
-//         .isReadEqualTo(false)
-//         .watch(
-//           fireImmediately: true,
-//         )
-//         .map((notifications) => notifications.length);
-//   }
-
-//   // ============================================================
-//   // MARK ONE AS READ
-//   // ============================================================
-
-//   Future<void> markAsRead(int id) async {
-//     final notification =
-//         await isar.notificationModels.get(id);
-
-//     if (notification == null) return;
-
-//     notification.isRead = true;
-
-//     await isar.writeTxn(() async {
-//       await isar.notificationModels.put(notification);
-//     });
-//   }
-
-//   // ============================================================
-//   // MARK ALL AS READ
-//   // ============================================================
-
-//   Future<void> markAllAsRead(int chopdiId) async {
-//     final notifications = await isar.notificationModels
-//         .filter()
-//         .chopdiIdEqualTo(chopdiId)
-//         .isReadEqualTo(false)
-//         .findAll();
-
-//     if (notifications.isEmpty) return;
-
-//     for (final notification in notifications) {
-//       notification.isRead = true;
-//     }
-
-//     await isar.writeTxn(() async {
-//       await isar.notificationModels.putAll(notifications);
-//     });
-//   }
-
-//   // ============================================================
-//   // DELETE ONE
-//   // ============================================================
-
-//   Future<void> deleteNotification(int id) async {
-//     await isar.writeTxn(() async {
-//       await isar.notificationModels.delete(id);
-//     });
-//   }
-
-//   // ============================================================
-//   // CLEAR ALL
-//   // ============================================================
-
-//   Future<void> clearAll(int chopdiId) async {
-//     await isar.writeTxn(() async {
-//       await isar.notificationModels
-//           .filter()
-//           .chopdiIdEqualTo(chopdiId)
-//           .deleteAll();
-//     });
-//   }
-// }
-
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/notification.dart';
 
@@ -207,6 +53,36 @@ class NotificationService {
 
     return await isar.writeTxn(() async {
       return await isar.notificationModels.put(notification);
+    });
+  }
+
+  // ============================================================
+  // INTEREST UPDATED
+  // ============================================================
+
+  Future<int> createInterestUpdatedNotification({
+    required int chopdiId,
+    required String customerName,
+    required double interestAmount,
+    required String interestPeriod,
+    int? customerId,
+  }) async {
+    final notification = NotificationModel()
+      ..title = "Interest Updated"
+      ..subtitle =
+          "Interest for $interestPeriod for $customerName has been updated to ₹${interestAmount.toStringAsFixed(2)}."
+      ..type = "interest_updated"
+      ..createdAt = DateTime.now()
+      ..isRead = false
+      ..customerId = customerId
+      ..customerName = customerName
+      ..amount = interestAmount
+      ..chopdiId = chopdiId;
+
+    return await isar.writeTxn(() async {
+      return await isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
