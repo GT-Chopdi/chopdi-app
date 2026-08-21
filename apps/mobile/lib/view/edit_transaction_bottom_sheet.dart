@@ -109,10 +109,10 @@ class _EditTransactionBottomSheetState
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(
-        20,
+        5,
         0,
-        20,
-        10,
+        5,
+        2,
       ),
       padding: const EdgeInsets.only(
                 left: 16,
@@ -120,7 +120,7 @@ class _EditTransactionBottomSheetState
                 bottom: 8,
               ),
       decoration: const BoxDecoration(
-        color: ChopdiColors.cream,
+        color: Color.fromRGBO(255, 248, 240, 1),
         borderRadius: BorderRadius.all(
           Radius.circular(24),
         ),
@@ -225,6 +225,14 @@ class _EditTransactionBottomSheetState
 
             const SizedBox(height: 9),
 
+            _buildLabel('Description'),
+
+            const SizedBox(height: 5),
+            
+            _buildDescriptionField(),
+
+            const SizedBox(height: 9),
+
             // Interest Type
             _buildLabel('Interest Type'),
 
@@ -277,14 +285,14 @@ class _EditTransactionBottomSheetState
               },
             ),
 
-            const SizedBox(height: 9),
+            // const SizedBox(height: 9),
 
             // Description
-            _buildLabel('Description'),
+            // _buildLabel('Description'),
 
-            const SizedBox(height: 5),
+            // const SizedBox(height: 5),
 
-            _buildDescriptionField(),
+            // _buildDescriptionField(),
 
             const SizedBox(height: 16),
 
@@ -401,7 +409,7 @@ class _EditTransactionBottomSheetState
             borderRadius:
                 BorderRadius.circular(6),
             borderSide: const BorderSide(
-              color: Color(0xFFBFC7D2),
+              color: Color.fromRGBO(170, 185, 207, 1),
               width: 0.8,
             ),
           ),
@@ -409,7 +417,7 @@ class _EditTransactionBottomSheetState
             borderRadius:
                 BorderRadius.circular(6),
             borderSide: const BorderSide(
-              color: Color(0xFF213F68),
+              color: Color.fromRGBO(170, 185, 207, 1),
               width: 1,
             ),
           ),
@@ -576,14 +584,6 @@ class _EditTransactionBottomSheetState
                 ),
               ),
             ),
-          ),
-        ),
-
-        Text(
-          '${descriptionController.text.length}/100',
-          style: GoogleFonts.manrope(
-            color: const Color(0xFF6F7A87),
-            fontSize: 8,
           ),
         ),
       ],
