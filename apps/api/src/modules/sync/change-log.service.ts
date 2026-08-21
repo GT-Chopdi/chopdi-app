@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { PrismaService } from '../../common/prisma/prisma.service';
+import type { PrismaClient } from '../../generated/prisma/client';
 
 /**
  * A Prisma client scoped to an open transaction.
@@ -10,8 +10,8 @@ import type { PrismaService } from '../../common/prisma/prisma.service';
  * ordering guarantee described below — so the type makes that mistake hard.
  */
 export type TransactionClient = Omit<
-  PrismaService,
-  '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$use' | '$extends'
 >;
 
 export interface ChangeLogEntry {
