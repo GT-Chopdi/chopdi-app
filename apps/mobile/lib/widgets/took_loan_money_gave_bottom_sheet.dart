@@ -7,6 +7,7 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
+import 'package:mychopdi/utils/money.dart';
 
 class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
 
@@ -614,9 +615,15 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                             final tx = Transaction()
                               ..customerId = widget.customer.id
                               ..chopdiId = widget.customer.chopdiId
-                              ..amount = amount
-                              ..interest = interestAmount
-                              ..interestRate = rate
+                              // Money is stored as integer paise; `amount` is
+                              // now a read-only rupee view of it.
+                              ..amountPaise = Money.toPaise(amount)
+                              ..interestRateBp = Money.rateToBasisPoints(
+                                double.tryParse(
+                                      interestController.text.trim(),
+                                    ) ??
+                                    0,
+                              )
                               ..date = selectedDate
                               ..type = TransactionType.took
                               ..description =

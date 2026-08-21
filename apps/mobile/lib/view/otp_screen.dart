@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:isar_community/isar.dart';
-import 'package:mychopdi/model/user_session.dart';
-import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/data/remote/api_exception.dart';
+import 'package:mychopdi/data/remote/error_code.dart';
+import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:pinput/pinput.dart';
@@ -10,9 +11,17 @@ import 'package:pinput/pinput.dart';
 class OTPScreen extends StatefulWidget {
   final String phoneNumber;
 
+  /// Identifies the challenge the server issued for this phone number.
+  ///
+  /// Verification is bound to it, which is why the code cannot be checked on
+  /// device: only the server knows what was sent, and only it can decide
+  /// whether this attempt is correct, expired, or one attempt too many.
+  final String challengeId;
+
   const OTPScreen({
     super.key,
     required this.phoneNumber,
+    required this.challengeId,
   });
 
   @override
@@ -26,6 +35,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final FocusNode otpFocusNode = FocusNode();
 
   String? otpError;
+  bool _verifying = false;
 
   @override
   void initState() {
@@ -56,6 +66,89 @@ class _OTPScreenState extends State<OTPScreen> {
     otpController.dispose();
     otpFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Verifies against the API.
+  ///
+  /// The code is never compared on device. Attempt limits, expiry, and the
+  /// dev-mode fixed code all live server-side, so a modified APK gains nothing.
+  Future<void> _verify() async {
+    final otp = otpController.text.trim();
+
+    if (otp.isEmpty) {
+      setState(() => otpError = "Please enter OTP");
+      return;
+    }
+
+    if (otp.length != 6) {
+      setState(() => otpError = "Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setState(() {
+      _verifying = true;
+      otpError = null;
+    });
+
+    try {
+      await AuthService.instance.verifyOtp(
+        challengeId: widget.challengeId,
+        code: otp,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _verifying = false;
+        otpError = _messageFor(error);
+      });
+    } on ApiConfigException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _verifying = false;
+        otpError = error.message;
+      });
+    } catch (error, stack) {
+      debugPrint('[chopdi] OTP verify failed: $error\n$stack');
+
+      if (!mounted) return;
+      setState(() {
+        _verifying = false;
+        otpError = "Something went wrong. Please try again.";
+      });
+    }
+  }
+
+  /// Turns a server error code into something a lender can act on.
+  ///
+  /// "Couldn't reach the server" and "that code is wrong" are different
+  /// problems, and showing the same text for both leaves the user retyping a
+  /// correct code while offline.
+  String _messageFor(ApiException error) {
+    switch (error.code) {
+      case ApiErrorCode.invalidCode:
+        final remaining = error.details?['attemptsRemaining'];
+        return remaining is int && remaining > 0
+            ? "Incorrect code. $remaining ${remaining == 1 ? 'attempt' : 'attempts'} left."
+            : "Incorrect code.";
+      case ApiErrorCode.challengeExpired:
+        return "This code has expired. Request a new one.";
+      case ApiErrorCode.tooManyAttempts:
+        return "Too many incorrect attempts. Request a new code.";
+      case ApiErrorCode.rateLimited:
+        return "Please wait a moment before trying again.";
+      case 'NETWORK_UNAVAILABLE':
+        return "Can't reach the server. Check your connection.";
+      default:
+        return error.message;
+    }
   }
 
   @override
@@ -456,7 +549,56 @@ class _OTPScreenState extends State<OTPScreen> {
                       const SizedBox(height: 12),
                     ],
                   ),
-                ),
+            
+                  SizedBox(height: 80),
+            
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      
+                      onPressed: _verifying ? null : _verify,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ChopdiColors.navy,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _verifying
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              "Verify OTP",
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+            
+                  const SizedBox(height: 18),
+            
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "Change Mobile Number",
+                      style: GoogleFonts.inter(
+                        color: const Color(0xff173A63),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+            
+                  const SizedBox(height: 12),
+                ],
               ),
             );
           },

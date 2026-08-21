@@ -21,6 +21,9 @@ class CustomerCard extends StatelessWidget {
    final list = await IsarService.isar.transactions
        .filter()
        .customerIdEqualTo(customerId)
+       // Deleted entries are voided, not removed, so every read must exclude
+       // them or a deleted loan reappears in the balance.
+       .voidedAtIsNull()
        .findAll();
 
    double balance = 0;
@@ -41,6 +44,7 @@ class CustomerCard extends StatelessWidget {
       stream: IsarService.isar.transactions
         .filter()
         .customerIdEqualTo(customer.id)
+        .voidedAtIsNull()
         .watch(fireImmediately: true),
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];

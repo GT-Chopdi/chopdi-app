@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
-import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/summary_tile.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerOptionsBottomSheet extends StatelessWidget {
   const CustomerOptionsBottomSheet({
@@ -397,13 +397,15 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
                           ),
                         ),
                         onPressed: () async{
-                          widget.customer
-                              ..name = nameController.text
-                              ..phone = phoneController.text;
-
-                            await IsarService.isar.writeTxn(() async {
-                              await IsarService.isar.customers.put(widget.customer);
-                            });
+                          // Through the repository so the edit is queued for
+                          // sync, and guarded by the version the client last saw
+                          // so a concurrent change is detected instead of
+                          // silently overwritten.
+                          await Repositories.customers.update(
+                            widget.customer,
+                            name: nameController.text,
+                            phone: phoneController.text,
+                          );
 
                             widget.onSaved();
 

@@ -8,6 +8,9 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
+import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/money.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class EditTransactionBottomSheet extends StatefulWidget {
   final Transaction transaction;
@@ -623,17 +626,9 @@ class _EditTransactionBottomSheetState
 
     final transaction = widget.transaction;
 
-    // ============================================================
-    // UPDATE TRANSACTION VALUES
-    // ============================================================
-
-    transaction.amount = amount;
-
-    transaction.interestRate =
-        interestRate;
-
-    transaction.date =
-        selectedDate;
+    transaction.amountPaise = Money.toPaise(amount);
+    transaction.interestRateBp = Money.rateToBasisPoints(interestRate);
+    transaction.date = selectedDate;
 
     transaction.interestType =
         selectedInterestType ?? '';
@@ -671,6 +666,16 @@ class _EditTransactionBottomSheetState
         frequency: interestFrequency,
       );
     }
+    // Through the repository: validated, version-guarded, and enqueued in the
+    // same transaction as the row.
+    await Repositories.ledger.update(
+      transaction,
+      amountPaise: transaction.amountPaise,
+      interestRateBp: transaction.interestRateBp,
+      date: transaction.date,
+      description: transaction.description,
+      paymentMode: transaction.paymentMode,
+    );
 
     // Save recalculated interest
     transaction.interest =

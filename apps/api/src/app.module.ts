@@ -7,6 +7,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { SyncModule } from './modules/sync/sync.module';
 
 /**
  * Application root module.
@@ -27,6 +28,7 @@ import { AuthModule } from './modules/auth/auth.module';
     PrismaModule,
     HealthModule,
     AuthModule,
+    SyncModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/data/remote/api_exception.dart';
+import 'package:mychopdi/data/remote/error_code.dart';
+import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
 
@@ -14,11 +19,97 @@ class ChopdiOnboardingScreen extends StatefulWidget {
 class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   // Controller for phone number
   final TextEditingController _phoneController = TextEditingController();
+  String? errorText;
+  bool _requesting = false;
 
   // Focus node for phone field
   final FocusNode _phoneFocusNode = FocusNode();
 
   String? errorText;
+
+  /// Asks the server to send a verification code, then moves to the OTP screen
+  /// carrying the challenge it issued.
+  ///
+  /// The code itself never reaches this app — only an identifier for the
+  /// attempt. That is what makes the OTP meaningful: a modified build cannot
+  /// learn or bypass it.
+  Future<void> _requestOtp() async {
+    final phone = _phoneController.text.trim();
+
+    if (phone.isEmpty) {
+      setState(() => errorText = "Please enter your mobile number");
+      return;
+    }
+
+    if (phone.length < 10) {
+      setState(() => errorText = "Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setState(() {
+      errorText = null;
+      _requesting = true;
+    });
+
+    try {
+      final challenge = await AuthService.instance.requestOtp(phone);
+
+      if (!mounted) return;
+      setState(() => _requesting = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            phoneNumber: phone,
+            challengeId: challenge.challengeId,
+          ),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = switch (error.code) {
+          ApiErrorCode.rateLimited =>
+            "A code was already sent. Please wait a moment.",
+          'NETWORK_UNAVAILABLE' =>
+            "Can't reach the server. Check your connection.",
+          // The server is right to reject this, but relaying its message sends
+          // someone hunting a server problem when the cause is a build flag.
+          // Distinguish "no key was compiled in" from "the key is wrong".
+          ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
+            "This build has no DEV_KEY compiled in.\n\n"
+                "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
+                "--dart-define-from-file=env/staging.env",
+          ApiErrorCode.devKeyRequired =>
+            "The DEV_KEY in this build was rejected. Check it matches "
+                "AUTH_DEV_KEY on the server.",
+          _ => error.message,
+        };
+      });
+    } on ApiConfigException catch (error) {
+      // A build-time mistake, not a runtime failure. Saying "try again" here
+      // sends someone retyping their number against a build that can never
+      // work, so the real reason is shown instead.
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = error.message;
+      });
+    } catch (error, stack) {
+      // Anything else is genuinely unexpected. The user gets a plain message,
+      // but the real error goes to the log — without it, every distinct
+      // failure looks identical in a bug report.
+      debugPrint('[chopdi] OTP request failed: $error\n$stack');
+
+      if (!mounted) return;
+      setState(() {
+        _requesting = false;
+        errorText = "Something went wrong. Please try again.";
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -309,6 +400,90 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                         child: Image.asset(
                                           'assets/mobile.png',
                                           fit: BoxFit.contain,
+                                    
+                                        const SizedBox(height: 24),
+                                    
+                                        _PhoneInputField(controller: _phoneController, errorText: errorText),
+                                    
+                                        const SizedBox(height: 22),
+                                    
+                                        _ContinueButton(
+                                          onPressed: () {
+                                            // if (_phoneController.text == AuthService.validPhone) {
+                                  
+                                            //   Navigator.push(
+                                            //     context,
+                                            //     MaterialPageRoute(
+                                            //       builder: (_) => OTPScreen(
+                                            //         phoneNumber: _phoneController.text,
+                                            //       ),
+                                            //     ),
+                                            //   );
+                                  
+                                            // } else {
+                                  
+                                            //   ScaffoldMessenger.of(context).showSnackBar(
+                                            //     SnackBar(backgroundColor: Colors.red, content: Text("Invalid Mobile Number",style: GoogleFonts.manrope(fontSize: 14, color: Colors.white,fontWeight: FontWeight.bold),)),
+                                            //   );
+                                  
+                                            // }
+                      
+                                            //  final phone = _phoneController.text.trim();
+                      
+                                            //   // Empty mobile number
+                                            //   if (phone.isEmpty) {
+                                            //     ScaffoldMessenger.of(context).showSnackBar(
+                                            //       SnackBar(
+                                            //         backgroundColor: Colors.red,
+                                            //         content: Text(
+                                            //           "Please enter mobile number",
+                                            //           style: GoogleFonts.manrope(
+                                            //             color: Colors.white,
+                                            //             fontWeight: FontWeight.bold,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     );
+                                            //     return;
+                                            //   }
+                      
+                                            //   // Invalid length
+                                            //   if (phone.length != 10) {
+                                            //     ScaffoldMessenger.of(context).showSnackBar(
+                                            //       SnackBar(
+                                            //         backgroundColor: Colors.red,
+                                            //         content: Text(
+                                            //           "Please enter a valid 10-digit mobile number",
+                                            //           style: GoogleFonts.manrope(
+                                            //             color: Colors.white,
+                                            //             fontWeight: FontWeight.bold,
+                                            //           ),
+                                            //         ),
+                                            //       ),
+                                            //     );
+                                            //     return;
+                                            //   }
+                      
+                                              // Check hardcoded number
+                                              // if (phone != AuthService.validPhone) {
+                                              //   ScaffoldMessenger.of(context).showSnackBar(
+                                              //     SnackBar(
+                                              //       backgroundColor: Colors.red,
+                                              //       content: Text(
+                                              //         "Invalid Mobile Number",
+                                              //         style: GoogleFonts.manrope(
+                                              //           color: Colors.white,
+                                              //           fontWeight: FontWeight.bold,
+                                              //         ),
+                                              //       ),
+                                              //     ),
+                                              //   );
+                                              //   return;
+                                              // }
+                      
+                                              _requestOtp();
+                                          },
+                                          loading: _requesting,
                                         ),
                                       ),
 
@@ -784,9 +959,13 @@ class _PhoneInputField extends StatelessWidget {
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const _ContinueButton({
-    required this.onPressed,
-  });
+  /// Disables the button and shows a spinner while the code is being sent.
+  /// Requesting an OTP is a network round trip, and without this the user can
+  /// tap repeatedly — each tap another SMS, and the later ones rejected by the
+  /// server's resend cooldown anyway.
+  final bool loading;
+
+  const _ContinueButton({required this.onPressed, this.loading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -805,25 +984,27 @@ class _ContinueButton extends StatelessWidget {
       height: buttonHeight,
 
       child: ElevatedButton(
-        onPressed: onPressed,
-
+        onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              ChopdiColors.navy,
-
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(10),
+          backgroundColor: ChopdiColors.navy,
+          disabledBackgroundColor: ChopdiColors.navy.withValues(alpha: 0.6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
 
           elevation: 0,
         ),
-
-        child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-
+        child: loading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               'Continue',

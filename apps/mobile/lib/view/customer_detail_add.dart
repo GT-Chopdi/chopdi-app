@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerDetailsAdd extends StatefulWidget {
   final String contactName;
@@ -85,19 +85,13 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
         return;
       }
 
-      // Create customer
-      final customer = Customer()
-        ..name = widget.contactName.trim()
-        ..phone = finalPhone
-        ..chopdiId = widget.chopdiId
-        ..status = "Pending"
-        ..received = false
-        ..loanType = "gave";
-
-      // SAVE CUSTOMER TO ISAR
-      await IsarService.isar.writeTxn(() async {
-        await IsarService.isar.customers.put(customer);
-      });
+      // See add_new_customer_screen.dart: the repository is the only write
+      // path, so the create is queued for sync in the same transaction.
+      final customer = await Repositories.customers.create(
+        name: widget.contactName.trim(),
+        phone: finalPhone,
+        status: "Pending",
+      );
 
       if (!mounted) return;
 
