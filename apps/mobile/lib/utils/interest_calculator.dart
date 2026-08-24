@@ -1,4 +1,4 @@
-simport 'dart:math';
+import 'dart:math';
 
 class InterestCalculator {
   /// Whole calendar days between two dates.

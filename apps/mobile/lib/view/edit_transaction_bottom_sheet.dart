@@ -6,9 +6,7 @@ import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
-import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
-import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 

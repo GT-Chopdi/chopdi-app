@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,8 +24,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   // Focus node for phone field
   final FocusNode _phoneFocusNode = FocusNode();
 
-  String? errorText;
-
   /// Asks the server to send a verification code, then moves to the OTP screen
   /// carrying the challenge it issued.
   ///
@@ -42,7 +39,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
     }
 
     if (phone.length < 10) {
-      setState(() => errorText = "Please enter a valid 10-digit mobile number");
+      setState(
+        () => errorText = "Please enter a valid 10-digit mobile number",
+      );
       return;
     }
 
@@ -55,6 +54,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
       final challenge = await AuthService.instance.requestOtp(phone);
 
       if (!mounted) return;
+
       setState(() => _requesting = false);
 
       Navigator.push(
@@ -68,13 +68,17 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
       );
     } on ApiException catch (error) {
       if (!mounted) return;
+
       setState(() {
         _requesting = false;
+
         errorText = switch (error.code) {
           ApiErrorCode.rateLimited =>
             "A code was already sent. Please wait a moment.",
+
           'NETWORK_UNAVAILABLE' =>
             "Can't reach the server. Check your connection.",
+
           // The server is right to reject this, but relaying its message sends
           // someone hunting a server problem when the cause is a build flag.
           // Distinguish "no key was compiled in" from "the key is wrong".
@@ -82,9 +86,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
             "This build has no DEV_KEY compiled in.\n\n"
                 "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
                 "--dart-define-from-file=env/staging.env",
+
           ApiErrorCode.devKeyRequired =>
             "The DEV_KEY in this build was rejected. Check it matches "
                 "AUTH_DEV_KEY on the server.",
+
           _ => error.message,
         };
       });
@@ -93,6 +99,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
       // sends someone retyping their number against a build that can never
       // work, so the real reason is shown instead.
       if (!mounted) return;
+
       setState(() {
         _requesting = false;
         errorText = error.message;
@@ -104,6 +111,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
       debugPrint('[chopdi] OTP request failed: $error\n$stack');
 
       if (!mounted) return;
+
       setState(() {
         _requesting = false;
         errorText = "Something went wrong. Please try again.";
@@ -127,7 +135,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
     _phoneFocusNode.addListener(() {
       if (_phoneFocusNode.hasFocus) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
+          if (mounted && _phoneFocusNode.context != null) {
             Scrollable.ensureVisible(
               _phoneFocusNode.context!,
               duration: const Duration(milliseconds: 300),
@@ -212,13 +220,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                 constraints: BoxConstraints(
                   minHeight: constraints.maxHeight,
                 ),
-
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: horizontalPadding,
                     vertical: 18,
                   ),
-
                   child: Column(
                     children: [
                       SizedBox(height: topSpacing),
@@ -233,13 +239,10 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                           right: width < 360 ? 12 : 24,
                           top: 10,
                         ),
-
                         child: SizedBox(
                           width: double.infinity,
-
                           child: Stack(
                             clipBehavior: Clip.none,
-
                             children: [
                               // -------------------------------------------------
                               // BOOK IMAGE
@@ -248,7 +251,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                               Positioned(
                                 top: -18,
                                 right: width < 360 ? -18 : -35,
-
                                 child: Image.asset(
                                   'assets/book.png',
                                   width: bookWidth,
@@ -264,11 +266,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                 padding: EdgeInsets.only(
                                   right: width < 360 ? 80 : 100,
                                 ),
-
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.start,
-
                                   children: [
                                     // Logo
                                     const _ChopdiLogo(),
@@ -296,19 +296,14 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                           fontWeight: FontWeight.w700,
                                           color: ChopdiColors.cream,
                                         ),
-
                                         children: [
                                           const TextSpan(
-                                            text:
-                                                'Your lending records,\n',
+                                            text: 'Your lending records,\n',
                                           ),
-
                                           TextSpan(
-                                            text:
-                                                'digitally organized.',
+                                            text: 'digitally organized.',
                                             style: GoogleFonts.manrope(
-                                              color:
-                                                  const Color(0xFF83A2CE),
+                                              color: const Color(0xFF83A2CE),
                                               fontSize: headingFontSize,
                                             ),
                                           ),
@@ -322,7 +317,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                     Text(
                                       'Track loans, interest and payments\n'
                                       'with clarity and confidence.',
-
                                       style: GoogleFonts.manrope(
                                         fontSize: subtitleFontSize,
                                         height: 1.35,
@@ -346,13 +340,10 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
 
                       Container(
                         width: double.infinity,
-
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(32),
                         ),
-
                         clipBehavior: Clip.antiAlias,
-
                         child: Column(
                           children: [
                             // =================================================
@@ -361,20 +352,16 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
 
                             Container(
                               width: double.infinity,
-
                               color: const Color(0xFFF4F4F4),
-
                               padding: EdgeInsets.fromLTRB(
                                 width < 360 ? 16 : 20,
                                 width < 360 ? 18 : 22,
                                 width < 360 ? 16 : 20,
                                 18,
                               ),
-
                               child: Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
-
                                 children: [
                                   // -----------------------------------------
                                   // STARTED ROW
@@ -383,107 +370,19 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                   Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-
                                     children: [
                                       // Mobile icon
                                       Container(
                                         width: width < 360 ? 50 : 56,
                                         height: width < 360 ? 50 : 56,
-
                                         decoration: const BoxDecoration(
                                           color: Color(0xFFAAB9CF),
                                           shape: BoxShape.circle,
                                         ),
-
                                         padding: const EdgeInsets.all(8),
-
                                         child: Image.asset(
                                           'assets/mobile.png',
                                           fit: BoxFit.contain,
-                                    
-                                        const SizedBox(height: 24),
-                                    
-                                        _PhoneInputField(controller: _phoneController, errorText: errorText),
-                                    
-                                        const SizedBox(height: 22),
-                                    
-                                        _ContinueButton(
-                                          onPressed: () {
-                                            // if (_phoneController.text == AuthService.validPhone) {
-                                  
-                                            //   Navigator.push(
-                                            //     context,
-                                            //     MaterialPageRoute(
-                                            //       builder: (_) => OTPScreen(
-                                            //         phoneNumber: _phoneController.text,
-                                            //       ),
-                                            //     ),
-                                            //   );
-                                  
-                                            // } else {
-                                  
-                                            //   ScaffoldMessenger.of(context).showSnackBar(
-                                            //     SnackBar(backgroundColor: Colors.red, content: Text("Invalid Mobile Number",style: GoogleFonts.manrope(fontSize: 14, color: Colors.white,fontWeight: FontWeight.bold),)),
-                                            //   );
-                                  
-                                            // }
-                      
-                                            //  final phone = _phoneController.text.trim();
-                      
-                                            //   // Empty mobile number
-                                            //   if (phone.isEmpty) {
-                                            //     ScaffoldMessenger.of(context).showSnackBar(
-                                            //       SnackBar(
-                                            //         backgroundColor: Colors.red,
-                                            //         content: Text(
-                                            //           "Please enter mobile number",
-                                            //           style: GoogleFonts.manrope(
-                                            //             color: Colors.white,
-                                            //             fontWeight: FontWeight.bold,
-                                            //           ),
-                                            //         ),
-                                            //       ),
-                                            //     );
-                                            //     return;
-                                            //   }
-                      
-                                            //   // Invalid length
-                                            //   if (phone.length != 10) {
-                                            //     ScaffoldMessenger.of(context).showSnackBar(
-                                            //       SnackBar(
-                                            //         backgroundColor: Colors.red,
-                                            //         content: Text(
-                                            //           "Please enter a valid 10-digit mobile number",
-                                            //           style: GoogleFonts.manrope(
-                                            //             color: Colors.white,
-                                            //             fontWeight: FontWeight.bold,
-                                            //           ),
-                                            //         ),
-                                            //       ),
-                                            //     );
-                                            //     return;
-                                            //   }
-                      
-                                              // Check hardcoded number
-                                              // if (phone != AuthService.validPhone) {
-                                              //   ScaffoldMessenger.of(context).showSnackBar(
-                                              //     SnackBar(
-                                              //       backgroundColor: Colors.red,
-                                              //       content: Text(
-                                              //         "Invalid Mobile Number",
-                                              //         style: GoogleFonts.manrope(
-                                              //           color: Colors.white,
-                                              //           fontWeight: FontWeight.bold,
-                                              //         ),
-                                              //       ),
-                                              //     ),
-                                              //   );
-                                              //   return;
-                                              // }
-                      
-                                              _requestOtp();
-                                          },
-                                          loading: _requesting,
                                         ),
                                       ),
 
@@ -496,37 +395,26 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
-
                                           children: [
                                             Text(
                                               "Let's get started",
-
-                                              style:
-                                                  GoogleFonts.manrope(
+                                              style: GoogleFonts.manrope(
                                                 fontSize:
                                                     width < 360 ? 16 : 18,
-                                                fontWeight:
-                                                    FontWeight.w600,
-                                                color:
-                                                    ChopdiColors.navy,
+                                                fontWeight: FontWeight.w600,
+                                                color: ChopdiColors.navy,
                                               ),
                                             ),
-
                                             const SizedBox(height: 4),
-
                                             Text(
                                               "Enter your mobile number to\n"
                                               "continue to Chopdi",
-
-                                              style:
-                                                  GoogleFonts.manrope(
+                                              style: GoogleFonts.manrope(
                                                 fontSize:
                                                     width < 360 ? 13 : 14,
                                                 height: 1.4,
-                                                color:
-                                                    ChopdiColors.navy,
-                                                fontWeight:
-                                                    FontWeight.w400,
+                                                color: ChopdiColors.navy,
+                                                fontWeight: FontWeight.w400,
                                               ),
                                             ),
                                           ],
@@ -554,7 +442,8 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                   // -----------------------------------------
 
                                   _ContinueButton(
-                                    onPressed: _handleContinue,
+                                    onPressed: _requestOtp,
+                                    loading: _requesting,
                                   ),
 
                                   const SizedBox(height: 24),
@@ -566,21 +455,15 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.center,
-
                                     children: [
                                       Container(
                                         width: 30,
                                         height: 30,
-
-                                        decoration:
-                                            const BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color: Color(0xFFAAB9CF),
                                           shape: BoxShape.circle,
                                         ),
-
-                                        padding:
-                                            const EdgeInsets.all(5),
-
+                                        padding: const EdgeInsets.all(5),
                                         child: Image.asset(
                                           'assets/secured_logo.png',
                                           height: 20,
@@ -594,20 +477,13 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                       Flexible(
                                         child: Text(
                                           "Your data is secure with us",
-
-                                          textAlign:
-                                              TextAlign.center,
-
-                                          style:
-                                              GoogleFonts.manrope(
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.manrope(
                                             color: ChopdiColors.navy
-                                                .withValues(
-                                              alpha: .7,
-                                            ),
+                                                .withValues(alpha: .7),
                                             fontSize:
                                                 width < 360 ? 12 : 13,
-                                            fontWeight:
-                                                FontWeight.w300,
+                                            fontWeight: FontWeight.w300,
                                           ),
                                         ),
                                       ),
@@ -623,66 +499,43 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
 
                             Container(
                               width: double.infinity,
-
                               color: const Color(0xFFB7C6E0),
-
                               padding: EdgeInsets.symmetric(
                                 vertical: 18,
-                                horizontal:
-                                    width < 360 ? 12 : 20,
+                                horizontal: width < 360 ? 12 : 20,
                               ),
-
                               child: RichText(
                                 textAlign: TextAlign.center,
-
                                 text: TextSpan(
                                   style: GoogleFonts.manrope(
-                                    fontSize:
-                                        width < 360 ? 10 : 12,
-                                    color:
-                                        const Color(0xFF33496F),
+                                    fontSize: width < 360 ? 10 : 12,
+                                    color: const Color(0xFF33496F),
                                     height: 1.5,
                                   ),
-
                                   children: [
                                     TextSpan(
                                       text:
                                           "By continuing, you agree to our\n",
-
-                                      style:
-                                          GoogleFonts.manrope(
-                                        fontWeight:
-                                            FontWeight.w400,
-                                        fontSize:
-                                            width < 360 ? 10 : 12,
+                                      style: GoogleFonts.manrope(
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: width < 360 ? 10 : 12,
                                       ),
                                     ),
-
                                     TextSpan(
                                       text: "Terms of Service",
-
-                                      style:
-                                          GoogleFonts.manrope(
-                                        fontWeight:
-                                            FontWeight.w600,
-                                        fontSize:
-                                            width < 360 ? 10 : 12,
+                                      style: GoogleFonts.manrope(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width < 360 ? 10 : 12,
                                       ),
                                     ),
-
                                     const TextSpan(
                                       text: " and ",
                                     ),
-
                                     TextSpan(
                                       text: "Privacy Policy",
-
-                                      style:
-                                          GoogleFonts.manrope(
-                                        fontWeight:
-                                            FontWeight.w600,
-                                        fontSize:
-                                            width < 360 ? 10 : 12,
+                                      style: GoogleFonts.manrope(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width < 360 ? 10 : 12,
                                       ),
                                     ),
                                   ],
@@ -700,45 +553,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-
-  // ===============================================================
-  // CONTINUE BUTTON LOGIC
-  // ===============================================================
-
-  void _handleContinue() {
-    final phone = _phoneController.text.trim();
-
-    setState(() {
-      if (phone.isEmpty) {
-        errorText = "Please enter your mobile number";
-        return;
-      }
-
-      if (phone.length < 10) {
-        errorText =
-            "Please enter a valid 10-digit mobile number";
-        return;
-      }
-
-      errorText = null;
-    });
-
-    if (phone.isEmpty || phone.length < 10) {
-      return;
-    }
-
-    // Hide keyboard before navigating
-    FocusScope.of(context).unfocus();
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OTPScreen(
-          phoneNumber: phone,
         ),
       ),
     );
@@ -792,30 +606,22 @@ class _PhoneInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    final countryCodePadding =
-        width < 360 ? 10.0 : 14.0;
+    final countryCodePadding = width < 360 ? 10.0 : 14.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         Container(
           width: double.infinity,
-
           decoration: BoxDecoration(
             color: Colors.white,
-
-            borderRadius:
-                BorderRadius.circular(10),
-
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: errorText != null
                   ? Colors.red
-                  : ChopdiColors.navy
-                      .withValues(alpha: .15),
+                  : ChopdiColors.navy.withValues(alpha: .15),
             ),
           ),
-
           child: Row(
             children: [
               // ============================================================
@@ -827,21 +633,15 @@ class _PhoneInputField extends StatelessWidget {
                   horizontal: countryCodePadding,
                   vertical: 14,
                 ),
-
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-
                   children: [
                     Text(
                       '+91',
-
                       style: GoogleFonts.manrope(
-                        fontSize:
-                            width < 360 ? 14 : 15,
-                        fontWeight:
-                            FontWeight.w600,
-                        color:
-                            ChopdiColors.navy,
+                        fontSize: width < 360 ? 14 : 15,
+                        fontWeight: FontWeight.w600,
+                        color: ChopdiColors.navy,
                       ),
                     ),
 
@@ -850,8 +650,7 @@ class _PhoneInputField extends StatelessWidget {
                     Icon(
                       Icons.keyboard_arrow_down,
                       size: 18,
-                      color: ChopdiColors.navy
-                          .withValues(alpha: .7),
+                      color: ChopdiColors.navy.withValues(alpha: .7),
                     ),
                   ],
                 ),
@@ -864,8 +663,7 @@ class _PhoneInputField extends StatelessWidget {
               Container(
                 width: 1,
                 height: 28,
-                color: ChopdiColors.navy
-                    .withValues(alpha: .15),
+                color: ChopdiColors.navy.withValues(alpha: .15),
               ),
 
               // ============================================================
@@ -875,45 +673,24 @@ class _PhoneInputField extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
-
                   focusNode: focusNode,
-
                   maxLength: 10,
-
-                  keyboardType:
-                      TextInputType.phone,
-
-                  textInputAction:
-                      TextInputAction.done,
-
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
                   autofocus: false,
-
                   style: GoogleFonts.manrope(
-                    fontSize:
-                        width < 360 ? 14 : 15,
-                    color:
-                        ChopdiColors.navy,
+                    fontSize: width < 360 ? 14 : 15,
+                    color: ChopdiColors.navy,
                   ),
-
-                  decoration:
-                      InputDecoration(
+                  decoration: InputDecoration(
                     counterText: '',
-
-                    hintText:
-                        '98765 23564',
-
-                    hintStyle:
-                        GoogleFonts.manrope(
+                    hintText: '98765 23564',
+                    hintStyle: GoogleFonts.manrope(
                       color: Colors.grey,
-                      fontSize:
-                          width < 360 ? 14 : 15,
+                      fontSize: width < 360 ? 14 : 15,
                     ),
-
-                    border:
-                        InputBorder.none,
-
-                    contentPadding:
-                        const EdgeInsets.symmetric(
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 14,
                     ),
@@ -932,17 +709,13 @@ class _PhoneInputField extends StatelessWidget {
           const SizedBox(height: 6),
 
           Padding(
-            padding:
-                const EdgeInsets.only(left: 12),
-
+            padding: const EdgeInsets.only(left: 12),
             child: Text(
               errorText!,
-
               style: GoogleFonts.manrope(
                 color: Colors.red,
                 fontSize: 12,
-                fontWeight:
-                    FontWeight.w400,
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
@@ -965,33 +738,31 @@ class _ContinueButton extends StatelessWidget {
   /// server's resend cooldown anyway.
   final bool loading;
 
-  const _ContinueButton({required this.onPressed, this.loading = false});
+  const _ContinueButton({
+    required this.onPressed,
+    this.loading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final width =
-        MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
 
-    final buttonHeight =
-        width < 360 ? 46.0 : 48.0;
+    final buttonHeight = width < 360 ? 46.0 : 48.0;
 
-    final fontSize =
-        width < 360 ? 18.0 : 20.0;
+    final fontSize = width < 360 ? 18.0 : 20.0;
 
     return SizedBox(
       width: double.infinity,
-
       height: buttonHeight,
-
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: ChopdiColors.navy,
-          disabledBackgroundColor: ChopdiColors.navy.withValues(alpha: 0.6),
+          disabledBackgroundColor:
+              ChopdiColors.navy.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-
           elevation: 0,
         ),
         child: loading
@@ -1003,29 +774,25 @@ class _ContinueButton extends StatelessWidget {
                   color: Colors.white,
                 ),
               )
-            : const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Continue',
-
-              style: GoogleFonts.manrope(
-                color: Colors.white,
-                fontSize: fontSize,
-                fontWeight:
-                    FontWeight.w600,
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Continue',
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ],
               ),
-            ),
-
-            const SizedBox(width: 8),
-
-            const Icon(
-              Icons.arrow_forward_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -29,8 +29,7 @@ class OTPScreen extends StatefulWidget {
 }
 
 class _OTPScreenState extends State<OTPScreen> {
-  final TextEditingController otpController =
-      TextEditingController();
+  final TextEditingController otpController = TextEditingController();
 
   final FocusNode otpFocusNode = FocusNode();
 
@@ -68,7 +67,11 @@ class _OTPScreenState extends State<OTPScreen> {
     super.dispose();
   }
 
-  /// Verifies against the API.
+  // ===============================================================
+  // VERIFY OTP
+  // ===============================================================
+
+  /// Verifies OTP against the API.
   ///
   /// The code is never compared on device. Attempt limits, expiry, and the
   /// dev-mode fixed code all live server-side, so a modified APK gains nothing.
@@ -76,12 +79,20 @@ class _OTPScreenState extends State<OTPScreen> {
     final otp = otpController.text.trim();
 
     if (otp.isEmpty) {
-      setState(() => otpError = "Please enter OTP");
+      setState(() {
+        otpError = "Please enter OTP";
+      });
+
+      _scrollToOtp();
       return;
     }
 
     if (otp.length != 6) {
-      setState(() => otpError = "Please enter a valid 6-digit OTP");
+      setState(() {
+        otpError = "Please enter a valid 6-digit OTP";
+      });
+
+      _scrollToOtp();
       return;
     }
 
@@ -98,27 +109,41 @@ class _OTPScreenState extends State<OTPScreen> {
 
       if (!mounted) return;
 
+      setState(() {
+        _verifying = false;
+      });
+
+      // Hide keyboard before navigation.
+      FocusScope.of(context).unfocus();
+
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
+        MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        ),
         (route) => false,
       );
     } on ApiException catch (error) {
       if (!mounted) return;
+
       setState(() {
         _verifying = false;
         otpError = _messageFor(error);
       });
     } on ApiConfigException catch (error) {
       if (!mounted) return;
+
       setState(() {
         _verifying = false;
         otpError = error.message;
       });
     } catch (error, stack) {
-      debugPrint('[chopdi] OTP verify failed: $error\n$stack');
+      debugPrint(
+        '[chopdi] OTP verify failed: $error\n$stack',
+      );
 
       if (!mounted) return;
+
       setState(() {
         _verifying = false;
         otpError = "Something went wrong. Please try again.";
@@ -126,29 +151,57 @@ class _OTPScreenState extends State<OTPScreen> {
     }
   }
 
+  // ===============================================================
+  // API ERROR MESSAGE
+  // ===============================================================
+
   /// Turns a server error code into something a lender can act on.
-  ///
-  /// "Couldn't reach the server" and "that code is wrong" are different
-  /// problems, and showing the same text for both leaves the user retyping a
-  /// correct code while offline.
   String _messageFor(ApiException error) {
     switch (error.code) {
       case ApiErrorCode.invalidCode:
         final remaining = error.details?['attemptsRemaining'];
+
         return remaining is int && remaining > 0
-            ? "Incorrect code. $remaining ${remaining == 1 ? 'attempt' : 'attempts'} left."
+            ? "Incorrect code. $remaining "
+                "${remaining == 1 ? 'attempt' : 'attempts'} left."
             : "Incorrect code.";
+
       case ApiErrorCode.challengeExpired:
         return "This code has expired. Request a new one.";
+
       case ApiErrorCode.tooManyAttempts:
         return "Too many incorrect attempts. Request a new code.";
+
       case ApiErrorCode.rateLimited:
         return "Please wait a moment before trying again.";
+
       case 'NETWORK_UNAVAILABLE':
         return "Can't reach the server. Check your connection.";
+
       default:
         return error.message;
     }
+  }
+
+  // ===============================================================
+  // SCROLL OTP INTO VIEW
+  // ===============================================================
+
+  void _scrollToOtp() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final context = otpFocusNode.context;
+
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          alignment: 0.35,
+        );
+      }
+    });
   }
 
   @override
@@ -161,13 +214,11 @@ class _OTPScreenState extends State<OTPScreen> {
     final defaultPinTheme = PinTheme(
       width: width < 360 ? 40 : 42,
       height: width < 360 ? 48 : 50,
-
       textStyle: GoogleFonts.inter(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: const Color(0xff1D3557),
       ),
-
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
@@ -205,8 +256,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   ),
 
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
 
                     children: [
                       const SizedBox(height: 8),
@@ -370,24 +420,19 @@ class _OTPScreenState extends State<OTPScreen> {
 
                         length: 6,
 
-                        defaultPinTheme:
-                            defaultPinTheme,
+                        defaultPinTheme: defaultPinTheme,
 
                         focusedPinTheme:
-                            defaultPinTheme
-                                .copyDecorationWith(
+                            defaultPinTheme.copyDecorationWith(
                           border: Border.all(
-                            color:
-                                const Color(0xff173A63),
+                            color: const Color(0xff173A63),
                             width: 1.5,
                           ),
                         ),
 
-                        keyboardType:
-                            TextInputType.number,
+                        keyboardType: TextInputType.number,
 
-                        textInputAction:
-                            TextInputAction.done,
+                        textInputAction: TextInputAction.done,
 
                         autofocus: false,
 
@@ -416,23 +461,19 @@ class _OTPScreenState extends State<OTPScreen> {
                           alignment: Alignment.center,
 
                           child: Padding(
-                            padding:
-                                const EdgeInsets.only(
+                            padding: const EdgeInsets.only(
                               left: 6,
                             ),
 
                             child: Text(
                               otpError!,
 
-                              textAlign:
-                                  TextAlign.center,
+                              textAlign: TextAlign.center,
 
-                              style:
-                                  GoogleFonts.manrope(
+                              style: GoogleFonts.manrope(
                                 color: Colors.red,
                                 fontSize: 12,
-                                fontWeight:
-                                    FontWeight.w500,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -463,8 +504,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color:
-                                  Colors.grey[700],
+                              color: Colors.grey[700],
                             ),
                           ),
 
@@ -490,33 +530,44 @@ class _OTPScreenState extends State<OTPScreen> {
                         height: 50,
 
                         child: ElevatedButton(
-                          onPressed: _verifyOtp,
+                          onPressed: _verifying ? null : _verify,
 
-                          style:
-                              ElevatedButton.styleFrom(
-                            backgroundColor:
-                                ChopdiColors.navy,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ChopdiColors.navy,
+
+                            disabledBackgroundColor:
+                                ChopdiColors.navy.withValues(
+                              alpha: 0.6,
+                            ),
 
                             elevation: 0,
 
-                            shape:
-                                RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(
-                                8,
-                              ),
+                                  BorderRadius.circular(8),
                             ),
                           ),
 
-                          child: Text(
-                            "Verify OTP",
+                          child: _verifying
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
 
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontWeight:
-                                  FontWeight.w600,
-                            ),
-                          ),
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  "Verify OTP",
+
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontWeight:
+                                        FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ),
 
@@ -528,8 +579,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
                       TextButton(
                         onPressed: () {
-                          FocusScope.of(context)
-                              .unfocus();
+                          FocusScope.of(context).unfocus();
 
                           Navigator.pop(context);
                         },
@@ -538,10 +588,8 @@ class _OTPScreenState extends State<OTPScreen> {
                           "Change Mobile Number",
 
                           style: GoogleFonts.inter(
-                            color:
-                                const Color(0xff173A63),
-                            fontWeight:
-                                FontWeight.w600,
+                            color: const Color(0xff173A63),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -549,180 +597,12 @@ class _OTPScreenState extends State<OTPScreen> {
                       const SizedBox(height: 12),
                     ],
                   ),
-            
-                  SizedBox(height: 80),
-            
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      
-                      onPressed: _verifying ? null : _verify,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ChopdiColors.navy,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _verifying
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              "Verify OTP",
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-            
-                  const SizedBox(height: 18),
-            
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Change Mobile Number",
-                      style: GoogleFonts.inter(
-                        color: const Color(0xff173A63),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-            
-                  const SizedBox(height: 12),
-                ],
+                ),
               ),
             );
           },
         ),
       ),
     );
-  }
-
-  // ===============================================================
-  // VERIFY OTP
-  // ===============================================================
-
-  Future<void> _verifyOtp() async {
-    final otp = otpController.text.trim();
-
-    // ---------------------------------------------------------------
-    // EMPTY OTP
-    // ---------------------------------------------------------------
-
-    if (otp.isEmpty) {
-      setState(() {
-        otpError = "Please enter OTP";
-      });
-
-      _scrollToOtp();
-
-      return;
-    }
-
-    // ---------------------------------------------------------------
-    // INVALID OTP LENGTH
-    // ---------------------------------------------------------------
-
-    if (otp.length != 6) {
-      setState(() {
-        otpError =
-            "Please enter a valid 6-digit OTP";
-      });
-
-      _scrollToOtp();
-
-      return;
-    }
-
-    // ---------------------------------------------------------------
-    // HARD-CODED OTP
-    // ---------------------------------------------------------------
-
-    if (otp != "123456") {
-      setState(() {
-        otpError = "Invalid OTP";
-      });
-
-      _scrollToOtp();
-
-      return;
-    }
-
-    // ---------------------------------------------------------------
-    // VALID OTP
-    // ---------------------------------------------------------------
-
-    setState(() {
-      otpError = null;
-    });
-
-    // Hide keyboard before navigation.
-    FocusScope.of(context).unfocus();
-
-    // Small delay allows keyboard to start closing
-    // before navigating.
-    await Future.delayed(
-      const Duration(milliseconds: 100),
-    );
-
-    // ---------------------------------------------------------------
-    // SAVE LOGIN SESSION
-    // ---------------------------------------------------------------
-
-    await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.userSessions.put(
-        UserSession()
-          ..phoneNumber = widget.phoneNumber
-          ..isLoggedIn = true
-          ..loginTime = DateTime.now(),
-      );
-    });
-
-    // ---------------------------------------------------------------
-    // NAVIGATE TO MAIN SCREEN
-    // ---------------------------------------------------------------
-
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-
-      MaterialPageRoute(
-        builder: (_) => const MainScreen(),
-      ),
-
-      (route) => false,
-    );
-  }
-
-  // ===============================================================
-  // SCROLL OTP INTO VIEW
-  // ===============================================================
-
-  void _scrollToOtp() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      final context = otpFocusNode.context;
-
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration:
-              const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          alignment: 0.35,
-        );
-      }
-    });
   }
 }
