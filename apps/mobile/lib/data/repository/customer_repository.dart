@@ -36,7 +36,7 @@ class CustomerRepository {
     required String phone,
     String notes = '',
     String status = 'active',
-    bool received = false,
+    bool received = false, 
   }) async {
     final cleanName = _validateName(name);
     final now = DateTime.now().toUtc();

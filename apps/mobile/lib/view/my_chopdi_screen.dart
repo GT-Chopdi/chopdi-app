@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/view/edit_chopdi_screen.dart';
 
 class MyChopdiScreen extends StatelessWidget {
   const MyChopdiScreen({super.key});
@@ -55,7 +56,7 @@ class MyChopdiScreen extends StatelessWidget {
                     // ---------------------------------------------------------
                     // CHOPDI CARD
                     // ---------------------------------------------------------
-                    _buildChopdiCard(),
+                    _buildChopdiCard(context),
 
                     const SizedBox(height: 14),
 
@@ -121,7 +122,7 @@ class MyChopdiScreen extends StatelessWidget {
             // ---------------------------------------------------------------
             // BOTTOM NAVIGATION
             // ---------------------------------------------------------------
-            _buildBottomNavigation(),
+            // _buildBottomNavigation(),
           ],
         ),
       ),
@@ -132,7 +133,7 @@ class MyChopdiScreen extends StatelessWidget {
   // CHOPDI CARD
   // =========================================================================
 
-  Widget _buildChopdiCard() {
+  Widget _buildChopdiCard(BuildContext context) {
     return Container(
       width: double.infinity,
       height: 231,
@@ -237,21 +238,43 @@ class MyChopdiScreen extends StatelessWidget {
                 ),
 
                 // Edit button
-                Container(
-                  width: 19,
-                  height: 19,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE3D0),
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(
-                      color: orangeColor,
-                      width: 0.8,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditChopdiScreen(
+                          initialName: 'My Chopdi',
+                          initialDescription:
+                              'My personal lending ledger to track loans and interest.',
+                          onSave: (name, description) async {
+                            // Update your Isar / Firebase data here.
+                            print(name);
+                            print(description);
+                          },
+                          onDelete: () {
+                            // Delete your Chopdi here.
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 19,
+                    height: 19,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE3D0),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                        color: orangeColor,
+                        width: 0.8,
+                      ),
                     ),
-                  ),
-                  child: const Icon(
-                    Icons.edit_outlined,
-                    size: 11,
-                    color: Color(0xFF24405F),
+                    child: const Icon(
+                      Icons.edit_outlined,
+                      size: 11,
+                      color: Color(0xFF24405F),
+                    ),
                   ),
                 ),
               ],
@@ -460,7 +483,7 @@ class MyChopdiScreen extends StatelessWidget {
               Text(
                 'Chopdi',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
                 ),
