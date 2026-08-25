@@ -1,82 +1,4 @@
-// import 'dart:math';
-
-// class InterestCalculator {
-
-//   static double calculate({
-//     required double principal,
-//     required double rate,
-//     required DateTime startDate,
-//     required String interestType,
-//     required String frequency,
-//   }) {
-//     final days = DateTime.now().difference(startDate).inDays;
-
-//     double time;
-
-//     if (frequency == "Monthly") {
-//       time = days / 30;
-//     } else {
-//       time = days / 365;
-//     }
-
-//     if (interestType == "Simple Interest") {
-//       return principal * rate * time / 100;
-//     }
-
-//     return principal *
-//         (pow(1 + rate / 100, time) - 1);
-//   }
-// }
-
-// import 'dart:math';
-
-// class InterestCalculator {
-//   static double calculate({
-//     required double principal,
-//     required double rate,
-//     required DateTime startDate,
-//     required String interestType,
-//     required String frequency,
-//   }) {
-//     final days = DateTime.now().difference(startDate).inDays;
-
-//     if (days <= 0) return 0;
-
-//     final double annualRate = rate / 100;
-
-//     if (interestType == "Simple Interest") {
-//       if (frequency == "Monthly") {
-//         final months = days / 30;
-
-//         return principal * (rate / 100) * months;
-//       } else {
-//         final years = days / 365;
-
-//         return principal * (rate / 100) * years;
-//       }
-//     }
-
-//     // Compound Interest
-//     if (frequency == "Monthly") {
-//       final years = days / 365;
-
-//       final amount = principal *
-//           pow(1 + annualRate / 12, 12 * years);
-
-//       return amount - principal;
-//     } else {
-//       final years = days / 365;
-
-//       final amount = principal *
-//           pow(1 + annualRate, years);
-
-//       return amount - principal;
-//     }
-//   }
-// }
-
 import 'dart:math';
-
 
 class InterestCalculator {
   /// Whole calendar days between two dates.
@@ -116,9 +38,9 @@ class InterestCalculator {
       return 0;
     }
 
-    // ============================
+    // ============================================================
     // SIMPLE INTEREST
-    // ============================
+    // ============================================================
 
     if (interestType == "Simple Interest") {
       double periods;
@@ -147,9 +69,9 @@ class InterestCalculator {
       return principal * rate * periods / 100;
     }
 
-    // ============================
+    // ============================================================
     // COMPOUND INTEREST
-    // ============================
+    // ============================================================
 
     double periods;
     double periodicRate;
@@ -181,24 +103,104 @@ class InterestCalculator {
     }
 
     return principal *
-        (pow(1 + periodicRate, periods) - 1);
+        (pow(
+          1 + periodicRate,
+          periods,
+        ) -
+            1);
   }
 
-  static String formatAmount(double amount) {
+  // ============================================================
+  // GET INTEREST PERIOD
+  // ============================================================
+
+  static String getInterestPeriod({
+    required DateTime startDate,
+    DateTime? endDate,
+    required String frequency,
+  }) {
+    final end = endDate ?? DateTime.now();
+
+    final days = end.difference(startDate).inDays;
+
+    if (days <= 0) {
+      return "0 days";
+    }
+
+    switch (frequency) {
+      case "Daily":
+        if (days == 1) {
+          return "1 day";
+        }
+
+        return "$days days";
+
+      case "Weekly":
+        final weeks = (days / 7).round();
+
+        if (weeks <= 1) {
+          return "1 week";
+        }
+
+        return "$weeks weeks";
+
+      case "Monthly":
+        final months = (days / 30).round();
+
+        if (months <= 1) {
+          return "1 month";
+        }
+
+        return "$months months";
+
+      case "Yearly":
+        final years = (days / 365).round();
+
+        if (years <= 1) {
+          return "1 year";
+        }
+
+        return "$years years";
+
+      default:
+        final months = (days / 30).round();
+
+        if (months <= 1) {
+          return "1 month";
+        }
+
+        return "$months months";
+    }
+  }
+
+  // ============================================================
+  // FORMAT AMOUNT
+  // ============================================================
+
+  static String formatAmount(
+    double amount,
+  ) {
     return "₹${amount.toStringAsFixed(2)}";
   }
+
+  // ============================================================
+  // FORMAT DATE RANGE
+  // ============================================================
 
   static String formatDateRange(
     DateTime startDate, {
     DateTime? endDate,
   }) {
-    final end = endDate ?? DateTime.now();
+    final end =
+        endDate ?? DateTime.now();
 
     return "${startDate.day} ${_month(startDate.month)} → "
         "${end.day} ${_month(end.month)}";
   }
 
-  static String _month(int month) {
+  static String _month(
+    int month,
+  ) {
     const months = [
       "Jan",
       "Feb",
@@ -217,3 +219,4 @@ class InterestCalculator {
     return months[month - 1];
   }
 }
+

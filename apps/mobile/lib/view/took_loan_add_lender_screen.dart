@@ -181,8 +181,6 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
         contact.displayName ?? 'Unknown';
 
     // // Check existing customer
-    // final existingCustomer =
-    //     await IsarService.getCustomerByPhone(phoneNumber);
     final existingCustomer =
         await IsarService.getCustomerByPhoneAndChopdi(
       phoneNumber,
@@ -347,18 +345,6 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
                   // ------------------------------------------------
                   // ADD NEW CUSTOMER
                   // ------------------------------------------------
-
-                  // AddNewCustomerCard(
-                  //   onTap: () {
-                  //     Navigator.push(
-                  //       context,
-                  //       MaterialPageRoute(
-                  //         builder: (_) =>
-                  //             const AddNewCustomerScreen(),
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
                   AddNewLenderCard(
                     onTap: () {
                       Navigator.push(
@@ -482,30 +468,6 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
         ),
       );
     }
-
-    // Contact list
-    // return ListView.builder(
-    //   itemCount: filteredContacts.length,
-
-    //   itemBuilder: (_, index) {
-    //     final contact =
-    //         filteredContacts[index];
-
-    //     final phone =
-    //         contact.phones.isNotEmpty
-    //             ? contact.phones.first.number
-    //             : "No phone number";
-
-    //     return ContactTile(
-    //       name: contact.displayName ?? 'Unknown',
-    //       phone: phone,
-
-    //       onTap: () {
-    //         selectContact(contact);
-    //       },
-    //     );
-    //   },
-    // );
 
     return ListView.builder(
       controller: _contactsScrollController,

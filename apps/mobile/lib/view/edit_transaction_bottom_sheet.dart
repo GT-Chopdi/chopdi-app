@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/model/customer.dart';
 
 import 'package:mychopdi/model/transaction.dart';
-import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/notification_service.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 
@@ -110,10 +113,10 @@ class _EditTransactionBottomSheetState
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(
-        20,
+        5,
         0,
-        20,
-        10,
+        5,
+        2,
       ),
       padding: const EdgeInsets.only(
                 left: 16,
@@ -121,7 +124,7 @@ class _EditTransactionBottomSheetState
                 bottom: 8,
               ),
       decoration: const BoxDecoration(
-        color: ChopdiColors.cream,
+        color: Color.fromRGBO(255, 248, 240, 1),
         borderRadius: BorderRadius.all(
           Radius.circular(24),
         ),
@@ -226,6 +229,14 @@ class _EditTransactionBottomSheetState
 
             const SizedBox(height: 9),
 
+            _buildLabel('Description'),
+
+            const SizedBox(height: 5),
+            
+            _buildDescriptionField(),
+
+            const SizedBox(height: 9),
+
             // Interest Type
             _buildLabel('Interest Type'),
 
@@ -278,14 +289,14 @@ class _EditTransactionBottomSheetState
               },
             ),
 
-            const SizedBox(height: 9),
+            // const SizedBox(height: 9),
 
             // Description
-            _buildLabel('Description'),
+            // _buildLabel('Description'),
 
-            const SizedBox(height: 5),
+            // const SizedBox(height: 5),
 
-            _buildDescriptionField(),
+            // _buildDescriptionField(),
 
             const SizedBox(height: 16),
 
@@ -402,7 +413,7 @@ class _EditTransactionBottomSheetState
             borderRadius:
                 BorderRadius.circular(6),
             borderSide: const BorderSide(
-              color: Color(0xFFBFC7D2),
+              color: Color.fromRGBO(170, 185, 207, 1),
               width: 0.8,
             ),
           ),
@@ -410,7 +421,7 @@ class _EditTransactionBottomSheetState
             borderRadius:
                 BorderRadius.circular(6),
             borderSide: const BorderSide(
-              color: Color(0xFF213F68),
+              color: Color.fromRGBO(170, 185, 207, 1),
               width: 1,
             ),
           ),
@@ -579,14 +590,6 @@ class _EditTransactionBottomSheetState
             ),
           ),
         ),
-
-        Text(
-          '${descriptionController.text.length}/100',
-          style: GoogleFonts.manrope(
-            color: const Color(0xFF6F7A87),
-            fontSize: 8,
-          ),
-        ),
       ],
     );
   }
@@ -601,7 +604,9 @@ class _EditTransactionBottomSheetState
     );
 
     if (amount == null || amount <= 0) {
-      _showError('Please enter a valid amount');
+      _showError(
+        'Please enter a valid amount',
+      );
       return;
     }
 
@@ -613,7 +618,10 @@ class _EditTransactionBottomSheetState
       return;
     }
 
-    // Update existing Isar object
+    // ============================================================
+    // EXISTING TRANSACTION
+    // ============================================================
+
     final transaction = widget.transaction;
 
     transaction.amountPaise = Money.toPaise(amount);
@@ -632,6 +640,30 @@ class _EditTransactionBottomSheetState
     transaction.description =
         descriptionController.text.trim();
 
+    // ============================================================
+    // CALCULATE UPDATED INTEREST
+    // ============================================================
+
+    double calculatedInterest = 0;
+
+    final interestType =
+        selectedInterestType ?? '';
+
+    final interestFrequency =
+        selectedInterestFrequency ?? '';
+
+    if (interestType.isNotEmpty &&
+        interestFrequency.isNotEmpty &&
+        interestRate > 0) {
+      calculatedInterest =
+          InterestCalculator.calculate(
+        principal: amount,
+        rate: interestRate,
+        startDate: selectedDate,
+        interestType: interestType,
+        frequency: interestFrequency,
+      );
+    }
     // Through the repository: validated, version-guarded, and enqueued in the
     // same transaction as the row.
     await Repositories.ledger.update(
@@ -643,9 +675,73 @@ class _EditTransactionBottomSheetState
       paymentMode: transaction.paymentMode,
     );
 
-    if (!mounted) return;
+    // Save recalculated interest
+    transaction.interest =
+        calculatedInterest;
 
-    Navigator.pop(context, true);
+    // ============================================================
+    // SAVE TRANSACTION
+    // ============================================================
+
+    await IsarService.isar.writeTxn(
+      () async {
+        await IsarService.isar.transactions.put(
+          transaction,
+        );
+      },
+    );
+
+    // ============================================================
+    // GET CUSTOMER
+    // ============================================================
+
+    final customer =
+        await IsarService.isar.customers.get(
+      transaction.customerId,
+    );
+
+    final customerName =
+        customer?.name ?? "Customer";
+
+    // ============================================================
+    // CREATE INTEREST UPDATED NOTIFICATION
+    // ============================================================
+
+    if (calculatedInterest > 0 &&
+        interestFrequency.isNotEmpty) {
+      final interestPeriod =
+          InterestCalculator.getInterestPeriod(
+        startDate: selectedDate,
+        frequency: interestFrequency,
+      );
+
+      final notificationService =
+          NotificationService(
+        IsarService.isar,
+      );
+
+      await notificationService
+          .createInterestUpdatedNotification(
+        chopdiId: transaction.chopdiId,
+        customerName: customerName,
+        interestAmount: calculatedInterest,
+        interestPeriod: interestPeriod,
+        customerId: transaction.customerId,
+      );
+    }
+
+    // ============================================================
+    // CLOSE
+    // ============================================================
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(
+      context,
+      true,
+    );
   }
 
   void _showError(String message) {

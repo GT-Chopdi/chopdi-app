@@ -46,27 +46,6 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
     }
   }
 
-  // Future<void> loadTransactions() async {
-  //     transactions = await IsarService.isar.transactions
-  //         .filter()
-  //         .customerIdEqualTo(widget.customer.id)
-  //         .sortByDate()
-  //         .findAll();
-
-  //     for (final tx in transactions) {
-  //       print("----------------");
-  //       print("Amount: ${tx.amount}");
-  //       print("Rate: ${tx.interestRate}");
-  //       print("Type: ${tx.interestType}");
-  //       print("Frequency: ${tx.interestFrequency}");
-  //       print("Date: ${tx.date}");
-  //       print("Calculated Interest: ${calculateInterest(tx)}");
-  //     }
-
-  //     setState(() {});
-
-  // }
-
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()

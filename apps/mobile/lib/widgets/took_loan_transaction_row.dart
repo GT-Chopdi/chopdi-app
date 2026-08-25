@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 
 class TookLoanTransactionRow extends StatelessWidget {
   final Transaction transaction;
@@ -21,11 +22,83 @@ class TookLoanTransactionRow extends StatelessWidget {
   // USER DESCRIPTION
 
   String _getDescription() {
-    if (transaction.description.trim().isEmpty) {
-      return "Description...";
+    final startDate =
+        DateFormat("dd MMM yyyy").format(transaction.date);
+
+    final endDate =
+        DateFormat("dd MMM yyyy").format(DateTime.now());
+
+    // ==========================================
+    // PAID
+    // ==========================================
+
+    if (transaction.type == TransactionType.paid) {
+      final description =
+          "Amount paid from $startDate to $endDate.";
+
+      return _shortenDescription(description);
     }
 
-    return transaction.description;
+    // ==========================================
+    // TOOK LOAN
+    // ==========================================
+
+    final days = DateTime.now()
+        .difference(transaction.date)
+        .inDays;
+
+    // If loan was taken today
+    if (days <= 0) {
+      final description = transaction.description.trim().isEmpty
+          ? "Loan took."
+          : transaction.description.trim();
+
+      return _shortenDescription(description);
+    }
+
+    // ==========================================
+    // INTEREST DESCRIPTION
+    // ==========================================
+
+    final interest = InterestCalculator.calculate(
+      principal: transaction.amount,
+      rate: transaction.interestRate,
+      startDate: transaction.date,
+      interestType: transaction.interestType,
+      frequency: transaction.interestFrequency,
+    );
+
+    final rate =
+        transaction.interestRate.toStringAsFixed(0);
+
+    final frequency =
+        transaction.interestFrequency.isEmpty
+            ? "monthly"
+            : transaction.interestFrequency.toLowerCase();
+
+    final interestType =
+        transaction.interestType.isEmpty
+            ? "simple"
+            : transaction.interestType
+                .replaceAll(" Interest", "")
+                .toLowerCase();
+
+    final description =
+        "₹${interest.toStringAsFixed(0)} interest "
+        "from $startDate to $endDate at $rate% "
+        "$frequency $interestType interest.";
+
+    return _shortenDescription(description);
+  }
+
+  String _shortenDescription(String description) {
+    const maxCharacters = 25;
+
+    if (description.length <= maxCharacters) {
+      return description;
+    }
+
+    return "${description.substring(0, maxCharacters).trim()}...";
   }
 
   // TRANSACTION TYPE
@@ -140,7 +213,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       fontSize: 10,
-                      color: Color(0xff8A93A6),
+                      color: const Color(0xff8A93A6),
                     ),
                   ),
                 ],
