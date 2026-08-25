@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for release builds. The Flutter template declares INTERNET only in
+         the debug and profile manifests, so a debug run works while a release APK
+         cannot open a socket at all: every request fails as "can't reach the
+         server" even though connectivity_plus reports the network as up. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <application
         android:label="Chopdi"
