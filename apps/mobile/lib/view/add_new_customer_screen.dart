@@ -603,6 +603,8 @@ class _AddNewCustomerScreenState
       name: name,
       phone: phone,
       status: "Pending",
+      chopdiId: widget.chopdiId,
+      loanType: "gave",
     );
 
     if (!mounted) return;

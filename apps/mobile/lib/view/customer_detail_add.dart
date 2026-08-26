@@ -91,6 +91,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
         name: widget.contactName.trim(),
         phone: finalPhone,
         status: "Pending",
+        chopdiId: widget.chopdiId,
+        loanType: "gave",
       );
 
       if (!mounted) return;

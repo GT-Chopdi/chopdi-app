@@ -11,32 +11,6 @@ enum TransactionType {
   paid,
 }
 
-// @collection
-// class Transaction {
-//   Id id = Isar.autoIncrement;
-
-//   late int customerId;
-
-//   late double amount;
-
-//   late double interest;
-
-//   late DateTime date;
-
-//   late double interestRate;
-
-//   @enumerated
-//   late TransactionType type;
-
-//   String description = "";
-
-//   String paymentMode = "";
-  
-
-//   String interestType = "";
-//   String interestFrequency = "";
-// }
-
 @collection
 class Transaction {
   /// Local row id only. See the note on [Customer.id].

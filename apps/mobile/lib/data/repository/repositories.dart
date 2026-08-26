@@ -23,6 +23,10 @@ class Repositories {
   static LedgerRepository get ledger =>
       _ledger ??= LedgerRepository(IsarService.isar);
 
+  static Future<void> migrateLegacyCustomers() async {
+    await customers.migrateLegacyCustomers();
+  }
+
   /// Drops the cached instances. Tests reopen Isar between cases, so a stale
   /// repository would hold a closed database.
   static void reset() {
