@@ -63,7 +63,7 @@ void main() {
   test('entries survive going offline, coming back, and an app restart',
       () async {
     // ---- connection available -------------------------------------------
-    final ramesh = await customers.create(name: 'Ramesh', phone: '+919876500001');
+    final ramesh = await customers.create(name: 'Ramesh', phone: '+919876500001', chopdiId: 1, loanType: 'gave');
     await ledger.create(
       customer: ramesh,
       amountPaise: Money.toPaise(5000),
@@ -77,7 +77,7 @@ void main() {
     // ---- connection lost -------------------------------------------------
     // Nothing changes. The save path never opened a socket in the first place,
     // so there is no state to switch.
-    final suresh = await customers.create(name: 'Suresh', phone: '+919876500002');
+    final suresh = await customers.create(name: 'Suresh', phone: '+919876500002', chopdiId: 1, loanType: 'gave');
     await ledger.create(
       customer: suresh,
       amountPaise: Money.toPaise(1200.75),
@@ -135,7 +135,7 @@ void main() {
 
   test('editing and deleting while offline queues follow-up operations',
       () async {
-    final c = await customers.create(name: 'Ramesh', phone: '+919876500003');
+    final c = await customers.create(name: 'Ramesh', phone: '+919876500003', chopdiId: 1, loanType: 'gave');
     final tx = await ledger.create(
       customer: c,
       amountPaise: Money.toPaise(5000),
@@ -161,7 +161,7 @@ void main() {
   });
 
   test('a long offline stretch just accumulates work', () async {
-    final c = await customers.create(name: 'Ramesh', phone: '+919876500004');
+    final c = await customers.create(name: 'Ramesh', phone: '+919876500004', chopdiId: 1, loanType: 'gave');
 
     for (var day = 1; day <= 40; day++) {
       await ledger.create(

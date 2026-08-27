@@ -602,6 +602,8 @@ class _AddNewCustomerScreenState
     final customer = await Repositories.customers.create(
       name: name,
       phone: phone,
+      chopdiId: widget.chopdiId,
+      loanType: "gave",
       status: "Pending",
     );
 

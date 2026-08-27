@@ -50,7 +50,7 @@ void main() {
   });
 
   Future<Customer> aCustomer() =>
-      customers.create(name: 'Ramesh', phone: '+919876543210');
+      customers.create(name: 'Ramesh', phone: '+919876543210', chopdiId: 1, loanType: 'gave');
 
   group('every write reaches the outbox', () {
     test('creating a customer enqueues exactly one create', () async {
@@ -137,7 +137,7 @@ void main() {
   group('validation rejects what the server would refuse', () {
     test('a blank name', () async {
       await expectLater(
-        customers.create(name: '   ', phone: '1'),
+        customers.create(name: '   ', phone: '1', chopdiId: 1, loanType: 'gave'),
         throwsA(isA<RepositoryException>()),
       );
     });

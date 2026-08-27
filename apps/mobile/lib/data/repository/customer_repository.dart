@@ -31,12 +31,20 @@ class CustomerRepository {
   /// Longest name the server accepts.
   static const maxNameLength = 120;
 
+  /// [chopdiId] and [loanType] are required because every list in the app
+  /// filters on them: the home screen shows `chopdiId == active && loanType ==
+  /// "gave"`, the took-loan screen the same with `"took"`. A row created without
+  /// them saves and syncs correctly and is invisible in the UI — a failure that
+  /// looks like the write never happened. Requiring them makes that unbuildable
+  /// rather than merely discouraged.
   Future<Customer> create({
     required String name,
     required String phone,
+    required int chopdiId,
+    required String loanType,
     String notes = '',
     String status = 'active',
-    bool received = false, 
+    bool received = false,
   }) async {
     final cleanName = _validateName(name);
     final now = DateTime.now().toUtc();
@@ -50,6 +58,8 @@ class CustomerRepository {
       ..notes = notes.trim()
       ..status = status
       ..received = received
+      ..chopdiId = chopdiId
+      ..loanType = loanType
       ..version = 0
       ..updatedAt = now
       ..syncStatus = SyncStatus.pending;

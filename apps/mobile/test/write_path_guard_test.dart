@@ -22,13 +22,32 @@ void main() {
     // test/local_migration_test.dart.
     'lib/data/migration/local_migration.dart',
 
-    // Arrived with the borrowing feature and still write to Isar directly, so
-    // nothing they save reaches the outbox — those entries live on the device
-    // and silently never sync. They must move to the repository before
-    // borrowing ships. Listed rather than ignored so the debt is visible.
+    // Arrived with the borrowing feature and still writes to Isar directly, so
+    // nothing it saves reaches the outbox — those entries live on the device
+    // and silently never sync. It must move to the repository before borrowing
+    // ships. Listed rather than ignored so the debt is visible.
+    //
+    // The two lender-creation screens that used to sit here have been migrated:
+    // writing a customer without the repository left it with no uuid, which
+    // LedgerRepository refuses, so every entry added to such a lender failed
+    // silently.
     'lib/view/took_loan_customer_details_screen.dart',
-    'lib/view/took_loan_customer_detail_add.dart',
-    'lib/view/took_loan_add_new_lender_screen.dart',
+
+    // The sync layer itself. It applies what the server has already accepted —
+    // marking rows synced, storing the version the server assigned — and those
+    // writes must *not* enqueue anything: an acknowledgement that queued a
+    // fresh operation would sync forever in a loop. Covered by
+    // test/sync_engine_test.dart.
+    'lib/data/sync/sync_engine.dart',
+
+    // Both call `Repositories.ledger.update` first — the synced fields go
+    // through the repository correctly — and then write `Transaction.interest`,
+    // a value derived locally from principal, rate and dates. It is absent from
+    // `_payloadFor`, so nothing the server stores is lost here. Allowed on that
+    // basis alone: the moment either writes a field that *is* in the payload,
+    // the change stops syncing with no error to show for it.
+    'lib/view/edit_transaction_bottom_sheet.dart',
+    'lib/widgets/edit_transaction_details.dart',
   };
 
   final writePattern = RegExp(

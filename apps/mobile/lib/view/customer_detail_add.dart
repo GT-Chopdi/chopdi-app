@@ -90,6 +90,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       final customer = await Repositories.customers.create(
         name: widget.contactName.trim(),
         phone: finalPhone,
+        chopdiId: widget.chopdiId,
+        loanType: "gave",
         status: "Pending",
       );
 

@@ -116,6 +116,11 @@ class LedgerRepository {
     draft
       ..uuid = _uuid.v7()
       ..customerUuid = customer.uuid
+      // Taken from the owning customer rather than the caller. Every read path
+      // that aggregates money (SummaryCard, the took-loan home screen) filters
+      // on chopdiId, so a draft that omits it saves correctly and then never
+      // appears in any total. Deriving it here means no call site can forget.
+      ..chopdiId = customer.chopdiId
       ..paymentMode = draft.paymentMode.trim()
       ..version = 0
       ..updatedAt = now
