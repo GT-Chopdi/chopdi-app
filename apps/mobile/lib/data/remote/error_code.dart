@@ -26,6 +26,44 @@ class ApiErrorCode {
   static const String smsNotConfigured = 'SMS_NOT_CONFIGURED';
   static const String userSuspended = 'USER_SUSPENDED';
 
+  // --- sync ---
+  //
+  // Returned per-operation by `/v1/sync/push`, not as a request-level failure.
+  // Whether to retry is taken from the `permanent` flag on the error itself,
+  // never inferred from the code here — that is what lets the server reclassify
+  // one without waiting for an app-store release. These constants exist so the
+  // client can *recognise* a code, not so it can second-guess it.
+
+  /// The row's id already exists. Permanent: a create cannot become valid.
+  static const String idExists = 'ID_EXISTS';
+
+  /// The row moved on since this client last saw it. Answered as a `conflict`,
+  /// not a rejection — both versions are kept and the user chooses, because
+  /// financial fields must never be merged automatically.
+  static const String staleVersion = 'STALE_VERSION';
+
+  /// The owning customer has not arrived yet.
+  ///
+  /// Explicitly **not** permanent, and the one code here where that matters
+  /// most: an entry and its customer are usually created in the same batch, and
+  /// a customer whose own operation failed may well succeed on the next
+  /// attempt. Treating this as fatal would dead-letter a perfectly valid entry.
+  static const String parentNotFound = 'PARENT_NOT_FOUND';
+
+  /// The target was soft-deleted. Permanent.
+  static const String entityVoided = 'ENTITY_VOIDED';
+
+  /// The same `opId` arrived carrying different bytes.
+  ///
+  /// Permanent, and a client bug rather than a user one: it means a payload was
+  /// re-serialised at send time instead of frozen at enqueue. See
+  /// [SyncOp.payload].
+  static const String idempotencyKeyReuse = 'IDEMPOTENCY_KEY_REUSE';
+
+  /// More operations than one request may carry. Permanent for that batch;
+  /// [SyncEngine.batchSize] mirrors the server's limit so it should not occur.
+  static const String batchTooLarge = 'BATCH_TOO_LARGE';
+
   // --- generic ---
   static const String notFound = 'NOT_FOUND';
   static const String rateLimited = 'RATE_LIMITED';
@@ -57,6 +95,12 @@ class ApiErrorCode {
     devKeyRequired,
     smsNotConfigured,
     userSuspended,
+    idExists,
+    staleVersion,
+    parentNotFound,
+    entityVoided,
+    idempotencyKeyReuse,
+    batchTooLarge,
     notFound,
     rateLimited,
     internal,
