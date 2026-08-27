@@ -96,3 +96,5 @@ flutter:
     - assets/chopdi_book.png
     - env/example.env
     - env/staging.env
+    - assets/MyChopdi.png
+    - assets/edit_chopdi_icon.png

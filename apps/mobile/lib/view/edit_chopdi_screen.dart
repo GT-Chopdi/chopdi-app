@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/widgets/delete_chopdi_bottom_sheet.dart';
 
 class EditChopdiScreen extends StatefulWidget {
   const EditChopdiScreen({
@@ -142,63 +143,27 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   // DELETE
   // ---------------------------------------------------------------------------
 
-  void _deleteChopdi() {
-    FocusScope.of(context).unfocus();
-
-    showDialog(
+  void _showDeleteChopdiBottomSheet() {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Delete Chopdi?',
-            style: TextStyle(
-              color: darkBlue,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: const Text(
-            'This action cannot be undone. All data associated with this Chopdi may be permanently deleted.',
-            style: TextStyle(
-              color: secondaryText,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: darkBlue,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
+        return DeleteChopdiBottomSheet(
+          onDelete: () async {
+            // Your existing Chopdi deletion logic goes here.
 
-                if (widget.onDelete != null) {
-                  widget.onDelete!();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: deleteRed,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
+            // Example:
+            //
+            // await deleteChopdi();
+
+            if (context.mounted) {
+              Navigator.of(context).pop(); // close bottom sheet
+            }
+
+            // Then refresh / navigate as required.
+          },
         );
       },
     );
@@ -364,218 +329,79 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
         alignment: Alignment.center,
         children: [
           // Background circle
-          Positioned(
-            top: 7,
-            child: Container(
-              width: 94,
-              height: 94,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE3CD),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 7,
+          //   child: Container(
+          //     width: 94,
+          //     height: 94,
+          //     decoration: const BoxDecoration(
+          //       color: Color(0xFFFFE3CD),
+          //       shape: BoxShape.circle,
+          //     ),
+          //   ),
+          // ),
 
-          // Decorative left branch
-          Positioned(
-            left: 62,
-            bottom: 12,
-            child: Transform.rotate(
-              angle: -0.15,
-              child: const Icon(
-                Icons.spa_outlined,
-                size: 39,
-                color: Color(0xFFD6A36C),
-              ),
-            ),
-          ),
+          // // Decorative left branch
+          // Positioned(
+          //   left: 62,
+          //   bottom: 12,
+          //   child: Transform.rotate(
+          //     angle: -0.15,
+          //     child: const Icon(
+          //       Icons.spa_outlined,
+          //       size: 39,
+          //       color: Color(0xFFD6A36C),
+          //     ),
+          //   ),
+          // ),
 
-          // Decorative right branch
-          Positioned(
-            right: 62,
-            bottom: 12,
-            child: Transform.scale(
-              scaleX: -1,
-              child: const Icon(
-                Icons.spa_outlined,
-                size: 39,
-                color: Color(0xFFD6A36C),
-              ),
-            ),
-          ),
+          // // Decorative right branch
+          // Positioned(
+          //   right: 62,
+          //   bottom: 12,
+          //   child: Transform.scale(
+          //     scaleX: -1,
+          //     child: const Icon(
+          //       Icons.spa_outlined,
+          //       size: 39,
+          //       color: Color(0xFFD6A36C),
+          //     ),
+          //   ),
+          // ),
 
-          // Small decorative dots
-          const Positioned(
-            left: 98,
-            top: 32,
-            child: Text(
-              '+',
-              style: TextStyle(
-                fontSize: 9,
-                color: Color(0xFFD5A06A),
-              ),
-            ),
-          ),
+          // // Small decorative dots
+          // const Positioned(
+          //   left: 98,
+          //   top: 32,
+          //   child: Text(
+          //     '+',
+          //     style: TextStyle(
+          //       fontSize: 9,
+          //       color: Color(0xFFD5A06A),
+          //     ),
+          //   ),
+          // ),
 
-          const Positioned(
-            right: 98,
-            top: 36,
-            child: Text(
-              '+',
-              style: TextStyle(
-                fontSize: 9,
-                color: Color(0xFFD5A06A),
-              ),
-            ),
-          ),
+          // const Positioned(
+          //   right: 98,
+          //   top: 36,
+          //   child: Text(
+          //     '+',
+          //     style: TextStyle(
+          //       fontSize: 9,
+          //       color: Color(0xFFD5A06A),
+          //     ),
+          //   ),
+          // ),
 
-          // Book
-          _buildBook(),
+          // // Book
+          // _buildBook(),
+          Image.asset('assets/chopdi_book.png'),
         ],
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // BOOK
-  // ---------------------------------------------------------------------------
-
-  Widget _buildBook() {
-    return Transform.rotate(
-      angle: -0.045,
-      child: SizedBox(
-        width: 72,
-        height: 95,
-        child: Stack(
-          children: [
-            // Book shadow
-            Positioned(
-              left: 8,
-              bottom: 4,
-              child: Container(
-                width: 59,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0x442B1D16),
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              ),
-            ),
-
-            // Main book
-            Positioned(
-              left: 8,
-              top: 3,
-              child: Container(
-                width: 57,
-                height: 76,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA91F25),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(5),
-                    topRight: Radius.circular(4),
-                    bottomLeft: Radius.circular(3),
-                    bottomRight: Radius.circular(4),
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x55000000),
-                      blurRadius: 3,
-                      offset: Offset(2, 3),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Spine
-                    Positioned(
-                      left: 4,
-                      top: 4,
-                      bottom: 4,
-                      child: Container(
-                        width: 5,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF7E161C),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-
-                    // Inner cover
-                    Positioned(
-                      left: 12,
-                      top: 9,
-                      right: 6,
-                      bottom: 8,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFFE4B96A),
-                            width: 1.1,
-                          ),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.currency_rupee_rounded,
-                              size: 22,
-                              color: Color(0xFFE4B96A),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Chopdi',
-                              style: TextStyle(
-                                fontSize: 6,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFE4B96A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Pages
-            Positioned(
-              left: 62,
-              top: 10,
-              child: Container(
-                width: 5,
-                height: 68,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE7D2B6),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Bottom bookmark
-            Positioned(
-              left: 34,
-              bottom: 0,
-              child: Container(
-                width: 8,
-                height: 18,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF78151B),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(2),
-                    bottomRight: Radius.circular(2),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ---------------------------------------------------------------------------
   // EDIT CARD
@@ -887,7 +713,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
   Widget _buildDeleteButton() {
     return GestureDetector(
-      onTap: _deleteChopdi,
+      onTap: _showDeleteChopdiBottomSheet,
       child: Container(
         width: double.infinity,
         height: 41,

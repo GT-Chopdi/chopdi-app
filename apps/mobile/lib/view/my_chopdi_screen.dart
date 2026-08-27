@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/view/edit_chopdi_screen.dart';
+import 'package:mychopdi/view/help_faqs_screen.dart';
+import 'package:mychopdi/view/notifications_setting_screen.dart';
+import 'package:mychopdi/view/terms_privacy_screen.dart';
 
 class MyChopdiScreen extends StatelessWidget {
   const MyChopdiScreen({super.key});
 
-  // Colors from the design
+  // ===========================================================================
+  // COLORS
+  // ===========================================================================
+
   static const Color backgroundColor = Color(0xFFFFEEDB);
   static const Color darkBlue = Color(0xFF18345C);
   static const Color lightBlue = Color(0xFFDCE6F2);
@@ -19,166 +26,259 @@ class MyChopdiScreen extends StatelessWidget {
 
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(23, 43, 18, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ---------------------------------------------------------
-                    // HEADER
-                    // ---------------------------------------------------------
-                    const Text(
-                      'My Chopdi',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: darkBlue,
+        
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+          
+                  padding: const EdgeInsets.fromLTRB(
+                    18,
+                    18,
+                    18,
+                    18,
+                  ),
+          
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+          
+                    children: [
+                      // =========================================================
+                      // HEADER
+                      // =========================================================
+          
+                      Image.asset(
+                        'assets/MyChopdi.png',
                       ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    const Text(
-                      'Manage your current chopdi',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF5C6B80),
+          
+                      const SizedBox(height: 2),
+          
+                      Text(
+                        'Manage your current chopdi',
+          
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color.fromRGBO(
+                            34,
+                            58,
+                            94,
+                            0.62,
+                          ),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // ---------------------------------------------------------
-                    // CHOPDI CARD
-                    // ---------------------------------------------------------
-                    _buildChopdiCard(context),
-
-                    const SizedBox(height: 14),
-
-                    // ---------------------------------------------------------
-                    // PREFERENCES
-                    // ---------------------------------------------------------
-                    const Text(
-                      'Preferences',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: darkBlue,
+          
+                      const SizedBox(height: 15),
+          
+                      // =========================================================
+                      // CHOPDI CARD
+                      // =========================================================
+          
+                      _buildChopdiCard(context),
+          
+                      const SizedBox(height: 14),
+          
+                      // =========================================================
+                      // PREFERENCES
+                      // =========================================================
+          
+                      Text(
+                        'Preferences',
+          
+                        style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color.fromRGBO(34, 58, 94, 1),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 5),
-
-                    _buildMenuCard(
-                      icon: Icons.notifications_none_rounded,
-                      title: 'Notifications Settings',
-                      subtitle: 'Manage app notifications',
-                      onTap: () {},
-                    ),
-
-                    const SizedBox(height: 7),
-
-                    // ---------------------------------------------------------
-                    // SUPPORT
-                    // ---------------------------------------------------------
-                    const Text(
-                      'Support',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: darkBlue,
+          
+                      const SizedBox(height: 8),
+          
+                      _buildMenuCard(
+                        icon:
+                            Icons.notifications_none_rounded,
+          
+                        title:
+                            'Notifications Settings',
+          
+                        subtitle:
+                            'Manage app notifications',
+          
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  NotificationSettingsScreen(),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-
-                    const SizedBox(height: 5),
-
-                    _buildMenuCard(
-                      icon: Icons.support_agent_rounded,
-                      title: 'Help & FAQs',
-                      subtitle: 'Get answers to common questions',
-                      onTap: () {},
-                    ),
-
-                    const SizedBox(height: 7),
-
-                    _buildMenuCard(
-                      icon: Icons.verified_user_outlined,
-                      title: 'Terms & Privacy',
-                      subtitle: 'Read our policies',
-                      onTap: () {},
-                    ),
-
-                    const SizedBox(height: 10),
-                  ],
+          
+                      const SizedBox(height: 10),
+          
+                      // =========================================================
+                      // SUPPORT
+                      // =========================================================
+          
+                      Text(
+                        'Support',
+          
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color.fromRGBO(34, 58, 94, 1),
+                        ),
+                      ),
+          
+                      const SizedBox(height: 5),
+          
+                      _buildMenuCard(
+                        icon:
+                            Icons.support_agent_rounded,
+          
+                        title:
+                            'Help & FAQs',
+          
+                        subtitle:
+                            'Get answers to common questions',
+          
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  HelpFaqsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+          
+                      const SizedBox(height: 7),
+          
+                      _buildMenuCard(
+                        icon:
+                            Icons.verified_user_outlined,
+          
+                        title:
+                            'Terms & Privacy',
+          
+                        subtitle:
+                            'Read our policies',
+          
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TermsPrivacyScreen(),
+                            ),
+                          );
+                        },
+                      ),
+          
+                      const SizedBox(height: 10),
+                    ],
+                  ),
                 ),
               ),
-            ),
-
-            // ---------------------------------------------------------------
-            // BOTTOM NAVIGATION
-            // ---------------------------------------------------------------
-            // _buildBottomNavigation(),
-          ],
+          
+              // ===============================================================
+              // BOTTOM NAVIGATION
+              // ===============================================================
+          
+              // _buildBottomNavigation(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // =========================================================================
+  // ===========================================================================
   // CHOPDI CARD
-  // =========================================================================
+  // ===========================================================================
 
-  Widget _buildChopdiCard(BuildContext context) {
+  Widget _buildChopdiCard(
+    BuildContext context,
+  ) {
     return Container(
       width: double.infinity,
       height: 231,
+
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9F0),
-        borderRadius: BorderRadius.circular(15),
+        color: const Color.fromRGBO(
+          255,
+          248,
+          240,
+          1,
+        ),
+
+        borderRadius:
+            BorderRadius.circular(15),
+
         border: Border.all(
-          color: borderColor,
+          color: const Color.fromRGBO(
+            170,
+            185,
+            207,
+            1,
+          ),
           width: 1,
         ),
       ),
+
       child: Stack(
         children: [
-          // ---------------------------------------------------------------
+          // =================================================================
           // BOOK IMAGE AREA
-          // ---------------------------------------------------------------
+          // =================================================================
+
           Positioned(
             left: 8,
             top: 20,
+
             child: SizedBox(
-              width: 128,
-              height: 150,
+              width: 130,
+              height: 180,
+
               child: Stack(
                 alignment: Alignment.center,
+
                 children: [
-                  // Decorative circle
+                  // ---------------------------------------------------------
+                  // DECORATIVE CIRCLE
+                  // ---------------------------------------------------------
+
                   Container(
                     width: 98,
                     height: 98,
-                    decoration: const BoxDecoration(
+
+                    decoration:
+                        const BoxDecoration(
                       color: Color(0xFFFFE6CF),
                       shape: BoxShape.circle,
                     ),
                   ),
 
-                  // Book image
+                  // ---------------------------------------------------------
+                  // BOOK IMAGE
+                  // ---------------------------------------------------------
+
                   Image.asset(
                     'assets/chopdi_book.png',
+
                     width: 104,
                     height: 128,
+
                     fit: BoxFit.contain,
 
-                    // If image is not available, this will still
-                    // keep the layout stable.
-                    errorBuilder: (context, error, stackTrace) {
+                    errorBuilder:
+                        (context, error, stackTrace) {
                       return _buildBookPlaceholder();
                     },
                   ),
@@ -187,29 +287,48 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------------------------------------------
+          // =================================================================
           // ACTIVE CHOPDI BADGE
-          // ---------------------------------------------------------------
+          // =================================================================
+
           Positioned(
             top: 10,
-            right: 14,
+            right: 122,
+
             child: Container(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 7,
                 vertical: 3,
               ),
+
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F8E9),
-                borderRadius: BorderRadius.circular(10),
+                color: const Color.fromRGBO(
+                  141,
+                  208,
+                  113,
+                  0.34,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(10),
+
                 border: Border.all(
-                  color: greenColor,
+                  color: const Color.fromRGBO(
+                    0,
+                    144,
+                    27,
+                    1,
+                  ),
                   width: 0.8,
                 ),
               ),
-              child: const Text(
+
+              child: Text(
                 'ACTIVE CHOPDI •',
-                style: TextStyle(
-                  fontSize: 7.5,
+
+                style: GoogleFonts.manrope(
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: greenColor,
                 ),
@@ -217,41 +336,69 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------------------------------------------
-          // CHOPDI TITLE
-          // ---------------------------------------------------------------
+          // =================================================================
+          // CHOPDI TITLE + EDIT BUTTON
+          // =================================================================
+
           Positioned(
             top: 37,
             left: 143,
             right: 10,
+
             child: Row(
               children: [
-                const Expanded(
+                // -----------------------------------------------------------
+                // TITLE
+                // -----------------------------------------------------------
+
+                Expanded(
                   child: Text(
                     'My Chopdi',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: darkBlue,
+
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+
+                    style: GoogleFonts.manrope(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color.fromRGBO(
+                        34,
+                        58,
+                        94,
+                        1,
+                      ),
                     ),
                   ),
                 ),
 
-                // Edit button
+                // -----------------------------------------------------------
+                // EDIT BUTTON
+                // -----------------------------------------------------------
+
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
+
                       MaterialPageRoute(
-                        builder: (context) => EditChopdiScreen(
-                          initialName: 'My Chopdi',
+                        builder: (context) =>
+                            EditChopdiScreen(
+                          initialName:
+                              'My Chopdi',
+
                           initialDescription:
                               'My personal lending ledger to track loans and interest.',
-                          onSave: (name, description) async {
-                            // Update your Isar / Firebase data here.
+
+                          onSave:
+                              (name, description) async {
+                            // Update your Isar /
+                            // Firebase data here.
+
                             print(name);
                             print(description);
                           },
+
                           onDelete: () {
                             // Delete your Chopdi here.
                           },
@@ -259,21 +406,38 @@ class MyChopdiScreen extends StatelessWidget {
                       ),
                     );
                   },
+
                   child: Container(
-                    width: 19,
-                    height: 19,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE3D0),
-                      borderRadius: BorderRadius.circular(3),
+                    width: 26,
+                    height: 26,
+
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          const Color.fromRGBO(
+                        255,
+                        215,
+                        190,
+                        1,
+                      ),
+
+                      borderRadius:
+                          BorderRadius.circular(3),
+
                       border: Border.all(
-                        color: orangeColor,
+                        color:
+                            const Color.fromRGBO(
+                          177,
+                          95,
+                          39,
+                          1,
+                        ),
                         width: 0.8,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.edit_outlined,
-                      size: 11,
-                      color: Color(0xFF24405F),
+
+                    child: Image.asset(
+                      'assets/edit_chopdi_icon.png',
                     ),
                   ),
                 ),
@@ -281,32 +445,46 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------------------------------------------
+          // =================================================================
           // DESCRIPTION
-          // ---------------------------------------------------------------
-          const Positioned(
+          // =================================================================
+
+          Positioned(
             top: 65,
             left: 143,
             right: 12,
+
             child: Text(
               'My personal lending ledger\n'
               'to track loans and interest.',
-              style: TextStyle(
-                fontSize: 8.5,
+
+              style: GoogleFonts.manrope(
+                fontSize: 12,
                 height: 1.3,
-                color: Color(0xFF273B56),
+                fontWeight: FontWeight.w700,
+                color: const Color.fromRGBO(
+                  34,
+                  58,
+                  94,
+                  1,
+                ),
               ),
             ),
           ),
 
-          // ---------------------------------------------------------------
+          // =================================================================
           // CREATED DATE
-          // ---------------------------------------------------------------
+          // =================================================================
+
           Positioned(
             top: 103,
             left: 143,
             right: 12,
+
             child: Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.center,
+
               children: [
                 _buildSmallInfoIcon(
                   Icons.calendar_month_outlined,
@@ -314,24 +492,55 @@ class MyChopdiScreen extends StatelessWidget {
 
                 const SizedBox(width: 7),
 
-                const Expanded(
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize:
+                        MainAxisSize.min,
+
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+
                     children: [
                       Text(
                         'Created On',
-                        style: TextStyle(
-                          fontSize: 7,
-                          color: Color(0xFF7B8796),
+
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+
+                        style:
+                            GoogleFonts.manrope(
+                          fontSize: 9,
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              const Color(
+                            0xFF7B8796,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 1),
+
+                      const SizedBox(height: 1),
+
                       Text(
                         '12 July 2026',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
-                          color: darkBlue,
+
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+
+                        style:
+                            GoogleFonts.manrope(
+                          fontSize: 9,
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              const Color.fromRGBO(
+                            34,
+                            58,
+                            94,
+                            0.62,
+                          ),
                         ),
                       ),
                     ],
@@ -341,25 +550,40 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // Divider
+          // =================================================================
+          // DIVIDER
+          // =================================================================
+
           Positioned(
             top: 132,
             left: 143,
             right: 12,
+
             child: Container(
               height: 0.7,
-              color: borderColor,
+
+              color: const Color.fromRGBO(
+                170,
+                185,
+                207,
+                1,
+              ),
             ),
           ),
 
-          // ---------------------------------------------------------------
+          // =================================================================
           // CUSTOMERS
-          // ---------------------------------------------------------------
+          // =================================================================
+
           Positioned(
             top: 140,
             left: 143,
             right: 12,
+
             child: Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.center,
+
               children: [
                 _buildSmallInfoIcon(
                   Icons.people_outline_rounded,
@@ -367,23 +591,48 @@ class MyChopdiScreen extends StatelessWidget {
 
                 const SizedBox(width: 7),
 
-                const Expanded(
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize:
+                        MainAxisSize.min,
+
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+
                     children: [
                       Text(
                         'Total Customers',
-                        style: TextStyle(
-                          fontSize: 7,
-                          color: Color(0xFF7B8796),
+
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+
+                        style:
+                            GoogleFonts.manrope(
+                          fontSize: 9,
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              const Color(
+                            0xFF7B8796,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 1),
+
+                      const SizedBox(height: 1),
+
                       Text(
                         '12',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
+
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+
+                        style:
+                            GoogleFonts.manrope(
+                          fontSize: 9,
+                          fontWeight:
+                              FontWeight.w700,
                           color: darkBlue,
                         ),
                       ),
@@ -394,27 +643,47 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------------------------------------------------------------
+          // =================================================================
           // BOTTOM STATISTICS
-          // ---------------------------------------------------------------
+          // =================================================================
+
           Positioned(
             left: 6,
             right: 6,
             bottom: 6,
+
             child: Container(
               height: 49,
-              padding: const EdgeInsets.symmetric(
+
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 7,
                 vertical: 6,
               ),
+
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF8ED),
-                borderRadius: BorderRadius.circular(8),
+                color: const Color.fromRGBO(
+                  253,
+                  237,
+                  217,
+                  1,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(8),
+
                 border: Border.all(
-                  color: borderColor,
+                  color:
+                      const Color.fromRGBO(
+                    170,
+                    185,
+                    207,
+                    1,
+                  ),
                   width: 0.8,
                 ),
               ),
+
               child: Row(
                 children: [
                   Expanded(
@@ -427,7 +696,8 @@ class MyChopdiScreen extends StatelessWidget {
 
                   Expanded(
                     child: _buildAmount(
-                      title: 'Total Interest Earned',
+                      title:
+                          'Total Interest Earned',
                       amount: '₹1,25,000',
                       amountColor: greenColor,
                     ),
@@ -435,7 +705,8 @@ class MyChopdiScreen extends StatelessWidget {
 
                   Expanded(
                     child: _buildAmount(
-                      title: 'Total Outstanding',
+                      title:
+                          'Total Outstanding',
                       amount: '₹1,25,000',
                       amountColor: greenColor,
                     ),
@@ -449,19 +720,24 @@ class MyChopdiScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
+  // ===========================================================================
   // BOOK PLACEHOLDER
-  // =========================================================================
+  // ===========================================================================
 
   Widget _buildBookPlaceholder() {
     return Transform.rotate(
       angle: -0.04,
+
       child: Container(
         width: 72,
         height: 102,
+
         decoration: BoxDecoration(
           color: const Color(0xFFB82222),
-          borderRadius: BorderRadius.circular(5),
+
+          borderRadius:
+              BorderRadius.circular(5),
+
           boxShadow: const [
             BoxShadow(
               color: Color(0x55000000),
@@ -470,22 +746,34 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ],
         ),
+
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+
+            mainAxisSize:
+                MainAxisSize.min,
+
             children: [
               const Icon(
                 Icons.currency_rupee_rounded,
                 color: Color(0xFFF6D68A),
                 size: 28,
               ),
+
               const SizedBox(height: 4),
+
               Text(
                 'Chopdi',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+
+                style: GoogleFonts.manrope(
+                  color: Colors.white
+                      .withValues(alpha: 0.9),
+
                   fontSize: 9,
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
             ],
@@ -495,18 +783,24 @@ class MyChopdiScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
+  // ===========================================================================
   // SMALL INFO ICON
-  // =========================================================================
+  // ===========================================================================
 
-  Widget _buildSmallInfoIcon(IconData icon) {
+  Widget _buildSmallInfoIcon(
+    IconData icon,
+  ) {
     return Container(
       width: 22,
       height: 22,
+
       decoration: BoxDecoration(
         color: lightBlue,
-        borderRadius: BorderRadius.circular(4),
+
+        borderRadius:
+            BorderRadius.circular(4),
       ),
+
       child: Icon(
         icon,
         size: 13,
@@ -515,9 +809,9 @@ class MyChopdiScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
+  // ===========================================================================
   // AMOUNT
-  // =========================================================================
+  // ===========================================================================
 
   Widget _buildAmount({
     required String title,
@@ -525,16 +819,31 @@ class MyChopdiScreen extends StatelessWidget {
     required Color amountColor,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+
+      mainAxisAlignment:
+          MainAxisAlignment.center,
+
       children: [
         Text(
           title,
+
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 6.8,
-            color: Color(0xFF58687A),
+          overflow:
+              TextOverflow.ellipsis,
+
+          style: GoogleFonts.manrope(
+            fontSize: 9,
+            fontWeight: FontWeight.w500,
+            color: const Color.fromRGBO(
+              34,
+              58,
+              94,
+              1,
+            ),
           ),
         ),
 
@@ -542,11 +851,14 @@ class MyChopdiScreen extends StatelessWidget {
 
         Text(
           amount,
+
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
+          overflow:
+              TextOverflow.ellipsis,
+
+          style: GoogleFonts.manrope(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
             color: amountColor,
           ),
         ),
@@ -554,9 +866,9 @@ class MyChopdiScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
+  // ===========================================================================
   // PREFERENCE / SUPPORT CARD
-  // =========================================================================
+  // ===========================================================================
 
   Widget _buildMenuCard({
     required IconData icon,
@@ -566,65 +878,125 @@ class MyChopdiScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
+
       child: Container(
         width: double.infinity,
-        height: 43,
+        height: 60,
+
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF5E7),
-          borderRadius: BorderRadius.circular(8),
+          color: Color.fromRGBO(253, 237, 217, 1),
+
+          borderRadius:
+              BorderRadius.circular(8),
+
           border: Border.all(
-            color: borderColor,
+            color: const Color.fromRGBO(
+              170,
+              185,
+              207,
+              1,
+            ),
             width: 0.9,
           ),
         ),
+
         child: Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.center,
+
           children: [
             const SizedBox(width: 9),
 
-            // Icon circle
+            // ===============================================================
+            // ICON CIRCLE
+            // ===============================================================
+
             Container(
               width: 28,
               height: 28,
+
               decoration: const BoxDecoration(
-                color: lightBlue,
+                color: Color.fromRGBO(
+                  170,
+                  185,
+                  207,
+                  0.6,
+                ),
                 shape: BoxShape.circle,
               ),
+
               child: Icon(
                 icon,
                 size: 16,
-                color: const Color(0xFF3D5F8B),
+                color: const Color(
+                  0xFF3D5F8B,
+                ),
               ),
             ),
 
             const SizedBox(width: 10),
 
-            // Text
+            // ===============================================================
+            // TEXT
+            //
+            // IMPORTANT:
+            // The previous 16 + 12 font sizes were too large for a
+            // 43px-high card and caused the RenderFlex overflow.
+            // ===============================================================
+
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize:
+                    MainAxisSize.min,
+
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight:
+                          FontWeight.w700,
                       color: darkBlue,
                     ),
                   ),
 
-                  const SizedBox(height: 1),
+                  const SizedBox(height: 2),
 
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 7.8,
-                      color: Color(0xFF58687A),
+
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+
+                    style:
+                        const TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          FontWeight.w600,
+                      color: Color(
+                        0xFF58687A,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            // ===============================================================
+            // ARROW
+            // ===============================================================
 
             const Icon(
               Icons.chevron_right_rounded,
@@ -635,87 +1007,6 @@ class MyChopdiScreen extends StatelessWidget {
             const SizedBox(width: 7),
           ],
         ),
-      ),
-    );
-  }
-
-  // =========================================================================
-  // BOTTOM NAVIGATION
-  // =========================================================================
-
-  Widget _buildBottomNavigation() {
-    return Container(
-      height: 54,
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFBF6),
-        border: Border(
-          top: BorderSide(
-            color: Color(0xFFF2E7DA),
-            width: 0.7,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // HOME
-          Expanded(
-            child: InkWell(
-              onTap: () {},
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.home_outlined,
-                    size: 21,
-                    color: Color(0xFF718096),
-                  ),
-                  const SizedBox(height: 1),
-                  const Text(
-                    'Home',
-                    style: TextStyle(
-                      fontSize: 8,
-                      color: Color(0xFF718096),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // MY CHOPDI
-          Expanded(
-            child: InkWell(
-              onTap: () {},
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 25,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: darkBlue,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Icon(
-                      Icons.menu_book_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  const Text(
-                    'My Chopdi',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w500,
-                      color: darkBlue,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
