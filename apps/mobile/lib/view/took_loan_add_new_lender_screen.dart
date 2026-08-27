@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
@@ -143,20 +144,19 @@ class _AddNewCustomerScreenState
 
     final currentChopdi =
             await ChopdiService.getCurrentChopdi();
-    // Create new customer
-    final customer = Customer()
-      ..name = name
-      ..phone = phone
-      ..chopdiId = currentChopdi.id
-      ..status = "Pending"
-      ..received = false
-      ..loanType = "took";
-     
 
-    // Save customer
-    await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.customers.put(customer);
-    });
+    // Created through the repository, not a direct `customers.put`. The
+    // repository is what mints the uuid, and a customer without one is refused
+    // by LedgerRepository._validateCustomer — so a lender written directly here
+    // saves fine and then silently rejects every entry added to it. It is also
+    // what enqueues the sync operation.
+    final customer = await Repositories.customers.create(
+      name: name,
+      phone: phone,
+      chopdiId: currentChopdi.id,
+      loanType: "took",
+      status: "Pending",
+    );
 
     if (!mounted) return;
 

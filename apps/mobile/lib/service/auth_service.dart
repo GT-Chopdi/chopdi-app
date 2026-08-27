@@ -32,6 +32,14 @@ class AuthService {
 
   TokenStorage get tokens => _tokens;
 
+  /// Shared with [SyncService] so both speak to the API through one client.
+  ///
+  /// A second [ApiClient] would keep its own refresh queue, and two independent
+  /// queues can rotate the refresh token in parallel — which the server reads
+  /// as a stolen token and answers by revoking the whole family, signing the
+  /// user out mid-sync. One client, one queue.
+  ApiClient get client => _client;
+
   /// Normalises user input to E.164, which is what the API requires.
   ///
   /// Without this, `9876543210`, `09876543210`, and `+919876543210` would

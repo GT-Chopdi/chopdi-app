@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
@@ -85,19 +86,16 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
         return;
       }
 
-      // Create customer
-      final customer = Customer()
-        ..name = widget.contactName.trim()
-        ..phone = finalPhone
-        ..chopdiId = widget.chopdiId
-        ..status = "Pending"
-        ..received = false
-        ..loanType = "took";
-
-      // SAVE CUSTOMER TO ISAR
-      await IsarService.isar.writeTxn(() async {
-        await IsarService.isar.customers.put(customer);
-      });
+      // See took_loan_add_new_lender_screen.dart: the repository mints the uuid
+      // that LedgerRepository requires before an entry can be added, and queues
+      // the create for sync in the same transaction.
+      final customer = await Repositories.customers.create(
+        name: widget.contactName.trim(),
+        phone: finalPhone,
+        chopdiId: widget.chopdiId,
+        loanType: "took",
+        status: "Pending",
+      );
 
       if (!mounted) return;
 

@@ -4,6 +4,7 @@ import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../model/sync_op.dart';
+import '../sync/sync_trigger.dart';
 
 /// Appends operations to the outbox.
 ///
@@ -92,6 +93,13 @@ class SyncQueue {
         ..expectedVersion = expectedVersion
         ..createdAt = DateTime.now().toUtc(),
     );
+
+    // Every operation that will ever need sending passes through here, which
+    // makes this the one place the announcement cannot be forgotten — as it
+    // would be if each of the nine write sites had to remember. Scheduling
+    // only, never sending: this runs inside the caller's transaction, and the
+    // debounce means the drain starts well after it commits.
+    SyncTrigger.notify();
   }
 
   /// Operations waiting to be sent, oldest first.
@@ -109,8 +117,60 @@ class SyncQueue {
       .limit(limit)
       .findAll();
 
+  /// Operations that are due to be sent *now*, oldest first.
+  ///
+  /// The backoff filter belongs in the query, not after it. Selecting the
+  /// oldest N and then discarding the ones that are backing off means a batch
+  /// of failing operations at the head of the queue starves everything behind
+  /// them: the filtered list comes back empty, the drain concludes there is
+  /// nothing to do, and entries that were ready to send sit there indefinitely.
+  /// Filtering in the query keeps the window full of work that can actually go.
+  Future<List<SyncOp>> sendable(
+    Isar isar, {
+    required DateTime now,
+    int limit = 200,
+  }) =>
+      isar.syncOps
+          .where()
+          .anyId()
+          .filter()
+          .deadLetteredEqualTo(false)
+          .group(
+            (q) => q
+                .nextAttemptAtIsNull()
+                .or()
+                .nextAttemptAtLessThan(now, include: true),
+          )
+          .limit(limit)
+          .findAll();
+
   Future<int> pendingCount(Isar isar) =>
       isar.syncOps.filter().deadLetteredEqualTo(false).count();
+
+  /// Clears the dead-letter flag so parked operations are tried again.
+  ///
+  /// Exists because "kept locally and surfaced" is only half a promise: without
+  /// a way back, a transient server bug that dead-lettered a day of entries
+  /// would strand them permanently. Attempts reset too, otherwise they would
+  /// dead-letter again on the first failure.
+  Future<int> revive(Isar isar) async {
+    final parked =
+        await isar.syncOps.filter().deadLetteredEqualTo(true).findAll();
+
+    if (parked.isEmpty) return 0;
+
+    await isar.writeTxn(() async {
+      for (final op in parked) {
+        op
+          ..deadLettered = false
+          ..attempts = 0
+          ..nextAttemptAt = null;
+      }
+      await isar.syncOps.putAll(parked);
+    });
+
+    return parked.length;
+  }
 
   Future<int> deadLetterCount(Isar isar) =>
       isar.syncOps.filter().deadLetteredEqualTo(true).count();
