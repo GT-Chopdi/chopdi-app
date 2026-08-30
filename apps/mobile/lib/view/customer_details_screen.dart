@@ -549,12 +549,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             });
           },
 
-          onDelete: () {
+          onDelete: () async{
             Navigator.pop(context);
 
             Future.delayed(const Duration(milliseconds: 250), () {
               showDeleteCustomerBottomSheet(context);
             });
+            
           },
         );
       },
@@ -611,8 +612,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             // Customer and entries are voided together in one transaction,
             // each queued for sync. Deleting them separately would leave a
             // window where a crash orphans entries against a deleted parent.
-            await Repositories.customers
-                .softDeleteWithEntries(widget.customer);
+            
+            await Repositories.customers.softDeleteWithEntries(widget.customer);
 
             if (mounted) {
               // Navigator.pop(context); // Close delete sheet

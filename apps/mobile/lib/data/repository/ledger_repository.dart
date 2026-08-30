@@ -8,6 +8,7 @@ import '../../model/customer.dart';
 import '../../model/sync_status.dart';
 import '../../model/transaction.dart';
 import 'repository_exception.dart';
+import 'customer_repository.dart';
 import 'sync_payload.dart';
 import 'sync_queue.dart';
 
@@ -18,12 +19,18 @@ import 'sync_queue.dart';
 /// That is why no balance is stored anywhere — there is no shared number for
 /// two devices to disagree about.
 class LedgerRepository {
-  LedgerRepository(this._isar, {SyncQueue queue = const SyncQueue()})
-      : _queue = queue;
+  // LedgerRepository(this._isar, {SyncQueue queue = const SyncQueue()})
+  //     : _queue = queue;
+  LedgerRepository(
+    this._isar, {
+    SyncQueue queue = const SyncQueue(),
+    CustomerRepository? customers,
+  }) : _queue = queue,
+       _customers = customers ?? CustomerRepository(_isar, queue: queue);
 
   final Isar _isar;
   final SyncQueue _queue;
-
+  final CustomerRepository _customers;
   static const _uuid = Uuid();
 
   /// ₹100 crore, matching `ledger_entry_amount_sane` on the server.
@@ -44,6 +51,8 @@ class LedgerRepository {
     String interestFrequency = 'Monthly',
     String description = '',
     String paymentMode = '',
+    int chopdiId = 0,
+    String loanType = 'gave'
   }) async {
     _validateCustomer(customer);
     _validateAmount(amountPaise);
@@ -60,6 +69,7 @@ class LedgerRepository {
       // anything on another device.
       ..customerId = customer.id
       ..customerUuid = customer.uuid
+      ..chopdiId = customer.chopdiId
       ..amountPaise = amountPaise
       ..interestRateBp = interestRateBp
       ..date = date
@@ -95,8 +105,51 @@ class LedgerRepository {
   ///
   /// Any sync metadata already on the draft is overwritten: identity and
   /// versioning are the repository's to assign, never a caller's.
+  // Future<Transaction> adoptDraft(Transaction draft) async {
+  //   final customer = await _isar.customers.get(draft.customerId);
+
+  //   if (customer == null) {
+  //     throw const RepositoryException(
+  //       'That customer no longer exists.',
+  //       field: 'customer',
+  //     );
+  //   }
+
+  //   _validateCustomer(customer);
+  //   _validateAmount(draft.amountPaise);
+  //   _validateRate(draft.interestRateBp);
+  //   _validateDate(draft.date);
+  //   draft.description = _validateDescription(draft.description);
+
+  //   final now = DateTime.now().toUtc();
+
+  //   draft
+  //     ..uuid = _uuid.v7()
+  //     ..customerUuid = customer.uuid
+  //     ..chopdiId = customer.chopdiId
+  //     ..paymentMode = draft.paymentMode.trim()
+  //     ..version = 0
+  //     ..updatedAt = now
+  //     ..voidedAt = null
+  //     ..voidedReason = null
+  //     ..syncStatus = SyncStatus.pending;
+
+  //   await _isar.writeTxn(() async {
+  //     await _isar.transactions.put(draft);
+  //     await _queue.enqueueCreate(
+  //       _isar,
+  //       entity: 'ledger_entry',
+  //       entityId: draft.uuid,
+  //       payload: _payloadFor(draft),
+  //     );
+  //   });
+
+  //   return draft;
+  // }
+
   Future<Transaction> adoptDraft(Transaction draft) async {
-    final customer = await _isar.customers.get(draft.customerId);
+    // Resolve the customer using the local Isar ID.
+    Customer? customer = await _isar.customers.get(draft.customerId);
 
     if (customer == null) {
       throw const RepositoryException(
@@ -105,16 +158,43 @@ class LedgerRepository {
       );
     }
 
-    _validateCustomer(customer);
+    // ------------------------------------------------------------
+    // IMPORTANT FIX
+    // ------------------------------------------------------------
+    //
+    // Old customers created before UUID migration can have:
+    //
+    //     customer.uuid == ''
+    //
+    // Make sure the customer receives a permanent UUID before creating
+    // the ledger entry.
+    //
+    // This is what fixes:
+    //
+    // RepositoryException [customer]:
+    // This customer has not been migrated yet.
+    //
+    customer = await _customers.ensureMigrated(customer);
+
+    if (customer.deletedAt != null) {
+      throw const RepositoryException(
+        'Cannot add an entry to a deleted customer.',
+        field: 'customer',
+      );
+    }
+
     _validateAmount(draft.amountPaise);
     _validateRate(draft.interestRateBp);
     _validateDate(draft.date);
-    draft.description = _validateDescription(draft.description);
+
+    draft.description =
+        _validateDescription(draft.description);
 
     final now = DateTime.now().toUtc();
 
     draft
       ..uuid = _uuid.v7()
+      ..customerId = customer.id
       ..customerUuid = customer.uuid
       // Taken from the owning customer rather than the caller. Every read path
       // that aggregates money (SummaryCard, the took-loan home screen) filters
@@ -130,6 +210,7 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(draft);
+
       await _queue.enqueueCreate(
         _isar,
         entity: 'ledger_entry',

@@ -79,9 +79,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
           'NETWORK_UNAVAILABLE' =>
             "Can't reach the server. Check your connection.",
 
-          // The server is right to reject this, but relaying its message sends
-          // someone hunting a server problem when the cause is a build flag.
-          // Distinguish "no key was compiled in" from "the key is wrong".
           ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
             "This build has no DEV_KEY compiled in.\n\n"
                 "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
@@ -131,16 +128,26 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
       }
     });
 
-    // When phone field gets focus, make sure it is visible.
+    // ================================================================
+    // KEYBOARD / PHONE FIELD SCROLL FIX
+    // ================================================================
+    //
+    // When the phone field receives focus, wait for the keyboard to
+    // finish opening and then scroll the field into the visible area.
+    //
     _phoneFocusNode.addListener(() {
       if (_phoneFocusNode.hasFocus) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _phoneFocusNode.context != null) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (!mounted) return;
+
+          final fieldContext = _phoneFocusNode.context;
+
+          if (fieldContext != null) {
             Scrollable.ensureVisible(
-              _phoneFocusNode.context!,
+              fieldContext,
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              alignment: 0.4,
+              alignment: 0.25,
             );
           }
         });
@@ -209,346 +216,345 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                     ? 28.0
                     : 40.0;
 
+            // ============================================================
+            // KEYBOARD FIX
+            // ============================================================
+            //
+            // Removed the ConstrainedBox with minHeight.
+            //
+            // The SingleChildScrollView must be allowed to become smaller
+            // when the keyboard opens so it can actually scroll the content.
+            //
             return SingleChildScrollView(
-              // Allows user to drag the page to dismiss keyboard.
               keyboardDismissBehavior:
                   ScrollViewKeyboardDismissBehavior.onDrag,
-
               physics: const BouncingScrollPhysics(),
-
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 18,
                 ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: 18,
-                  ),
-                  child: Column(
-                    children: [
-                      SizedBox(height: topSpacing),
+                child: Column(
+                  children: [
+                    SizedBox(height: topSpacing),
 
-                      // =====================================================
-                      // HEADER SECTION
-                      // =====================================================
+                    // =====================================================
+                    // HEADER SECTION
+                    // =====================================================
 
-                      Padding(
-                        padding: EdgeInsets.only(
-                          left: width < 360 ? 12 : 24,
-                          right: width < 360 ? 12 : 24,
-                          top: 10,
-                        ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              // -------------------------------------------------
-                              // BOOK IMAGE
-                              // -------------------------------------------------
-
-                              Positioned(
-                                top: -18,
-                                right: width < 360 ? -18 : -35,
-                                child: Image.asset(
-                                  'assets/book.png',
-                                  width: bookWidth,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-
-                              // -------------------------------------------------
-                              // LOGO + HEADING + SUBTITLE
-                              // -------------------------------------------------
-
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  right: width < 360 ? 80 : 100,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    // Logo
-                                    const _ChopdiLogo(),
-
-                                    // Chopdi text
-                                    Text(
-                                      'Chopdi',
-                                      style: GoogleFonts.manrope(
-                                        color: ChopdiColors.cream,
-                                        fontSize: chopdiFontSize,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-
-                                    SizedBox(
-                                      height: height < 650 ? 28 : 40,
-                                    ),
-
-                                    // Main heading
-                                    RichText(
-                                      text: TextSpan(
-                                        style: GoogleFonts.manrope(
-                                          fontSize: headingFontSize,
-                                          height: 1.25,
-                                          fontWeight: FontWeight.w700,
-                                          color: ChopdiColors.cream,
-                                        ),
-                                        children: [
-                                          const TextSpan(
-                                            text: 'Your lending records,\n',
-                                          ),
-                                          TextSpan(
-                                            text: 'digitally organized.',
-                                            style: GoogleFonts.manrope(
-                                              color: const Color(0xFF83A2CE),
-                                              fontSize: headingFontSize,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 12),
-
-                                    // Subtitle
-                                    Text(
-                                      'Track loans, interest and payments\n'
-                                      'with clarity and confidence.',
-                                      style: GoogleFonts.manrope(
-                                        fontSize: subtitleFontSize,
-                                        height: 1.35,
-                                        fontWeight: FontWeight.w400,
-                                        color: ChopdiColors.cream,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: width < 360 ? 12 : 24,
+                        right: width < 360 ? 12 : 24,
+                        top: 10,
                       ),
-
-                      SizedBox(height: headerBottomSpacing),
-
-                      // =====================================================
-                      // MAIN WHITE CARD
-                      // =====================================================
-
-                      Container(
+                      child: SizedBox(
                         width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            // =================================================
-                            // FORM SECTION
-                            // =================================================
+                            // -------------------------------------------------
+                            // BOOK IMAGE
+                            // -------------------------------------------------
 
-                            Container(
-                              width: double.infinity,
-                              color: const Color(0xFFF4F4F4),
-                              padding: EdgeInsets.fromLTRB(
-                                width < 360 ? 16 : 20,
-                                width < 360 ? 18 : 22,
-                                width < 360 ? 16 : 20,
-                                18,
-                              ),
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  // -----------------------------------------
-                                  // STARTED ROW
-                                  // -----------------------------------------
-
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Mobile icon
-                                      Container(
-                                        width: width < 360 ? 50 : 56,
-                                        height: width < 360 ? 50 : 56,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFFAAB9CF),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        padding: const EdgeInsets.all(8),
-                                        child: Image.asset(
-                                          'assets/mobile.png',
-                                          fit: BoxFit.contain,
-                                        ),
-                                      ),
-
-                                      SizedBox(
-                                        width: width < 360 ? 10 : 14,
-                                      ),
-
-                                      // Text
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Let's get started",
-                                              style: GoogleFonts.manrope(
-                                                fontSize:
-                                                    width < 360 ? 16 : 18,
-                                                fontWeight: FontWeight.w600,
-                                                color: ChopdiColors.navy,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              "Enter your mobile number to\n"
-                                              "continue to Chopdi",
-                                              style: GoogleFonts.manrope(
-                                                fontSize:
-                                                    width < 360 ? 13 : 14,
-                                                height: 1.4,
-                                                color: ChopdiColors.navy,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 24),
-
-                                  // -----------------------------------------
-                                  // PHONE INPUT
-                                  // -----------------------------------------
-
-                                  _PhoneInputField(
-                                    controller: _phoneController,
-                                    errorText: errorText,
-                                    focusNode: _phoneFocusNode,
-                                  ),
-
-                                  const SizedBox(height: 22),
-
-                                  // -----------------------------------------
-                                  // CONTINUE BUTTON
-                                  // -----------------------------------------
-
-                                  _ContinueButton(
-                                    onPressed: _requestOtp,
-                                    loading: _requesting,
-                                  ),
-
-                                  const SizedBox(height: 24),
-
-                                  // -----------------------------------------
-                                  // SECURITY MESSAGE
-                                  // -----------------------------------------
-
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFFAAB9CF),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        padding: const EdgeInsets.all(5),
-                                        child: Image.asset(
-                                          'assets/secured_logo.png',
-                                          height: 20,
-                                          width: 20,
-                                          fit: BoxFit.contain,
-                                        ),
-                                      ),
-
-                                      const SizedBox(width: 5),
-
-                                      Flexible(
-                                        child: Text(
-                                          "Your data is secure with us",
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.manrope(
-                                            color: ChopdiColors.navy
-                                                .withValues(alpha: .7),
-                                            fontSize:
-                                                width < 360 ? 12 : 13,
-                                            fontWeight: FontWeight.w300,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                            Positioned(
+                              top: -18,
+                              right: width < 360 ? -18 : -35,
+                              child: Image.asset(
+                                'assets/book.png',
+                                width: bookWidth,
+                                fit: BoxFit.contain,
                               ),
                             ),
 
-                            // =================================================
-                            // TERMS SECTION
-                            // =================================================
+                            // -------------------------------------------------
+                            // LOGO + HEADING + SUBTITLE
+                            // -------------------------------------------------
 
-                            Container(
-                              width: double.infinity,
-                              color: const Color(0xFFB7C6E0),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 18,
-                                horizontal: width < 360 ? 12 : 20,
+                            Padding(
+                              padding: EdgeInsets.only(
+                                right: width < 360 ? 80 : 100,
                               ),
-                              child: RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  style: GoogleFonts.manrope(
-                                    fontSize: width < 360 ? 10 : 12,
-                                    color: const Color(0xFF33496F),
-                                    height: 1.5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Logo
+                                  const _ChopdiLogo(),
+
+                                  // Chopdi text
+                                  Text(
+                                    'Chopdi',
+                                    style: GoogleFonts.manrope(
+                                      color: ChopdiColors.cream,
+                                      fontSize: chopdiFontSize,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                  children: [
-                                    TextSpan(
-                                      text:
-                                          "By continuing, you agree to our\n",
+
+                                  SizedBox(
+                                    height: height < 650 ? 28 : 40,
+                                  ),
+
+                                  // Main heading
+                                  RichText(
+                                    text: TextSpan(
                                       style: GoogleFonts.manrope(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: width < 360 ? 10 : 12,
+                                        fontSize: headingFontSize,
+                                        height: 1.25,
+                                        fontWeight: FontWeight.w700,
+                                        color: ChopdiColors.cream,
                                       ),
+                                      children: [
+                                        const TextSpan(
+                                          text: 'Your lending records,\n',
+                                        ),
+                                        TextSpan(
+                                          text: 'digitally organized.',
+                                          style: GoogleFonts.manrope(
+                                            color: const Color(0xFF83A2CE),
+                                            fontSize: headingFontSize,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    TextSpan(
-                                      text: "Terms of Service",
-                                      style: GoogleFonts.manrope(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width < 360 ? 10 : 12,
-                                      ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // Subtitle
+                                  Text(
+                                    'Track loans, interest and payments\n'
+                                    'with clarity and confidence.',
+                                    style: GoogleFonts.manrope(
+                                      fontSize: subtitleFontSize,
+                                      height: 1.35,
+                                      fontWeight: FontWeight.w400,
+                                      color: ChopdiColors.cream,
                                     ),
-                                    const TextSpan(
-                                      text: " and ",
-                                    ),
-                                    TextSpan(
-                                      text: "Privacy Policy",
-                                      style: GoogleFonts.manrope(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width < 360 ? 10 : 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 12),
-                    ],
-                  ),
+                    SizedBox(height: headerBottomSpacing),
+
+                    // =====================================================
+                    // MAIN WHITE CARD
+                    // =====================================================
+
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          // =================================================
+                          // FORM SECTION
+                          // =================================================
+
+                          Container(
+                            width: double.infinity,
+                            color: const Color(0xFFF4F4F4),
+                            padding: EdgeInsets.fromLTRB(
+                              width < 360 ? 16 : 20,
+                              width < 360 ? 18 : 22,
+                              width < 360 ? 16 : 20,
+                              18,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // -----------------------------------------
+                                // STARTED ROW
+                                // -----------------------------------------
+
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    // Mobile icon
+                                    Container(
+                                      width: width < 360 ? 50 : 56,
+                                      height: width < 360 ? 50 : 56,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFAAB9CF),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: Image.asset(
+                                        'assets/mobile.png',
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+
+                                    SizedBox(
+                                      width: width < 360 ? 10 : 14,
+                                    ),
+
+                                    // Text
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Let's get started",
+                                            style: GoogleFonts.manrope(
+                                              fontSize:
+                                                  width < 360 ? 16 : 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: ChopdiColors.navy,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Enter your mobile number to\n"
+                                            "continue to Chopdi",
+                                            style: GoogleFonts.manrope(
+                                              fontSize:
+                                                  width < 360 ? 13 : 14,
+                                              height: 1.4,
+                                              color: ChopdiColors.navy,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // -----------------------------------------
+                                // PHONE INPUT
+                                // -----------------------------------------
+
+                                _PhoneInputField(
+                                  controller: _phoneController,
+                                  errorText: errorText,
+                                  focusNode: _phoneFocusNode,
+                                ),
+
+                                const SizedBox(height: 22),
+
+                                // -----------------------------------------
+                                // CONTINUE BUTTON
+                                // -----------------------------------------
+
+                                _ContinueButton(
+                                  onPressed: _requestOtp,
+                                  loading: _requesting,
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // -----------------------------------------
+                                // SECURITY MESSAGE
+                                // -----------------------------------------
+
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFAAB9CF),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(5),
+                                      child: Image.asset(
+                                        'assets/secured_logo.png',
+                                        height: 20,
+                                        width: 20,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 5),
+
+                                    Flexible(
+                                      child: Text(
+                                        "Your data is secure with us",
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.manrope(
+                                          color: ChopdiColors.navy
+                                              .withValues(alpha: .7),
+                                          fontSize:
+                                              width < 360 ? 12 : 13,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // =================================================
+                          // TERMS SECTION
+                          // =================================================
+
+                          Container(
+                            width: double.infinity,
+                            color: const Color(0xFFB7C6E0),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 18,
+                              horizontal: width < 360 ? 12 : 20,
+                            ),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: GoogleFonts.manrope(
+                                  fontSize: width < 360 ? 10 : 12,
+                                  color: const Color(0xFF33496F),
+                                  height: 1.5,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        "By continuing, you agree to our\n",
+                                    style: GoogleFonts.manrope(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: width < 360 ? 10 : 12,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: "Terms of Service",
+                                    style: GoogleFonts.manrope(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: width < 360 ? 10 : 12,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                    text: " and ",
+                                  ),
+                                  TextSpan(
+                                    text: "Privacy Policy",
+                                    style: GoogleFonts.manrope(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: width < 360 ? 10 : 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+                  ],
                 ),
               ),
             );

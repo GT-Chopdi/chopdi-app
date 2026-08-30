@@ -25,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isFabSmall = false;
   Chopdi? currentChopdi;
+
   bool isGaveLoan = true;
   bool isGaveLoanSelected = true;
 
@@ -82,7 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   } else {
-                    // Add your Add Loan screen here
+                    // =========================
+                    // I TOOK LOAN
+                    // =========================
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -126,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     // =========================
                     // I TOOK LOAN
                     // =========================
-                    // Add your Add Loan screen here
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -163,19 +165,23 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // const HomeHeader(),
+              // =========================
+              // HEADER
+              // =========================
               HomeHeader(
                 currentChopdi: currentChopdi,
                 onChopdiChanged: (chopdi) {
                   setState(() {
                     currentChopdi = chopdi;
                   });
-                }, 
+                },
               ),
 
               const SizedBox(height: 18),
 
-              // const LoanToggle(),
+              // =========================
+              // LOAN TOGGLE
+              // =========================
               LoanToggle(
                 isGaveLoanSelected: isGaveLoanSelected,
                 onChanged: (value) {
@@ -187,140 +193,148 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 18),
 
-
               Expanded(
-                child: isGaveLoanSelected ? NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification is UserScrollNotification) {
-                      if (notification.direction == ScrollDirection.reverse) {
-                        // Scrolling DOWN → small FAB
-                        if (!_isFabSmall) {
-                          setState(() {
-                            _isFabSmall = true;
-                          });
-                        }
-                      } else if (notification.direction == ScrollDirection.forward) {
-                        // Scrolling UP → large FAB
-                        if (_isFabSmall) {
-                          setState(() {
-                            _isFabSmall = false;
-                          });
-                        }
-                      }
-                    }
+                child: isGaveLoanSelected
 
-                    return false;
-                  },
-                  child: currentChopdi == null
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                // : StreamBuilder<List<Customer>>(
-                //     stream: IsarService.isar.customers
-                //         .filter()
-                //         .chopdiIdEqualTo(currentChopdi!.id)
-                //         .watch(fireImmediately: true),
+                    // ======================================================
+                    // I GAVE LOAN
+                    // ======================================================
+                    ? NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification is UserScrollNotification) {
+                            if (notification.direction ==
+                                ScrollDirection.reverse) {
 
-                //     builder: (context, snapshot) {
-                //       final customers = snapshot.data ?? [];
+                              // Scrolling DOWN → small FAB
+                              if (!_isFabSmall) {
+                                setState(() {
+                                  _isFabSmall = true;
+                                });
+                              }
 
-                //       return ListView(
-                //         physics: const BouncingScrollPhysics(),
-                //         padding: const EdgeInsets.only(bottom: 100),
-                //         children: [
-                //           // const SummaryCard(),
-                //           SummaryCard(
-                //             chopdiId: currentChopdi!.id,
-                //             isGaveLoanSelected: isGaveLoanSelected,
-                //           ),
+                            } else if (notification.direction ==
+                                ScrollDirection.forward) {
 
-                //           const SizedBox(height: 18),
+                              // Scrolling UP → large FAB
+                              if (_isFabSmall) {
+                                setState(() {
+                                  _isFabSmall = false;
+                                });
+                              }
+                            }
+                          }
 
-                //           if (customers.isEmpty)
-                //             SizedBox(
-                //               height: 350,
-                //               child: _buildEmptyState(),
-                //             )
-                //           else
-                //             CustomerListSection(
-                //               customers: customers,
-                //             ),
-                //         ],
-                //       );
-                //     },
-                //   ),
-                : StreamBuilder<List<Customer>>(
-                  stream: IsarService.isar.customers
-                      .filter()
-                      .chopdiIdEqualTo(currentChopdi!.id)
-                      .watch(fireImmediately: true),
+                          return false;
+                        },
 
-                  builder: (context, snapshot) {
-                    final allCustomers = snapshot.data ?? [];
+                        child: currentChopdi == null
+                            ? const Center(
+                                child: CircularProgressIndicator(),
+                              )
 
-                    // ONLY customers belonging to I GAVE LOAN
-                    final customers = allCustomers
-                        .where(
-                          (customer) => customer.loanType == "gave",
-                        )
-                        .toList();
+                            : StreamBuilder<List<Customer>>(
+                                stream: IsarService.isar.customers
+                                    .filter()
 
-                    return ListView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.only(bottom: 100),
-                      children: [
-                        SummaryCard(
+                                    // Current Chopdi only
+                                    .chopdiIdEqualTo(
+                                      currentChopdi!.id,
+                                    )
+
+                                    // IMPORTANT:
+                                    // Do not show soft-deleted customers.
+                                    .deletedAtIsNull()
+
+                                    .watch(
+                                      fireImmediately: true,
+                                    ),
+
+                                builder: (context, snapshot) {
+                                  final allCustomers =
+                                      snapshot.data ?? [];
+
+                                  // ONLY customers belonging to
+                                  // I GAVE LOAN
+                                  final customers = allCustomers
+                                      .where(
+                                        (customer) =>
+                                            customer.loanType == "gave",
+                                      )
+                                      .toList();
+
+                                  return ListView(
+                                    physics:
+                                        const BouncingScrollPhysics(),
+                                    padding:
+                                        const EdgeInsets.only(
+                                      bottom: 100,
+                                    ),
+                                    children: [
+
+                                      SummaryCard(
+                                        chopdiId:
+                                            currentChopdi!.id,
+                                        isGaveLoanSelected:
+                                            isGaveLoanSelected,
+                                      ),
+
+                                      const SizedBox(height: 18),
+
+                                      if (customers.isEmpty)
+                                        SizedBox(
+                                          height: 350,
+                                          child:
+                                              _buildEmptyState(),
+                                        )
+                                      else
+                                        CustomerListSection(
+                                          customers: customers,
+                                        ),
+                                    ],
+                                  );
+                                },
+                              ),
+                      )
+
+                    // ======================================================
+                    // I TOOK LOAN
+                    // ======================================================
+                    : NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification
+                              is UserScrollNotification) {
+
+                            if (notification.direction ==
+                                ScrollDirection.reverse) {
+
+                              // Scrolling DOWN → small FAB
+                              if (!_isFabSmall) {
+                                setState(() {
+                                  _isFabSmall = true;
+                                });
+                              }
+
+                            } else if (notification.direction ==
+                                ScrollDirection.forward) {
+
+                              // Scrolling UP → large FAB
+                              if (_isFabSmall) {
+                                setState(() {
+                                  _isFabSmall = false;
+                                });
+                              }
+                            }
+                          }
+
+                          return false;
+                        },
+
+                        child: TookLoanHomeContent(
                           chopdiId: currentChopdi!.id,
-                          isGaveLoanSelected: isGaveLoanSelected,
+                          isGaveLoanSelected:
+                              isGaveLoanSelected,
                         ),
-
-                        const SizedBox(height: 18),
-
-                        if (customers.isEmpty)
-                          SizedBox(
-                            height: 350,
-                            child: _buildEmptyState(),
-                          )
-                        else
-                          CustomerListSection(
-                            customers: customers,
-                          ),
-                      ],
-                    );
-                  },
-                )
-                )
-                // : TookLoanHomeContent(
-                //     chopdiId: currentChopdi!.id,
-                //     isGaveLoanSelected: isGaveLoanSelected,
-                //   ),
-                : NotificationListener<ScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification is UserScrollNotification) {
-                        if (notification.direction == ScrollDirection.reverse) {
-                          // Scrolling DOWN → small FAB
-                          if (!_isFabSmall) {
-                            setState(() {
-                              _isFabSmall = true;
-                            });
-                          }
-                        } else if (notification.direction == ScrollDirection.forward) {
-                          // Scrolling UP → large FAB
-                          if (_isFabSmall) {
-                            setState(() {
-                              _isFabSmall = false;
-                            });
-                          }
-                        }
-                      }
-
-                      return false;
-                    },
-                    child: TookLoanHomeContent(
-                      chopdiId: currentChopdi!.id,
-                      isGaveLoanSelected: isGaveLoanSelected,
-                    ),
-                ),
+                      ),
               ),
             ],
           ),
@@ -334,7 +348,6 @@ class _HomeScreenState extends State<HomeScreen> {
       customers: customers,
     );
   }
-
 
   Widget _buildEmptyState() {
     return Center(

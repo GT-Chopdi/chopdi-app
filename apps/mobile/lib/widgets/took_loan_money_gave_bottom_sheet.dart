@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
-import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 
@@ -612,11 +612,31 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               frequency: interestFrequency,
                             );
 
+                            // final tx = Transaction()
+                            //   ..customerId = widget.customer.id
+                            //   ..chopdiId = widget.customer.chopdiId
+                            //   // Money is stored as integer paise; `amount` is
+                            //   // now a read-only rupee view of it.
+                            //   ..amountPaise = Money.toPaise(amount)
+                            //   ..interestRateBp = Money.rateToBasisPoints(
+                            //     double.tryParse(
+                            //           interestController.text.trim(),
+                            //         ) ??
+                            //         0,
+                            //   )
+                            //   ..date = selectedDate
+                            //   ..type = TransactionType.took
+                            //   ..description =
+                            //       descriptionController.text.trim()
+                            //   ..paymentMode = paymentMode
+                            //   ..interestType = interestType
+                            //   ..interestFrequency =
+                            //       interestFrequency;
+
+                            // await TransactionService.addTransaction(tx);
                             final tx = Transaction()
                               ..customerId = widget.customer.id
                               ..chopdiId = widget.customer.chopdiId
-                              // Money is stored as integer paise; `amount` is
-                              // now a read-only rupee view of it.
                               ..amountPaise = Money.toPaise(amount)
                               ..interestRateBp = Money.rateToBasisPoints(
                                 double.tryParse(
@@ -626,14 +646,12 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               )
                               ..date = selectedDate
                               ..type = TransactionType.took
-                              ..description =
-                                  descriptionController.text.trim()
+                              ..description = descriptionController.text.trim()
                               ..paymentMode = paymentMode
                               ..interestType = interestType
-                              ..interestFrequency =
-                                  interestFrequency;
+                              ..interestFrequency = interestFrequency;
 
-                            await TransactionService.addTransaction(tx);
+                            await Repositories.ledger.adoptDraft(tx);
 
                             // ==================================================
                             // INTEREST NOTIFICATION
