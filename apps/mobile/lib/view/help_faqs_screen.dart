@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HelpFaqsScreen extends StatefulWidget {
   const HelpFaqsScreen({
@@ -17,18 +18,18 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // COLORS
   // ===========================================================================
 
-  static const Color backgroundColor = Color(0xFFFFEEDB);
+  static const Color backgroundColor = Color.fromRGBO(253, 237, 217, 1);
   static const Color cardColor = Color(0xFFFFFAF3);
 
-  static const Color darkBlue = Color(0xFF203E68);
+  static const Color darkBlue = Color.fromRGBO(34, 58, 94, 1);
   static const Color secondaryText = Color(0xFF68778B);
 
-  static const Color borderColor = Color(0xFFB8C8DA);
+  static const Color borderColor = Color.fromRGBO(170, 185, 207, 1);
 
-  static const Color supportBackground = Color(0xFFFFDFC8);
-  static const Color supportBorder = Color(0xFFFFC49D);
+  static const Color supportBackground = Color.fromRGBO(255, 215, 190, 0.6);
+  static const Color supportBorder = Color.fromRGBO(177, 95, 39, 0.23);
 
-  static const Color supportRed = Color(0xFFE35B55);
+  static const Color supportRed = Color.fromRGBO(199, 76, 76, 1);
   static const Color supportIconBackground = Color(0xFFF8D1C5);
 
   // ===========================================================================
@@ -54,47 +55,47 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
     {
       'question': 'What is Chopdi?',
       'answer':
-          'Chopdi is your personal lending ledger where you can manage customers, loans, payments and interest.',
+          'Chopdi is a digital ledger that helps you keep track of customers, loans, payments and interest in one place. It replaces traditional paper ledgers with an easy-to-manage digital record.',
     },
     {
       'question': 'How do I add a new customer?',
       'answer':
-          'Open the customer section and select the option to add a new customer. Enter the required customer details and save.',
+          'Tap Add Customer from the Home screen. You can either select a customer from your phone contacts or add a new customer manually. After adding the customer, you can start recording loan and payment entries.',
     },
     {
       'question': 'Can I edit customer details?',
       'answer':
-          'Yes. Open the customer profile, select edit, update the required information and save the changes.',
+          "Yes. Open the customer's profile, tap the three-dot menu (⋮) in the top-right corner and select Edit Customer to update the customer's name or phone number.",
     },
     {
       'question': 'How do I record a payment?',
       'answer':
-          'Open the customer account, select the payment option, enter the payment amount and save the transaction.',
+          "Open the customer's ledger and tap You Gave ₹ to record a loan or You Got ₹ to record a payment. Enter the required details and save the entry.",
     },
     {
       'question': 'Can I edit or delete a transaction?',
       'answer':
-          'Yes. Open the transaction details and use the edit or delete option to manage the transaction.',
+          "Yes. Tap any transaction in the customer's ledger to open its details. From there, you can Edit Transaction or Delete Transaction.",
     },
     {
       'question': 'How is interest calculated?',
       'answer':
-          'Interest is calculated according to the interest rate and the loan details configured for the customer.',
+          "Interest is calculated using the interest rate you enter while creating or editing a customer's loan. Each customer can have a different interest rate and calculation method (Simple Interest / Compound Interest).",
     },
     {
       'question': 'Can I export my ledger?',
       'answer':
-          'Yes. You can export your ledger data from the available export option in your Chopdi.',
+          "Yes. Open any customer's ledger, tap the three dots on the top-right corner, and and tap Export PDF. You can share, print or save the ledger as a PDF file.",
     },
     {
       'question': 'Can I change my Chopdi details?',
       'answer':
-          'Yes. Go to My Chopdi and select Edit Chopdi to update your Chopdi name and description.',
+          "Yes. Go to My Chopdi > Edit (pencil icon) to update your Chopdi name, description or ledger type.",
     },
     {
       'question': 'Will my data be lost if I change my phone?',
       'answer':
-          'Your data will remain available when you use the same account and supported backup or synchronization options.',
+          "No. Your data is safe. As long as you are signed in with your account , you can restore it on your new phone.",
     },
   ];
 
@@ -137,84 +138,111 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardVisible =
+        MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       backgroundColor: backgroundColor,
+
       resizeToAvoidBottomInset: true,
 
       body: SafeArea(
+        bottom: false,
+
         child: GestureDetector(
           onTap: () {
             FocusScope.of(context).unfocus();
           },
 
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Padding(
+            // ===============================================================
+            // SAME OUTER PADDING AS MY CHOPDI
+            // ===============================================================
 
-                  physics:
-                      const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(14),
 
-                  padding: const EdgeInsets.fromLTRB(
-                    30,
-                    47,
-                    18,
-                    20,
-                  ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
 
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      // =======================================================
-                      // HEADER
-                      // =======================================================
+                    physics:
+                        const BouncingScrollPhysics(),
 
-                      _buildHeader(),
+                    // IMPORTANT:
+                    // No additional horizontal padding here.
+                    padding: EdgeInsets.only(
+                      bottom:
+                          keyboardVisible ? 30 : 14,
+                    ),
 
-                      const SizedBox(height: 14),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
 
-                      // =======================================================
-                      // SEARCH
-                      // =======================================================
+                      children: [
+                        // =====================================================
+                        // HEADER
+                        // =====================================================
 
-                      _buildSearchField(),
+                        _buildHeader(),
 
-                      const SizedBox(height: 19),
-
-                      // =======================================================
-                      // FAQ TITLE
-                      // =======================================================
-
-                      const Text(
-                        'Frequently asked questions',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: secondaryText,
-                          fontWeight: FontWeight.w400,
+                        const SizedBox(
+                          height: 18,
                         ),
-                      ),
 
-                      const SizedBox(height: 11),
+                        // =====================================================
+                        // SEARCH
+                        // =====================================================
 
-                      // =======================================================
-                      // FAQ LIST
-                      // =======================================================
+                        _buildSearchField(),
 
-                      _buildFaqList(),
-                    ],
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        // =====================================================
+                        // FAQ TITLE
+                        // =====================================================
+
+                        Text(
+                          'Frequently asked questions',
+
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            color: secondaryText,
+                            fontWeight:
+                                FontWeight.w700,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        // =====================================================
+                        // FAQ LIST
+                        // =====================================================
+
+                        _buildFaqList(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // =============================================================
-              // BOTTOM SUPPORT
-              // =============================================================
+                // =============================================================
+                // SUPPORT CARD
+                // =============================================================
 
-              _buildSupportCard(),
-            ],
+                const SizedBox(
+                  height: 7,
+                ),
+
+                _buildSupportCard(),
+              ],
+            ),
           ),
         ),
       ),
@@ -228,7 +256,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   Widget _buildHeader() {
     return Row(
       crossAxisAlignment:
-          CrossAxisAlignment.start,
+          CrossAxisAlignment.center,
       children: [
         GestureDetector(
           onTap: () {
@@ -249,16 +277,16 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
           ),
         ),
 
-        const Column(
+        Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
 
           children: [
             Text(
               'Help & FAQs',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              style: GoogleFonts.manrope(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
                 color: darkBlue,
               ),
             ),
@@ -268,7 +296,8 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
             Text(
               'Find answers to common questions',
               style: TextStyle(
-                fontSize: 8.5,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: secondaryText,
               ),
             ),
@@ -285,7 +314,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   Widget _buildSearchField() {
     return Container(
       width: double.infinity,
-      height: 30,
+      height: 40,
 
       decoration: BoxDecoration(
         color: cardColor,
@@ -295,7 +324,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
         border: Border.all(
           color: borderColor,
-          width: 0.9,
+          width: 1.0,
         ),
       ),
 
@@ -303,10 +332,10 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
         children: [
           const SizedBox(width: 8),
 
-          const Icon(
-            Icons.search,
-            size: 17,
-            color: darkBlue,
+          SizedBox(
+            height: 24,
+            width: 24,
+            child: Image.asset('assets/search_option.png'),
           ),
 
           const SizedBox(width: 7),
@@ -325,18 +354,19 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               textInputAction:
                   TextInputAction.search,
 
-              style: const TextStyle(
+              style: GoogleFonts.manrope(
                 fontSize: 9,
                 color: darkBlue,
               ),
 
               decoration:
-                  const InputDecoration(
+                  InputDecoration(
                 hintText:
                     'Search for help...',
 
-                hintStyle: TextStyle(
-                  fontSize: 9,
+                hintStyle: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: secondaryText,
                 ),
 
@@ -390,16 +420,17 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
     if (faqs.isEmpty) {
       return Container(
         width: double.infinity,
+        height: 40,
         padding:
             const EdgeInsets.symmetric(
           vertical: 30,
         ),
 
-        child: const Center(
+        child: Center(
           child: Text(
             'No questions found.',
-            style: TextStyle(
-              fontSize: 10,
+            style: GoogleFonts.manrope(
+              fontSize: 12,
               color: secondaryText,
             ),
           ),
@@ -452,11 +483,11 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
         color: cardColor,
 
         borderRadius:
-            BorderRadius.circular(7),
+            BorderRadius.circular(10),
 
         border: Border.all(
           color: borderColor,
-          width: 0.9,
+          width: 1.0,
         ),
       ),
 
@@ -468,7 +499,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
           InkWell(
             borderRadius:
-                BorderRadius.circular(7),
+                BorderRadius.circular(10),
 
             onTap: () {
               setState(() {
@@ -482,7 +513,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
             },
 
             child: Container(
-              height: 29,
+              height: 40,
 
               padding:
                   const EdgeInsets.only(
@@ -500,10 +531,10 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                           TextOverflow.ellipsis,
 
                       style:
-                          const TextStyle(
-                        fontSize: 9.5,
+                          GoogleFonts.manrope(
+                        fontSize: 16,
                         fontWeight:
-                            FontWeight.w500,
+                            FontWeight.w700,
                         color: darkBlue,
                       ),
                     ),
@@ -548,8 +579,9 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
               child: Text(
                 answer,
-                style: const TextStyle(
-                  fontSize: 8,
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                   height: 1.35,
                   color: secondaryText,
                 ),
@@ -564,158 +596,330 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // SUPPORT CARD
   // ===========================================================================
 
+  // Widget _buildSupportCard() {
+  //   return SafeArea(
+  //     top: false,
+
+  //     child: Container(
+  //       width: double.infinity,
+  //       height: 68,
+
+  //       margin:
+  //           const EdgeInsets.fromLTRB(
+  //         30,
+  //         0,
+  //         18,
+  //         0,
+  //       ),
+
+  //       padding:
+  //           const EdgeInsets.symmetric(
+  //         horizontal: 9,
+  //         vertical: 9,
+  //       ),
+
+  //       decoration: BoxDecoration(
+  //         color: supportBackground,
+
+  //         borderRadius:
+  //             BorderRadius.circular(10),
+
+  //         border: Border.all(
+  //           color: supportBorder,
+  //           width: 1.0,
+  //         ),
+  //       ),
+
+  //       child: Row(
+  //         children: [
+  //           // -------------------------------------------------------------
+  //           // SUPPORT ICON
+  //           // -------------------------------------------------------------
+
+  //           Container(
+  //             width: 46,
+  //             height: 46,
+
+  //             decoration:
+  //                 const BoxDecoration(
+  //               color:
+  //                   supportIconBackground,
+  //               shape: BoxShape.circle,
+  //             ),
+
+  //             child: Image.asset('assets/support_icon.png'),
+  //           ),
+
+  //           const SizedBox(width: 9),
+
+  //           // -------------------------------------------------------------
+  //           // TEXT
+  //           // -------------------------------------------------------------
+
+  //           Expanded(
+  //             child: Column(
+  //               mainAxisAlignment:
+  //                   MainAxisAlignment.center,
+
+  //               crossAxisAlignment:
+  //                   CrossAxisAlignment.start,
+
+  //               children: [
+  //                 Text(
+  //                   'Still need help?',
+  //                   style: GoogleFonts.manrope(
+  //                     fontSize: 14,
+  //                     fontWeight:
+  //                         FontWeight.w700,
+  //                     color: darkBlue,
+  //                   ),
+  //                 ),
+
+  //                 SizedBox(height: 2),
+
+  //                 Text(
+  //                   'Our Support team is here.',
+  //                   style: GoogleFonts.manrope(
+  //                     fontSize: 12,
+  //                     fontWeight: FontWeight.w400,
+  //                     color: secondaryText,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+
+  //           // -------------------------------------------------------------
+  //           // CONTACT SUPPORT
+  //           // -------------------------------------------------------------
+
+  //           GestureDetector(
+  //             onTap: () {
+  //               widget.onContactSupport?.call();
+  //             },
+
+  //             child: Container(
+  //               height: 42,
+  //               width: 140,
+
+  //               decoration: BoxDecoration(
+  //                 color: const Color(
+  //                   0xFFFFE9D8,
+  //                 ),
+
+  //                 borderRadius:
+  //                     BorderRadius.circular(10),
+
+  //                 border: Border.all(
+  //                   color: supportRed,
+  //                   width: 1.0,
+  //                 ),
+  //               ),
+
+  //               child: Row(
+  //                 mainAxisAlignment:
+  //                     MainAxisAlignment.center,
+
+  //                 children: [
+  //                   SizedBox(
+  //                     height: 14,
+  //                     width: 18,
+  //                     child: Image.asset('assets/support_mail.png'),
+  //                   ),
+
+  //                   const SizedBox(width: 5),
+
+  //                   Text(
+  //                     'Contact Support',
+  //                     style: GoogleFonts.manrope(
+  //                       fontSize: 12,
+  //                       fontWeight:
+  //                           FontWeight.w700,
+  //                       color: supportRed,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _buildSupportCard() {
-    return SafeArea(
-      top: false,
+    return Container(
+      width: double.infinity,
+      height: 58,
 
-      child: Container(
-        width: double.infinity,
-        height: 70,
+      // Same outer spacing system as MyChopdi / Notification Settings.
+      margin: const EdgeInsets.only(
+        left: 10,
+        right: 10,
+      ),
 
-        margin:
-            const EdgeInsets.fromLTRB(
-          30,
-          0,
-          18,
-          0,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 7,
+      ),
+
+      decoration: BoxDecoration(
+        color: supportBackground,
+
+        borderRadius: BorderRadius.circular(8),
+
+        border: Border.all(
+          color: supportBorder,
+          width: 0.8,
         ),
+      ),
 
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 9,
-          vertical: 9,
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
 
-        decoration: BoxDecoration(
-          color: supportBackground,
+        children: [
+          // ===============================================================
+          // SUPPORT ICON
+          // ===============================================================
 
-          borderRadius:
-              BorderRadius.circular(8),
+          Container(
+            width: 34,
+            height: 34,
 
-          border: Border.all(
-            color: supportBorder,
-            width: 0.8,
-          ),
-        ),
-
-        child: Row(
-          children: [
-            // -------------------------------------------------------------
-            // SUPPORT ICON
-            // -------------------------------------------------------------
-
-            Container(
-              width: 33,
-              height: 33,
-
-              decoration:
-                  const BoxDecoration(
-                color:
-                    supportIconBackground,
-                shape: BoxShape.circle,
-              ),
-
-              child: const Icon(
-                Icons.support_agent_outlined,
-                size: 18,
-                color: supportRed,
-              ),
+            decoration: const BoxDecoration(
+              color: supportIconBackground,
+              shape: BoxShape.circle,
             ),
 
-            const SizedBox(width: 9),
+            child: const Icon(
+              Icons.support_agent_outlined,
+              size: 18,
+              color: supportRed,
+            ),
+          ),
 
-            // -------------------------------------------------------------
-            // TEXT
-            // -------------------------------------------------------------
+          const SizedBox(
+            width: 9,
+          ),
 
-            const Expanded(
-              child: Column(
+          // ===============================================================
+          // SUPPORT TEXT
+          // ===============================================================
+
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+              children: [
+                Text(
+                  'Still need help?',
+
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: darkBlue,
+                    height: 1.1,
+                  ),
+                ),
+
+                SizedBox(
+                  height: 2,
+                ),
+
+                Text(
+                  'Our Support team is here.',
+
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: secondaryText,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(
+            width: 8,
+          ),
+
+          // ===============================================================
+          // CONTACT SUPPORT BUTTON
+          // ===============================================================
+
+          GestureDetector(
+            onTap: () {
+              widget.onContactSupport?.call();
+            },
+
+            child: Container(
+              height: 32,
+              width: 126,
+
+              decoration: BoxDecoration(
+                color: const Color(
+                  0xFFFFE9D8,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(10),
+
+                border: Border.all(
+                  color: supportRed,
+                  width: 1.0,
+                ),
+              ),
+
+              child: Row(
                 mainAxisAlignment:
                     MainAxisAlignment.center,
 
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
                 children: [
-                  Text(
-                    'Still need help?',
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight:
-                          FontWeight.w600,
-                      color: darkBlue,
-                    ),
+                  SizedBox(width: 5),
+                  Icon(
+                    Icons.mail_outline_rounded,
+                    size: 15,
+                    color: supportRed,
                   ),
 
-                  SizedBox(height: 2),
+                  SizedBox(
+                    width: 5,
+                  ),
 
-                  Text(
-                    'Our Support team is here.',
-                    style: TextStyle(
-                      fontSize: 7.5,
-                      color: secondaryText,
+                  Flexible(
+                    child: Text(
+                      'Contact Support',
+
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
+
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        fontWeight:
+                            FontWeight.w700,
+                        color: supportRed,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            // -------------------------------------------------------------
-            // CONTACT SUPPORT
-            // -------------------------------------------------------------
-
-            GestureDetector(
-              onTap: () {
-                widget.onContactSupport?.call();
-              },
-
-              child: Container(
-                height: 32,
-                width: 101,
-
-                decoration: BoxDecoration(
-                  color: const Color(
-                    0xFFFFE9D8,
-                  ),
-
-                  borderRadius:
-                      BorderRadius.circular(6),
-
-                  border: Border.all(
-                    color: supportRed,
-                    width: 0.8,
-                  ),
-                ),
-
-                child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-                    const Icon(
-                      Icons
-                          .mail_outline_rounded,
-                      size: 15,
-                      color: supportRed,
-                    ),
-
-                    const SizedBox(width: 5),
-
-                    const Text(
-                      'Contact Support',
-                      style: TextStyle(
-                        fontSize: 7.5,
-                        fontWeight:
-                            FontWeight.w500,
-                        color: supportRed,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:isar_community/isar.dart';
+
+import 'package:mychopdi/model/chopdi.dart';
+import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/transaction.dart';
+
+import 'package:mychopdi/service/chopdi_service.dart';
+import 'package:mychopdi/service/isar_service.dart';
+
 import 'package:mychopdi/view/edit_chopdi_screen.dart';
 import 'package:mychopdi/view/help_faqs_screen.dart';
 import 'package:mychopdi/view/notifications_setting_screen.dart';
 import 'package:mychopdi/view/terms_privacy_screen.dart';
 
-class MyChopdiScreen extends StatelessWidget {
+class MyChopdiScreen extends StatefulWidget {
   const MyChopdiScreen({super.key});
 
+  @override
+  State<MyChopdiScreen> createState() => _MyChopdiScreenState();
+}
+
+class _MyChopdiScreenState extends State<MyChopdiScreen> {
   // ===========================================================================
   // COLORS
   // ===========================================================================
@@ -15,9 +29,216 @@ class MyChopdiScreen extends StatelessWidget {
   static const Color backgroundColor = Color(0xFFFFEEDB);
   static const Color darkBlue = Color(0xFF18345C);
   static const Color lightBlue = Color(0xFFDCE6F2);
-  static const Color borderColor = Color(0xFFB7C7DA);
   static const Color greenColor = Color(0xFF159447);
   static const Color orangeColor = Color(0xFFFF7A32);
+
+  // ===========================================================================
+  // STATE
+  // ===========================================================================
+
+  Chopdi? _currentChopdi;
+
+  int _totalCustomers = 0;
+
+  double _totalLoan = 0;
+  double _totalInterestEarned = 0;
+  double _totalOutstanding = 0;
+
+  bool _isLoading = true;
+
+  
+
+  // ===========================================================================
+  // INIT
+  // ===========================================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChopdiData();
+  }
+
+  // ===========================================================================
+  // LOAD CURRENT CHOPDI + DATA
+  // ===========================================================================
+
+  Future<void> _loadChopdiData() async {
+    try {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // -----------------------------------------------------------------------
+      // Get currently active Chopdi.
+      // -----------------------------------------------------------------------
+
+      final chopdi = await ChopdiService.getCurrentChopdi();
+
+      // -----------------------------------------------------------------------
+      // Get customers belonging ONLY to this Chopdi.
+      //
+      // Soft-deleted customers are excluded.
+      // -----------------------------------------------------------------------
+
+      final customers = await IsarService.isar.customers
+          .filter()
+          .chopdiIdEqualTo(chopdi.id)
+          .deletedAtIsNull()
+          .findAll();
+
+      // -----------------------------------------------------------------------
+      // Get transactions belonging ONLY to this Chopdi.
+      //
+      // Voided transactions are excluded.
+      // -----------------------------------------------------------------------
+
+      final transactions = await IsarService.isar.transactions
+          .filter()
+          .chopdiIdEqualTo(chopdi.id)
+          .voidedAtIsNull()
+          .findAll();
+
+      // -----------------------------------------------------------------------
+      // Calculate statistics.
+      // -----------------------------------------------------------------------
+
+      double totalGave = 0;
+      double totalReceived = 0;
+
+      double totalTook = 0;
+      double totalPaid = 0;
+
+      double totalInterestEarned = 0;
+
+      for (final transaction in transactions) {
+        final amount = transaction.amount;
+
+        switch (transaction.type) {
+          // ===================================================================
+          // I GAVE LOAN
+          // ===================================================================
+
+          case TransactionType.gave:
+            totalGave += amount;
+
+            // Interest earned from money that I gave.
+            totalInterestEarned += transaction.interest;
+
+            break;
+
+          // ===================================================================
+          // I RECEIVED MONEY
+          // ===================================================================
+
+          case TransactionType.received:
+            totalReceived += amount;
+
+            break;
+
+          // ===================================================================
+          // I TOOK LOAN
+          // ===================================================================
+
+          case TransactionType.took:
+            totalTook += amount;
+
+            break;
+
+          // ===================================================================
+          // I PAID BACK LOAN
+          // ===================================================================
+
+          case TransactionType.paid:
+            totalPaid += amount;
+
+            break;
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // TOTAL LOAN
+      //
+      // Includes BOTH:
+      //
+      //     Gave + Took
+      //
+      // Example:
+      //
+      //     Gave = ₹30,000
+      //     Took = ₹15,000
+      //
+      //     Total Loan = ₹45,000
+      // -----------------------------------------------------------------------
+
+      final totalLoan = totalGave + totalTook;
+
+      // -----------------------------------------------------------------------
+      // OUTSTANDING FOR LOANS GIVEN
+      //
+      // Money given minus money received back.
+      // -----------------------------------------------------------------------
+
+      final gaveOutstanding = totalGave - totalReceived;
+
+      // -----------------------------------------------------------------------
+      // OUTSTANDING FOR LOANS TAKEN
+      //
+      // Money taken minus money paid back.
+      // -----------------------------------------------------------------------
+
+      final tookOutstanding = totalTook - totalPaid;
+
+      // -----------------------------------------------------------------------
+      // TOTAL OUTSTANDING
+      //
+      // Both Gave Loan and Took Loan are included.
+      // -----------------------------------------------------------------------
+
+      double totalOutstanding =
+          gaveOutstanding + tookOutstanding;
+
+      // -----------------------------------------------------------------------
+      // Protect against negative value.
+      // -----------------------------------------------------------------------
+
+      if (totalOutstanding < 0) {
+        totalOutstanding = 0;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _currentChopdi = chopdi;
+
+        _totalCustomers = customers.length;
+
+        _totalLoan = totalLoan;
+
+        _totalInterestEarned = totalInterestEarned;
+
+        _totalOutstanding = totalOutstanding;
+
+        _isLoading = false;
+      });
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[MyChopdiScreen] Failed to load Chopdi data: '
+        '$error\n$stackTrace',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+    } 
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -26,40 +247,48 @@ class MyChopdiScreen extends StatelessWidget {
 
       body: SafeArea(
         bottom: false,
-        
+
         child: Padding(
+          // -------------------------------------------------------------------
+          // SAME OUTER PADDING
+          // -------------------------------------------------------------------
+
           padding: const EdgeInsets.all(14),
+
           child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-          
-                  padding: const EdgeInsets.fromLTRB(
-                    18,
-                    18,
-                    18,
-                    18,
-                  ),
-          
+
+                  // ----------------------------------------------------------------
+                  // IMPORTANT:
+                  // No additional 18 px padding here.
+                  // The outer 14 px padding controls the screen margin.
+                  // ----------------------------------------------------------------
+
+                  padding: EdgeInsets.zero,
+
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-          
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
                     children: [
                       // =========================================================
                       // HEADER
                       // =========================================================
-          
-                      Image.asset(
-                        'assets/MyChopdi.png',
+
+                      Text(
+                        'My Chopdi',
+                        style: GoogleFonts.manrope(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold
+                        )
                       ),
-          
+
                       const SizedBox(height: 2),
-          
+
                       Text(
                         'Manage your current chopdi',
-          
                         style: GoogleFonts.manrope(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -71,43 +300,41 @@ class MyChopdiScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-          
-                      const SizedBox(height: 15),
-          
+
+                      const SizedBox(height: 18),
+
                       // =========================================================
                       // CHOPDI CARD
                       // =========================================================
-          
+
                       _buildChopdiCard(context),
-          
-                      const SizedBox(height: 14),
-          
+
+                      const SizedBox(height: 18),
+
                       // =========================================================
                       // PREFERENCES
                       // =========================================================
-          
+
                       Text(
                         'Preferences',
-          
                         style: GoogleFonts.manrope(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color.fromRGBO(34, 58, 94, 1),
+                          color: const Color.fromRGBO(
+                            34,
+                            58,
+                            94,
+                            1,
+                          ),
                         ),
                       ),
-          
+
                       const SizedBox(height: 8),
-          
+
                       _buildMenuCard(
-                        icon:
-                            Icons.notifications_none_rounded,
-          
-                        title:
-                            'Notifications Settings',
-          
-                        subtitle:
-                            'Manage app notifications',
-          
+                        icon: Icons.notifications_none_rounded,
+                        title: 'Notifications Settings',
+                        subtitle: 'Manage app notifications',
                         onTap: () {
                           Navigator.push(
                             context,
@@ -118,80 +345,64 @@ class MyChopdiScreen extends StatelessWidget {
                           );
                         },
                       ),
-          
-                      const SizedBox(height: 10),
-          
+
+                      const SizedBox(height: 18),
+
                       // =========================================================
                       // SUPPORT
                       // =========================================================
-          
+
                       Text(
                         'Support',
-          
-                        style: TextStyle(
+                        style: GoogleFonts.manrope(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color.fromRGBO(34, 58, 94, 1),
+                          color: const Color.fromRGBO(
+                            34,
+                            58,
+                            94,
+                            1,
+                          ),
                         ),
                       ),
-          
-                      const SizedBox(height: 5),
-          
+
+                      const SizedBox(height: 8),
+
                       _buildMenuCard(
-                        icon:
-                            Icons.support_agent_rounded,
-          
-                        title:
-                            'Help & FAQs',
-          
-                        subtitle:
-                            'Get answers to common questions',
-          
+                        icon: Icons.support_agent_rounded,
+                        title: 'Help & FAQs',
+                        subtitle: 'Get answers to common questions',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  HelpFaqsScreen(),
+                              builder: (context) => HelpFaqsScreen(),
                             ),
                           );
                         },
                       ),
-          
-                      const SizedBox(height: 7),
-          
+
+                      const SizedBox(height: 10),
+
                       _buildMenuCard(
-                        icon:
-                            Icons.verified_user_outlined,
-          
-                        title:
-                            'Terms & Privacy',
-          
-                        subtitle:
-                            'Read our policies',
-          
+                        icon: Icons.verified_user_outlined,
+                        title: 'Terms & Privacy',
+                        subtitle: 'Read our policies',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  TermsPrivacyScreen(),
+                              builder: (context) => TermsPrivacyScreen(),
                             ),
                           );
                         },
                       ),
-          
+
                       const SizedBox(height: 10),
                     ],
                   ),
                 ),
               ),
-          
-              // ===============================================================
-              // BOTTOM NAVIGATION
-              // ===============================================================
-          
-              // _buildBottomNavigation(),
             ],
           ),
         ),
@@ -203,9 +414,15 @@ class MyChopdiScreen extends StatelessWidget {
   // CHOPDI CARD
   // ===========================================================================
 
-  Widget _buildChopdiCard(
-    BuildContext context,
-  ) {
+  Widget _buildChopdiCard(BuildContext context) {
+    final chopdi = _currentChopdi;
+
+    final chopdiName = chopdi?.name ?? 'My Chopdi';
+
+    final createdDate = chopdi == null
+        ? '—'
+        : _formatDate(chopdi.createdAt);
+
     return Container(
       width: double.infinity,
       height: 231,
@@ -218,8 +435,7 @@ class MyChopdiScreen extends StatelessWidget {
           1,
         ),
 
-        borderRadius:
-            BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15),
 
         border: Border.all(
           color: const Color.fromRGBO(
@@ -234,9 +450,9 @@ class MyChopdiScreen extends StatelessWidget {
 
       child: Stack(
         children: [
-          // =================================================================
-          // BOOK IMAGE AREA
-          // =================================================================
+          // ===================================================================
+          // BOOK IMAGE
+          // ===================================================================
 
           Positioned(
             left: 8,
@@ -250,35 +466,27 @@ class MyChopdiScreen extends StatelessWidget {
                 alignment: Alignment.center,
 
                 children: [
-                  // ---------------------------------------------------------
-                  // DECORATIVE CIRCLE
-                  // ---------------------------------------------------------
-
                   Container(
                     width: 98,
                     height: 98,
 
-                    decoration:
-                        const BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Color(0xFFFFE6CF),
                       shape: BoxShape.circle,
                     ),
                   ),
 
-                  // ---------------------------------------------------------
-                  // BOOK IMAGE
-                  // ---------------------------------------------------------
-
                   Image.asset(
                     'assets/chopdi_book.png',
-
                     width: 104,
                     height: 128,
-
                     fit: BoxFit.contain,
 
-                    errorBuilder:
-                        (context, error, stackTrace) {
+                    errorBuilder: (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
                       return _buildBookPlaceholder();
                     },
                   ),
@@ -287,17 +495,16 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // ACTIVE CHOPDI BADGE
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             top: 10,
             right: 122,
 
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: 7,
                 vertical: 3,
               ),
@@ -310,8 +517,7 @@ class MyChopdiScreen extends StatelessWidget {
                   0.34,
                 ),
 
-                borderRadius:
-                    BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10),
 
                 border: Border.all(
                   color: const Color.fromRGBO(
@@ -326,7 +532,6 @@ class MyChopdiScreen extends StatelessWidget {
 
               child: Text(
                 'ACTIVE CHOPDI •',
-
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -336,9 +541,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // CHOPDI TITLE + EDIT BUTTON
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             top: 37,
@@ -347,17 +552,11 @@ class MyChopdiScreen extends StatelessWidget {
 
             child: Row(
               children: [
-                // -----------------------------------------------------------
-                // TITLE
-                // -----------------------------------------------------------
-
                 Expanded(
                   child: Text(
-                    'My Chopdi',
-
+                    chopdiName,
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
 
                     style: GoogleFonts.manrope(
                       fontSize: 20,
@@ -372,61 +571,67 @@ class MyChopdiScreen extends StatelessWidget {
                   ),
                 ),
 
-                // -----------------------------------------------------------
-                // EDIT BUTTON
-                // -----------------------------------------------------------
-
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
+                  onTap: () async {
+                    if (_currentChopdi == null) return;
 
+                    final chopdi = _currentChopdi!;
+
+                    final result = await Navigator.push(
+                      context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            EditChopdiScreen(
-                          initialName:
-                              'My Chopdi',
+                        builder: (context) => EditChopdiScreen(
+                          initialName: chopdi.name,
 
                           initialDescription:
-                              'My personal lending ledger to track loans and interest.',
+                              chopdi.description.trim().isEmpty
+                                  ? 'My personal lending ledger\n'
+                                    'to track loans and interest.'
+                                  : chopdi.description,
 
-                          onSave:
-                              (name, description) async {
-                            // Update your Isar /
-                            // Firebase data here.
+                          onSave: (name, description) async {
+                            chopdi.name = name.trim();
 
-                            print(name);
-                            print(description);
+                            chopdi.description =
+                                description.trim().isEmpty
+                                    ? 'My personal lending ledger\n'
+                                      'to track loans and interest.'
+                                    : description.trim();
+
+                            await IsarService.isar.writeTxn(() async {
+                              await IsarService.isar.chopdis.put(
+                                chopdi,
+                              );
+                            });
                           },
 
                           onDelete: () {
-                            // Delete your Chopdi here.
+                            // Keep your existing delete logic here.
                           },
                         ),
                       ),
                     );
+
+                    // Refresh MyChopdi after returning from EditChopdi.
+                    if (result == true && mounted) {
+                      await _loadChopdiData();
+                    }
                   },
 
                   child: Container(
                     width: 26,
                     height: 26,
 
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color.fromRGBO(
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(
                         255,
                         215,
                         190,
                         1,
                       ),
-
-                      borderRadius:
-                          BorderRadius.circular(3),
-
+                      borderRadius: BorderRadius.circular(3),
                       border: Border.all(
-                        color:
-                            const Color.fromRGBO(
+                        color: const Color.fromRGBO(
                           177,
                           95,
                           39,
@@ -445,9 +650,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // DESCRIPTION
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             top: 65,
@@ -455,8 +660,7 @@ class MyChopdiScreen extends StatelessWidget {
             right: 12,
 
             child: Text(
-              'My personal lending ledger\n'
-              'to track loans and interest.',
+              "${chopdi?.description}",
 
               style: GoogleFonts.manrope(
                 fontSize: 12,
@@ -472,9 +676,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // CREATED DATE
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             top: 103,
@@ -482,8 +686,7 @@ class MyChopdiScreen extends StatelessWidget {
             right: 12,
 
             child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
 
               children: [
                 _buildSmallInfoIcon(
@@ -494,27 +697,19 @@ class MyChopdiScreen extends StatelessWidget {
 
                 Expanded(
                   child: Column(
-                    mainAxisSize:
-                        MainAxisSize.min,
-
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
                       Text(
                         'Created On',
-
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
 
-                        style:
-                            GoogleFonts.manrope(
+                        style: GoogleFonts.manrope(
                           fontSize: 9,
-                          fontWeight:
-                              FontWeight.w700,
-                          color:
-                              const Color(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(
                             0xFF7B8796,
                           ),
                         ),
@@ -523,19 +718,14 @@ class MyChopdiScreen extends StatelessWidget {
                       const SizedBox(height: 1),
 
                       Text(
-                        '12 July 2026',
-
+                        createdDate,
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
 
-                        style:
-                            GoogleFonts.manrope(
+                        style: GoogleFonts.manrope(
                           fontSize: 9,
-                          fontWeight:
-                              FontWeight.w700,
-                          color:
-                              const Color.fromRGBO(
+                          fontWeight: FontWeight.w700,
+                          color: const Color.fromRGBO(
                             34,
                             58,
                             94,
@@ -550,9 +740,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // DIVIDER
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             top: 132,
@@ -571,9 +761,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
-          // CUSTOMERS
-          // =================================================================
+          // ===================================================================
+          // TOTAL CUSTOMERS
+          // ===================================================================
 
           Positioned(
             top: 140,
@@ -581,8 +771,7 @@ class MyChopdiScreen extends StatelessWidget {
             right: 12,
 
             child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
 
               children: [
                 _buildSmallInfoIcon(
@@ -593,27 +782,19 @@ class MyChopdiScreen extends StatelessWidget {
 
                 Expanded(
                   child: Column(
-                    mainAxisSize:
-                        MainAxisSize.min,
-
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
                       Text(
                         'Total Customers',
-
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
 
-                        style:
-                            GoogleFonts.manrope(
+                        style: GoogleFonts.manrope(
                           fontSize: 9,
-                          fontWeight:
-                              FontWeight.w700,
-                          color:
-                              const Color(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(
                             0xFF7B8796,
                           ),
                         ),
@@ -622,17 +803,13 @@ class MyChopdiScreen extends StatelessWidget {
                       const SizedBox(height: 1),
 
                       Text(
-                        '12',
-
+                        _totalCustomers.toString(),
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
 
-                        style:
-                            GoogleFonts.manrope(
+                        style: GoogleFonts.manrope(
                           fontSize: 9,
-                          fontWeight:
-                              FontWeight.w700,
+                          fontWeight: FontWeight.w700,
                           color: darkBlue,
                         ),
                       ),
@@ -643,9 +820,9 @@ class MyChopdiScreen extends StatelessWidget {
             ),
           ),
 
-          // =================================================================
+          // ===================================================================
           // BOTTOM STATISTICS
-          // =================================================================
+          // ===================================================================
 
           Positioned(
             left: 6,
@@ -655,8 +832,7 @@ class MyChopdiScreen extends StatelessWidget {
             child: Container(
               height: 49,
 
-              padding:
-                  const EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: 7,
                 vertical: 6,
               ),
@@ -669,12 +845,10 @@ class MyChopdiScreen extends StatelessWidget {
                   1,
                 ),
 
-                borderRadius:
-                    BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8),
 
                 border: Border.all(
-                  color:
-                      const Color.fromRGBO(
+                  color: const Color.fromRGBO(
                     170,
                     185,
                     207,
@@ -686,28 +860,44 @@ class MyChopdiScreen extends StatelessWidget {
 
               child: Row(
                 children: [
+                  // ===========================================================
+                  // TOTAL LOAN
+                  // ===========================================================
+
                   Expanded(
                     child: _buildAmount(
                       title: 'Total Loan',
-                      amount: '₹10,00,000',
+                      amount: _formatCurrency(
+                        _totalLoan,
+                      ),
                       amountColor: darkBlue,
                     ),
                   ),
 
+                  // ===========================================================
+                  // TOTAL INTEREST EARNED
+                  // ===========================================================
+
                   Expanded(
                     child: _buildAmount(
-                      title:
-                          'Total Interest Earned',
-                      amount: '₹1,25,000',
+                      title: 'Total Interest Earned',
+                      amount: _formatCurrency(
+                        _totalInterestEarned,
+                      ),
                       amountColor: greenColor,
                     ),
                   ),
 
+                  // ===========================================================
+                  // TOTAL OUTSTANDING
+                  // ===========================================================
+
                   Expanded(
                     child: _buildAmount(
-                      title:
-                          'Total Outstanding',
-                      amount: '₹1,25,000',
+                      title: 'Total Outstanding',
+                      amount: _formatCurrency(
+                        _totalOutstanding,
+                      ),
                       amountColor: greenColor,
                     ),
                   ),
@@ -715,6 +905,37 @@ class MyChopdiScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ===================================================================
+          // LOADING
+          // ===================================================================
+
+          if (_isLoading)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(
+                    255,
+                    248,
+                    240,
+                    0.75,
+                  ),
+
+                  borderRadius: BorderRadius.circular(15),
+                ),
+
+                child: const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -735,8 +956,7 @@ class MyChopdiScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFFB82222),
 
-          borderRadius:
-              BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(5),
 
           boxShadow: const [
             BoxShadow(
@@ -749,11 +969,8 @@ class MyChopdiScreen extends StatelessWidget {
 
         child: Center(
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
 
             children: [
               const Icon(
@@ -766,14 +983,12 @@ class MyChopdiScreen extends StatelessWidget {
 
               Text(
                 'Chopdi',
-
                 style: GoogleFonts.manrope(
-                  color: Colors.white
-                      .withValues(alpha: 0.9),
-
+                  color: Colors.white.withValues(
+                    alpha: 0.9,
+                  ),
                   fontSize: 9,
-                  fontWeight:
-                      FontWeight.w600,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -797,8 +1012,7 @@ class MyChopdiScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: lightBlue,
 
-        borderRadius:
-            BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(4),
       ),
 
       child: Icon(
@@ -821,19 +1035,15 @@ class MyChopdiScreen extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
 
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
-      mainAxisAlignment:
-          MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
 
       children: [
         Text(
           title,
-
           maxLines: 1,
-          overflow:
-              TextOverflow.ellipsis,
+          overflow: TextOverflow.ellipsis,
 
           style: GoogleFonts.manrope(
             fontSize: 9,
@@ -851,10 +1061,8 @@ class MyChopdiScreen extends StatelessWidget {
 
         Text(
           amount,
-
           maxLines: 1,
-          overflow:
-              TextOverflow.ellipsis,
+          overflow: TextOverflow.ellipsis,
 
           style: GoogleFonts.manrope(
             fontSize: 13,
@@ -884,10 +1092,14 @@ class MyChopdiScreen extends StatelessWidget {
         height: 60,
 
         decoration: BoxDecoration(
-          color: Color.fromRGBO(253, 237, 217, 1),
+          color: const Color.fromRGBO(
+            253,
+            237,
+            217,
+            1,
+          ),
 
-          borderRadius:
-              BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8),
 
           border: Border.all(
             color: const Color.fromRGBO(
@@ -901,15 +1113,10 @@ class MyChopdiScreen extends StatelessWidget {
         ),
 
         child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
 
           children: [
             const SizedBox(width: 9),
-
-            // ===============================================================
-            // ICON CIRCLE
-            // ===============================================================
 
             Container(
               width: 28,
@@ -936,37 +1143,23 @@ class MyChopdiScreen extends StatelessWidget {
 
             const SizedBox(width: 10),
 
-            // ===============================================================
-            // TEXT
-            //
-            // IMPORTANT:
-            // The previous 16 + 12 font sizes were too large for a
-            // 43px-high card and caused the RenderFlex overflow.
-            // ===============================================================
-
             Expanded(
               child: Column(
-                mainAxisSize:
-                    MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
 
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
 
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
                   Text(
                     title,
-
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
 
                     style: GoogleFonts.manrope(
                       fontSize: 16,
-                      fontWeight:
-                          FontWeight.w700,
+                      fontWeight: FontWeight.w700,
                       color: darkBlue,
                     ),
                   ),
@@ -975,16 +1168,12 @@ class MyChopdiScreen extends StatelessWidget {
 
                   Text(
                     subtitle,
-
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
 
-                    style:
-                        const TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      fontWeight:
-                          FontWeight.w600,
+                      fontWeight: FontWeight.w600,
                       color: Color(
                         0xFF58687A,
                       ),
@@ -993,10 +1182,6 @@ class MyChopdiScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // ===============================================================
-            // ARROW
-            // ===============================================================
 
             const Icon(
               Icons.chevron_right_rounded,
@@ -1009,5 +1194,64 @@ class MyChopdiScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ===========================================================================
+  // DATE FORMAT
+  // ===========================================================================
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  // ===========================================================================
+  // CURRENCY FORMAT
+  // ===========================================================================
+
+  String _formatCurrency(double amount) {
+    if (amount == 0) {
+      return '₹0';
+    }
+
+    final roundedAmount = amount.round();
+
+    final formatted = roundedAmount.toString();
+
+    String result = '';
+
+    int count = 0;
+
+    for (int i = formatted.length - 1; i >= 0; i--) {
+      result = formatted[i] + result;
+
+      count++;
+
+      if (count == 3 && i != 0) {
+        result = ',$result';
+        count = 0;
+      } else if (
+          count > 3 &&
+          (count - 3) % 2 == 0 &&
+          i != 0) {
+        result = ',$result';
+      }
+    }
+
+    return '₹$result';
   }
 }

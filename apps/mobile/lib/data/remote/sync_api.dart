@@ -129,7 +129,7 @@ class SyncApi {
       '/v1/sync/push',
       body: {
         'operations': operations,
-        if (syncSessionId != null) 'syncSessionId': syncSessionId,
+        'syncSessionId': ?syncSessionId,
       },
     );
 
