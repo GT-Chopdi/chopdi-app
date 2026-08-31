@@ -98,3 +98,11 @@ flutter:
     - env/staging.env
     - assets/MyChopdi.png
     - assets/edit_chopdi_icon.png
+    - assets/chopdi_edit_logo.png
+    - assets/info-outline.png
+    - assets/delete-outline.png
+    - assets/bulb.png
+    - assets/shield-lock-outline.png
+    - assets/support_icon.png
+    - assets/support_mail.png
+    - assets/terms_and_privacy.png

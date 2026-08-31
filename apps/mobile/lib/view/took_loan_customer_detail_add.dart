@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';

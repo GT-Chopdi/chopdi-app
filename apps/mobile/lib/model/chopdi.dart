@@ -34,5 +34,10 @@ class Chopdi {
 
   late String name;
 
+  // String description = '';
+   String description =
+      'My personal lending ledger\n'
+      'to track loans and interest.';
+
   late DateTime createdAt;
 }

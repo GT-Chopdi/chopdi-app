@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({
@@ -12,103 +13,147 @@ class TermsPrivacyScreen extends StatelessWidget {
   // COLORS
   // ===========================================================================
 
-  static const Color backgroundColor = Color(0xFFFFEEDB);
-  static const Color darkBlue = Color(0xFF203E68);
-  static const Color textColor = Color(0xFF263D5B);
-  static const Color secondaryText = Color(0xFF66758A);
-  static const Color borderColor = Color(0xFFB9C8D9);
+  static const Color backgroundColor = Color(0xFFFDEDD9);
+  static const Color darkBlue = Color(0xFF223A5E);
+  static const Color textColor = Color(0xFF223A5E);
+  static const Color secondaryText = Color.fromRGBO(34, 58, 94, 0.62);
+  static const Color borderColor = Color(0xFFAAB9CF);
 
   static const Color iconCircleColor = Color(0xFFFFDCC7);
-  static const Color orange = Color(0xFFE56B48);
+  static const Color orange = Color(0xFFC74C4C);
 
-  static const Color infoBackground = Color(0xFFFFDFC9);
-  static const Color infoBorder = Color(0xFFFFC49D);
+  static const Color infoBackground = Color(0xFFFEE0C9);
+  static const Color infoBorder = Color.fromRGBO(177, 95, 39, 0.23);
 
   @override
   Widget build(BuildContext context) {
+    final keyboardVisible =
+        MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       backgroundColor: backgroundColor,
+
       resizeToAvoidBottomInset: true,
 
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        bottom: false,
 
-          padding: const EdgeInsets.fromLTRB(
-            30,
-            38,
-            15,
-            28,
-          ),
+        child: Padding(
+          // ===============================================================
+          // SAME OUTER PADDING AS MY CHOPDI / HELP / NOTIFICATION SETTINGS
+          // ===============================================================
+
+          padding: const EdgeInsets.all(14),
 
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // =================================================================
-              // HEADER
-              // =================================================================
+              Expanded(
+                child: SingleChildScrollView(
+                  physics:
+                      const BouncingScrollPhysics(),
 
-              _buildHeader(context),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior
+                          .onDrag,
 
-              const SizedBox(height: 14),
+                  // No additional horizontal padding.
+                  padding: EdgeInsets.only(
+                    bottom:
+                        keyboardVisible ? 30 : 14,
+                  ),
 
-              // =================================================================
-              // DOCUMENT ILLUSTRATION
-              // =================================================================
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
 
-              _buildDocumentIllustration(),
+                    children: [
+                      // =====================================================
+                      // HEADER
+                      // =====================================================
 
-              const SizedBox(height: 9),
+                      _buildHeader(context),
 
-              // =================================================================
-              // TRUST TEXT
-              // =================================================================
+                      const SizedBox(
+                        height: 18,
+                      ),
 
-              _buildTrustText(),
+                      // =====================================================
+                      // DOCUMENT ILLUSTRATION
+                      // =====================================================
 
-              const SizedBox(height: 10),
+                      _buildDocumentIllustration(),
 
-              // =================================================================
-              // DIVIDER
-              // =================================================================
+                      const SizedBox(
+                        height: 18,
+                      ),
 
-              _buildDivider(),
+                      // =====================================================
+                      // TRUST TEXT
+                      // =====================================================
 
-              // =================================================================
-              // TERMS & CONDITIONS
-              // =================================================================
+                      _buildTrustText(),
 
-              _buildTermsSection(),
+                      const SizedBox(
+                        height: 18,
+                      ),
 
-              const SizedBox(height: 8),
+                      // =====================================================
+                      // DIVIDER
+                      // =====================================================
 
-              _buildDivider(),
+                      _buildDivider(),
 
-              // =================================================================
-              // PRIVACY POLICY
-              // =================================================================
+                      // =====================================================
+                      // TERMS
+                      // =====================================================
 
-              _buildPrivacySection(),
+                      _buildTermsSection(),
 
-              const SizedBox(height: 11),
+                      const SizedBox(
+                        height: 8,
+                      ),
 
-              _buildDivider(),
+                      _buildDivider(),
 
-              const SizedBox(height: 19),
+                      // =====================================================
+                      // PRIVACY
+                      // =====================================================
 
-              // =================================================================
-              // CONTACT BOX
-              // =================================================================
+                      _buildPrivacySection(),
 
-              _buildContactBox(),
+                      const SizedBox(
+                        height: 11,
+                      ),
 
-              const SizedBox(height: 28),
+                      _buildDivider(),
 
-              // =================================================================
-              // LAST UPDATED
-              // =================================================================
+                      const SizedBox(
+                        height: 18,
+                      ),
 
-              _buildLastUpdated(),
+                      // =====================================================
+                      // CONTACT
+                      // =====================================================
+
+                      _buildContactBox(),
+
+                      const SizedBox(
+                        height: 18,
+                      ),
+
+                      // =====================================================
+                      // LAST UPDATED
+                      // =====================================================
+
+                      _buildLastUpdated(),
+
+                      const SizedBox(
+                        height: 14,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -122,7 +167,7 @@ class TermsPrivacyScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         GestureDetector(
           onTap: () {
@@ -143,14 +188,14 @@ class TermsPrivacyScreen extends StatelessWidget {
           ),
         ),
 
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Terms & Privacy',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              style: GoogleFonts.manrope(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
                 color: darkBlue,
               ),
             ),
@@ -159,8 +204,9 @@ class TermsPrivacyScreen extends StatelessWidget {
 
             Text(
               'Read our policies',
-              style: TextStyle(
-                fontSize: 8.5,
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: secondaryText,
               ),
             ),
@@ -187,11 +233,10 @@ class TermsPrivacyScreen extends StatelessWidget {
           // ---------------------------------------------------------------
 
           Container(
-            width: 66,
-            height: 66,
-
+            width: 107.43,
+            height: 107.43,
             decoration: const BoxDecoration(
-              color: Color(0xFF718096),
+              color: Color.fromRGBO(34, 58, 94, 0.62),
               shape: BoxShape.circle,
             ),
           ),
@@ -200,103 +245,12 @@ class TermsPrivacyScreen extends StatelessWidget {
           // DOCUMENT
           // ---------------------------------------------------------------
 
-          Container(
-            width: 40,
-            height: 46,
-
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8EE),
-              borderRadius:
-                  BorderRadius.circular(3),
-
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 2,
-                  offset: Offset(1, 2),
-                ),
-              ],
-            ),
-
-            child: Stack(
-              children: [
-                // Top fold
-                Positioned(
-                  right: 0,
-                  top: 0,
-
-                  child: Container(
-                    width: 10,
-                    height: 10,
-
-                    decoration:
-                        const BoxDecoration(
-                      color: Color(0xFFE8D9C6),
-
-                      borderRadius:
-                          BorderRadius.only(
-                        topRight:
-                            Radius.circular(3),
-                        bottomLeft:
-                            Radius.circular(3),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Lines
-                Positioned(
-                  left: 7,
-                  right: 7,
-                  top: 16,
-
-                  child: Column(
-                    children: [
-                      _documentLine(),
-                      const SizedBox(height: 4),
-                      _documentLine(),
-                      const SizedBox(height: 4),
-                      _documentLine(width: 18),
-                    ],
-                  ),
-                ),
-
-                // Small document icon
-                const Positioned(
-                  left: 7,
-                  top: 6,
-                  child: Icon(
-                    Icons.description_outlined,
-                    size: 12,
-                    color: Color(0xFF8793A1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ---------------------------------------------------------------
-          // LOCK CIRCLE
-          // ---------------------------------------------------------------
-
-          Positioned(
-            right: 112,
-            bottom: 10,
-
-            child: Container(
-              width: 24,
-              height: 24,
-
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFD2B7),
-                shape: BoxShape.circle,
-              ),
-
-              child: const Icon(
-                Icons.lock_outline,
-                size: 14,
-                color: orange,
-              ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: SizedBox(
+              height: 64,
+              width: 90,
+              child: Image.asset('assets/terms_and_privacy.png')
             ),
           ),
         ],
@@ -326,7 +280,7 @@ class TermsPrivacyScreen extends StatelessWidget {
   // ===========================================================================
 
   Widget _buildTrustText() {
-    return const SizedBox(
+    return SizedBox(
       width: double.infinity,
 
       child: Column(
@@ -335,9 +289,9 @@ class TermsPrivacyScreen extends StatelessWidget {
             'Your trust is important to us.',
             textAlign: TextAlign.center,
 
-            style: TextStyle(
-              fontSize: 7.7,
-              fontWeight: FontWeight.w600,
+            style: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
               color: darkBlue,
             ),
           ),
@@ -348,8 +302,9 @@ class TermsPrivacyScreen extends StatelessWidget {
             'Please read our Terms & Conditions and Privacy Policy.',
             textAlign: TextAlign.center,
 
-            style: TextStyle(
-              fontSize: 6.5,
+            style: GoogleFonts.manrope(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
               color: textColor,
             ),
           ),
@@ -365,7 +320,7 @@ class TermsPrivacyScreen extends StatelessWidget {
   Widget _buildDivider() {
     return Container(
       width: double.infinity,
-      height: 0.8,
+      height: 1.0,
       color: borderColor,
     );
   }
@@ -398,21 +353,22 @@ class TermsPrivacyScreen extends StatelessWidget {
                   CrossAxisAlignment.start,
 
               children: [
-                const Text(
+                Text(
                   'Terms & Conditions',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: darkBlue,
                   ),
                 ),
 
                 const SizedBox(height: 3),
 
-                const Text(
+                Text(
                   'By using Chopdi, you agree to the following terms:',
-                  style: TextStyle(
-                    fontSize: 7.2,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: textColor,
                   ),
                 ),
@@ -477,21 +433,22 @@ class TermsPrivacyScreen extends StatelessWidget {
                   CrossAxisAlignment.start,
 
               children: [
-                const Text(
+                Text(
                   'Privacy Policy',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: darkBlue,
                   ),
                 ),
 
                 const SizedBox(height: 3),
 
-                const Text(
+                Text(
                   'We are committed to protecting your privacy:',
-                  style: TextStyle(
-                    fontSize: 7.2,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: textColor,
                   ),
                 ),
@@ -561,7 +518,7 @@ class TermsPrivacyScreen extends StatelessWidget {
             CrossAxisAlignment.start,
 
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(
               top: 2,
               right: 4,
@@ -569,7 +526,7 @@ class TermsPrivacyScreen extends StatelessWidget {
 
             child: Text(
               '•',
-              style: TextStyle(
+              style: GoogleFonts.manrope(
                 fontSize: 7,
                 color: darkBlue,
               ),
@@ -579,8 +536,9 @@ class TermsPrivacyScreen extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 7,
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 height: 1.12,
                 color: textColor,
               ),
@@ -603,20 +561,21 @@ class TermsPrivacyScreen extends StatelessWidget {
 
       child: Container(
         width: double.infinity,
-        height: 39,
 
-        padding:
-            const EdgeInsets.symmetric(
+        // Do not force a small height.
+        // Let the content determine the height.
+        constraints: const BoxConstraints(
+          minHeight: 39,
+        ),
+
+        padding: const EdgeInsets.symmetric(
           horizontal: 8,
-          vertical: 6,
+          vertical: 7,
         ),
 
         decoration: BoxDecoration(
           color: infoBackground,
-
-          borderRadius:
-              BorderRadius.circular(7),
-
+          borderRadius: BorderRadius.circular(7),
           border: Border.all(
             color: infoBorder,
             width: 0.8,
@@ -634,10 +593,14 @@ class TermsPrivacyScreen extends StatelessWidget {
               color: orange,
             ),
 
-            const SizedBox(width: 7),
+            const SizedBox(
+              width: 7,
+            ),
 
-            const Expanded(
+            Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+
                 mainAxisAlignment:
                     MainAxisAlignment.center,
 
@@ -647,21 +610,36 @@ class TermsPrivacyScreen extends StatelessWidget {
                 children: [
                   Text(
                     'If you have any questions, feel free to contact us at',
-                    style: TextStyle(
-                      fontSize: 7.2,
+
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: textColor,
+                      height: 1.15,
                     ),
                   ),
 
-                  SizedBox(height: 2),
+                  SizedBox(
+                    height: 2,
+                  ),
 
                   Text(
                     'support@chopdi.app',
-                    style: TextStyle(
-                      fontSize: 7.2,
+
+                    maxLines: 1,
+                    overflow:
+                        TextOverflow.ellipsis,
+
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
                       color: orange,
                       fontWeight:
-                          FontWeight.w500,
+                          FontWeight.w700,
+                      height: 1.15,
                     ),
                   ),
                 ],
@@ -678,15 +656,16 @@ class TermsPrivacyScreen extends StatelessWidget {
   // ===========================================================================
 
   Widget _buildLastUpdated() {
-    return const SizedBox(
+    return SizedBox(
       width: double.infinity,
 
       child: Text(
         'Last Updated on 30 July 2026',
         textAlign: TextAlign.center,
 
-        style: TextStyle(
-          fontSize: 6.5,
+        style: GoogleFonts.manrope(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
           color: secondaryText,
         ),
       ),
