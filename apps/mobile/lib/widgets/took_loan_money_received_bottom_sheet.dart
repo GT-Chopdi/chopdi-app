@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/money.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
   final Customer customer;
@@ -212,6 +214,30 @@ class _MoneyReceiveBottomSheetState
       ..interestFrequency = "";
 
     await TransactionService.addTransaction(tx);
+
+    final localNotificationService =
+        LocalNotificationService.instance;
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    final paymentReminderEnabled =
+        prefs.getBool(
+              'notification_payment_reminder_enabled',
+            ) ??
+            true;
+
+    if (paymentReminderEnabled) {
+      // Recalculate the customer's reminder using
+      // the original loan transaction/frequency.
+      //
+      // This is important because this transaction is
+      // a RECEIVED/PAYMENT transaction and does not have
+      // an interest frequency of its own.
+
+      await localNotificationService
+          .rescheduleAllPaymentReminders();
+    }
 
     widget.onSaved();
 

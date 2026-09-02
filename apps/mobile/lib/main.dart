@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/sync_service.dart';
 import 'package:mychopdi/view/splash_screen.dart';
 
@@ -12,6 +13,7 @@ Future<void> main() async {
 
   await IsarService.init(); // IMPORTANT
   await Repositories.migrateLegacyCustomers();
+  await LocalNotificationService.instance.initialize();
   await dotenv.load(fileName: 'env/staging.env');
 
   // Starts the outbox draining. Not awaited: the first drain needs the network

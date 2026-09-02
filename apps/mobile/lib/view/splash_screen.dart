@@ -72,11 +72,21 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
-      Navigator.pushReplacement(
-        context,
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (_) => const ChopdiOnboardingScreen(),
+      //   ),
+      // );
+      await AuthService.instance.logout();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => const ChopdiOnboardingScreen(),
+          builder: (_) => ChopdiOnboardingScreen(),
         ),
+        (route) => false,
       );
     }
   }

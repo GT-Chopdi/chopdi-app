@@ -5,14 +5,17 @@ import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/auth_service.dart';
 
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/service/isar_service.dart';
 
 import 'package:mychopdi/view/edit_chopdi_screen.dart';
 import 'package:mychopdi/view/help_faqs_screen.dart';
+import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/notifications_setting_screen.dart';
 import 'package:mychopdi/view/terms_privacy_screen.dart';
+import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
 
 class MyChopdiScreen extends StatefulWidget {
   const MyChopdiScreen({super.key});
@@ -236,6 +239,188 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
     } 
   }
 
+  // Future<void> _handleLogout() async {
+  //   final shouldLogout = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         backgroundColor: const Color(0xFFFFF8F0),
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(14),
+  //         ),
+  //         title: Text(
+  //           'Logout',
+  //           style: GoogleFonts.manrope(
+  //             fontSize: 18,
+  //             fontWeight: FontWeight.w700,
+  //             color: darkBlue,
+  //           ),
+  //         ),
+  //         content: Text(
+  //           'Are you sure you want to logout?',
+  //           style: GoogleFonts.manrope(
+  //             fontSize: 13,
+  //             fontWeight: FontWeight.w600,
+  //             color: const Color(0xFF58687A),
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.pop(context, false);
+  //             },
+  //             child: Text(
+  //               'Cancel',
+  //               style: GoogleFonts.manrope(
+  //                 fontSize: 13,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: darkBlue,
+  //               ),
+  //             ),
+  //           ),
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.pop(context, true);
+  //             },
+  //             child: Text(
+  //               'Logout',
+  //               style: GoogleFonts.manrope(
+  //                 fontSize: 13,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: orangeColor,
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+
+  //   if (shouldLogout != true || !mounted) return;
+
+  //   try {
+  //     await AuthService.instance.logout();
+
+  //     if (!mounted) return;
+
+  //     // Remove all previous screens so the user cannot
+  //     // press back and return to MyChopdi.
+  //     Navigator.of(context).pushNamedAndRemoveUntil(
+  //       '/login',
+  //       (route) => false,
+  //     );
+  //   } catch (error) {
+  //     debugPrint('[MyChopdiScreen] Logout failed: $error');
+
+  //     if (!mounted) return;
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           'Unable to logout. Please try again.',
+  //           style: GoogleFonts.manrope(
+  //             fontWeight: FontWeight.w600,
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
+
+  Future<void> _handleLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFF8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: Text(
+            'Logout',
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: darkBlue,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF58687A),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: darkBlue,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text(
+                'Logout',
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: orangeColor,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true || !mounted) return;
+
+    try {
+      // Logout from API and clear local session.
+      await AuthService.instance.logout();
+
+      if (!mounted) return;
+
+      // Navigate directly to LoginScreen.
+      // Remove all previous routes so the user cannot
+      // press the back button and return to the app.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+        (route) => false,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[MyChopdiScreen] Logout failed: $error\n$stackTrace',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to logout. Please try again.',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   // ===========================================================================
   // BUILD
   // ===========================================================================
@@ -396,6 +581,15 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                             ),
                           );
                         },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      _buildMenuCard(
+                        icon: Icons.logout_rounded,
+                        title: 'Logout',
+                        subtitle: 'Sign out of your account',
+                        onTap: _handleLogout,
                       ),
 
                       const SizedBox(height: 10),
@@ -571,57 +765,287 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                   ),
                 ),
 
+                // GestureDetector(
+                //   onTap: () async {
+                //     if (_currentChopdi == null) return;
+
+                //     final chopdi = _currentChopdi!;
+
+                //     // final result = await Navigator.push(
+                //     //   context,
+                //     //   MaterialPageRoute(
+                //     //     builder: (context) => EditChopdiScreen(
+                //     //       initialName: chopdi.name,
+
+                //     //       initialDescription:
+                //     //           chopdi.description.trim().isEmpty
+                //     //               ? 'My personal lending ledger\n'
+                //     //                 'to track loans and interest.'
+                //     //               : chopdi.description,
+
+                //     //       onSave: (name, description) async {
+                //     //         chopdi.name = name.trim();
+
+                //     //         chopdi.description =
+                //     //             description.trim().isEmpty
+                //     //                 ? 'My personal lending ledger\n'
+                //     //                   'to track loans and interest.'
+                //     //                 : description.trim();
+
+                //     //         await IsarService.isar.writeTxn(() async {
+                //     //           await IsarService.isar.chopdis.put(
+                //     //             chopdi,
+                //     //           );
+                //     //         });
+                //     //       },
+
+                //     //       onDelete: () {
+                //     //         // Keep your existing delete logic here.
+                //     //       },
+                //     //     ),
+                //     //   ),
+                //     // );
+
+                //     // Refresh MyChopdi after returning from EditChopdi.
+                //     // if (result == true && mounted) {
+                //     //   await _loadChopdiData();
+                //     // }
+                //     final result = await Navigator.push<Chopdi>(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (_) => EditChopdiScreen(),
+                //       ),
+                //     );
+
+                //     if (!mounted) return;
+
+                //     if (result != null) {
+                //       final allChopdis =
+                //           await ChopdiService.getAllChopdis();
+
+                //       // ============================================================
+                //       // ONLY ONE CHOPDI LEFT
+                //       // ============================================================
+
+                //       if (allChopdis.length == 1) {
+                //         // Make sure default Chopdi is active.
+                //         await ChopdiService.setActiveChopdi(
+                //           result,
+                //         );
+
+                //         // Refresh HomeScreen.
+                //         setState(() {});
+
+                //         return;
+                //       }
+
+                //       // ============================================================
+                //       // MULTIPLE CHOPDIS LEFT
+                //       // ============================================================
+
+                //       final selectedChopdi =
+                //           await showModalBottomSheet<Chopdi>(
+                //         context: context,
+                //         backgroundColor: Colors.transparent,
+                //         isScrollControlled: true,
+                //         builder: (_) {
+                //           return const ChopdiBottomSheet();
+                //         },
+                //       );
+
+                //       if (!mounted) return;
+
+                //       if (selectedChopdi != null) {
+                //         await ChopdiService.setActiveChopdi(
+                //           selectedChopdi,
+                //         );
+
+                //         setState(() {});
+                //       }
+                //     }
+                //     if (result == true && mounted) {
+                //       await _loadChopdiData();
+                //     }
+                //   },
+
+                //   child: Container(
+                //     width: 26,
+                //     height: 26,
+
+                //     decoration: BoxDecoration(
+                //       color: const Color.fromRGBO(
+                //         255,
+                //         215,
+                //         190,
+                //         1,
+                //       ),
+                //       borderRadius: BorderRadius.circular(3),
+                //       border: Border.all(
+                //         color: const Color.fromRGBO(
+                //           177,
+                //           95,
+                //           39,
+                //           1,
+                //         ),
+                //         width: 0.8,
+                //       ),
+                //     ),
+
+                //     child: Image.asset(
+                //       'assets/edit_chopdi_icon.png',
+                //     ),
+                //   ),
+                // ),
+
+                // GestureDetector(
+                //   onTap: () async {
+                //     if (_currentChopdi == null) return;
+
+                //     final chopdi = _currentChopdi!;
+
+                //     final result = await Navigator.push<Chopdi>(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (_) => EditChopdiScreen(
+                //           initialName: chopdi.name,
+                //           initialDescription:
+                //               chopdi.description.trim().isEmpty
+                //                   ? 'My personal lending ledger\n'
+                //                     'to track loans and interest.'
+                //                   : chopdi.description,
+                //         ),
+                //       ),
+                //     );
+
+                //     if (!mounted) return;
+
+                //     if (result != null) {
+                //       // Refresh My Chopdi screen.
+                //       //
+                //       // This updates:
+                //       // - Chopdi name
+                //       // - Chopdi description
+                //       // - Created date
+                //       // - Total customers
+                //       // - Total loan
+                //       // - Total interest
+                //       // - Total outstanding
+                //       //
+                //       // IMPORTANT:
+                //       // Do not open ChopdiBottomSheet here.
+                //       await _loadChopdiData();
+                //     }
+                //   },
+
+                //   child: Container(
+                //     width: 26,
+                //     height: 26,
+
+                //     decoration: BoxDecoration(
+                //       color: const Color.fromRGBO(
+                //         255,
+                //         215,
+                //         190,
+                //         1,
+                //       ),
+                //       borderRadius: BorderRadius.circular(3),
+                //       border: Border.all(
+                //         color: const Color.fromRGBO(
+                //           177,
+                //           95,
+                //           39,
+                //           1,
+                //         ),
+                //         width: 0.8,
+                //       ),
+                //     ),
+
+                //     child: Image.asset(
+                //       'assets/edit_chopdi_icon.png',
+                //     ),
+                //   ),
+                // ),
                 GestureDetector(
                   onTap: () async {
                     if (_currentChopdi == null) return;
 
                     final chopdi = _currentChopdi!;
 
-                    final result = await Navigator.push(
+                    final result = await Navigator.push<Chopdi>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditChopdiScreen(
+                        builder: (_) => EditChopdiScreen(
                           initialName: chopdi.name,
-
                           initialDescription:
                               chopdi.description.trim().isEmpty
                                   ? 'My personal lending ledger\n'
                                     'to track loans and interest.'
                                   : chopdi.description,
-
-                          onSave: (name, description) async {
-                            chopdi.name = name.trim();
-
-                            chopdi.description =
-                                description.trim().isEmpty
-                                    ? 'My personal lending ledger\n'
-                                      'to track loans and interest.'
-                                    : description.trim();
-
-                            await IsarService.isar.writeTxn(() async {
-                              await IsarService.isar.chopdis.put(
-                                chopdi,
-                              );
-                            });
-                          },
-
-                          onDelete: () {
-                            // Keep your existing delete logic here.
-                          },
                         ),
                       ),
                     );
 
-                    // Refresh MyChopdi after returning from EditChopdi.
-                    if (result == true && mounted) {
-                      await _loadChopdiData();
+                    if (!mounted) return;
+
+                    if (result != null) {
+                      // ----------------------------------------------------------
+                      // Check remaining Chopdis AFTER edit/delete screen closes.
+                      // ----------------------------------------------------------
+
+                      final allChopdis =
+                          await ChopdiService.getAllChopdis();
+
+                      if (!mounted) return;
+
+                      // ----------------------------------------------------------
+                      // ONLY ONE CHOPDI
+                      //
+                      // Go directly to My Chopdi screen.
+                      // ----------------------------------------------------------
+
+                      if (allChopdis.length == 1) {
+                        await ChopdiService.setActiveChopdi(
+                          allChopdis.first,
+                        );
+
+                        if (!mounted) return;
+
+                        await _loadChopdiData();
+
+                        return;
+                      }
+
+                      // ----------------------------------------------------------
+                      // MULTIPLE CHOPDIS
+                      //
+                      // Show ChopdiBottomSheet so user can choose.
+                      // ----------------------------------------------------------
+
+                      final selectedChopdi =
+                          await showModalBottomSheet<Chopdi>(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (_) {
+                          return const ChopdiBottomSheet();
+                        },
+                      );
+
+                      if (!mounted) return;
+
+                      if (selectedChopdi != null) {
+                        await ChopdiService.setActiveChopdi(
+                          selectedChopdi,
+                        );
+
+                        await _loadChopdiData();
+                      }
                     }
                   },
 
                   child: Container(
                     width: 26,
                     height: 26,
-
                     decoration: BoxDecoration(
                       color: const Color.fromRGBO(
                         255,
@@ -640,7 +1064,6 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                         width: 0.8,
                       ),
                     ),
-
                     child: Image.asset(
                       'assets/edit_chopdi_icon.png',
                     ),

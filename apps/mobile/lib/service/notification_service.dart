@@ -86,6 +86,54 @@ class NotificationService {
     });
   }
 
+  Future<int> createPaymentReminderNotification({
+    required int chopdiId,
+    required String customerName,
+    required DateTime dueDate,
+    required String reminderType,
+    int? customerId,
+    double? amount,
+  }) async {
+    String reminderText;
+
+    switch (reminderType) {
+      case 'oneDayBefore':
+        reminderText = 'Payment is due tomorrow';
+        break;
+
+      case 'threeDaysBefore':
+        reminderText = 'Payment is due in 3 days';
+        break;
+
+      case 'dueDate':
+      default:
+        reminderText = 'Payment is due today';
+        break;
+    }
+
+    final amountText = amount == null
+        ? ''
+        : ' Amount: ₹${amount.toStringAsFixed(2)}.';
+
+    final notification = NotificationModel()
+      ..title = 'Payment Reminder'
+      ..subtitle =
+          '$reminderText for $customerName.$amountText'
+      ..type = 'payment_reminder'
+      ..createdAt = DateTime.now()
+      ..isRead = false
+      ..customerId = customerId
+      ..customerName = customerName
+      ..amount = amount
+      ..chopdiId = chopdiId;
+
+    return await isar.writeTxn(() async {
+      return await isar.notificationModels.put(
+        notification,
+      );
+    });
+  }
+
   // ============================================================
   // WATCH ALL NOTIFICATIONS
   // ============================================================

@@ -20,6 +20,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   final TextEditingController _phoneController = TextEditingController();
   String? errorText;
   bool _requesting = false;
+  // Stores the latest OTP challenge so we can reuse it
+  // if the user comes back from the OTP screen and
+  // presses Continue without changing the number.
+  String? _lastChallengeId;
+  String? _lastChallengePhone;
 
   // Focus node for phone field
   final FocusNode _phoneFocusNode = FocusNode();
@@ -30,18 +35,135 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   /// The code itself never reaches this app — only an identifier for the
   /// attempt. That is what makes the OTP meaningful: a modified build cannot
   /// learn or bypass it.
+  // Future<void> _requestOtp() async {
+  //   final phone = _phoneController.text.trim();
+
+  //   if (phone.isEmpty) {
+  //     setState(() => errorText = "Please enter your mobile number");
+  //     return;
+  //   }
+
+  //   if (phone.length < 10) {
+  //     setState(
+  //       () => errorText = "Please enter a valid 10-digit mobile number",
+  //     );
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     errorText = null;
+  //     _requesting = true;
+  //   });
+
+  //   try {
+  //     final challenge = await AuthService.instance.requestOtp(phone);
+
+  //     if (!mounted) return;
+
+  //     setState(() => _requesting = false);
+
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (_) => OTPScreen(
+  //           phoneNumber: phone,
+  //           challengeId: challenge.challengeId,
+  //         ),
+  //       ),
+  //     );
+  //   } on ApiException catch (error) {
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       _requesting = false;
+
+  //       errorText = switch (error.code) {
+  //         ApiErrorCode.rateLimited =>
+  //           "A code was already sent. Please wait a moment.",
+
+  //         'NETWORK_UNAVAILABLE' =>
+  //           "Can't reach the server. Check your connection.",
+
+  //         ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
+  //           "This build has no DEV_KEY compiled in.\n\n"
+  //               "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
+  //               "--dart-define-from-file=env/staging.env",
+
+  //         ApiErrorCode.devKeyRequired =>
+  //           "The DEV_KEY in this build was rejected. Check it matches "
+  //               "AUTH_DEV_KEY on the server.",
+
+  //         _ => error.message,
+  //       };
+  //     });
+  //   } on ApiConfigException catch (error) {
+  //     // A build-time mistake, not a runtime failure. Saying "try again" here
+  //     // sends someone retyping their number against a build that can never
+  //     // work, so the real reason is shown instead.
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       _requesting = false;
+  //       errorText = error.message;
+  //     });
+  //   } catch (error, stack) {
+  //     // Anything else is genuinely unexpected. The user gets a plain message,
+  //     // but the real error goes to the log — without it, every distinct
+  //     // failure looks identical in a bug report.
+  //     debugPrint('[chopdi] OTP request failed: $error\n$stack');
+
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       _requesting = false;
+  //       errorText = "Something went wrong. Please try again.";
+  //     });
+  //   }
+  // }
+
   Future<void> _requestOtp() async {
     final phone = _phoneController.text.trim();
 
     if (phone.isEmpty) {
-      setState(() => errorText = "Please enter your mobile number");
+      setState(() {
+        errorText = "Please enter your mobile number";
+      });
       return;
     }
 
     if (phone.length < 10) {
-      setState(
-        () => errorText = "Please enter a valid 10-digit mobile number",
+      setState(() {
+        errorText = "Please enter a valid 10-digit mobile number";
+      });
+      return;
+    }
+
+    // ================================================================
+    // REUSE EXISTING OTP CHALLENGE
+    // ================================================================
+    //
+    // If the user came back from the OTP screen using
+    // "Change Mobile Number" but did not actually change
+    // the number, don't request another OTP.
+    //
+    // Instead, open the existing OTP screen using the same
+    // challengeId.
+    // ================================================================
+
+    if (_lastChallengeId != null &&
+        _lastChallengePhone == phone) {
+      FocusScope.of(context).unfocus();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            phoneNumber: phone,
+            challengeId: _lastChallengeId!,
+          ),
+        ),
       );
+
       return;
     }
 
@@ -55,7 +177,18 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
 
       if (!mounted) return;
 
-      setState(() => _requesting = false);
+      // ================================================================
+      // SAVE THE CHALLENGE
+      // ================================================================
+
+      _lastChallengeId = challenge.challengeId;
+      _lastChallengePhone = phone;
+
+      setState(() {
+        _requesting = false;
+      });
+
+      FocusScope.of(context).unfocus();
 
       Navigator.push(
         context,
@@ -79,7 +212,8 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
           'NETWORK_UNAVAILABLE' =>
             "Can't reach the server. Check your connection.",
 
-          ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
+          ApiErrorCode.devKeyRequired
+              when ApiConfig.devKey.isEmpty =>
             "This build has no DEV_KEY compiled in.\n\n"
                 "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
                 "--dart-define-from-file=env/staging.env",
@@ -92,9 +226,6 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
         };
       });
     } on ApiConfigException catch (error) {
-      // A build-time mistake, not a runtime failure. Saying "try again" here
-      // sends someone retyping their number against a build that can never
-      // work, so the real reason is shown instead.
       if (!mounted) return;
 
       setState(() {
@@ -102,10 +233,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
         errorText = error.message;
       });
     } catch (error, stack) {
-      // Anything else is genuinely unexpected. The user gets a plain message,
-      // but the real error goes to the log — without it, every distinct
-      // failure looks identical in a bug report.
-      debugPrint('[chopdi] OTP request failed: $error\n$stack');
+      debugPrint(
+        '[chopdi] OTP request failed: $error\n$stack',
+      );
 
       if (!mounted) return;
 
@@ -653,11 +783,11 @@ class _PhoneInputField extends StatelessWidget {
 
                     const SizedBox(width: 4),
 
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 18,
-                      color: ChopdiColors.navy.withValues(alpha: .7),
-                    ),
+                    // Icon(
+                    //   Icons.keyboard_arrow_down,
+                    //   size: 18,
+                    //   color: ChopdiColors.navy.withValues(alpha: .7),
+                    // ),
                   ],
                 ),
               ),
