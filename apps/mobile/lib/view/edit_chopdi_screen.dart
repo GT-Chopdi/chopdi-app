@@ -1353,16 +1353,17 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
             Container(
               width: 40,
               height: 40,
-
-              decoration:
-                  const BoxDecoration(
-                color:
-                    Color(0xFFF8D0C2),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8D0C2),
                 shape: BoxShape.circle,
               ),
-
-              child: Image.asset(
-                'assets/delete_outline_rounded_transactions.png', height: 20, width: 20,fit: BoxFit.contain,
+              child: Center(
+                child: Image.asset(
+                  'assets/delete_outline_rounded_transactions.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 
