@@ -1213,7 +1213,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                 EdgeInsets.only(top: 1),
 
             child: Image.asset(
-              'assets/info-outline.png'
+              'assets/info-outline.png',
+              height: 20,
+              width: 20,
             )
           ),
 
@@ -1360,7 +1362,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
               ),
 
               child: Image.asset(
-                'assets/delete_outline_rounded_transactions.png', height: 20, width: 20,
+                'assets/delete_outline_rounded_transactions.png', height: 20, width: 20,fit: BoxFit.contain,
               ),
             ),
 

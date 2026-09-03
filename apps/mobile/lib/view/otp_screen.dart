@@ -353,8 +353,8 @@ class _OTPScreenState extends State<OTPScreen> {
 
                         child: Image.asset(
                           'assets/lock.png',
-                          width: 30,
-                          height: 30,
+                          width: 20,
+                          height: 20,
                           fit: BoxFit.contain,
                         ),
                       ),
