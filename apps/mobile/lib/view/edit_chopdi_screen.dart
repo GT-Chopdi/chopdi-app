@@ -886,7 +886,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
               'Update your chopdi details',
               style: GoogleFonts.manrope(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: secondaryText,
               ),
             ),
@@ -903,9 +903,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   Widget _buildBookSection() {
     return Center(
       child: SizedBox(
-        height: 170,
+        height: 190,
         // width: double.infinity,
-        width: 255,
+        width: 265,
       
         child: Stack(
           alignment: Alignment.center,
@@ -1231,7 +1231,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                   style: GoogleFonts.manrope(
                     fontSize: 10,
                     fontWeight:
-                        FontWeight.w700,
+                        FontWeight.w600,
                     color: textColor,
                   ),
                 ),
@@ -1360,7 +1360,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
               ),
 
               child: Image.asset(
-                'assets/delete-outline.png'
+                'assets/delete_outline_rounded_transactions.png', height: 20, width: 20,
               ),
             ),
 
