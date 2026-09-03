@@ -39,12 +39,12 @@ class LoanToggle extends StatelessWidget {
                   const SizedBox(width: 8),
 
                   SizedBox(
-                    height: 50,
-                    width: 50,
+                    height: 32,
+                    width: 32,
                     child: Image.asset(
                       isGaveLoanSelected
-                          ? 'assets/home_cream_loan.png'
-                          : 'assets/home_blue_loan.png',
+                          ? 'assets/home_cream_loan_new.png'
+                          : 'assets/home_blue_loan_new.png',
                     ),
                   ),
 
@@ -109,12 +109,12 @@ class LoanToggle extends StatelessWidget {
                   const SizedBox(width: 8),
 
                   SizedBox(
-                    height: 50,
-                    width: 50,
+                    height: 32,
+                    width: 32,
                     child: Image.asset(
                       !isGaveLoanSelected
-                          ? 'assets/home_cream_loan.png'
-                          : 'assets/home_blue_loan.png',
+                          ? 'assets/home_cream_loan_new.png'
+                          : 'assets/home_blue_loan_new.png',
                     ),
                   ),
 

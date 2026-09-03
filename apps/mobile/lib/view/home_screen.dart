@@ -375,16 +375,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         // =======================================================
 
                         if (customers.isEmpty)
-                          SizedBox(
-                            // Use available height instead of fixed 350.
-                            height: _emptyStateHeight(
-                              constraints.maxHeight,
-                            ),
-                            child: _buildEmptyState(
-                              constraints.maxWidth,
-                              constraints.maxHeight,
-                            ),
+                          _buildEmptyState(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
                           )
+                          // SizedBox(
+                          //   // Use available height instead of fixed 350.
+                          //   height: _emptyStateHeight(
+                          //     constraints.maxHeight,
+                          //   ),
+                          //   child: _buildEmptyState(
+                          //     constraints.maxWidth,
+                          //     constraints.maxHeight,
+                          //   ),
+                          // )
                         else
                           CustomerListSection(
                             customers: customers,
@@ -498,107 +502,64 @@ class _HomeScreenState extends State<HomeScreen> {
       28.0,
     );
 
-    return Center(
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: 10,
+     return Padding(
+      padding: EdgeInsets.only(
+        left: horizontalPadding,
+        right: horizontalPadding,
+        top: 55,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 160,
+            height: 140,
+            child: Image.asset(
+              'assets/home_screen_book.png',
+              fit: BoxFit.contain,
+            ),
           ),
 
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 6),
 
-            children: [
-              // ===============================================================
-              // BOOK IMAGE
-              // ===============================================================
+          Text(
+            'No customers yet!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              color: ChopdiColors.navy,
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
 
-              SizedBox(
-                height: imageHeight,
-                width: imageWidth,
-                child: Image.asset(
-                  'assets/home_screen_book.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
+          const SizedBox(height: 3),
 
-              SizedBox(
-                height: (6 * scale).clamp(
-                  4.0,
-                  8.0,
-                ),
-              ),
-
-              // ===============================================================
-              // TITLE
-              // ===============================================================
-
-              Text(
-                'No customers yet!',
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-
-                style: GoogleFonts.manrope(
-                  color: ChopdiColors.navy,
-                  fontSize: titleFontSize,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-
-              SizedBox(
-                height: (3 * scale).clamp(
-                  2.0,
-                  5.0,
-                ),
-              ),
-
-              // ===============================================================
-              // DESCRIPTION
-              // ===============================================================
-
-              Text(
-                'Start by adding a customer and\n'
+          Text(
+            'Start by adding a customer and\n'
                 'keep track of your loans easily',
-
-                textAlign: TextAlign.center,
-
-                style: GoogleFonts.manrope(
-                  color: ChopdiColors.navy,
-                  fontSize: descriptionFontSize,
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
-                ),
-              ),
-
-              SizedBox(
-                height: (12 * scale).clamp(
-                  8.0,
-                  14.0,
-                ),
-              ),
-
-              // ===============================================================
-              // DECORATIVE LINE
-              // ===============================================================
-
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: width * 0.65,
-                ),
-
-                child: Image.asset(
-                  'assets/line_home.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ],
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              color: ChopdiColors.navy,
+              fontSize: descriptionFontSize,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+            ),
           ),
-        ),
+
+          const SizedBox(height: 12),
+
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: width * 0.65,
+            ),
+            child: Image.asset(
+              'assets/line_home.png',
+              height: 125,
+              width: 65,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ],
       ),
     );
   }

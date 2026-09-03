@@ -1037,6 +1037,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
           Image.asset(
             'assets/chopdi_edit_logo.png'
+
           ),
 
           const SizedBox(width: 6),

@@ -127,7 +127,7 @@ String _getInterestDescription() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF393536),
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,7 +571,7 @@ String _getInterestDescription() {
               ),
             ),
             icon: Image.asset(
-              'assets/edit_outline_rounded_transactions.png',
+              'assets/edit_outline_rounded_transactions.png' , height: 24, width: 24,
             ),
             label: Text(
               "Edit Transaction",
@@ -638,7 +638,7 @@ String _getInterestDescription() {
               ),
             ),
             icon: Image.asset(
-              'assets/delete_outline_rounded_transactions.png',
+              'assets/delete_outline_rounded_transactions.png', height: 24, width: 24,
             ),
             label: Text(
               "Delete Transaction",
@@ -795,8 +795,8 @@ String _getInterestDescription() {
         ),
         ),
 
-        const SizedBox(height: 60),
-
+        // const SizedBox(height: 60),
+        const Spacer(),
         // Edit button
         SizedBox(
           width: double.infinity,

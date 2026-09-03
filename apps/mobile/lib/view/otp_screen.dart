@@ -351,9 +351,11 @@ class _OTPScreenState extends State<OTPScreen> {
                           shape: BoxShape.circle,
                         ),
 
-                        child: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xff1D3557),
+                        child: Image.asset(
+                          'assets/lock.png',
+                          width: 30,
+                          height: 30,
+                          fit: BoxFit.contain,
                         ),
                       ),
 

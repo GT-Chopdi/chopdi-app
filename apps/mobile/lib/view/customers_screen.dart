@@ -103,7 +103,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                   controller: searchController,
                   onChanged: searchCustomer,
                   decoration: InputDecoration(
-                    prefixIcon: Image.asset('assets/search_option.png'),
+                    prefixIcon: Image.asset('assets/search_option.png', height: 24, width: 24,),
                     hintText: "Search by name and phone number",
                     border: InputBorder.none,
                   ),
@@ -122,7 +122,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                 ),
                 child: Row(
                   children: [
-                    Image.asset('assets/filter.png'),
+                    Image.asset('assets/filter.png', height: 24, width: 24,),
                     SizedBox(width: 5),
                     Text("Filter"),
                   ],

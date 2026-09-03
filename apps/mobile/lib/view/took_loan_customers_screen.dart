@@ -132,8 +132,14 @@ class _TookLoanCustomerListSectionState
                   controller: searchController,
                   onChanged: searchCustomer,
                   decoration: InputDecoration(
-                    prefixIcon: Image.asset(
-                      'assets/search_option.png',
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        'assets/search_option.png',
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                     hintText: "Search by name and phone number",
                     border: InputBorder.none,
@@ -165,6 +171,8 @@ class _TookLoanCustomerListSectionState
                   children: [
                     Image.asset(
                       'assets/filter.png',
+                      height: 24,
+                      width: 24,
                     ),
 
                     const SizedBox(width: 5),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ChopdiColors {
   static const Color navy = Color(0xFF223A5E); // main background / button
   static const Color lightBlue = Color(0xFFAAB9CF); // subtitle accent text
-  static const Color cream = Color(0xFFFDEDD9); // warm accent (unused bg, kept for icons)
+  static const Color cream = Color(0xFFFDEDD9); // warm accent (unused bg, kept for icons) #FDEDD9
   static const Color mediumBlue = Color(0xFF83A2CE); // icon circle background
   static const Color red = Color(0xFFC74C4C); // logo accent (rupee symbol)
   static const Color lightGray = Color(0xFFD9D9D9); // card background

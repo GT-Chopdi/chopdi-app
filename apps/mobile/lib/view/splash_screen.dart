@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 2.3, // Entire screen zooms
+      end: 2.1, // Entire screen zooms
     ).animate(
       CurvedAnimation(
         parent: _controller,
@@ -126,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Text(
                 "Chopdi",
                 style: GoogleFonts.styleScript(
-                  fontSize: 96,
+                  fontSize: 86,
                   color: Color(0XFF223A5E),
                   height: 1,
                   fontWeight: FontWeight.w400,

@@ -38,7 +38,9 @@ class HomeHeader extends StatelessWidget {
 
                 IconButton(
                   icon: Image.asset(
-                    'assets/tabler_edit.png',
+                    'assets/tabler_edit_new.png',
+                    height: 24,
+                    width: 24,
                   ),
                   onPressed: () async {
                     final selectedChopdi =
@@ -107,7 +109,7 @@ class HomeHeader extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Image.asset(
-                      'assets/notifications.png',
+                      'assets/notifications_new.png',
                       height: 25,
                       width: 25,
                     ),
