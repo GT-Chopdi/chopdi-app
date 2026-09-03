@@ -91,22 +91,41 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
 
+  // double get totalInterest {
+  //   return transactions
+  //       .where((e) => e.type == TransactionType.gave)
+  //       .fold(
+  //         0.0,
+  //         (sum, tx) =>
+  //             sum +
+  //             InterestCalculator.calculate(
+  //               principal: tx.amount,
+  //               rate: tx.interestRate,
+  //               startDate: tx.date,
+  //               interestType: tx.interestType,
+  //               frequency: tx.interestFrequency,
+  //             ),
+  //       );
+  // }
+
   double get totalInterest {
-    return transactions
-        .where((e) => e.type == TransactionType.gave)
-        .fold(
-          0.0,
-          (sum, tx) =>
-              sum +
-              InterestCalculator.calculate(
-                principal: tx.amount,
-                rate: tx.interestRate,
-                startDate: tx.date,
-                interestType: tx.interestType,
-                frequency: tx.interestFrequency,
-              ),
-        );
-  }
+  return transactions
+      .where(
+        (e) => e.type == TransactionType.gave,
+      )
+      .fold(
+        0.0,
+        (sum, tx) =>
+            sum +
+            InterestCalculator.calculate(
+              principal: tx.amount,
+              rate: tx.interestRate,
+              startDate: tx.date,
+              interestType: tx.interestType,
+              frequency: tx.interestFrequency,
+            ),
+      );
+}
 
   double get outstanding {
     return totalGiven + totalInterest - totalReceived;

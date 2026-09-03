@@ -5,14 +5,18 @@ import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/auth_service.dart';
 
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/service/isar_service.dart';
 
 import 'package:mychopdi/view/edit_chopdi_screen.dart';
 import 'package:mychopdi/view/help_faqs_screen.dart';
+import 'package:mychopdi/view/login_screen.dart';
+import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/view/notifications_setting_screen.dart';
 import 'package:mychopdi/view/terms_privacy_screen.dart';
+import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
 
 class MyChopdiScreen extends StatefulWidget {
   const MyChopdiScreen({super.key});
@@ -236,6 +240,100 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
     } 
   }
 
+  Future<void> _handleLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFF8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: Text(
+            'Logout',
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: darkBlue,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF58687A),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: darkBlue,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text(
+                'Logout',
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: orangeColor,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true || !mounted) return;
+
+    try {
+      // Logout from API and clear local session.
+      await AuthService.instance.logout();
+
+      if (!mounted) return;
+
+      // Navigate directly to LoginScreen.
+      // Remove all previous routes so the user cannot
+      // press the back button and return to the app.
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+        (route) => false,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[MyChopdiScreen] Logout failed: $error\n$stackTrace',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to logout. Please try again.',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   // ===========================================================================
   // BUILD
   // ===========================================================================
@@ -278,13 +376,17 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                       // =========================================================
 
                       Text(
-                        'My Chopdi',
+                        _currentChopdi?.name.trim().isNotEmpty == true
+                            ? _currentChopdi!.name
+                            : 'My Chopdi',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold
-                        )
+                          fontWeight: FontWeight.bold,
+                          color: darkBlue,
+                        ),
                       ),
-
                       const SizedBox(height: 2),
 
                       Text(
@@ -396,6 +498,15 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                             ),
                           );
                         },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      _buildMenuCard(
+                        icon: Icons.logout_rounded,
+                        title: 'Logout',
+                        subtitle: 'Sign out of your account',
+                        onTap: _handleLogout,
                       ),
 
                       const SizedBox(height: 10),
@@ -577,43 +688,109 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
                     final chopdi = _currentChopdi!;
 
-                    final result = await Navigator.push(
+                    final result = await Navigator.push<Object?>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditChopdiScreen(
+                        builder: (_) => EditChopdiScreen(
                           initialName: chopdi.name,
-
                           initialDescription:
                               chopdi.description.trim().isEmpty
                                   ? 'My personal lending ledger\n'
                                     'to track loans and interest.'
                                   : chopdi.description,
-
-                          onSave: (name, description) async {
-                            chopdi.name = name.trim();
-
-                            chopdi.description =
-                                description.trim().isEmpty
-                                    ? 'My personal lending ledger\n'
-                                      'to track loans and interest.'
-                                    : description.trim();
-
-                            await IsarService.isar.writeTxn(() async {
-                              await IsarService.isar.chopdis.put(
-                                chopdi,
-                              );
-                            });
-                          },
-
-                          onDelete: () {
-                            // Keep your existing delete logic here.
-                          },
                         ),
                       ),
                     );
 
-                    // Refresh MyChopdi after returning from EditChopdi.
-                    if (result == true && mounted) {
+                    if (!mounted || result == null) return;
+
+                    // ----------------------------------------------------------
+                    // DELETE COMPLETED
+                    // ----------------------------------------------------------
+                    // Delete returns ChopdiDeleteResult so we can distinguish
+                    // delete navigation from a normal edit/save operation.
+                    // ----------------------------------------------------------
+
+                    if (result is ChopdiDeleteResult && result.deleted) {
+                      final remainingChopdis =
+                          await ChopdiService.getAllChopdis();
+
+                      if (!mounted) return;
+
+                      // --------------------------------------------------------
+                      // ONLY ONE CHOPDI REMAINS
+                      // --------------------------------------------------------
+                      // The deleted Chopdi was the only user Chopdi. The service
+                      // keeps/creates the default Chopdi. Make it active and
+                      // return to MyChopdi/Home without opening the selector.
+                      // --------------------------------------------------------
+
+                      if (remainingChopdis.length == 1) {
+                        // The deleted Chopdi was the only user Chopdi.
+                        // Make the remaining default Chopdi active first.
+                        await ChopdiService.setActiveChopdi(
+                          remainingChopdis.first,
+                        );
+
+                        if (!mounted) return;
+
+                        // Go directly to HomeScreen.
+                        // HomeScreen loads the active Chopdi, so the
+                        // default "My Chopdi" will be displayed there.
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const MainScreen(),
+                          ),
+                        );
+
+                        return;
+                      }
+
+                      // --------------------------------------------------------
+                      // MULTIPLE CHOPDIS REMAIN
+                      // --------------------------------------------------------
+                      // Whether the deleted Chopdi was the default/active one
+                      // or another selected Chopdi, let the user choose the
+                      // Chopdi that should become active.
+                      // --------------------------------------------------------
+
+                      final selectedChopdi =
+                          await showModalBottomSheet<Chopdi>(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (_) {
+                          return const ChopdiBottomSheet();
+                        },
+                      );
+
+                      if (!mounted) return;
+
+                      if (selectedChopdi != null) {
+                        await ChopdiService.setActiveChopdi(
+                          selectedChopdi,
+                        );
+
+                        if (!mounted) return;
+
+                        await _loadChopdiData();
+                      }
+
+                      return;
+                    }
+
+                    // ----------------------------------------------------------
+                    // NORMAL EDIT/SAVE COMPLETED
+                    // ----------------------------------------------------------
+                    // Do NOT open ChopdiBottomSheet after an edit. The edited
+                    // Chopdi remains active.
+                    // ----------------------------------------------------------
+
+                    if (result is Chopdi) {
+                      await ChopdiService.setActiveChopdi(result);
+
+                      if (!mounted) return;
+
                       await _loadChopdiData();
                     }
                   },
@@ -621,7 +798,6 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                   child: Container(
                     width: 26,
                     height: 26,
-
                     decoration: BoxDecoration(
                       color: const Color.fromRGBO(
                         255,
@@ -640,7 +816,6 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                         width: 0.8,
                       ),
                     ),
-
                     child: Image.asset(
                       'assets/edit_chopdi_icon.png',
                     ),

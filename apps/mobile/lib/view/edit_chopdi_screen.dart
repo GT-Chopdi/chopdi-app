@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
-import 'package:mychopdi/widgets/delete_chopdi_bottom_sheet.dart';
+
+class ChopdiDeleteResult {
+  final Chopdi? nextChopdi;
+  final bool deleted;
+
+  const ChopdiDeleteResult({
+    this.nextChopdi,
+    required this.deleted,
+  });
+}
 
 class EditChopdiScreen extends StatefulWidget {
   const EditChopdiScreen({
@@ -25,7 +34,8 @@ class EditChopdiScreen extends StatefulWidget {
     String description,
   )? onSave;
 
-  final VoidCallback? onDelete;
+  // final VoidCallback? onDelete;
+  final Future<void> Function()? onDelete;
 
   @override
   State<EditChopdiScreen> createState() =>
@@ -200,148 +210,406 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   // ===========================================================================
 
   Future<void> _saveChanges() async {
-  FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
 
-  final name =
-      _nameController.text.trim();
+    final name = _nameController.text.trim();
 
-  String description =
-      _descriptionController.text.trim();
+    String description =
+        _descriptionController.text.trim();
 
-  // ---------------------------------------------------------------
-  // VALIDATION
-  // ---------------------------------------------------------------
+    // ============================================================
+    // VALIDATION
+    // ============================================================
 
-  if (name.isEmpty) {
-    _showError(
-      'Please enter a Chopdi name.',
-    );
-    return;
-  }
-
-  if (name.length > 50) {
-    _showError(
-      'Chopdi name cannot exceed 50 characters.',
-    );
-    return;
-  }
-
-  // ---------------------------------------------------------------
-  // IF USER DOES NOT ENTER A DESCRIPTION,
-  // USE THE DEFAULT DESCRIPTION.
-  // ---------------------------------------------------------------
-
-  if (description.isEmpty) {
-    description = defaultDescription;
-  }
-
-  if (description.length > 100) {
-    _showError(
-      'Description cannot exceed 100 characters.',
-    );
-    return;
-  }
-
-  if (_currentChopdi == null) {
-    _showError(
-      'Chopdi could not be found.',
-    );
-    return;
-  }
-
-  setState(() {
-    _isSaving = true;
-  });
-
-  try {
-    // -------------------------------------------------------------
-    // SAVE BOTH NAME AND DESCRIPTION
-    // -------------------------------------------------------------
-
-    if (widget.onSave != null) {
-      await widget.onSave!(
-        name,
-        description,
+    if (name.isEmpty) {
+      await _showError(
+        'Please enter a Chopdi name.',
       );
+      return;
     }
 
-    if (!mounted) return;
+    if (name.length > 50) {
+      await _showError(
+        'Chopdi name cannot exceed 50 characters.',
+      );
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Chopdi updated successfully',
-        ),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
+    // ============================================================
+    // DEFAULT DESCRIPTION
+    // ============================================================
 
-    Navigator.of(context).pop(true);
-  } catch (e) {
-    debugPrint(
-      '[EditChopdiScreen] Save failed: $e',
-    );
+    if (description.isEmpty) {
+      description = defaultDescription;
+    }
 
-    if (!mounted) return;
+    if (description.length > 100) {
+      await _showError(
+        'Description cannot exceed 100 characters.',
+      );
+      return;
+    }
 
-    _showError(
-      'Unable to save changes. Please try again.',
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isSaving = false;
-      });
+    // ============================================================
+    // CHECK CHOPDI
+    // ============================================================
+
+    if (_currentChopdi == null) {
+      await _showError(
+        'Chopdi could not be found.',
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      // ==========================================================
+      // UPDATE LOCAL CHOPDI
+      // ==========================================================
+
+      _currentChopdi!
+        ..name = name
+        ..description = description;
+
+      // ==========================================================
+      // SAVE TO ISAR
+      // ==========================================================
+
+      await ChopdiService.updatedChopdi(
+        _currentChopdi!,
+      );
+
+      // ==========================================================
+      // OPTIONAL CALLBACK
+      // ==========================================================
+
+      if (widget.onSave != null) {
+        await widget.onSave!(
+          name,
+          description,
+        );
+      }
+
+      if (!mounted) return;
+
+      // ==========================================================
+      // SUCCESS POPUP
+      // ==========================================================
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AlertDialog(
+            backgroundColor: cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Success',
+              style: GoogleFonts.manrope(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: textColor,
+              ),
+            ),
+            content: Text(
+              'Chopdi updated successfully.',
+              style: GoogleFonts.manrope(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: secondaryText,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                },
+                child: Text(
+                  'OK',
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (!mounted) return;
+
+      // ==========================================================
+      // RETURN UPDATED CHOPDI
+      // ==========================================================
+
+      Navigator.of(context).pop(_currentChopdi);
+    } catch (e) {
+      debugPrint(
+        '[EditChopdiScreen] Save failed: $e',
+      );
+
+      if (!mounted) return;
+
+      await _showError(
+        'Unable to save changes. Please try again.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
-}
 
   // ===========================================================================
   // DELETE
   // ===========================================================================
 
-  void _showDeleteChopdiBottomSheet() {
-    showModalBottomSheet(
+  Future<void> _showDeleteChopdiBottomSheet() async {
+    if (_currentChopdi == null) {
+      await _showError(
+        'Chopdi could not be found.',
+      );
+      return;
+    }
+
+    // ============================================================
+    // CONFIRM DELETE POPUP
+    // ============================================================
+
+    final bool? shouldDelete = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor:
-          Colors.black.withValues(alpha: 0.78),
-      builder: (context) {
-        return DeleteChopdiBottomSheet(
-          onDelete: () async {
-            // ---------------------------------------------------------------
-            // Keep your existing delete logic.
-            // ---------------------------------------------------------------
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
 
-            if (widget.onDelete != null) {
-              widget.onDelete!();
-            }
+          title: Text(
+            'Delete Chopdi?',
+            style: GoogleFonts.manrope(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
 
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
+          content: Text(
+            'Are you sure you want to delete '
+            '"${_currentChopdi!.name}"?\n\n'
+            'This action cannot be undone.',
+            style: GoogleFonts.manrope(
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w500,
+              color: secondaryText,
+            ),
+          ),
+
+          actionsPadding: const EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            14,
+          ),
+
+          actions: [
+            // ======================================================
+            // CANCEL
+            // ======================================================
+
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: secondaryText,
+                ),
+              ),
+            ),
+
+            // ======================================================
+            // DELETE / OK
+            // ======================================================
+
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: Text(
+                'OK',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: deleteRed,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
-  }
+
+    // ============================================================
+    // USER PRESSED CANCEL
+    // ============================================================
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    // ============================================================
+    // DELETE
+    // ============================================================
+
+    try {
+      final deletedId = _currentChopdi!.id;
+
+      final nextChopdi = await ChopdiService.deleteChopdi(
+        deletedId,
+      );
+
+      if (!mounted) return;
+
+      // ============================================================
+      // GET REMAINING CHOPDIS
+      // ============================================================
+
+      final remainingChopdis =
+          await ChopdiService.getAllChopdis();
+
+      // ============================================================
+      // ONLY ONE CHOPDI REMAINS
+      // ============================================================
+      //
+      // User deleted the only Chopdi.
+      // The service has created/kept the default Chopdi.
+      //
+      // Return a DELETE result so MyChopdiScreen knows this
+      // was a delete operation and can navigate to Home.
+      // ============================================================
+
+      if (remainingChopdis.length == 1) {
+        await ChopdiService.setActiveChopdi(
+          remainingChopdis.first,
+        );
+
+        if (!mounted) return;
+
+        Navigator.of(context).pop(
+          ChopdiDeleteResult(
+            nextChopdi: remainingChopdis.first,
+            deleted: true,
+          ),
+        );
+
+        return;
+      }
+
+      // ============================================================
+      // MULTIPLE CHOPDIS REMAIN
+      // ============================================================
+      //
+      // Return a special delete result.
+      // MyChopdiScreen will open ChopdiBottomSheet.
+      // ============================================================
+
+      Navigator.of(context).pop(
+        ChopdiDeleteResult(
+          nextChopdi: nextChopdi,
+          deleted: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint(
+        '[EditChopdiScreen] Delete failed: $e',
+      );
+
+      if (!mounted) return;
+
+      await _showError(
+        'Unable to delete Chopdi. Please try again.',
+      );
+    }
+
+    // Close _showDeleteChopdiBottomSheet.
+    }
 
   // ===========================================================================
   // ERROR
   // ===========================================================================
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
+  // void _showError(String message) {
+  //   ScaffoldMessenger.of(context)
+  //       .showSnackBar(
+  //     SnackBar(
+  //       content: Text(message),
+  //       behavior:
+  //           SnackBarBehavior.floating,
+  //     ),
+  //   );
+  // }
+  Future<void> _showError(String message) async {
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFFFBF6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF223A5E),
+            ),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF69778A),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF223A5E),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
+
 
   // ===========================================================================
   // BUILD
@@ -513,7 +781,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
               'Update your chopdi details',
               style: GoogleFonts.manrope(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: secondaryText,
               ),
             ),
@@ -530,9 +798,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   Widget _buildBookSection() {
     return Center(
       child: SizedBox(
-        height: 170,
+        height: 190,
         // width: double.infinity,
-        width: 255,
+        width: 265,
       
         child: Stack(
           alignment: Alignment.center,
@@ -664,6 +932,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
           Image.asset(
             'assets/chopdi_edit_logo.png'
+
           ),
 
           const SizedBox(width: 6),
@@ -839,7 +1108,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                 EdgeInsets.only(top: 1),
 
             child: Image.asset(
-              'assets/info-outline.png'
+              'assets/info-outline.png',
+              height: 20,
+              width: 20,
             )
           ),
 
@@ -857,7 +1128,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                   style: GoogleFonts.manrope(
                     fontSize: 10,
                     fontWeight:
-                        FontWeight.w700,
+                        FontWeight.w600,
                     color: textColor,
                   ),
                 ),
@@ -977,16 +1248,17 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
             Container(
               width: 40,
               height: 40,
-
-              decoration:
-                  const BoxDecoration(
-                color:
-                    Color(0xFFF8D0C2),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8D0C2),
                 shape: BoxShape.circle,
               ),
-
-              child: Image.asset(
-                'assets/delete-outline.png'
+              child: Center(
+                child: Image.asset(
+                  'assets/delete_outline_rounded_transactions.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 

@@ -18,19 +18,30 @@ class BottomNavbar extends StatelessWidget {
       selectedItemColor: const Color(0xff243B67),
       unselectedItemColor: Colors.grey,
       type: BottomNavigationBarType.fixed,
-      backgroundColor: Color.fromRGBO(255, 248, 240, 1),
+      backgroundColor: const Color.fromRGBO(255, 248, 240, 1),
 
       items: const [
-
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
+          icon: ImageIcon(
+            AssetImage('assets/home_bottom_bar.png'),
+            size: 24,
+          ),
+          activeIcon: ImageIcon(
+            AssetImage('assets/home_fill_bottom_bar.png'),
+            size: 24,
+          ),
           label: "Home",
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book_outlined),
-          activeIcon: Icon(Icons.menu_book),
+          icon: ImageIcon(
+            AssetImage('assets/fluent_document_bottom_bar.png'),
+            size: 24,
+          ),
+          activeIcon: ImageIcon(
+            AssetImage('assets/fluent_document_bottom_bar_fill.png'),
+            size: 24,
+          ),
           label: "My Chopdi",
         ),
       ],

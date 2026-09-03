@@ -16,6 +16,7 @@ dependencies:
   flutter_contacts: ^2.3.1
   flutter_dotenv: ^6.0.1
   flutter_launcher_icons: ^0.14.4
+  flutter_local_notifications: ^22.3.0
   flutter_riverpod: ^2.6.1
   flutter_secure_storage: ^11.0.0
   gap: ^3.0.1
@@ -27,6 +28,7 @@ dependencies:
   permission_handler: ^12.0.3
   pinput: ^6.0.2
   shared_preferences: ^2.5.5
+  timezone: ^0.11.1
   url_launcher: ^6.3.2
   uuid: ^4.6.0
 dev_dependencies:
@@ -69,11 +71,17 @@ flutter:
     - assets/Vector 3.png
     - assets/home_screen_book.png
     - assets/line_home.png
-    - assets/home_cream_loan.png
-    - assets/home_blue_loan.png
-    - assets/tabler_edit.png
-    - assets/notifications.png
+    - assets/lock.png
+    - assets/fluent_document_bottom_bar_fill.png
+    - assets/fluent_document_bottom_bar.png
+    - assets/home_cream_loan_new.png
+    - assets/home_blue_loan_new.png
+    - assets/tabler_edit_new.png
+    - assets/notifications_new.png
     - assets/call_logo.png
+    - assets/home_bottom_bar.png
+    - assets/home_fill_bottom_bar.png
+    - assets/
     - assets/total_given.png
     - assets/total_interest.png
     - assets/outstanding.png

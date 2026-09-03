@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:mychopdi/utils/app_colors.dart';
@@ -199,6 +201,83 @@ class _NotificationSettingsScreenState
   // SAVE SETTINGS
   // ===========================================================================
 
+  // Future<void> _saveNotificationSettings() async {
+  //   if (_saving) return;
+
+  //   setState(() {
+  //     _saving = true;
+  //   });
+
+  //   try {
+  //     final prefs =
+  //         await SharedPreferences.getInstance();
+
+  //     await prefs.setBool(
+  //       _paymentReminderKey,
+  //       _paymentReminderEnabled,
+  //     );
+
+  //     await prefs.setBool(
+  //       _dailyReminderKey,
+  //       _dailyReminderEnabled,
+  //     );
+
+  //     await prefs.setString(
+  //       _selectedReminderKey,
+  //       _selectedReminder,
+  //     );
+
+  //     final localNotificationService = LocalNotificationService.instance;
+  //     await localNotificationService.initialize();
+
+  //     await localNotificationService.requestPermission();
+
+  //     if (_dailyReminderEnabled) {
+  //       await localNotificationService.scheduleDailyReminder();
+  //     } else {
+  //       await localNotificationService.cancelDailyReminder();
+  //     }
+
+  //     if (_paymentReminderEnabled) {
+  //       // Payment schedules should be created here
+  //       // using your actual customer/payment data.
+  //     } else {
+  //       await localNotificationService
+  //           .cancelAllPaymentReminders();
+  //     }
+
+  //     // Keep your existing callback functionality.
+  //     widget.onSave?.call();
+
+  //     if (!mounted) return;
+
+  //     await _showSuccess(
+  //       'Notification settings saved successfully.',
+  //     );
+
+  //     if (!mounted) return;
+
+  //     Navigator.of(context).pop(true);
+  //   } catch (e) {
+  //     debugPrint(
+  //       '[NotificationSettings] '
+  //       'Failed to save settings: $e',
+  //     );
+
+  //     if (!mounted) return;
+
+  //     _showError(
+  //       'Unable to save notification settings.',
+  //     );
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() {
+  //         _saving = false;
+  //       });
+  //     }
+  //   }
+  // }
+
   Future<void> _saveNotificationSettings() async {
     if (_saving) return;
 
@@ -209,6 +288,10 @@ class _NotificationSettingsScreenState
     try {
       final prefs =
           await SharedPreferences.getInstance();
+
+      // ============================================================
+      // SAVE SETTINGS
+      // ============================================================
 
       await prefs.setBool(
         _paymentReminderKey,
@@ -225,23 +308,59 @@ class _NotificationSettingsScreenState
         _selectedReminder,
       );
 
-      // Keep your existing callback functionality.
+      // ============================================================
+      // LOCAL NOTIFICATIONS
+      // ============================================================
+
+      final localNotificationService =
+          LocalNotificationService.instance;
+
+      await localNotificationService.initialize();
+
+      await localNotificationService.requestPermission();
+
+      // ============================================================
+      // DAILY REMINDER
+      // ============================================================
+
+      if (_dailyReminderEnabled) {
+        await localNotificationService
+            .scheduleDailyReminder();
+      } else {
+        await localNotificationService
+            .cancelDailyReminder();
+      }
+
+      // ============================================================
+      // PAYMENT REMINDERS
+      // ============================================================
+
+      if (_paymentReminderEnabled) {
+        await localNotificationService
+            .rescheduleAllPaymentReminders(
+          database: IsarService.isar,
+        );
+      } else {
+        await localNotificationService
+            .cancelAllPaymentReminders(
+          database: IsarService.isar,
+        );
+      }
+
+      // ============================================================
+      // EXISTING CALLBACK
+      // ============================================================
+
       widget.onSave?.call();
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Notification settings saved',
-          ),
-          behavior:
-              SnackBarBehavior.floating,
-        ),
+      await _showSuccess(
+        'Notification settings saved successfully.',
       );
 
-      // Return true to the previous screen.
+      if (!mounted) return;
+
       Navigator.of(context).pop(true);
     } catch (e) {
       debugPrint(
@@ -251,7 +370,7 @@ class _NotificationSettingsScreenState
 
       if (!mounted) return;
 
-      _showError(
+      await _showError(
         'Unable to save notification settings.',
       );
     } finally {
@@ -267,16 +386,91 @@ class _NotificationSettingsScreenState
   // ERROR
   // ===========================================================================
 
-  void _showError(
-    String message,
-  ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
+  Future<void> _showError(String message) async {
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Error',
+            style: GoogleFonts.manrope(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: darkBlue,
+            ),
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.manrope(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: secondaryText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(
+                'OK',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: darkBlue,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showSuccess(String message) async {
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Success',
+            style: GoogleFonts.manrope(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: darkBlue,
+            ),
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.manrope(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: secondaryText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(
+                'OK',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: darkBlue,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

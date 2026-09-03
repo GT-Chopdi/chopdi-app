@@ -33,7 +33,7 @@ class AddNewLenderCard extends StatelessWidget {
                 painter: DashedCirclePainter(),
                 child: const Center(
                   child: Icon(
-                    Icons.add,
+                    Icons.person_add_outlined,
                     color: Color(0xff223A5E),
                     size: 22,
                   ),

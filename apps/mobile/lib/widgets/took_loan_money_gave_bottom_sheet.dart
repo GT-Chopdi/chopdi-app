@@ -5,9 +5,11 @@ import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
 
@@ -652,6 +654,35 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                               ..interestFrequency = interestFrequency;
 
                             await Repositories.ledger.adoptDraft(tx);
+
+                            final localNotificationService =
+                                LocalNotificationService.instance;
+
+                            final prefs =
+                                await SharedPreferences.getInstance();
+
+                            final paymentReminderEnabled =
+                                prefs.getBool(
+                                      'notification_payment_reminder_enabled',
+                                    ) ??
+                                    true;
+
+                            if (paymentReminderEnabled) {
+                              final reminderType =
+                                  prefs.getString(
+                                        'notification_selected_reminder',
+                                      ) ??
+                                      'dueDate';
+
+                              await localNotificationService
+                                  .scheduleCustomerPaymentReminder(
+                                customer: widget.customer,
+                                loanDate: selectedDate,
+                                interestFrequency: interestFrequency,
+                                reminderType: reminderType,
+                                amount: amount,
+                              );
+                            }
 
                             // ==================================================
                             // INTEREST NOTIFICATION

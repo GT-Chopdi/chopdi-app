@@ -330,6 +330,9 @@ class NotificationsScreen extends StatelessWidget {
       case "app_update":
         return Icons.system_update_rounded;
 
+      case "payment_reminder":
+        return Icons.notifications_active_rounded;
+
       default:
         return Icons.notifications_none;
     }
@@ -351,6 +354,9 @@ class NotificationsScreen extends StatelessWidget {
 
       case "app_update":
         return Colors.blue;
+
+      case "payment_reminder":
+        return Colors.red;
 
       default:
         return ChopdiColors.navy;
@@ -430,7 +436,7 @@ class NotificationsScreen extends StatelessWidget {
             radius: 24,
             backgroundColor: Colors.transparent,
             child: Image.asset(
-              'assets/notifications.png',
+              'assets/notifications_new.png', height: 24, width: 24,
             ),
           ),
 

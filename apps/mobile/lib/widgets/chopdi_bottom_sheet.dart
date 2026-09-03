@@ -4,7 +4,6 @@ import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/create_new_chopdi.dart';
 
-
 class ChopdiBottomSheet extends StatefulWidget {
   const ChopdiBottomSheet({super.key});
 
@@ -25,7 +24,8 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
 
   Future<void> loadChopdis() async {
     final allChopdis = await ChopdiService.getAllChopdis();
-    final activeChopdi = await ChopdiService.getCurrentChopdi();
+    final activeChopdi =
+        await ChopdiService.getCurrentChopdi();
 
     if (!mounted) return;
 
@@ -73,7 +73,8 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey,
-                    borderRadius: BorderRadius.circular(50),
+                    borderRadius:
+                        BorderRadius.circular(50),
                   ),
                 ),
               ),
@@ -97,25 +98,33 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                       chopdi.id == currentChopdi?.id;
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding:
+                        const EdgeInsets.only(bottom: 10),
                     child: GestureDetector(
                       onTap: () async {
-                        await ChopdiService.setActiveChopdi(chopdi);
+                        await ChopdiService
+                            .setActiveChopdi(chopdi);
 
                         if (!mounted) return;
 
-                        Navigator.pop(context, chopdi);
+                        Navigator.pop(
+                          context,
+                          chopdi,
+                        );
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding:
+                            const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(12),
                           border: Border.all(
                             color: isActive
                                 ? const Color(0xffC7D6F5)
                                 : const Color(0xffE0E0E0),
-                            width: isActive ? 1.5 : 1,
+                            width:
+                                isActive ? 1.5 : 1,
                           ),
                         ),
                         child: Row(
@@ -123,9 +132,14 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                             Container(
                               width: 44,
                               height: 44,
-                              decoration: BoxDecoration(
-                                color: const Color(0xffE7F0FF),
-                                borderRadius: BorderRadius.circular(12),
+                              decoration:
+                                  BoxDecoration(
+                                color:
+                                    const Color(
+                                        0xffE7F0FF),
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(12),
                               ),
                               child: Image.asset(
                                 "assets/menu_logo.png",
@@ -137,23 +151,33 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                             Expanded(
                               child: Text(
                                 chopdi.name,
-                                style: const TextStyle(
+                                style:
+                                    const TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xff233B66),
+                                  fontWeight:
+                                      FontWeight.w600,
+                                  color:
+                                      Color(0xff233B66),
                                 ),
                               ),
                             ),
 
                             if (isActive)
                               Container(
-                                padding: const EdgeInsets.symmetric(
+                                padding:
+                                    const EdgeInsets
+                                        .symmetric(
                                   horizontal: 12,
                                   vertical: 6,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffE4ECFF),
-                                  borderRadius: BorderRadius.circular(25),
+                                decoration:
+                                    BoxDecoration(
+                                  color:
+                                      const Color(
+                                          0xffE4ECFF),
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(25),
                                 ),
                                 child: const Row(
                                   children: [
@@ -161,14 +185,20 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                                       "Active",
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Color(0xff233B66),
-                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            Color(
+                                                0xff233B66),
+                                        fontWeight:
+                                            FontWeight
+                                                .w600,
                                       ),
                                     ),
                                     SizedBox(width: 4),
                                     Icon(
                                       Icons.check,
-                                      color: Color(0xff233B66),
+                                      color:
+                                          Color(
+                                              0xff233B66),
                                       size: 15,
                                     ),
                                   ],
@@ -188,31 +218,42 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
+                  style:
+                      ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color(0xff243B67),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
+                    shape:
+                        RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: () async {
-                    final newChopdi =
+                    // IMPORTANT:
+                    // await the second bottom sheet.
+                    final Chopdi? newChopdi =
                         await showModalBottomSheet<Chopdi>(
                       context: context,
-                      backgroundColor: Colors.transparent,
+                      backgroundColor:
+                          Colors.transparent,
                       isScrollControlled: true,
-                      builder: (_) => CreateChopdiBottomSheet(
-                        parentContext: context,
-                      ),
+                      useSafeArea: false,
+                      builder: (sheetContext) {
+                        return CreateChopdiBottomSheet(
+                          parentContext: context,
+                        );
+                      },
                     );
 
                     if (!mounted) return;
 
                     if (newChopdi != null) {
                       // Return new Chopdi to HomeScreen
-                      Navigator.pop(context, newChopdi);
+                      Navigator.pop(
+                        context,
+                        newChopdi,
+                      );
                     }
                   },
                   child: const Row(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,9 +37,45 @@ class _OTPScreenState extends State<OTPScreen> {
   String? otpError;
   bool _verifying = false;
 
+  Timer? _resendTimer;
+  int _resendSeconds = 30;
+  bool get _canResend => _resendSeconds <= 0;
+
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+
+    setState(() {
+      _resendSeconds = 30;
+    });
+
+    _resendTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        if (_resendSeconds <= 1) {
+          timer.cancel();
+
+          setState(() {
+            _resendSeconds = 0;
+          });
+        } else {
+          setState(() {
+            _resendSeconds--;
+          });
+        }
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _startResendTimer();
 
     otpFocusNode.addListener(() {
       if (otpFocusNode.hasFocus) {
@@ -60,8 +97,15 @@ class _OTPScreenState extends State<OTPScreen> {
     });
   }
 
+  // @override
+  // void dispose() {
+  //   otpController.dispose();
+  //   otpFocusNode.dispose();
+  //   super.dispose();
+  // }
   @override
   void dispose() {
+    _resendTimer?.cancel();
     otpController.dispose();
     otpFocusNode.dispose();
     super.dispose();
@@ -156,15 +200,11 @@ class _OTPScreenState extends State<OTPScreen> {
   // ===============================================================
 
   /// Turns a server error code into something a lender can act on.
+
   String _messageFor(ApiException error) {
     switch (error.code) {
       case ApiErrorCode.invalidCode:
-        final remaining = error.details?['attemptsRemaining'];
-
-        return remaining is int && remaining > 0
-            ? "Incorrect code. $remaining "
-                "${remaining == 1 ? 'attempt' : 'attempts'} left."
-            : "Incorrect code.";
+        return "Incorrect OTP. Please try again.";
 
       case ApiErrorCode.challengeExpired:
         return "This code has expired. Request a new one.";
@@ -311,9 +351,11 @@ class _OTPScreenState extends State<OTPScreen> {
                           shape: BoxShape.circle,
                         ),
 
-                        child: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xff1D3557),
+                        child: Image.asset(
+                          'assets/lock.png',
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.contain,
                         ),
                       ),
 
@@ -487,9 +529,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       // =====================================================
 
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
                             Icons.access_time,
@@ -499,23 +539,43 @@ class _OTPScreenState extends State<OTPScreen> {
 
                           const SizedBox(width: 6),
 
-                          Text(
-                            "Resend OTP in ",
+                          if (_canResend)
+                            GestureDetector(
+                              onTap: () {
+                                _startResendTimer();
 
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: Colors.grey[700],
+                                // TODO:
+                                // Call your resend OTP API here.
+                              },
+                              child: Text(
+                                "Resend OTP",
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: const Color(0xff173A63),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            )
+                          else
+                            Row(
+                              children: [
+                                Text(
+                                  "Resend OTP in ",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                Text(
+                                  "00:${_resendSeconds.toString().padLeft(2, '0')}",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-
-                          Text(
-                            "00:26",
-
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: Colors.red,
-                            ),
-                          ),
                         ],
                       ),
 

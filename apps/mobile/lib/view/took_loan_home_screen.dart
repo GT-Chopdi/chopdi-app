@@ -21,6 +21,9 @@ class TookLoanHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Get the screen size to replace the undefined 'constraints'
+    final size = MediaQuery.of(context).size;
+
     return StreamBuilder<List<Transaction>>(
       // Get ONLY took-loan transactions
       stream: IsarService.isar.transactions
@@ -33,10 +36,10 @@ class TookLoanHomeContent extends StatelessWidget {
         final tookTransactions =
             transactionSnapshot.data ?? <Transaction>[];
 
-        // Customer IDs that have a Took Loan transaction
-        final tookLoanCustomerIds = tookTransactions
-            .map((tx) => tx.customerId)
-            .toSet();
+        // 2. Commented out to fix the unused variable warning
+        // final tookLoanCustomerIds = tookTransactions
+        //     .map((tx) => tx.customerId)
+        //     .toSet();
 
         return StreamBuilder<List<Customer>>(
           stream: IsarService.isar.customers
@@ -48,18 +51,11 @@ class TookLoanHomeContent extends StatelessWidget {
             final allCustomers =
                 customerSnapshot.data ?? <Customer>[];
 
-            // Only customers who have Took Loan transactions
-            // final tookLoanCustomers = allCustomers
-            //     .where(
-            //       (customer) =>
-            //           tookLoanCustomerIds.contains(customer.id),
-            //     )
-            //     .toList();
             final tookLoanCustomers = allCustomers
-              .where(
-                (customer) => customer.loanType == "took",
-              )
-              .toList();
+                .where(
+                  (customer) => customer.loanType == "took",
+            )
+                .toList();
 
             return ListView(
               physics: const BouncingScrollPhysics(),
@@ -73,9 +69,10 @@ class TookLoanHomeContent extends StatelessWidget {
                 const SizedBox(height: 18),
 
                 if (tookLoanCustomers.isEmpty)
-                  SizedBox(
-                    height: 350,
-                    child: _buildEmptyState(),
+                // 3. Fixed missing ')' and used screen size instead of constraints
+                  _buildEmptyState(
+                    size.width,
+                    size.height,
                   )
                 else
                   TookLoanCustomerListSection(
@@ -89,26 +86,62 @@ class TookLoanHomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
+  Widget _buildEmptyState(
+      double width,
+      double height,
+      ) {
+    // Responsive scale.
+    final scale = (width / 390).clamp(
+      0.82,
+      1.10,
+    );
+
+    // Unused variables for image sizing removed to prevent further warnings,
+    // or you can implement them below in the image widget if needed.
+    // final imageWidth = (82 * scale).clamp(68.0, 92.0);
+    // final imageHeight = (74 * scale).clamp(62.0, 84.0);
+
+    final titleFontSize = (22 * scale).clamp(
+      18.0,
+      23.0,
+    );
+
+    final descriptionFontSize = (16 * scale).clamp(
+      13.0,
+      17.0,
+    );
+
+    final horizontalPadding = (width * 0.05).clamp(
+      12.0,
+      28.0,
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: horizontalPadding,
+        right: horizontalPadding,
+        top: 55,
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: 74,
-            width: 82,
+            width: 160,
+            height: 140,
             child: Image.asset(
               'assets/home_screen_book.png',
+              fit: BoxFit.contain,
             ),
           ),
 
           const SizedBox(height: 6),
 
           Text(
-            'No loans yet!',
+            'No customers yet!',
+            textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
-              fontSize: 22,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -116,20 +149,29 @@ class TookLoanHomeContent extends StatelessWidget {
           const SizedBox(height: 3),
 
           Text(
-            'Start by adding a loan to\n'
-            'keep track of your borrowings easily',
+            'Start by adding a customer and\n'
+                'keep track of your loans easily',
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
-              fontSize: 16,
+              fontSize: descriptionFontSize,
               fontWeight: FontWeight.w700,
+              height: 1.25,
             ),
           ),
 
           const SizedBox(height: 12),
 
-          Image.asset(
-            'assets/line_home.png',
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: width * 0.65,
+            ),
+            child: Image.asset(
+              'assets/line_home.png',
+              height: 125,
+              width: 65,
+              fit: BoxFit.contain,
+            ),
           ),
         ],
       ),

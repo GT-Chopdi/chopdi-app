@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/utils/app_constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpFaqsScreen extends StatefulWidget {
   const HelpFaqsScreen({
@@ -130,6 +132,51 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
       return question.contains(query) ||
           answer.contains(query);
     }).toList();
+  }
+
+  Future<void> _contactSupport() async {
+
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: AppConstants.supportEmail,
+      queryParameters: {
+        'subject': 'MyChopdi Support Request',
+      },
+    );
+
+    try {
+      final bool launched =
+          await launchUrl(
+        emailUri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No email app is available on this device.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint(
+        '[HelpFaqs] Failed to open email: $e',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to open email app.',
+          ),
+        ),
+      );
+    }
   }
 
   // ===========================================================================
@@ -355,7 +402,8 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                   TextInputAction.search,
 
               style: GoogleFonts.manrope(
-                fontSize: 9,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
                 color: darkBlue,
               ),
 
@@ -596,157 +644,6 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // SUPPORT CARD
   // ===========================================================================
 
-  // Widget _buildSupportCard() {
-  //   return SafeArea(
-  //     top: false,
-
-  //     child: Container(
-  //       width: double.infinity,
-  //       height: 68,
-
-  //       margin:
-  //           const EdgeInsets.fromLTRB(
-  //         30,
-  //         0,
-  //         18,
-  //         0,
-  //       ),
-
-  //       padding:
-  //           const EdgeInsets.symmetric(
-  //         horizontal: 9,
-  //         vertical: 9,
-  //       ),
-
-  //       decoration: BoxDecoration(
-  //         color: supportBackground,
-
-  //         borderRadius:
-  //             BorderRadius.circular(10),
-
-  //         border: Border.all(
-  //           color: supportBorder,
-  //           width: 1.0,
-  //         ),
-  //       ),
-
-  //       child: Row(
-  //         children: [
-  //           // -------------------------------------------------------------
-  //           // SUPPORT ICON
-  //           // -------------------------------------------------------------
-
-  //           Container(
-  //             width: 46,
-  //             height: 46,
-
-  //             decoration:
-  //                 const BoxDecoration(
-  //               color:
-  //                   supportIconBackground,
-  //               shape: BoxShape.circle,
-  //             ),
-
-  //             child: Image.asset('assets/support_icon.png'),
-  //           ),
-
-  //           const SizedBox(width: 9),
-
-  //           // -------------------------------------------------------------
-  //           // TEXT
-  //           // -------------------------------------------------------------
-
-  //           Expanded(
-  //             child: Column(
-  //               mainAxisAlignment:
-  //                   MainAxisAlignment.center,
-
-  //               crossAxisAlignment:
-  //                   CrossAxisAlignment.start,
-
-  //               children: [
-  //                 Text(
-  //                   'Still need help?',
-  //                   style: GoogleFonts.manrope(
-  //                     fontSize: 14,
-  //                     fontWeight:
-  //                         FontWeight.w700,
-  //                     color: darkBlue,
-  //                   ),
-  //                 ),
-
-  //                 SizedBox(height: 2),
-
-  //                 Text(
-  //                   'Our Support team is here.',
-  //                   style: GoogleFonts.manrope(
-  //                     fontSize: 12,
-  //                     fontWeight: FontWeight.w400,
-  //                     color: secondaryText,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-
-  //           // -------------------------------------------------------------
-  //           // CONTACT SUPPORT
-  //           // -------------------------------------------------------------
-
-  //           GestureDetector(
-  //             onTap: () {
-  //               widget.onContactSupport?.call();
-  //             },
-
-  //             child: Container(
-  //               height: 42,
-  //               width: 140,
-
-  //               decoration: BoxDecoration(
-  //                 color: const Color(
-  //                   0xFFFFE9D8,
-  //                 ),
-
-  //                 borderRadius:
-  //                     BorderRadius.circular(10),
-
-  //                 border: Border.all(
-  //                   color: supportRed,
-  //                   width: 1.0,
-  //                 ),
-  //               ),
-
-  //               child: Row(
-  //                 mainAxisAlignment:
-  //                     MainAxisAlignment.center,
-
-  //                 children: [
-  //                   SizedBox(
-  //                     height: 14,
-  //                     width: 18,
-  //                     child: Image.asset('assets/support_mail.png'),
-  //                   ),
-
-  //                   const SizedBox(width: 5),
-
-  //                   Text(
-  //                     'Contact Support',
-  //                     style: GoogleFonts.manrope(
-  //                       fontSize: 12,
-  //                       fontWeight:
-  //                           FontWeight.w700,
-  //                       color: supportRed,
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
   Widget _buildSupportCard() {
     return Container(
       width: double.infinity,
@@ -861,9 +758,10 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
           // ===============================================================
 
           GestureDetector(
-            onTap: () {
-              widget.onContactSupport?.call();
-            },
+            // onTap: () {
+            //   widget.onContactSupport?.call();
+            // },
+            onTap: _contactSupport,
 
             child: Container(
               height: 32,
