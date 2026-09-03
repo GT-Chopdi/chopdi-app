@@ -71,11 +71,17 @@ flutter:
     - assets/Vector 3.png
     - assets/home_screen_book.png
     - assets/line_home.png
-    - assets/home_cream_loan.png
-    - assets/home_blue_loan.png
-    - assets/tabler_edit.png
-    - assets/notifications.png
+    - assets/lock.png
+    - assets/fluent_document_bottom_bar_fill.png
+    - assets/fluent_document_bottom_bar.png
+    - assets/home_cream_loan_new.png
+    - assets/home_blue_loan_new.png
+    - assets/tabler_edit_new.png
+    - assets/notifications_new.png
     - assets/call_logo.png
+    - assets/home_bottom_bar.png
+    - assets/home_fill_bottom_bar.png
+    - assets/
     - assets/total_given.png
     - assets/total_interest.png
     - assets/outstanding.png

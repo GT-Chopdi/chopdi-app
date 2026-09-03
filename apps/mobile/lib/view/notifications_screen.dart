@@ -436,7 +436,7 @@ class NotificationsScreen extends StatelessWidget {
             radius: 24,
             backgroundColor: Colors.transparent,
             child: Image.asset(
-              'assets/notifications.png',
+              'assets/notifications_new.png', height: 24, width: 24,
             ),
           ),
 

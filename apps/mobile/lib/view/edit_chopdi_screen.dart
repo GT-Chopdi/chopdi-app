@@ -781,7 +781,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
               'Update your chopdi details',
               style: GoogleFonts.manrope(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: secondaryText,
               ),
             ),
@@ -798,9 +798,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   Widget _buildBookSection() {
     return Center(
       child: SizedBox(
-        height: 170,
+        height: 190,
         // width: double.infinity,
-        width: 255,
+        width: 265,
       
         child: Stack(
           alignment: Alignment.center,
@@ -932,6 +932,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
           Image.asset(
             'assets/chopdi_edit_logo.png'
+
           ),
 
           const SizedBox(width: 6),
@@ -1107,7 +1108,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                 EdgeInsets.only(top: 1),
 
             child: Image.asset(
-              'assets/info-outline.png'
+              'assets/info-outline.png',
+              height: 20,
+              width: 20,
             )
           ),
 
@@ -1125,7 +1128,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
                   style: GoogleFonts.manrope(
                     fontSize: 10,
                     fontWeight:
-                        FontWeight.w700,
+                        FontWeight.w600,
                     color: textColor,
                   ),
                 ),
@@ -1245,16 +1248,17 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
             Container(
               width: 40,
               height: 40,
-
-              decoration:
-                  const BoxDecoration(
-                color:
-                    Color(0xFFF8D0C2),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8D0C2),
                 shape: BoxShape.circle,
               ),
-
-              child: Image.asset(
-                'assets/delete-outline.png'
+              child: Center(
+                child: Image.asset(
+                  'assets/delete_outline_rounded_transactions.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 
