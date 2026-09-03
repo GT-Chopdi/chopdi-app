@@ -373,121 +373,6 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   // DELETE
   // ===========================================================================
 
-//   Future<void> _showDeleteChopdiBottomSheet() async {
-//   if (_currentChopdi == null) {
-//     _showError(
-//       'Chopdi could not be found.',
-//     );
-//     return;
-//   }
-
-//   await showModalBottomSheet(
-//     context: context,
-//     isScrollControlled: true,
-//     backgroundColor: Colors.transparent,
-//     barrierColor:
-//         Colors.black.withValues(
-//       alpha: 0.78,
-//     ),
-//     builder: (sheetContext) {
-//       return DeleteChopdiBottomSheet(
-//         onDelete: () async {
-//           try {
-//             final deletedId =
-//                 _currentChopdi!.id;
-
-//             final nextChopdi =
-//                 await ChopdiService.deleteChopdi(
-//               deletedId,
-//             );
-
-//             if (widget.onDelete != null) {
-//               await widget.onDelete!();
-//             }
-
-//             if (!sheetContext.mounted) {
-//               return;
-//             }
-
-//             Navigator.of(sheetContext).pop(
-//               nextChopdi,
-//             );
-//           } catch (e) {
-//             debugPrint(
-//               '[EditChopdiScreen] '
-//               'Delete failed: $e',
-//             );
-
-//             if (!sheetContext.mounted) {
-//               return;
-//             }
-
-//             // ScaffoldMessenger.of(
-//             //   sheetContext,
-//             // ).showSnackBar(
-//             //   const SnackBar(
-//             //     content: Text(
-//             //       'Unable to delete Chopdi.',
-//             //     ),
-//             //   ),
-//             // );
-//             await showDialog<void>(
-//               context: sheetContext,
-//               barrierDismissible: true,
-//               builder: (dialogContext) {
-//                 return AlertDialog(
-//                   backgroundColor: const Color(0xFFFFFBF6),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(16),
-//                   ),
-//                   title: const Text(
-//                     'Delete Failed',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.w700,
-//                       color: Color(0xFFD94D3D),
-//                     ),
-//                   ),
-//                   content: const Text(
-//                     'Unable to delete Chopdi. Please try again.',
-//                     style: TextStyle(
-//                       fontSize: 14,
-//                       color: Color(0xFF69778A),
-//                     ),
-//                   ),
-//                   actions: [
-//                     TextButton(
-//                       onPressed: () {
-//                         Navigator.of(dialogContext).pop();
-//                       },
-//                       child: const Text(
-//                         'OK',
-//                         style: TextStyle(
-//                           fontSize: 14,
-//                           fontWeight: FontWeight.w700,
-//                           color: Color(0xFFD94D3D),
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 );
-//               },
-//             );
-//           }
-//         },
-//       );
-//     },
-//   ).then((result) {
-//     if (!mounted) return;
-
-//     if (result is Chopdi) {
-//       Navigator.of(context).pop(
-//         result,
-//       );
-//     }
-//   });
-// }
-
   Future<void> _showDeleteChopdiBottomSheet() async {
     if (_currentChopdi == null) {
       await _showError(
@@ -594,8 +479,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
     try {
       final deletedId = _currentChopdi!.id;
 
-      final nextChopdi =
-          await ChopdiService.deleteChopdi(
+      final nextChopdi = await ChopdiService.deleteChopdi(
         deletedId,
       );
 
@@ -610,11 +494,13 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
       // ============================================================
       // ONLY ONE CHOPDI REMAINS
+      // ============================================================
       //
-      // This means the deleted Chopdi was the only Chopdi.
-      // ChopdiService.deleteChopdi() creates the default Chopdi.
+      // User deleted the only Chopdi.
+      // The service has created/kept the default Chopdi.
       //
-      // Go directly to MyChopdi/HomeScreen.
+      // Return a DELETE result so MyChopdiScreen knows this
+      // was a delete operation and can navigate to Home.
       // ============================================================
 
       if (remainingChopdis.length == 1) {
@@ -625,7 +511,10 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
         if (!mounted) return;
 
         Navigator.of(context).pop(
-          remainingChopdis.first,
+          ChopdiDeleteResult(
+            nextChopdi: remainingChopdis.first,
+            deleted: true,
+          ),
         );
 
         return;
@@ -633,13 +522,17 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
 
       // ============================================================
       // MULTIPLE CHOPDIS REMAIN
+      // ============================================================
       //
-      // Return the next Chopdi to the previous screen.
-      // The previous screen can then open ChopdiBottomSheet.
+      // Return a special delete result.
+      // MyChopdiScreen will open ChopdiBottomSheet.
       // ============================================================
 
       Navigator.of(context).pop(
-        nextChopdi,
+        ChopdiDeleteResult(
+          nextChopdi: nextChopdi,
+          deleted: true,
+        ),
       );
     } catch (e) {
       debugPrint(
@@ -652,7 +545,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
         'Unable to delete Chopdi. Please try again.',
       );
     }
-  }
+
+    // Close _showDeleteChopdiBottomSheet.
+    }
 
   // ===========================================================================
   // ERROR

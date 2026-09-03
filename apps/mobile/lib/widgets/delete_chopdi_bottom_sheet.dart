@@ -6,7 +6,7 @@ class DeleteChopdiBottomSheet extends StatefulWidget {
     required this.onDelete,
   });
 
-  final VoidCallback onDelete;
+  final Future<void> Function() onDelete;
 
   @override
   State<DeleteChopdiBottomSheet> createState() =>
@@ -430,7 +430,7 @@ class _DeleteChopdiBottomSheetState
     });
 
     try {
-      widget.onDelete();
+      await widget.onDelete();
     } finally {
       if (mounted) {
         setState(() {

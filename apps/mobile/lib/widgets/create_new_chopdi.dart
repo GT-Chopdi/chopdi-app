@@ -17,7 +17,6 @@ class CreateChopdiBottomSheet extends StatefulWidget {
 
 class _CreateChopdiBottomSheetState
     extends State<CreateChopdiBottomSheet> {
-
   final TextEditingController nameController =
       TextEditingController();
 
@@ -30,173 +29,211 @@ class _CreateChopdiBottomSheetState
   }
 
   Future<void> _createChopdi() async {
-  final name = nameController.text.trim();
+    final name = nameController.text.trim();
 
-  if (name.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Please enter Chopdi name"),
-      ),
-    );
-    return;
-  }
-
-  setState(() {
-    isSaving = true;
-  });
-
-  try {
-    final chopdi = await ChopdiService.createChopdi(name);
-
-    if (!mounted) return;
-
-    // Return the newly created Chopdi
-    Navigator.pop(context, chopdi);
-  } catch (e) {
-    debugPrint("CREATE CHOPDI ERROR: $e");
-
-    if (!mounted) return;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter Chopdi name"),
+        ),
+      );
+      return;
+    }
 
     setState(() {
-      isSaving = false;
+      isSaving = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Failed to create Chopdi: $e",
+    try {
+      final chopdi =
+          await ChopdiService.createChopdi(name);
+
+      if (!mounted) return;
+
+      // Return the newly created Chopdi
+      Navigator.pop(context, chopdi);
+    } catch (e) {
+      debugPrint(
+        "CREATE CHOPDI ERROR: $e",
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Failed to create Chopdi: $e",
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(12),
+    final keyboardHeight =
+        MediaQuery.of(context).viewInsets.bottom;
 
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        20,
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(
+        bottom: keyboardHeight,
       ),
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          // No margin.
+          // This makes the sheet full width like
+          // the Khatabook-style bottom sheet.
+          margin: EdgeInsets.zero,
 
-      decoration: const BoxDecoration(
-        color: AppColors.card,
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            20,
+          ),
 
-        borderRadius: BorderRadius.all(
-          Radius.circular(30),
-        ),
-      ),
+          decoration: const BoxDecoration(
+            color: AppColors.card,
 
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-
-        children: [
-
-          Container(
-            width: 48,
-            height: 4,
-
-            decoration: BoxDecoration(
-              color: Colors.grey,
-              borderRadius:
-                  BorderRadius.circular(20),
+            // Only top corners are rounded.
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
             ),
           ),
 
-          const SizedBox(height: 28),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag,
 
-          TextField(
-            controller: nameController,
-
-            textCapitalization:
-                TextCapitalization.words,
-
-            decoration: InputDecoration(
-              hintText:
-                  "Enter Shop/Business name",
-
-              hintStyle: const TextStyle(
-                color: Color(0xff7B869C),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-
-              contentPadding:
-                  const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 18,
-              ),
-
-              enabledBorder:
-                  OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(14),
-
-                borderSide: const BorderSide(
-                  color: Color(0xffB9C9E8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius:
+                        BorderRadius.circular(20),
+                  ),
                 ),
-              ),
 
-              focusedBorder:
-                  OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(14),
+                const SizedBox(height: 28),
 
-                borderSide: const BorderSide(
-                  color: Color(0xff243B67),
-                  width: 1.5,
-                ),
-              ),
-            ),
-          ),
+                // Input field
+                TextField(
+                  controller: nameController,
 
-          const SizedBox(height: 120),
+                  textCapitalization:
+                      TextCapitalization.words,
 
-          SizedBox(
-            width: double.infinity,
-            height: 58,
+                  decoration: InputDecoration(
+                    hintText:
+                        "Enter Shop/Business name",
 
-            child: ElevatedButton(
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xff243B67),
+                    hintStyle: const TextStyle(
+                      color: Color(0xff7B869C),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
 
-                elevation: 0,
+                    contentPadding:
+                        const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
 
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(16),
-                ),
-              ),
+                    enabledBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(14),
 
-              onPressed:
-                  isSaving
-                      ? null
-                      : _createChopdi,
-
-              child: isSaving
-                  ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
-                  : const Text(
-                      "Create",
-
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight:
-                            FontWeight.w600,
-                        color: Colors.white,
+                      borderSide:
+                          const BorderSide(
+                        color: Color(0xffB9C9E8),
                       ),
                     ),
+
+                    focusedBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(14),
+
+                      borderSide:
+                          const BorderSide(
+                        color: Color(0xff243B67),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Original spacing when keyboard
+                // is closed.
+                //
+                // Reduce it when keyboard is open
+                // so the sheet fits above keyboard.
+                SizedBox(
+                  height:
+                      keyboardHeight > 0
+                          ? 40
+                          : 120,
+                ),
+
+                // Create button
+                SizedBox(
+                  width: double.infinity,
+                  height: 58,
+
+                  child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(0xff243B67),
+
+                      elevation: 0,
+
+                      shape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(16),
+                      ),
+                    ),
+
+                    onPressed:
+                        isSaving
+                            ? null
+                            : _createChopdi,
+
+                    child: isSaving
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            "Create",
+
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight:
+                                  FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
