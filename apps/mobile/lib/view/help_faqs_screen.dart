@@ -139,9 +139,9 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
     final Uri emailUri = Uri(
       scheme: 'mailto',
       path: AppConstants.supportEmail,
-      queryParameters: {
-        'subject': 'MyChopdi Support Request',
-      },
+      // queryParameters: {
+      //   'subject': 'MyChopdi Support Request',
+      // },
     );
 
     try {

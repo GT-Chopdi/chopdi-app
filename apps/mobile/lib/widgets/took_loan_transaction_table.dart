@@ -367,6 +367,8 @@ class _InterestRow extends StatelessWidget {
                           transaction: transaction,
                           customerId: customerId,
                           onChanged: onChanged,
+                          displayAmount: interest,
+                          isInterestRow: true,
                         );
                       },
                     );

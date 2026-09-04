@@ -16,16 +16,16 @@ class NotificationService {
     String? message,
   }) async {
     final notification = NotificationModel()
-      ..title = "App Update"
-      ..subtitle = message ??
-          "A new version of Chopdi ($version) is available."
-      ..type = "app_update"
+      ..title = 'App Update'
+      ..subtitle =
+          message ?? 'A new version of Chopdi ($version) is available.'
+      ..type = 'app_update'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..chopdiId = chopdiId;
 
-    return await isar.writeTxn(() async {
-      return await isar.notificationModels.put(notification);
+    return isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
   }
 
@@ -40,10 +40,10 @@ class NotificationService {
     int? customerId,
   }) async {
     final notification = NotificationModel()
-      ..title = "Interest Calculated"
+      ..title = 'Interest Calculated'
       ..subtitle =
-          "₹${interestAmount.toStringAsFixed(2)} interest calculated for $customerName."
-      ..type = "interest_calculated"
+          '₹${interestAmount.toStringAsFixed(2)} interest calculated for $customerName.'
+      ..type = 'interest_calculated'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..customerId = customerId
@@ -51,8 +51,8 @@ class NotificationService {
       ..amount = interestAmount
       ..chopdiId = chopdiId;
 
-    return await isar.writeTxn(() async {
-      return await isar.notificationModels.put(notification);
+    return isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
   }
 
@@ -68,10 +68,10 @@ class NotificationService {
     int? customerId,
   }) async {
     final notification = NotificationModel()
-      ..title = "Interest Updated"
+      ..title = 'Interest Updated'
       ..subtitle =
-          "Interest for $interestPeriod for $customerName has been updated to ₹${interestAmount.toStringAsFixed(2)}."
-      ..type = "interest_updated"
+          'Interest for $interestPeriod for $customerName has been updated to ₹${interestAmount.toStringAsFixed(2)}.'
+      ..type = 'interest_updated'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..customerId = customerId
@@ -79,12 +79,14 @@ class NotificationService {
       ..amount = interestAmount
       ..chopdiId = chopdiId;
 
-    return await isar.writeTxn(() async {
-      return await isar.notificationModels.put(
-        notification,
-      );
+    return isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
   }
+
+  // ============================================================
+  // PAYMENT REMINDER - IN APP HISTORY
+  // ============================================================
 
   Future<int> createPaymentReminderNotification({
     required int chopdiId,
@@ -127,10 +129,8 @@ class NotificationService {
       ..amount = amount
       ..chopdiId = chopdiId;
 
-    return await isar.writeTxn(() async {
-      return await isar.notificationModels.put(
-        notification,
-      );
+    return isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
   }
 
@@ -186,9 +186,7 @@ class NotificationService {
     notification.isRead = true;
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.put(
-        notification,
-      );
+      await isar.notificationModels.put(notification);
     });
   }
 
@@ -214,9 +212,7 @@ class NotificationService {
     }
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.putAll(
-        notifications,
-      );
+      await isar.notificationModels.putAll(notifications);
     });
   }
 
@@ -228,9 +224,7 @@ class NotificationService {
     int notificationId,
   ) async {
     await isar.writeTxn(() async {
-      await isar.notificationModels.delete(
-        notificationId,
-      );
+      await isar.notificationModels.delete(notificationId);
     });
   }
 

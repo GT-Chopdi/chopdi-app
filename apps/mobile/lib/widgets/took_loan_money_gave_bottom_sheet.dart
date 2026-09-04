@@ -655,6 +655,11 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
 
                             await Repositories.ledger.adoptDraft(tx);
 
+                            await LocalNotificationService.instance
+                                .syncNotifications(
+                              database: IsarService.isar,
+                            );
+
                             final localNotificationService =
                                 LocalNotificationService.instance;
 
