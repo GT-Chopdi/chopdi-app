@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/money.dart';
@@ -211,6 +212,11 @@ class _MoneyReceiveBottomSheetState
 
     await TransactionService.addTransaction(tx);
 
+    await LocalNotificationService.instance
+        .syncNotifications(
+      database: IsarService.isar,
+    );
+
     final localNotificationService =
         LocalNotificationService.instance;
 
@@ -223,17 +229,17 @@ class _MoneyReceiveBottomSheetState
             ) ??
             true;
 
-    if (paymentReminderEnabled) {
-      // Recalculate the customer's reminder using
-      // the original loan transaction/frequency.
-      //
-      // This is important because this transaction is
-      // a RECEIVED/PAYMENT transaction and does not have
-      // an interest frequency of its own.
+    // if (paymentReminderEnabled) {
+    //   // Recalculate the customer's reminder using
+    //   // the original loan transaction/frequency.
+    //   //
+    //   // This is important because this transaction is
+    //   // a RECEIVED/PAYMENT transaction and does not have
+    //   // an interest frequency of its own.
 
-      await localNotificationService
-          .rescheduleAllPaymentReminders();
-    }
+    //   await localNotificationService
+    //       .rescheduleAllPaymentReminders();
+    // }
 
     widget.onSaved();
 

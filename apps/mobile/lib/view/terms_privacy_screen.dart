@@ -628,7 +628,7 @@ class TermsPrivacyScreen extends StatelessWidget {
                   ),
 
                   Text(
-                    'support@chopdi.app',
+                    'chopdi@geloratech.com',
 
                     maxLines: 1,
                     overflow:

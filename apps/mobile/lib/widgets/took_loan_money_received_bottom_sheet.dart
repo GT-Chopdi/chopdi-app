@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
+import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/money.dart';
@@ -214,6 +215,11 @@ class _MoneyReceiveBottomSheetState
       ..interestFrequency = "";
 
     await TransactionService.addTransaction(tx);
+
+    await LocalNotificationService.instance
+        .syncNotifications(
+      database: IsarService.isar,
+    );
 
     final localNotificationService =
         LocalNotificationService.instance;

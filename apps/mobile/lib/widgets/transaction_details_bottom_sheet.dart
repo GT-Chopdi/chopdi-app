@@ -14,14 +14,123 @@ import 'package:mychopdi/data/repository/repositories.dart';
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
   final int customerId;
-   final VoidCallback? onChanged;
+  final VoidCallback? onChanged;
+  // If this is an interest row, this contains the interest amount
+  // that should be displayed instead of transaction.amount.
+  final double? displayAmount;
+  final bool isInterestRow;
 
   const TransactionDetailsScreen({
     super.key,
     required this.transaction,
     required this.customerId,
     required this.onChanged,
+    this.displayAmount,
+    this.isInterestRow = false,
   });
+
+  String _getTransactionTitle() {
+    if (isInterestRow) return "Interest Details";
+
+    switch (transaction.type) {
+      case TransactionType.gave:
+        return "Transaction Details";
+
+      case TransactionType.received:
+        return "Transaction Details";
+
+      case TransactionType.took:
+        return "Transaction Details";
+
+      case TransactionType.paid:
+        return "Transaction Details";
+    }
+  }
+
+  String _getBadgeText() {
+    if (isInterestRow) return "Interest";
+
+    switch (transaction.type) {
+      case TransactionType.gave:
+        return "Loan Given";
+
+      case TransactionType.received:
+        return "Payment Received";
+
+      case TransactionType.took:
+        return "Loan Took";
+
+      case TransactionType.paid:
+        return "Amount Paid";
+    }
+  }
+
+  Color _getBadgeBorderColor() {
+  if (isInterestRow) {
+    return const Color(0xFF21A83A);
+  }
+
+  if (transaction.type == TransactionType.received ||
+      transaction.type == TransactionType.paid) {
+    return const Color(0xFF21A83A);
+  }
+
+  return const Color.fromRGBO(199, 76, 76, 1);
+}
+
+Color _getBadgeBackgroundColor() {
+  if (isInterestRow) {
+    return const Color.fromRGBO(60, 180, 80, 0.15);
+  }
+
+  if (transaction.type == TransactionType.received ||
+      transaction.type == TransactionType.paid) {
+    return const Color.fromRGBO(60, 180, 80, 0.15);
+  }
+
+  return const Color.fromRGBO(199, 76, 76, 0.19);
+}
+
+Color _getBadgeTextColor() {
+  if (isInterestRow) {
+    return const Color(0xFF159B2D);
+  }
+
+  if (transaction.type == TransactionType.received ||
+      transaction.type == TransactionType.paid) {
+    return const Color(0xFF159B2D);
+  }
+
+  return const Color.fromRGBO(199, 76, 76, 1);
+}
+
+Color _getInterestColor() {
+  // Interest for Loan Given = Green
+  if (transaction.type == TransactionType.gave) {
+    return const Color(0xFF159B2D);
+  }
+
+  // Interest for Took Loan = Red
+  if (transaction.type == TransactionType.took) {
+    return const Color.fromRGBO(199, 76, 76, 1);
+  }
+
+  return const Color(0xFF159B2D);
+}
+
+Color _getInterestBackgroundColor() {
+  // Loan Given Interest = Green background
+  if (transaction.type == TransactionType.gave) {
+    return const Color.fromRGBO(60, 180, 80, 0.15);
+  }
+
+  // Took Loan Interest = Red background
+  if (transaction.type == TransactionType.took) {
+    return const Color.fromRGBO(199, 76, 76, 0.19);
+  }
+
+  return const Color.fromRGBO(60, 180, 80, 0.15);
+}
 
   String _getFullDescription() {
   final startDate =
@@ -75,54 +184,107 @@ String _getInterestDescription() {
       "$rate% $frequency $interestType";
 }
 
+String _getDisplayAmount() {
+  final amount = displayAmount ?? transaction.amount;
+  return _formatAmount(amount);
+}
+
+  // String _getTransactionDescription() {
+  //   final startDate =
+  //       DateFormat("dd MMM yyyy").format(transaction.date);
+
+  //   final endDate =
+  //       DateFormat("dd MMM yyyy").format(DateTime.now());
+
+  //   // PAYMENT RECEIVED
+
+  //   if (transaction.type == TransactionType.received) {
+  //     return "Payment received from $startDate to $endDate.";
+  //   }
+
+  //   // LOAN GIVEN
+
+  //   final days = DateTime.now()
+  //       .difference(transaction.date)
+  //       .inDays;
+
+  //   if (days <= 0) {
+  //     return transaction.description.isEmpty
+  //         ? "Loan given."
+  //         : transaction.description;
+  //   }
+
+  //   final interest = InterestCalculator.calculate(
+  //     principal: transaction.amount,
+  //     rate: transaction.interestRate,
+  //     startDate: transaction.date,
+  //     interestType: transaction.interestType,
+  //     frequency: transaction.interestFrequency,
+  //   );
+
+  //   final rate =
+  //       transaction.interestRate.toStringAsFixed(0);
+
+  //   final frequency =
+  //       transaction.interestFrequency.toLowerCase();
+
+  //   final interestType =
+  //       transaction.interestType
+  //           .replaceAll(" Interest", "")
+  //           .toLowerCase();
+
+  //   return "₹${interest.toStringAsFixed(0)} interest "
+  //       "from $startDate to $endDate at $rate% "
+  //       "$frequency $interestType interest.";
+  // }
+
   String _getTransactionDescription() {
-    final startDate =
-        DateFormat("dd MMM yyyy").format(transaction.date);
+  // Interest rows have their own description.
+  if (isInterestRow) {
+    final startDate = DateFormat("dd MMM yyyy")
+        .format(transaction.date);
 
-    final endDate =
-        DateFormat("dd MMM yyyy").format(DateTime.now());
-
-    // PAYMENT RECEIVED
-
-    if (transaction.type == TransactionType.received) {
-      return "Payment received from $startDate to $endDate.";
-    }
-
-    // LOAN GIVEN
-
-    final days = DateTime.now()
-        .difference(transaction.date)
-        .inDays;
-
-    if (days <= 0) {
-      return transaction.description.isEmpty
-          ? "Loan given."
-          : transaction.description;
-    }
-
-    final interest = InterestCalculator.calculate(
-      principal: transaction.amount,
-      rate: transaction.interestRate,
-      startDate: transaction.date,
-      interestType: transaction.interestType,
-      frequency: transaction.interestFrequency,
-    );
+    final endDate = DateFormat("dd MMM yyyy")
+        .format(DateTime.now());
 
     final rate =
         transaction.interestRate.toStringAsFixed(0);
 
     final frequency =
-        transaction.interestFrequency.toLowerCase();
+        transaction.interestFrequency.isEmpty
+            ? "Monthly"
+            : transaction.interestFrequency;
 
     final interestType =
-        transaction.interestType
-            .replaceAll(" Interest", "")
-            .toLowerCase();
+        transaction.interestType.isEmpty
+            ? "Simple Interest"
+            : transaction.interestType;
 
-    return "₹${interest.toStringAsFixed(0)} interest "
+    return "₹${displayAmount?.toStringAsFixed(0) ?? '0'} interest "
         "from $startDate to $endDate at $rate% "
         "$frequency $interestType interest.";
   }
+
+  // Normal transaction row.
+  if (transaction.description.isNotEmpty) {
+    return transaction.description;
+  }
+
+  // Default descriptions if user didn't enter one.
+  switch (transaction.type) {
+    case TransactionType.gave:
+      return "Loan given.";
+
+    case TransactionType.received:
+      return "Payment received.";
+
+    case TransactionType.took:
+      return "Loan taken.";
+
+    case TransactionType.paid:
+      return "Amount paid.";
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -132,22 +294,6 @@ String _getInterestDescription() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 16,
-                top: 4,
-                bottom: 8,
-              ),
-              child: Text(
-                "Transaction Details",
-                style: GoogleFonts.manrope(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-
             Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -167,7 +313,11 @@ String _getInterestDescription() {
                       Radius.circular(24),
                     ),
                   ),
-                  child: transaction.type == TransactionType.received
+                  // child: transaction.type == TransactionType.received
+                  //   ? _buildPaymentReceivedDetails(context)
+                  //   : _buildLoanGivenDetails(context),
+                  child: (transaction.type == TransactionType.received ||
+                        transaction.type == TransactionType.paid)
                     ? _buildPaymentReceivedDetails(context)
                     : _buildLoanGivenDetails(context),
                 ),
@@ -362,7 +512,7 @@ String _getInterestDescription() {
         const SizedBox(height: 7),
 
         Text(
-          "Transaction Details",
+          _getTransactionTitle(),
           style: GoogleFonts.manrope(
             color: const Color(0xFF233E67),
             fontSize: 16,
@@ -372,27 +522,21 @@ String _getInterestDescription() {
 
         const SizedBox(height: 6),
 
-        // Loan Given
+        //Loan Given
         Container(
           padding: const EdgeInsets.symmetric(
             horizontal: 9,
             vertical: 4,
           ),
           decoration: BoxDecoration(
-            color: const Color.fromRGBO(
-              199,
-              76,
-              76,
-              0.19,
-            ),
+            color: isInterestRow
+                ? _getInterestBackgroundColor()
+                : const Color.fromRGBO(199, 76, 76, 0.19),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color.fromRGBO(
-                199,
-                76,
-                76,
-                1,
-              ),
+              color: isInterestRow
+                  ? _getInterestColor()
+                  : const Color.fromRGBO(199, 76, 76, 1),
               width: 0.8,
             ),
           ),
@@ -400,22 +544,19 @@ String _getInterestDescription() {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/arrow_up.png',
+                isInterestRow && transaction.type == TransactionType.gave
+                    ? 'assets/arrow_down.png' // Green arrow for Loan Given Interest
+                    : 'assets/arrow_up.png',  // Red arrow for Took Loan Interest
                 height: 14,
                 width: 14,
               ),
-
               const SizedBox(width: 4),
-
               Text(
-                "Loan Given",
+                _getBadgeText(),
                 style: GoogleFonts.manrope(
-                  color: const Color.fromRGBO(
-                    199,
-                    76,
-                    76,
-                    1,
-                  ),
+                  color: isInterestRow
+                      ? _getInterestColor()
+                      : const Color.fromRGBO(199, 76, 76, 1),
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -449,14 +590,11 @@ String _getInterestDescription() {
             const Spacer(),
 
             Text(
-              _formatAmount(transaction.amount),
+              _getDisplayAmount(),
               style: GoogleFonts.manrope(
-                color: const Color.fromRGBO(
-                  199,
-                  76,
-                  76,
-                  1,
-                ),
+                 color: isInterestRow
+                  ? _getInterestColor()
+                  : const Color.fromRGBO(199, 76, 76, 1),// Red for loan given
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -544,9 +682,8 @@ String _getInterestDescription() {
           width: double.infinity,
           height: 40,
           child: ElevatedButton.icon(
-            onPressed: () {
-              // Edit transaction
-              showModalBottomSheet(
+            onPressed: () async {
+              final result = await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
@@ -556,6 +693,14 @@ String _getInterestDescription() {
                   );
                 },
               );
+
+              if (result == true && context.mounted) {
+                // Close Transaction Details screen
+                Navigator.pop(context);
+
+                // Tell Customer Details screen to reload
+                onChanged?.call();
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF213F68),
@@ -724,7 +869,11 @@ String _getInterestDescription() {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                'assets/arrow_down.png',
+                (transaction.type == TransactionType.received ||
+                        transaction.type == TransactionType.paid ||
+                        isInterestRow)
+                    ? 'assets/arrow_down.png'
+                    : 'assets/arrow_up.png',
                 height: 14,
                 width: 14,
               ),
@@ -732,9 +881,9 @@ String _getInterestDescription() {
               const SizedBox(width: 4),
 
               Text(
-                "Payment Received",
+                _getBadgeText(),
                 style: GoogleFonts.manrope(
-                  color: const Color(0xFF159B2D),
+                  color: _getBadgeTextColor(),
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -802,9 +951,8 @@ String _getInterestDescription() {
           width: double.infinity,
           height: 40,
           child: ElevatedButton.icon(
-            onPressed: () {
-              // Edit transaction
-              showModalBottomSheet(
+            onPressed: () async {
+              final result = await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
@@ -814,6 +962,11 @@ String _getInterestDescription() {
                   );
                 },
               );
+
+              if (result == true && context.mounted) {
+                Navigator.pop(context);
+                onChanged?.call();
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF213F68),

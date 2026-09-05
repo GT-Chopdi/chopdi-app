@@ -13,7 +13,15 @@ Future<void> main() async {
 
   await IsarService.init(); // IMPORTANT
   await Repositories.migrateLegacyCustomers();
-  await LocalNotificationService.instance.initialize();
+  // await LocalNotificationService.instance.initialize();
+    final localNotificationService =
+      LocalNotificationService.instance;
+
+  await localNotificationService.initialize();
+
+  await localNotificationService.syncNotifications(
+    database: IsarService.isar,
+  );
   await dotenv.load(fileName: 'env/staging.env');
 
   // Starts the outbox draining. Not awaited: the first drain needs the network

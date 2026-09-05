@@ -21,64 +21,32 @@ class TransactionRow extends StatelessWidget {
   // USER DESCRIPTION
 
   String _getDescription() {
-    final startDate =
-        DateFormat("dd MMM yyyy").format(transaction.date);
+    // ============================================================
+    // NORMAL TRANSACTION DESCRIPTION
+    // ============================================================
 
-    final endDate =
-        DateFormat("dd MMM yyyy").format(DateTime.now());
-
-    // PAYMENT RECEIVED
-    if (transaction.type == TransactionType.received) {
-      final description =
-          "Payment received from $startDate to $endDate.";
-
-      return _shortenDescription(description);
+    // If user has entered a description, show that description.
+    if (transaction.description.trim().isNotEmpty) {
+      return _shortenDescription(
+        transaction.description.trim(),
+      );
     }
 
-    // LOAN GIVEN
-    final days = DateTime.now()
-        .difference(transaction.date)
-        .inDays;
+    // If no description was entered, use a simple default
+    // based on the transaction type.
+    switch (transaction.type) {
+      case TransactionType.gave:
+        return "Loan given.";
 
-    // If transaction is today
-    if (days <= 0) {
-      final description = transaction.description.trim().isEmpty
-          ? "Loan given."
-          : transaction.description.trim();
+      case TransactionType.received:
+        return "Payment received.";
 
-      return _shortenDescription(description);
+      case TransactionType.took:
+        return "Loan taken.";
+
+      case TransactionType.paid:
+        return "Amount paid.";
     }
-
-    // Interest description
-    final interest = InterestCalculator.calculate(
-      principal: transaction.amount,
-      rate: transaction.interestRate,
-      startDate: transaction.date,
-      interestType: transaction.interestType,
-      frequency: transaction.interestFrequency,
-    );
-
-    final rate =
-        transaction.interestRate.toStringAsFixed(0);
-
-    final frequency =
-        transaction.interestFrequency.isEmpty
-            ? "monthly"
-            : transaction.interestFrequency.toLowerCase();
-
-    final interestType =
-        transaction.interestType.isEmpty
-            ? "simple"
-            : transaction.interestType
-                .replaceAll(" Interest", "")
-                .toLowerCase();
-
-    final description =
-        "₹${interest.toStringAsFixed(0)} interest "
-        "from $startDate to $endDate at $rate% "
-        "$frequency $interestType interest.";
-
-    return _shortenDescription(description);
   }
 
   String _shortenDescription(String description) {

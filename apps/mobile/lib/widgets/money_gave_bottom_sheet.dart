@@ -585,102 +585,6 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                       child: SizedBox(
                         height: 52,
                         child: ElevatedButton(
-                          // onPressed: () async {
-                          //   if (amountController.text.isEmpty ||
-                          //       interestController.text.isEmpty) {
-                          //     return;
-                          //   }
-
-                          //   final amount = double.parse(
-                          //     amountController.text,
-                          //   );
-
-                          //   final rate = double.parse(
-                          //     interestController.text,
-                          //   );
-
-                          //   final interestAmount =
-                          //       InterestCalculator.calculate(
-                          //     principal: amount,
-                          //     rate: rate,
-                          //     startDate: selectedDate,
-                          //     interestType: interestType,
-                          //     frequency: interestFrequency,
-                          //   );
-
-                          //   final tx = Transaction()
-                          //     ..customerId =
-                          //         widget.customer.id
-                          //     ..amountPaise = Money.toPaise(amount)
-                          //     ..interest = interestAmount
-                          //     ..interestRateBp =
-                          //         Money.rateToBasisPoints(rate)
-                          //     ..date = selectedDate
-                          //     ..type = TransactionType.gave
-                          //     ..description =
-                          //         descriptionController.text.trim()
-                          //     ..paymentMode = paymentMode
-                          //     ..interestType = interestType
-                          //     ..interestFrequency =
-                          //         interestFrequency;
-
-                          //   await TransactionService.addTransaction(tx);
-
-                          //   final localNotificationService =
-                          //       LocalNotificationService.instance;
-
-                          //   final prefs =
-                          //       await SharedPreferences.getInstance();
-
-                          //   final paymentReminderEnabled =
-                          //       prefs.getBool(
-                          //             'notification_payment_reminder_enabled',
-                          //           ) ??
-                          //           true;
-
-                          //   if (paymentReminderEnabled) {
-                          //     final reminderType =
-                          //         prefs.getString(
-                          //               'notification_selected_reminder',
-                          //             ) ??
-                          //             'dueDate';
-
-                          //     await localNotificationService
-                          //         .scheduleCustomerPaymentReminder(
-                          //       customer: widget.customer,
-                          //       loanDate: selectedDate,
-                          //       interestFrequency: interestFrequency,
-                          //       reminderType: reminderType,
-                          //       amount: amount,
-                          //     );
-                          //   }
-
-                          //   // ==================================================
-                          //   // INTEREST NOTIFICATION
-                          //   // ==================================================
-
-                          //   if (interestAmount > 0) {
-                          //     final notificationService =
-                          //         NotificationService(
-                          //       IsarService.isar,
-                          //     );
-
-                          //     await notificationService
-                          //         .createInterestNotification(
-                          //       chopdiId: widget.customer.chopdiId,
-                          //       customerName: widget.customer.name,
-                          //       interestAmount: interestAmount,
-                          //       customerId: widget.customer.id,
-                          //     );
-                          //   }
-
-                          //   widget.onSaved();
-
-                          //   if (mounted) {
-                          //     Navigator.pop(context);
-                          //   }
-                          // },
-
                           onPressed: () async {
                             if (amountController.text.isEmpty ||
                                 interestController.text.isEmpty) {
@@ -715,6 +619,11 @@ class _MoneyGaveBottomSheetState extends State<MoneyGaveBottomSheet> {
                               // Save transaction
                               // ------------------------------------------------------------
                               await TransactionService.addTransaction(tx);
+
+                              await LocalNotificationService.instance
+                                  .syncNotifications(
+                                database: IsarService.isar,
+                              );
 
                               // ------------------------------------------------------------
                               // Payment reminder
