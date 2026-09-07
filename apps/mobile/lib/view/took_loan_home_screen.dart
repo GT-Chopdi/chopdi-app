@@ -120,14 +120,14 @@ class TookLoanHomeContent extends StatelessWidget {
       padding: EdgeInsets.only(
         left: horizontalPadding,
         right: horizontalPadding,
-        top: 55,
+        top: 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: 160,
-            height: 140,
+            width: 120,
+            height: 100,
             child: Image.asset(
               'assets/home_screen_book.png',
               fit: BoxFit.contain,

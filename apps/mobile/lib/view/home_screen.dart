@@ -407,14 +407,14 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: EdgeInsets.only(
         left: horizontalPadding,
         right: horizontalPadding,
-        top: 55,
+        top: 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: imageWidth,
-            height: imageHeight,
+            width: 120,
+            height: 100,
             child: Image.asset(
               'assets/home_screen_book.png',
               fit: BoxFit.contain,
@@ -422,6 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 6),
+
 
           Text(
             'No customers yet!',
@@ -455,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Image.asset(
               'assets/line_home.png',
-              height: 125,
+              height: 135,
               width: 65,
               fit: BoxFit.contain,
             ),
