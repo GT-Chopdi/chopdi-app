@@ -345,17 +345,19 @@ class _OTPScreenState extends State<OTPScreen> {
                       Container(
                         height: 54,
                         width: 54,
-
                         decoration: const BoxDecoration(
                           color: Color(0xffB7C3D7),
                           shape: BoxShape.circle,
                         ),
-
-                        child: Image.asset(
-                          'assets/lock.png',
-                          width: 20,
-                          height: 20,
-                          fit: BoxFit.contain,
+                        child: Center(
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Image.asset(
+                              'assets/lock.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
 
