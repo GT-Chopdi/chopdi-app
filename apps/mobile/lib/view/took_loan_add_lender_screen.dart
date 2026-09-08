@@ -321,9 +321,9 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
                       const Text(
                         "Add Lender",
                         style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff223A5E),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF223A5E),
                         ),
                       ),
                     ],

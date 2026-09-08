@@ -162,48 +162,48 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                               ),
                             ),
 
-                            if (isActive)
-                              Container(
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color(
-                                          0xffE4ECFF),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(25),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Text(
-                                      "Active",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color:
-                                            Color(
-                                                0xff233B66),
-                                        fontWeight:
-                                            FontWeight
-                                                .w600,
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.check,
-                                      color:
-                                          Color(
-                                              0xff233B66),
-                                      size: 15,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            // if (isActive)
+                              // Container(
+                              //   padding:
+                              //       const EdgeInsets
+                              //           .symmetric(
+                              //     horizontal: 12,
+                              //     vertical: 6,
+                              //   ),
+                              //   decoration:
+                              //       BoxDecoration(
+                              //     color:
+                              //         const Color(
+                              //             0xffE4ECFF),
+                              //     borderRadius:
+                              //         BorderRadius
+                              //             .circular(25),
+                              //   ),
+                              //   child: const Row(
+                              //     children: [
+                              //       Text(
+                              //         "Active",
+                              //         style: TextStyle(
+                              //           fontSize: 12,
+                              //           color:
+                              //               Color(
+                              //                   0xff233B66),
+                              //           fontWeight:
+                              //               FontWeight
+                              //                   .w600,
+                              //         ),
+                              //       ),
+                              //       SizedBox(width: 4),
+                              //       Icon(
+                              //         Icons.check,
+                              //         color:
+                              //             Color(
+                              //                 0xff233B66),
+                              //         size: 15,
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
                           ],
                         ),
                       ),

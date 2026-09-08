@@ -38,9 +38,9 @@ class HomeHeader extends StatelessWidget {
 
                 IconButton(
                   icon: Image.asset(
-                    'assets/tabler_edit_new.png',
-                    height: 24,
-                    width: 24,
+                    'assets/add_chopdi_icon.png',
+                    height: 26,
+                    width: 26,
                   ),
                   onPressed: () async {
                     final selectedChopdi =

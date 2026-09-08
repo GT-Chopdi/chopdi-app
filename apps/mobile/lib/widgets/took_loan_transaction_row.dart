@@ -111,6 +111,9 @@ class TookLoanTransactionRow extends StatelessWidget {
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
+          isDismissible: true,
+          enableDrag: true,
+          barrierColor: Colors.black54,
           builder: (_) {
             return TransactionDetailsScreen(
               transaction: transaction,
