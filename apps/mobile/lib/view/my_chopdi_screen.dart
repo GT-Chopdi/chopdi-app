@@ -388,6 +388,16 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                       child: Stack(
                         alignment: Alignment.bottomCenter,
                         children: [
+                          Container(
+                            width: 190,
+                            height: 190,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFE6CF),
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(100),
+                              ),
+                            ),
+                          ),
                           Image.asset(
                             'assets/chopdibook.png',
                             width: 150,
@@ -406,7 +416,6 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
                           const SizedBox(height: 8),
 
                           // Title & Edit Button

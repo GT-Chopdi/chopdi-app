@@ -1143,49 +1143,45 @@ class _OTPScreenState extends State<OTPScreen> {
 
                       // ==============================================                      // OTP INPUT
                       // ==============================================
-                      AutofillGroup(
-                        child: Pinput(
-                          controller: otpController,
-                          focusNode: otpFocusNode,
-                          length: 6,
-
-                          defaultPinTheme: defaultPinTheme,
-
-                          focusedPinTheme:
-                              defaultPinTheme.copyDecorationWith(
-                            border: Border.all(
-                              color: const Color(0xff173A63),
-                              width: 1.5,
-                            ),
+                     AutofillGroup(
+                      child: Pinput(
+                        controller: otpController,
+                        focusNode: otpFocusNode,
+                        length: 6,
+                        defaultPinTheme: defaultPinTheme,
+                        focusedPinTheme: defaultPinTheme.copyDecorationWith(
+                          border: Border.all(
+                            color: const Color(0xff173A63),
+                            width: 1.5,
                           ),
-
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-
-                          // Enables OTP auto-fill from SMS on supported devices.
-                          autofillHints: const [
-                            AutofillHints.oneTimeCode,
-                          ],
-
-                          enableSuggestions: true,
-                          autofocus: false,
-
-                          onChanged: (value) {
-                            if (otpError != null) {
-                              setState(() {
-                                otpError = null;
-                              });
-                            }
-                          },
-
-                          // Automatically verify when all 6 digits are entered.
-                          onCompleted: (_) {
-                            if (!_verifying) {
-                              _verify();
-                            }
-                          },
                         ),
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+
+                        // Enables OTP auto-fill from SMS on supported devices.
+                        autofillHints: const [
+                          AutofillHints.oneTimeCode,
+                        ],
+
+                        enableSuggestions: true,
+                        autofocus: false,
+
+                        onChanged: (value) {
+                          if (otpError != null) {
+                            setState(() {
+                              otpError = null;
+                            });
+                          }
+                        },
+
+                        // Automatically verify when all 6 digits are entered.
+                        onCompleted: (_) {
+                          if (!_verifying) {
+                            _verify();
+                          }
+                        },
                       ),
+                    ),
 
                       // ==============================================                      // OTP ERROR
                       // ==============================================
