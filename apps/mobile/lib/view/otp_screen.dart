@@ -459,15 +459,11 @@ class _OTPScreenState extends State<OTPScreen> {
 
                       Pinput(
                         controller: otpController,
-
                         focusNode: otpFocusNode,
-
                         length: 6,
-
                         defaultPinTheme: defaultPinTheme,
 
-                        focusedPinTheme:
-                            defaultPinTheme.copyDecorationWith(
+                        focusedPinTheme: defaultPinTheme.copyDecorationWith(
                           border: Border.all(
                             color: const Color(0xff173A63),
                             width: 1.5,
@@ -475,9 +471,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         ),
 
                         keyboardType: TextInputType.number,
-
                         textInputAction: TextInputAction.done,
-
                         autofocus: false,
 
                         onChanged: (value) {
@@ -488,9 +482,11 @@ class _OTPScreenState extends State<OTPScreen> {
                           }
                         },
 
+                        // Automatically verify when all 6 digits are entered
                         onCompleted: (_) {
-                          // Keep keyboard open so user can still
-                          // review/edit OTP if needed.
+                          if (!_verifying) {
+                            _verify();
+                          }
                         },
                       ),
 
