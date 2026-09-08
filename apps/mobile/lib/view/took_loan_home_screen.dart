@@ -21,40 +21,23 @@ class TookLoanHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Get the screen size to replace the undefined 'constraints'
-    final size = MediaQuery.of(context).size;
-
     return StreamBuilder<List<Transaction>>(
-      // Get ONLY took-loan transactions
       stream: IsarService.isar.transactions
           .filter()
           .chopdiIdEqualTo(chopdiId)
           .typeEqualTo(TransactionType.took)
           .watch(fireImmediately: true),
-
       builder: (context, transactionSnapshot) {
-        final tookTransactions =
-            transactionSnapshot.data ?? <Transaction>[];
-
-        // 2. Commented out to fix the unused variable warning
-        // final tookLoanCustomerIds = tookTransactions
-        //     .map((tx) => tx.customerId)
-        //     .toSet();
-
         return StreamBuilder<List<Customer>>(
           stream: IsarService.isar.customers
               .filter()
               .chopdiIdEqualTo(chopdiId)
               .watch(fireImmediately: true),
-
           builder: (context, customerSnapshot) {
-            final allCustomers =
-                customerSnapshot.data ?? <Customer>[];
+            final allCustomers = customerSnapshot.data ?? <Customer>[];
 
             final tookLoanCustomers = allCustomers
-                .where(
-                  (customer) => customer.loanType == "took",
-            )
+                .where((customer) => customer.loanType == "took")
                 .toList();
 
             return ListView(
@@ -63,16 +46,17 @@ class TookLoanHomeContent extends StatelessWidget {
               children: [
                 TookLoanSummaryCard(
                   chopdiId: chopdiId,
-                  // isGaveLoanSelected: isGaveLoanSelected,
                 ),
-
                 const SizedBox(height: 18),
 
+                // ==========================================
+                // CLEAN EMPTY STATE
+                // ==========================================
                 if (tookLoanCustomers.isEmpty)
-                // 3. Fixed missing ')' and used screen size instead of constraints
-                  _buildEmptyState(
-                    size.width,
-                    size.height,
+                  Container(
+                    margin: const EdgeInsets.only(top: 40), // Gives spacing below the card
+                    alignment: Alignment.center,
+                    child: _buildEmptyState(context),
                   )
                 else
                   TookLoanCustomerListSection(
@@ -86,44 +70,19 @@ class TookLoanHomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(
-      double width,
-      double height,
-      ) {
-    // Responsive scale.
-    final scale = (width / 390).clamp(
-      0.82,
-      1.10,
-    );
+  Widget _buildEmptyState(BuildContext context) {
+    // Safely get screen width without LayoutBuilder
+    final width = MediaQuery.of(context).size.width;
+    final scale = (width / 390).clamp(0.82, 1.10);
 
-    // Unused variables for image sizing removed to prevent further warnings,
-    // or you can implement them below in the image widget if needed.
-    // final imageWidth = (82 * scale).clamp(68.0, 92.0);
-    // final imageHeight = (74 * scale).clamp(62.0, 84.0);
-
-    final titleFontSize = (22 * scale).clamp(
-      18.0,
-      23.0,
-    );
-
-    final descriptionFontSize = (16 * scale).clamp(
-      13.0,
-      17.0,
-    );
-
-    final horizontalPadding = (width * 0.05).clamp(
-      12.0,
-      28.0,
-    );
+    final titleFontSize = (22 * scale).clamp(18.0, 23.0);
+    final descriptionFontSize = (16 * scale).clamp(13.0, 17.0);
+    final horizontalPadding = (width * 0.05).clamp(12.0, 28.0);
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: horizontalPadding,
-        right: horizontalPadding,
-        top: 20,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Prevents infinite height issues
         children: [
           SizedBox(
             width: 120,
@@ -133,9 +92,7 @@ class TookLoanHomeContent extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
-
           const SizedBox(height: 6),
-
           Text(
             'No customers yet!',
             textAlign: TextAlign.center,
@@ -145,9 +102,7 @@ class TookLoanHomeContent extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-
           const SizedBox(height: 3),
-
           Text(
             'Start by adding a customer and\n'
                 'keep track of your loans easily',
@@ -159,16 +114,14 @@ class TookLoanHomeContent extends StatelessWidget {
               height: 1.25,
             ),
           ),
-
           const SizedBox(height: 12),
-
           ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: width * 0.65,
             ),
             child: Image.asset(
               'assets/line_home.png',
-              height: 125,
+              height: 105,
               width: 65,
               fit: BoxFit.contain,
             ),

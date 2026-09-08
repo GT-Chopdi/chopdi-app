@@ -798,9 +798,9 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
   Widget _buildBookSection() {
     return Center(
       child: SizedBox(
-        height: 190,
+        height: 170,
         // width: double.infinity,
-        width: 265,
+        width: 255,
       
         child: Stack(
           alignment: Alignment.center,
@@ -808,6 +808,8 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
           children: [
             Image.asset(
               'assets/chopdi_book.png',
+              width: 255,
+              height: 170,
             ),
           ],
         ),

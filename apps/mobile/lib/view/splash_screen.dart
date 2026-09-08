@@ -20,8 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-
-      _controller = AnimationController(
+    _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
@@ -72,27 +71,31 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (_) => const ChopdiOnboardingScreen(),
-      //   ),
-      // );
       await AuthService.instance.logout();
 
       if (!mounted) return;
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (_) => ChopdiOnboardingScreen(),
+          builder: (_) => const ChopdiOnboardingScreen(),
         ),
-        (route) => false,
+            (route) => false,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 1. Fetch screen dimensions to make UI responsive
+    final size = MediaQuery
+        .of(context)
+        .size;
+    // 2. Get system padding (avoids overlapping the gesture bar on Android)
+    final bottomSafeArea = MediaQuery
+        .of(context)
+        .padding
+        .bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xFFC74C4C),
       body: AnimatedBuilder(
@@ -113,7 +116,8 @@ class _SplashScreenState extends State<SplashScreen>
 
             Positioned.fill(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(size.width * 0.03),
+                // 3% of screen width
                 child: Image.asset(
                   "assets/frame_overlay.png",
                   fit: BoxFit.cover,
@@ -126,8 +130,9 @@ class _SplashScreenState extends State<SplashScreen>
               child: Text(
                 "Chopdi",
                 style: GoogleFonts.styleScript(
-                  fontSize: 86,
-                  color: Color(0XFF223A5E),
+                  // Scales with screen width, but won't get smaller than 60 or larger than 100
+                  fontSize: (size.width * 0.20).clamp(60.0, 100.0),
+                  color: const Color(0XFF223A5E),
                   height: 1,
                   fontWeight: FontWeight.w400,
                 ),
@@ -136,7 +141,8 @@ class _SplashScreenState extends State<SplashScreen>
 
             /// Bottom Badge
             Positioned(
-              bottom: 70,
+              // Pushes it up 6% of the screen height PLUS the height of the gesture bar
+              bottom: bottomSafeArea + (size.height * 0.06),
               left: 0,
               right: 0,
               child: Column(
@@ -144,15 +150,16 @@ class _SplashScreenState extends State<SplashScreen>
                 children: [
                   Image.asset(
                     "assets/secure.png",
-                    width: 108,
-                    height: 114,
+                    // Scales image based on screen width
+                    width: (size.width * 0.20).clamp(80.0, 120.0),
+                    height: (size.width * 0.20).clamp(85.0, 125.0),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: size.height * 0.015),
                   Text(
                     "SECURE • SIMPLE",
                     style: GoogleFonts.manrope(
-                      color: Color(0xFFFDEDD9),
-                      fontSize: 20,
+                      color: const Color(0xFFFDEDD9),
+                      fontSize: (size.width * 0.048).clamp(16.0, 22.0),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.0,
                     ),
@@ -162,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen>
                     "YOUR LEDGER, ALWAYS SAFE",
                     style: GoogleFonts.manrope(
                       color: const Color(0xFFFFF8F0),
-                      fontSize: 14,
+                      fontSize: (size.width * 0.035).clamp(12.0, 16.0),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.0,
                     ),
