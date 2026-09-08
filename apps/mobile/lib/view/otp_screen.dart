@@ -457,41 +457,44 @@ class _OTPScreenState extends State<OTPScreen> {
                       // OTP INPUT
                       // =====================================================
 
-                      Pinput(
-                        controller: otpController,
+                      AutofillGroup(
+                        child: Pinput(
+                          controller: otpController,
+                          focusNode: otpFocusNode,
+                          length: 6,
 
-                        focusNode: otpFocusNode,
+                          defaultPinTheme: defaultPinTheme,
 
-                        length: 6,
-
-                        defaultPinTheme: defaultPinTheme,
-
-                        focusedPinTheme:
-                            defaultPinTheme.copyDecorationWith(
-                          border: Border.all(
-                            color: const Color(0xff173A63),
-                            width: 1.5,
+                          focusedPinTheme:
+                              defaultPinTheme.copyDecorationWith(
+                            border: Border.all(
+                              color: const Color(0xff173A63),
+                              width: 1.5,
+                            ),
                           ),
+
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+
+                          autofillHints: const [
+                            AutofillHints.oneTimeCode,
+                          ],
+
+                          enableSuggestions: true,
+                          autofocus: false,
+
+                          onChanged: (value) {
+                            if (otpError != null) {
+                              setState(() {
+                                otpError = null;
+                              });
+                            }
+                          },
+
+                          onCompleted: (value) {
+                            // User can review the OTP before verification.
+                          },
                         ),
-
-                        keyboardType: TextInputType.number,
-
-                        textInputAction: TextInputAction.done,
-
-                        autofocus: false,
-
-                        onChanged: (value) {
-                          if (otpError != null) {
-                            setState(() {
-                              otpError = null;
-                            });
-                          }
-                        },
-
-                        onCompleted: (_) {
-                          // Keep keyboard open so user can still
-                          // review/edit OTP if needed.
-                        },
                       ),
 
                       // =====================================================

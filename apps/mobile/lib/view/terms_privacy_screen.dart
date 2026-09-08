@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({
@@ -656,13 +657,14 @@ class TermsPrivacyScreen extends StatelessWidget {
   // ===========================================================================
 
   Widget _buildLastUpdated() {
+    final String formattedDate =
+        DateFormat('dd MMMM yyyy').format(DateTime.now());
+
     return SizedBox(
       width: double.infinity,
-
       child: Text(
-        'Last Updated on 30 July 2026',
+        'Last Updated on $formattedDate',
         textAlign: TextAlign.center,
-
         style: GoogleFonts.manrope(
           fontSize: 10,
           fontWeight: FontWeight.w700,

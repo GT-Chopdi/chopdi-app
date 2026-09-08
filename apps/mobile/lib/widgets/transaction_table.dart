@@ -431,152 +431,285 @@ class _InterestRow extends StatelessWidget {
         "$frequency $interestType interest.";
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   final dateFormat =
+  //       DateFormat("dd MMM yyyy");
+
+  //   return Container(
+  //     margin: const EdgeInsets.only(
+  //       bottom: 10,
+  //     ),
+  //     padding: const EdgeInsets.symmetric(
+  //       horizontal: 8,
+  //       vertical: 8,
+  //     ),
+  //     decoration: BoxDecoration(
+  //       color: const Color(0xFFFFF8F0),
+  //       border: Border.all(
+  //         color: const Color(0xFFAAB9CF),
+  //       ),
+  //       borderRadius:
+  //           BorderRadius.circular(10),
+  //     ),
+  //     child: Row(
+  //       crossAxisAlignment:
+  //           CrossAxisAlignment.center,
+  //       children: [
+  //         // ========================================================
+  //         // DATE + DESCRIPTION
+  //         // ========================================================
+
+  //         Expanded(
+  //           flex: 3,
+  //           child: Column(
+  //             crossAxisAlignment:
+  //                 CrossAxisAlignment.start,
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Text(
+  //                 "${dateFormat.format(startDate)} - "
+  //                 "${dateFormat.format(endDate)}",
+  //                 style: GoogleFonts.manrope(
+  //                   fontSize: 12,
+  //                   fontWeight:
+  //                       FontWeight.w600,
+  //                   color:
+  //                       ChopdiColors.navy,
+  //                 ),
+  //               ),
+
+  //               const SizedBox(height: 3),
+
+  //               GestureDetector(
+  //                 onTap: () {
+  //                   showModalBottomSheet(
+  //                     context: context,
+  //                     isScrollControlled: true,
+  //                     backgroundColor:
+  //                         Colors.transparent,
+  //                     builder: (_) {
+  //                       return TransactionDetailsScreen(
+  //                         transaction:
+  //                             transaction,
+  //                         customerId:
+  //                             customerId,
+  //                         onChanged:
+  //                             onChanged,
+  //                         displayAmount: interest,
+  //                         isInterestRow: true,
+  //                       );
+  //                     },
+  //                   );
+  //                 },
+  //                 child: Text(
+  //                   _getInterestDescription(),
+  //                   maxLines: 1,
+  //                   overflow:
+  //                       TextOverflow.ellipsis,
+  //                   style:
+  //                       const TextStyle(
+  //                     fontSize: 13,
+  //                     color:
+  //                         Color(0xff8A93A6),
+  //                     decoration:
+  //                         TextDecoration.underline,
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+
+  //         // ========================================================
+  //         // GIVEN
+  //         // ========================================================
+
+  //         const Expanded(
+  //           flex: 2,
+  //           child: Center(
+  //             child: Text(
+  //               "-",
+  //               style: TextStyle(
+  //                 fontSize: 12,
+  //                 color: Colors.black87,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+
+  //         // ========================================================
+  //         // RECEIVED
+  //         // ========================================================
+
+  //         const Expanded(
+  //           flex: 2,
+  //           child: Center(
+  //             child: Text(
+  //               "-",
+  //               style: TextStyle(
+  //                 fontSize: 12,
+  //                 color: Colors.black87,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+
+  //         // ========================================================
+  //         // INTEREST
+  //         // ========================================================
+
+  //         Expanded(
+  //           flex: 2,
+  //           child: Align(
+  //             alignment:
+  //                 Alignment.centerRight,
+  //             child: Text(
+  //               "₹${interest.toStringAsFixed(2)}",
+  //               style: const TextStyle(
+  //                 color:
+  //                     Color(0xFF00901B),
+  //                 fontWeight:
+  //                     FontWeight.bold,
+  //                 fontSize: 14,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
-    final dateFormat =
-        DateFormat("dd MMM yyyy");
+    final dateFormat = DateFormat("dd MMM yyyy");
 
-    return Container(
-      margin: const EdgeInsets.only(
-        bottom: 10,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F0),
-        border: Border.all(
-          color: const Color(0xFFAAB9CF),
+    void openTransactionDetails() {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) {
+          return TransactionDetailsScreen(
+            transaction: transaction,
+            customerId: customerId,
+            onChanged: onChanged,
+            displayAmount: interest,
+            isInterestRow: true,
+          );
+        },
+      );
+    }
+
+    return GestureDetector(
+      onTap: openTransactionDetails,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 8,
         ),
-        borderRadius:
-            BorderRadius.circular(10),
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
-        children: [
-          // ========================================================
-          // DATE + DESCRIPTION
-          // ========================================================
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8F0),
+          border: Border.all(
+            color: const Color(0xFFAAB9CF),
+          ),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // ========================================================
+            // DATE + DESCRIPTION
+            // ========================================================
 
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "${dateFormat.format(startDate)} - "
-                  "${dateFormat.format(endDate)}",
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    fontWeight:
-                        FontWeight.w600,
-                    color:
-                        ChopdiColors.navy,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor:
-                          Colors.transparent,
-                      builder: (_) {
-                        return TransactionDetailsScreen(
-                          transaction:
-                              transaction,
-                          customerId:
-                              customerId,
-                          onChanged:
-                              onChanged,
-                          displayAmount: interest,
-                          isInterestRow: true,
-                        );
-                      },
-                    );
-                  },
-                  child: Text(
-                    _getInterestDescription(),
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(
-                      fontSize: 13,
-                      color:
-                          Color(0xff8A93A6),
-                      decoration:
-                          TextDecoration.underline,
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "${dateFormat.format(startDate)} - "
+                    "${dateFormat.format(endDate)}",
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: ChopdiColors.navy,
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 3),
+
+                  Text(
+                    _getInterestDescription(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xff8A93A6),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // ========================================================
-          // GIVEN
-          // ========================================================
+            // ========================================================
+            // GIVEN
+            // ========================================================
 
-          const Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                "-",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
+            const Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  "-",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // ========================================================
-          // RECEIVED
-          // ========================================================
+            // ========================================================
+            // RECEIVED
+            // ========================================================
 
-          const Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                "-",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
+            const Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  "-",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // ========================================================
-          // INTEREST
-          // ========================================================
+            // ========================================================
+            // INTEREST
+            // ========================================================
 
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment:
-                  Alignment.centerRight,
-              child: Text(
-                "₹${interest.toStringAsFixed(2)}",
-                style: const TextStyle(
-                  color:
-                      Color(0xFF00901B),
-                  fontWeight:
-                      FontWeight.bold,
-                  fontSize: 14,
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "₹${interest.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    color: Color(0xFF00901B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

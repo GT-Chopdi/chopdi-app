@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
-import 'package:mychopdi/utils/interest_calculator.dart';
 
 class TransactionRow extends StatelessWidget {
   final Transaction transaction;
