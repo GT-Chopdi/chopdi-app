@@ -1,5 +1,6 @@
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/notification.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
 
 class NotificationService {
   final Isar isar;
@@ -7,7 +8,7 @@ class NotificationService {
   NotificationService(this.isar);
 
   // ============================================================
-  // APP UPDATE NOTIFICATION
+  // APP UPDATE
   // ============================================================
 
   Future<int> createAppUpdateNotification({
@@ -15,22 +16,33 @@ class NotificationService {
     required String version,
     String? message,
   }) async {
+    final enabled =
+        await LocalNotificationService.instance
+            .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
     final notification = NotificationModel()
       ..title = 'App Update'
       ..subtitle =
-          message ?? 'A new version of Chopdi ($version) is available.'
+          message ??
+          'A new version of Chopdi ($version) is available.'
       ..type = 'app_update'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..chopdiId = chopdiId;
 
     return isar.writeTxn(() async {
-      return isar.notificationModels.put(notification);
+      return isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
   // ============================================================
-  // INTEREST CALCULATED NOTIFICATION
+  // INTEREST CALCULATED
   // ============================================================
 
   Future<int> createInterestNotification({
@@ -39,10 +51,19 @@ class NotificationService {
     required double interestAmount,
     int? customerId,
   }) async {
+    final enabled =
+        await LocalNotificationService.instance
+            .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
     final notification = NotificationModel()
       ..title = 'Interest Calculated'
       ..subtitle =
-          '₹${interestAmount.toStringAsFixed(2)} interest calculated for $customerName.'
+          '₹${interestAmount.toStringAsFixed(2)} '
+          'interest calculated for $customerName.'
       ..type = 'interest_calculated'
       ..createdAt = DateTime.now()
       ..isRead = false
@@ -52,7 +73,9 @@ class NotificationService {
       ..chopdiId = chopdiId;
 
     return isar.writeTxn(() async {
-      return isar.notificationModels.put(notification);
+      return isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
@@ -67,10 +90,20 @@ class NotificationService {
     required String interestPeriod,
     int? customerId,
   }) async {
+    final enabled =
+        await LocalNotificationService.instance
+            .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
     final notification = NotificationModel()
       ..title = 'Interest Updated'
       ..subtitle =
-          'Interest for $interestPeriod for $customerName has been updated to ₹${interestAmount.toStringAsFixed(2)}.'
+          'Interest for $interestPeriod for $customerName '
+          'has been updated to '
+          '₹${interestAmount.toStringAsFixed(2)}.'
       ..type = 'interest_updated'
       ..createdAt = DateTime.now()
       ..isRead = false
@@ -80,12 +113,14 @@ class NotificationService {
       ..chopdiId = chopdiId;
 
     return isar.writeTxn(() async {
-      return isar.notificationModels.put(notification);
+      return isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
   // ============================================================
-  // PAYMENT REMINDER - IN APP HISTORY
+  // PAYMENT REMINDER
   // ============================================================
 
   Future<int> createPaymentReminderNotification({
@@ -96,6 +131,14 @@ class NotificationService {
     int? customerId,
     double? amount,
   }) async {
+    final enabled =
+        await LocalNotificationService.instance
+            .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
     String reminderText;
 
     switch (reminderType) {
@@ -130,12 +173,14 @@ class NotificationService {
       ..chopdiId = chopdiId;
 
     return isar.writeTxn(() async {
-      return isar.notificationModels.put(notification);
+      return isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
   // ============================================================
-  // WATCH ALL NOTIFICATIONS
+  // WATCH NOTIFICATIONS
   // ============================================================
 
   Stream<List<NotificationModel>> watchNotifications(
@@ -165,28 +210,66 @@ class NotificationService {
           fireImmediately: true,
         )
         .map(
-          (notifications) => notifications.length,
+          (notifications) =>
+              notifications.length,
         );
   }
 
   // ============================================================
-  // MARK ONE AS READ
+  // MARK AS READ
   // ============================================================
 
   Future<void> markAsRead(
     int notificationId,
   ) async {
     final notification =
-        await isar.notificationModels.get(notificationId);
+        await isar.notificationModels.get(
+      notificationId,
+    );
 
     if (notification == null) {
+      return;
+    }
+
+    if (notification.isRead) {
       return;
     }
 
     notification.isRead = true;
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.put(notification);
+      await isar.notificationModels.put(
+        notification,
+      );
+    });
+  }
+
+  // ============================================================
+  // MARK AS UNREAD
+  // ============================================================
+
+  Future<void> markAsUnread(
+    int notificationId,
+  ) async {
+    final notification =
+        await isar.notificationModels.get(
+      notificationId,
+    );
+
+    if (notification == null) {
+      return;
+    }
+
+    if (!notification.isRead) {
+      return;
+    }
+
+    notification.isRead = false;
+
+    await isar.writeTxn(() async {
+      await isar.notificationModels.put(
+        notification,
+      );
     });
   }
 
@@ -197,11 +280,12 @@ class NotificationService {
   Future<void> markAllAsRead(
     int chopdiId,
   ) async {
-    final notifications = await isar.notificationModels
-        .filter()
-        .chopdiIdEqualTo(chopdiId)
-        .isReadEqualTo(false)
-        .findAll();
+    final notifications =
+        await isar.notificationModels
+            .filter()
+            .chopdiIdEqualTo(chopdiId)
+            .isReadEqualTo(false)
+            .findAll();
 
     if (notifications.isEmpty) {
       return;
@@ -212,7 +296,9 @@ class NotificationService {
     }
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.putAll(notifications);
+      await isar.notificationModels.putAll(
+        notifications,
+      );
     });
   }
 
@@ -224,12 +310,14 @@ class NotificationService {
     int notificationId,
   ) async {
     await isar.writeTxn(() async {
-      await isar.notificationModels.delete(notificationId);
+      await isar.notificationModels.delete(
+        notificationId,
+      );
     });
   }
 
   // ============================================================
-  // DELETE ALL
+  // CLEAR ALL
   // ============================================================
 
   Future<void> clearAll(

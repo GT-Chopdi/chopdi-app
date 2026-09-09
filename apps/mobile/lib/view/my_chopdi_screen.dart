@@ -394,12 +394,12 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                             decoration: const BoxDecoration(
                               color: Color(0xFFFFE6CF),
                               borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(100), // Arch shape
+                                top: Radius.circular(100),
                               ),
                             ),
                           ),
                           Image.asset(
-                            'assets/chopdi_book.png',
+                            'assets/chopdibook.png',
                             width: 150,
                             height: 150,
                             fit: BoxFit.contain,
@@ -416,30 +416,6 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Badge Row
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(141, 208, 113, 0.34),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: const Color.fromRGBO(0, 144, 27, 1),
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Text(
-                                'ACTIVE CHOPDI •',
-                                style: GoogleFonts.manrope(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: greenColor,
-                                ),
-                              ),
-                            ),
-                          ),
                           const SizedBox(height: 8),
 
                           // Title & Edit Button
@@ -481,7 +457,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
                           // Description
                           Text(
-                            "${chopdi?.description ?? 'My personal lending ledger\nto track loans and interest.'}",
+                            chopdi?.description ?? 'My personal lending ledger\nto track loans and interest.',
                             style: GoogleFonts.manrope(
                               fontSize: 12,
                               height: 1.3,

@@ -23,11 +23,9 @@ class LocalNotificationService {
   // CHANNELS
   // ============================================================
 
-  static const String paymentChannelId =
-      'payment_reminders';
+  static const String paymentChannelId = 'payment_reminders';
 
-  static const String dailyChannelId =
-      'daily_reminders';
+  static const String dailyChannelId = 'daily_reminders';
 
   // ============================================================
   // NOTIFICATION IDS
@@ -43,6 +41,13 @@ class LocalNotificationService {
   // SHARED PREFERENCES KEYS
   // ============================================================
 
+  /// Master notification switch.
+  ///
+  /// This controls whether the app is allowed to send
+  /// any notification at all.
+  static const String notificationsEnabledKey =
+      'notifications_enabled';
+
   static const String paymentReminderKey =
       'notification_payment_reminder_enabled';
 
@@ -55,6 +60,9 @@ class LocalNotificationService {
   // ============================================================
   // DEFAULT SETTINGS
   // ============================================================
+
+  /// Notifications are ON by default.
+  static const bool defaultNotificationsEnabled = true;
 
   static const bool defaultPaymentReminder = true;
 
@@ -91,8 +99,7 @@ class LocalNotificationService {
 
     await _plugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse:
-          _onNotificationResponse,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
     await _createAndroidChannels();
@@ -176,6 +183,45 @@ class LocalNotificationService {
   }
 
   // ============================================================
+  // MASTER NOTIFICATION SETTING
+  // ============================================================
+
+  Future<bool> areNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    return prefs.getBool(notificationsEnabledKey) ??
+        defaultNotificationsEnabled;
+  }
+
+  Future<void> setNotificationsEnabled(
+    bool enabled, {
+    Isar? database,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setBool(
+      notificationsEnabledKey,
+      enabled,
+    );
+
+    debugPrint(
+      '[LocalNotification] Master notifications: $enabled',
+    );
+
+    if (!enabled) {
+      // Immediately remove every scheduled notification.
+      await cancelAllNotifications();
+      return;
+    }
+
+    // When enabled again, restore the user's existing
+    // daily/payment reminder settings.
+    await syncNotifications(
+      database: database,
+    );
+  }
+
+  // ============================================================
   // GET SETTINGS
   // ============================================================
 
@@ -196,8 +242,7 @@ class LocalNotificationService {
   Future<String> getSelectedReminderType() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final value =
-        prefs.getString(selectedReminderKey);
+    final value = prefs.getString(selectedReminderKey);
 
     if (value == 'dueDate' ||
         value == 'oneDayBefore' ||
@@ -217,8 +262,7 @@ class LocalNotificationService {
     required bool dailyReminderEnabled,
     required String selectedReminder,
   }) async {
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool(
       paymentReminderKey,
@@ -257,16 +301,6 @@ class LocalNotificationService {
 
   // ============================================================
   // CENTRAL SYNC
-  //
-  // THIS IS THE MAIN METHOD.
-  //
-  // Call this:
-  // - App startup
-  // - After transaction added
-  // - After transaction edited
-  // - After transaction deleted
-  // - After interest updated
-  // - After notification settings saved
   // ============================================================
 
   Future<void> syncNotifications({
@@ -274,6 +308,34 @@ class LocalNotificationService {
     bool requestPermissionIfNeeded = false,
   }) async {
     await initialize();
+
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    debugPrint(
+      '[LocalNotification] '
+      'Master notifications enabled: $masterEnabled',
+    );
+
+    // ==========================================================
+    // MASTER SWITCH OFF
+    // ==========================================================
+
+    if (!masterEnabled) {
+      await cancelAllNotifications();
+
+      debugPrint(
+        '[LocalNotification] '
+        'Master switch is OFF. '
+        'No notifications will be scheduled.',
+      );
+
+      return;
+    }
+
+    // ==========================================================
+    // PERMISSION
+    // ==========================================================
 
     if (requestPermissionIfNeeded) {
       await requestPermission();
@@ -302,9 +364,9 @@ class LocalNotificationService {
       'Daily enabled: $dailyEnabled',
     );
 
-    // ------------------------------------------------------------
+    // ==========================================================
     // DAILY REMINDER
-    // ------------------------------------------------------------
+    // ==========================================================
 
     if (dailyEnabled) {
       await scheduleDailyReminder();
@@ -312,9 +374,9 @@ class LocalNotificationService {
       await cancelDailyReminder();
     }
 
-    // ------------------------------------------------------------
+    // ==========================================================
     // PAYMENT REMINDERS
-    // ------------------------------------------------------------
+    // ==========================================================
 
     if (paymentEnabled) {
       await rescheduleAllPaymentReminders(
@@ -399,26 +461,21 @@ class LocalNotificationService {
 
   DateTime _addMonth(DateTime date) {
     final int nextMonth =
-        date.month == 12
-            ? 1
-            : date.month + 1;
+        date.month == 12 ? 1 : date.month + 1;
 
     final int nextYear =
         date.month == 12
             ? date.year + 1
             : date.year;
 
-    final int lastDay =
-        DateTime(
-          nextYear,
-          nextMonth + 1,
-          0,
-        ).day;
+    final int lastDay = DateTime(
+      nextYear,
+      nextMonth + 1,
+      0,
+    ).day;
 
     final int day =
-        date.day > lastDay
-            ? lastDay
-            : date.day;
+        date.day > lastDay ? lastDay : date.day;
 
     return DateTime(
       nextYear,
@@ -432,11 +489,9 @@ class LocalNotificationService {
   // ============================================================
 
   DateTime _addYear(DateTime date) {
-    final int nextYear =
-        date.year + 1;
+    final int nextYear = date.year + 1;
 
-    if (date.month == 2 &&
-        date.day == 29) {
+    if (date.month == 2 && date.day == 29) {
       return DateTime(
         nextYear,
         2,
@@ -458,8 +513,7 @@ class LocalNotificationService {
   int paymentReminderNotificationId(
     int customerId,
   ) {
-    return paymentReminderIdBase +
-        customerId;
+    return paymentReminderIdBase + customerId;
   }
 
   // ============================================================
@@ -474,6 +528,19 @@ class LocalNotificationService {
     double? amount,
   }) async {
     await initialize();
+
+    // IMPORTANT:
+    // Never schedule if master notifications are OFF.
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      debugPrint(
+        '[LocalNotification] '
+        'Skipped payment reminder because notifications are OFF.',
+      );
+      return;
+    }
 
     DateTime scheduledDate;
 
@@ -514,9 +581,9 @@ class LocalNotificationService {
         break;
     }
 
-    // ------------------------------------------------------------
+    // ==========================================================
     // DON'T SCHEDULE PAST NOTIFICATIONS
-    // ------------------------------------------------------------
+    // ==========================================================
 
     if (scheduledDate.isBefore(DateTime.now())) {
       debugPrint(
@@ -527,14 +594,13 @@ class LocalNotificationService {
       return;
     }
 
-    // ------------------------------------------------------------
+    // ==========================================================
     // MESSAGE
-    // ------------------------------------------------------------
+    // ==========================================================
 
-    final String amountText =
-        amount == null
-            ? ''
-            : ' Amount due: ₹${amount.toStringAsFixed(2)}.';
+    final String amountText = amount == null
+        ? ''
+        : ' Amount due: ₹${amount.toStringAsFixed(2)}.';
 
     final String body;
 
@@ -610,6 +676,13 @@ class LocalNotificationService {
     required String reminderType,
     double? amount,
   }) async {
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      return;
+    }
+
     final int notificationId =
         paymentReminderNotificationId(
       customer.id,
@@ -667,6 +740,16 @@ class LocalNotificationService {
     final Isar db =
         database ?? IsarService.isar;
 
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      await cancelAllPaymentReminders(
+        database: db,
+      );
+      return;
+    }
+
     final bool enabled =
         await isPaymentReminderEnabled();
 
@@ -698,9 +781,9 @@ class LocalNotificationService {
         continue;
       }
 
-      // ----------------------------------------------------------
+      // ========================================================
       // CUSTOMER TRANSACTIONS
-      // ----------------------------------------------------------
+      // ========================================================
 
       final transactions =
           await db.transactions
@@ -715,9 +798,9 @@ class LocalNotificationService {
         continue;
       }
 
-      // ----------------------------------------------------------
+      // ========================================================
       // GAVE
-      // ----------------------------------------------------------
+      // ========================================================
 
       final gaveTransactions =
           transactions
@@ -728,9 +811,9 @@ class LocalNotificationService {
               )
               .toList();
 
-      // ----------------------------------------------------------
+      // ========================================================
       // TOOK
-      // ----------------------------------------------------------
+      // ========================================================
 
       final tookTransactions =
           transactions
@@ -746,11 +829,11 @@ class LocalNotificationService {
         continue;
       }
 
-      // ----------------------------------------------------------
+      // ========================================================
       // CUSTOMER OWES YOU
       //
       // GIVEN - RECEIVED + INTEREST
-      // ----------------------------------------------------------
+      // ========================================================
 
       final double totalGiven =
           gaveTransactions.fold(
@@ -780,15 +863,14 @@ class LocalNotificationService {
       );
 
       final double customerOwesYou =
-          (totalGiven -
-                  totalReceived) +
+          (totalGiven - totalReceived) +
               totalGivenInterest;
 
-      // ----------------------------------------------------------
+      // ========================================================
       // YOU OWE CUSTOMER
       //
       // TOOK - PAID + INTEREST
-      // ----------------------------------------------------------
+      // ========================================================
 
       final double totalTook =
           tookTransactions.fold(
@@ -818,13 +900,12 @@ class LocalNotificationService {
       );
 
       final double youOweCustomer =
-          (totalTook -
-                  totalPaid) +
+          (totalTook - totalPaid) +
               totalTookInterest;
 
-      // ----------------------------------------------------------
+      // ========================================================
       // SELECT ACTIVE SIDE
-      // ----------------------------------------------------------
+      // ========================================================
 
       final bool hasCustomerOwesYouBalance =
           customerOwesYou > 0;
@@ -867,9 +948,9 @@ class LocalNotificationService {
         continue;
       }
 
-      // ----------------------------------------------------------
+      // ========================================================
       // ORIGINAL LOAN TRANSACTION
-      // ----------------------------------------------------------
+      // ========================================================
 
       activeLoans.sort(
         (a, b) =>
@@ -891,9 +972,9 @@ class LocalNotificationService {
         'Outstanding: $outstanding',
       );
 
-      // ----------------------------------------------------------
+      // ========================================================
       // SCHEDULE
-      // ----------------------------------------------------------
+      // ========================================================
 
       await scheduleCustomerPaymentReminder(
         customer: customer,
@@ -914,6 +995,17 @@ class LocalNotificationService {
     int minute = 0,
   }) async {
     await initialize();
+
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      debugPrint(
+        '[LocalNotification] '
+        'Skipped daily reminder because notifications are OFF.',
+      );
+      return;
+    }
 
     await cancelDailyReminder();
 
@@ -1064,6 +1156,17 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> showRealDeviceTestNotification() async {
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      debugPrint(
+        '[LocalNotification] '
+        'Test notification blocked because notifications are OFF.',
+      );
+      return;
+    }
+
     await initialize();
 
     await requestPermission();
@@ -1106,6 +1209,17 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> scheduleTestNotificationAfterOneMinute() async {
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      debugPrint(
+        '[LocalNotification] '
+        'Test notification blocked because notifications are OFF.',
+      );
+      return;
+    }
+
     await initialize();
 
     await requestPermission();
@@ -1155,6 +1269,17 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> scheduleTestDailyReminder() async {
+    final bool masterEnabled =
+        await areNotificationsEnabled();
+
+    if (!masterEnabled) {
+      debugPrint(
+        '[LocalNotification] '
+        'Test daily notification blocked because notifications are OFF.',
+      );
+      return;
+    }
+
     await initialize();
 
     await requestPermission();

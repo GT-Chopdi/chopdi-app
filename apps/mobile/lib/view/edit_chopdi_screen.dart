@@ -807,7 +807,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
       
           children: [
             Image.asset(
-              'assets/chopdi_book.png',
+              'assets/edit_chopdi_book.png',
               width: 255,
               height: 170,
             ),
@@ -933,7 +933,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
           const SizedBox(width: 7),
 
           Image.asset(
-            'assets/chopdi_edit_logo.png'
+            'assets/edit_chopdi_book.png'
 
           ),
 
