@@ -129,7 +129,7 @@ class TermsPrivacyScreen extends StatelessWidget {
                       _buildDivider(),
 
                       const SizedBox(
-                        height: 18,
+                        height: 38,
                       ),
 
                       // =====================================================
