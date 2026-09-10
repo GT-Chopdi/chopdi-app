@@ -274,7 +274,7 @@ class _NotificationsScreenState
           child: const Padding(
             padding: EdgeInsets.all(4),
             child: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_new,
               color: ChopdiColors.navy,
             ),
           ),

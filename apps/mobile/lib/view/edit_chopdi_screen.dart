@@ -753,7 +753,7 @@ class _EditChopdiScreenState extends State<EditChopdiScreen> {
             height: 32,
             child: Center(
               child: Icon(
-                Icons.arrow_back,
+                Icons.arrow_back_ios_new,
                 color: textColor,
               ),
             ),

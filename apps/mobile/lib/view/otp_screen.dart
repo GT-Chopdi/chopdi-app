@@ -316,7 +316,7 @@
 //                             },
 
 //                             child: const Icon(
-//                               Icons.arrow_back_outlined,
+//                               Icons.arrow_back_ios_new_outlined,
 //                               size: 18,
 //                               color: Color(0xff1D3557),
 //                             ),
@@ -1014,7 +1014,7 @@ class _OTPScreenState extends State<OTPScreen> {
                             },
 
                             child: const Icon(
-                              Icons.arrow_back_outlined,
+                              Icons.arrow_back_ios_new_outlined,
                               size: 18,
                               color: Color(0xff1D3557),
                             ),

@@ -202,7 +202,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
         title: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back,
+              icon: const Icon(Icons.arrow_back_ios_new,
                   color: ChopdiColors.navy),
               onPressed: () => Navigator.pop(context),
             ),
