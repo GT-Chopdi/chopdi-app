@@ -140,7 +140,7 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(
-                  Icons.arrow_back,
+                  Icons.arrow_back_ios_new,
                   color: primaryColor,
                 ),
                 padding: EdgeInsets.zero,

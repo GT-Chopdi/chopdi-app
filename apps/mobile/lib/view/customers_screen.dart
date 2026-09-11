@@ -103,8 +103,25 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                   controller: searchController,
                   onChanged: searchCustomer,
                   decoration: InputDecoration(
-                    prefixIcon: Image.asset('assets/search_option.png', height: 24, width: 24,),
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        'assets/search_option.png',
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 44,
+                      minHeight: 44,
+                      maxWidth: 44,
+                      maxHeight: 44,
+                    ),
+
                     hintText: "Search by name and phone number",
+                    hintStyle: TextStyle(fontSize: 12),
                     border: InputBorder.none,
                   ),
                 ),

@@ -142,6 +142,7 @@ class _TookLoanCustomerListSectionState
                       ),
                     ),
                     hintText: "Search by name and phone number",
+                    hintStyle: TextStyle(fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       vertical: 12,

@@ -38,123 +38,75 @@ class TermsPrivacyScreen extends StatelessWidget {
 
       body: SafeArea(
         bottom: false,
-
         child: Padding(
-          // ===============================================================
-          // SAME OUTER PADDING AS MY CHOPDI / HELP / NOTIFICATION SETTINGS
-          // ===============================================================
-
           padding: const EdgeInsets.all(14),
-
           child: Column(
             children: [
+              // ==============================
+              // SCROLLABLE CONTENT
+              // ==============================
               Expanded(
                 child: SingleChildScrollView(
-                  physics:
-                      const BouncingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
 
                   keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior
-                          .onDrag,
+                  ScrollViewKeyboardDismissBehavior.onDrag,
 
-                  // No additional horizontal padding.
                   padding: EdgeInsets.only(
-                    bottom:
-                        keyboardVisible ? 30 : 14,
+                    bottom: keyboardVisible ? 30 : 14,
                   ),
 
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // =====================================================
                       // HEADER
-                      // =====================================================
-
                       _buildHeader(context),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 18),
 
-                      // =====================================================
                       // DOCUMENT ILLUSTRATION
-                      // =====================================================
-
                       _buildDocumentIllustration(),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 18),
 
-                      // =====================================================
                       // TRUST TEXT
-                      // =====================================================
-
                       _buildTrustText(),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 18),
 
-                      // =====================================================
                       // DIVIDER
-                      // =====================================================
-
                       _buildDivider(),
 
-                      // =====================================================
                       // TERMS
-                      // =====================================================
-
                       _buildTermsSection(),
 
-                      const SizedBox(
-                        height: 8,
-                      ),
+                      const SizedBox(height: 8),
 
                       _buildDivider(),
 
-                      // =====================================================
                       // PRIVACY
-                      // =====================================================
-
                       _buildPrivacySection(),
 
-                      const SizedBox(
-                        height: 11,
-                      ),
+                      const SizedBox(height: 11),
 
                       _buildDivider(),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 38),
 
-                      // =====================================================
-                      // CONTACT
-                      // =====================================================
-
-                      _buildContactBox(),
-
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // =====================================================
                       // LAST UPDATED
-                      // =====================================================
 
-                      _buildLastUpdated(),
-
-                      const SizedBox(
-                        height: 14,
-                      ),
                     ],
                   ),
                 ),
               ),
+
+              // ==============================
+              // FIXED BOTTOM CONTACT BOX
+              // ==============================
+              _buildContactBox(),
+              _buildLastUpdated(),
+
+              const SizedBox(height: 14),
             ],
           ),
         ),
@@ -182,7 +134,7 @@ class TermsPrivacyScreen extends StatelessWidget {
             ),
 
             child: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_new,
               size: 19,
               color: darkBlue,
             ),
@@ -559,21 +511,15 @@ class TermsPrivacyScreen extends StatelessWidget {
       onTap: () {
         onContactSupport?.call();
       },
-
       child: Container(
         width: double.infinity,
-
-        // Do not force a small height.
-        // Let the content determine the height.
         constraints: const BoxConstraints(
           minHeight: 39,
         ),
-
         padding: const EdgeInsets.symmetric(
           horizontal: 8,
           vertical: 7,
         ),
-
         decoration: BoxDecoration(
           color: infoBackground,
           borderRadius: BorderRadius.circular(7),
@@ -582,11 +528,8 @@ class TermsPrivacyScreen extends StatelessWidget {
             width: 0.8,
           ),
         ),
-
         child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.center,
-
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Icon(
               Icons.info_outline,
@@ -594,28 +537,17 @@ class TermsPrivacyScreen extends StatelessWidget {
               color: orange,
             ),
 
-            const SizedBox(
-              width: 7,
-            ),
+            const SizedBox(width: 7),
 
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'If you have any questions, feel free to contact us at',
-
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -624,22 +556,16 @@ class TermsPrivacyScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(
-                    height: 2,
-                  ),
+                  const SizedBox(height: 2),
 
                   Text(
                     'chopdi@geloratech.com',
-
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       color: orange,
-                      fontWeight:
-                          FontWeight.w700,
+                      fontWeight: FontWeight.w700,
                       height: 1.15,
                     ),
                   ),
@@ -651,7 +577,6 @@ class TermsPrivacyScreen extends StatelessWidget {
       ),
     );
   }
-
   // ===========================================================================
   // LAST UPDATED
   // ===========================================================================
