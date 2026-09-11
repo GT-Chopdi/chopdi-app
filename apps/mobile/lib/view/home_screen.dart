@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: const Color(0xff243B67),
           elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(18),
           ),
           onPressed: () async {
             if (currentChopdi == null) return;

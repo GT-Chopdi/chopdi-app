@@ -17,6 +17,7 @@ class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
   final VoidCallback onSaved;
   final bool isEdit;
   final Transaction? transaction;
+
   
   const TookLoanMoneyGaveBottomSheet({super.key, required this.customer, required this.onSaved, required this.isEdit, this.transaction});
 
@@ -42,7 +43,7 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
   final GlobalKey _amountKey = GlobalKey();
   final GlobalKey _interestKey = GlobalKey();
   final GlobalKey _descriptionKey = GlobalKey();
-
+  bool _interestRateError = false;
   DateTime selectedDate = DateTime.now();
 
   String interestType = "Simple Interest";
@@ -372,20 +373,52 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                         child: title("Interest Rate (%)"),
                       ),
 
-                      Container(
-                        key: _interestKey,
-                        child: TextField(
-                          controller: interestController,
-                          focusNode: _interestFocusNode,
-                          onChanged: (_) => setState(() {}),
-                          keyboardType: TextInputType.number,
-                          decoration: decoration(
-                            hint: "Enter Interest rate",
-                          ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 18),
+                Container(
+                key: _interestKey,
+                child: TextField(
+                controller: interestController,
+                focusNode: _interestFocusNode,
+                    onChanged: (value) {
+              setState(() {
+              _interestRateError = value.trim().isEmpty;
+              });
+              },
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: decoration(
+                  hint: "Enter Interest rate",
+                ).copyWith(
+                  errorText: _interestRateError
+                      ? "Interest rate is required"
+                      : null,
+                  errorStyle: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: _interestRateError
+                          ? Colors.red
+                          : const Color(0xffC9D2E3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: _interestRateError
+                          ? Colors.red
+                          : const Color(0xff29406B),
+                      width: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+      ),
+
+
+
+        const SizedBox(height: 18),
 
                       // =========================
                       // DESCRIPTION
@@ -592,8 +625,17 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () async {
-                            if (amountController.text.isEmpty ||
-                                interestController.text.isEmpty) {
+                            if (amountController.text.trim().isEmpty ||
+                                interestController.text.trim().isEmpty) {
+                              setState(() {
+                                _interestRateError = interestController.text.trim().isEmpty;
+                              });
+
+                              if (_interestRateError) {
+                                _interestFocusNode.requestFocus();
+                                _scrollToField(_interestKey);
+                              }
+
                               return;
                             }
 

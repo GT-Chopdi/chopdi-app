@@ -370,7 +370,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       const Text(
                         "Add Customer",
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: Color(0xff223A5E),
                         ),

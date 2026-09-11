@@ -33,6 +33,11 @@ class _EditTransactionBottomSheetState
   String? selectedInterestFrequency;
   String? selectedPaymentMode;
 
+  bool _interestRateError = false;
+
+  final FocusNode _interestRateFocusNode = FocusNode();
+  final GlobalKey _interestRateKey = GlobalKey();
+
   final List<String> interestTypes = [
     'Simple Interest',
     'Compound Interest',
@@ -74,19 +79,19 @@ class _EditTransactionBottomSheetState
     selectedDate = transaction.date;
 
     selectedInterestType =
-        transaction.interestType.isEmpty
-            ? null
-            : transaction.interestType;
+    transaction.interestType.isEmpty
+        ? null
+        : transaction.interestType;
 
     selectedInterestFrequency =
-        transaction.interestFrequency.isEmpty
-            ? null
-            : transaction.interestFrequency;
+    transaction.interestFrequency.isEmpty
+        ? null
+        : transaction.interestFrequency;
 
     selectedPaymentMode =
-        transaction.paymentMode.isEmpty
-            ? null
-            : transaction.paymentMode;
+    transaction.paymentMode.isEmpty
+        ? null
+        : transaction.paymentMode;
   }
 
   @override
@@ -94,170 +99,212 @@ class _EditTransactionBottomSheetState
     amountController.dispose();
     interestRateController.dispose();
     descriptionController.dispose();
+    _interestRateFocusNode.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final keyboardHeight =
-        MediaQuery.of(context).viewInsets.bottom;
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final keyboardHeight = mediaQuery.viewInsets.bottom;
 
-    final size = MediaQuery.of(context).size;
+    // When the keyboard opens, use only the visible space above it.
+    final availableHeight = screenHeight - keyboardHeight;
 
-    final width = size.width;
-    final height = size.height;
+    final sheetHeight = keyboardHeight > 0
+        ? availableHeight
+        : screenHeight * 0.90;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(
-        5,
-        0,
-        5,
-        2,
-      ),
+      height: sheetHeight,
+      margin: const EdgeInsets.fromLTRB(5, 0, 5, 0),
       padding: const EdgeInsets.only(
-                left: 16,
-                top: 4,
-                bottom: 8,
-              ),
+        left: 16,
+        top: 4,
+        right: 16,
+        bottom: 0,
+      ),
       decoration: const BoxDecoration(
         color: Color.fromRGBO(255, 248, 240, 1),
-        borderRadius: BorderRadius.all(
-          Radius.circular(24),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(24),
         ),
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-                left: 16,
+      child: Column(
+        children: [
+          // Drag handle
+          Container(
+            width: 38,
+            height: 3,
+            decoration: BoxDecoration(
+              color: const Color(0xFF85817D),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Scrollable content. The buttons stay fixed above the keyboard.
+          Expanded(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior:
+              ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.only(
+                left: 0,
                 top: 5,
-                bottom: 12,
-                right: 18,
+                bottom: 20,
+                right: 2,
               ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              width: 38,
-              height: 3,
-              decoration: BoxDecoration(
-                color: const Color(0xFF85817D),
-                borderRadius:
-                    BorderRadius.circular(10),
-              ),
-            ),
-
-            const SizedBox(height: 17),
-
-            // Rupee icon
-            Container(
-              width: 52,
-              height: 52,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(
-                  170,
-                  185,
-                  207,
-                  0.6,
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: 30,
-                  height: 30,
-                  child: Image.asset(
-                    'assets/currency_rupee_circle.png',
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Rupee icon
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(
+                        170,
+                        185,
+                        207,
+                        0.6,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Image.asset(
+                          'assets/currency_rupee_circle.png',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 7),
+
+                  Text(
+                    'Edit Transaction Details',
+                    style: GoogleFonts.manrope(
+                      color: const Color(0xFF233E67),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Amount
+                  _buildLabel('Amount'),
+
+                  const SizedBox(height: 5),
+
+                  _buildTextField(
+                    controller: amountController,
+                    prefixText: '₹ ',
+                    keyboardType:
+                    const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  // Date
+                  _buildLabel('Date'),
+
+                  const SizedBox(height: 5),
+
+                  _buildDateField(),
+
+                  const SizedBox(height: 9),
+
+                  // Interest Rate
+                  _buildLabel('Interest Rate (%)'),
+
+                  const SizedBox(height: 5),
+
+                  Container(
+                    key: _interestRateKey,
+                    child: _buildInterestRateField(),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  // Description
+                  _buildLabel('Description'),
+
+                  const SizedBox(height: 5),
+
+                  _buildDescriptionField(),
+
+                  const SizedBox(height: 9),
+
+                  // Payment Mode
+                  _buildLabel('Payment Mode (Optional)'),
+
+                  const SizedBox(height: 5),
+
+                  _buildDropdown(
+                    value: selectedPaymentMode,
+                    hint: 'Select Payment Mode',
+                    items: paymentModes,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPaymentMode = value;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // // Contact support
+                  // _buildContactBox(),
+                  //
+                  // const SizedBox(height: 20),
+                ],
               ),
             ),
+          ),
 
-            const SizedBox(height: 7),
-
-            Text(
-              'Edit Transaction Details',
-              style: GoogleFonts.manrope(
-                color: const Color(0xFF233E67),
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
+          // Fixed buttons
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(
+              top: 8,
+              bottom: 12,
             ),
-
-            const SizedBox(height: 12),
-
-            // Amount
-            _buildLabel('Amount'),
-
-            const SizedBox(height: 5),
-
-            _buildTextField(
-              controller: amountController,
-              prefixText: '₹ ',
-              keyboardType:
-                  const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
+            color: const Color.fromRGBO(
+              255,
+              248,
+              240,
+              1,
             ),
-
-            const SizedBox(height: 9),
-
-            // Date
-            _buildLabel('Date'),
-
-            const SizedBox(height: 5),
-
-            _buildDateField(),
-
-            const SizedBox(height: 9),
-
-            _buildLabel('Description'),
-
-            const SizedBox(height: 5),
-            
-            _buildDescriptionField(),
-
-
-            const SizedBox(height: 9),
-
-            // Payment Mode
-            _buildLabel('Payment Mode (Optional)'),
-
-            const SizedBox(height: 5),
-
-            _buildDropdown(
-              value: selectedPaymentMode,
-              hint: 'Select Payment Mode',
-              items: paymentModes,
-              onChanged: (value) {
-                setState(() {
-                  selectedPaymentMode = value;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-
-            // Buttons
-            Row(
+            child: Row(
               children: [
                 Expanded(
                   child: SizedBox(
                     height: 40,
                     child: OutlinedButton(
                       onPressed: () {
+                        FocusScope.of(context).unfocus();
                         Navigator.pop(context);
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor:
-                            const Color(0xFF233E67),
+                        const Color(0xFF233E67),
                         side: const BorderSide(
                           color: Color(0xFFBFC7D2),
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(6),
+                          BorderRadius.circular(6),
                         ),
                       ),
                       child: Text(
@@ -280,13 +327,12 @@ class _EditTransactionBottomSheetState
                       onPressed: _saveChanges,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            const Color(0xFF213F68),
-                        foregroundColor:
-                            Colors.white,
+                        const Color(0xFF213F68),
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(6),
+                          BorderRadius.circular(6),
                         ),
                       ),
                       child: Text(
@@ -301,8 +347,139 @@ class _EditTransactionBottomSheetState
                 ),
               ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInterestRateField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: interestRateController,
+          focusNode: _interestRateFocusNode,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+          ),
+          style: GoogleFonts.manrope(
+            color: const Color(0xFF233E67),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+          onChanged: (value) {
+            if (_interestRateError &&
+                value.trim().isNotEmpty) {
+              setState(() {
+                _interestRateError = false;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 7,
+            ),
+            hintText: 'Enter Interest Rate',
+            hintStyle: GoogleFonts.manrope(
+              color: const Color(0xFF8B929B),
+              fontSize: 10,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(
+                color: _interestRateError
+                    ? Colors.red
+                    : const Color(0xFFBFC7D2),
+                width: 0.8,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(
+                color: _interestRateError
+                    ? Colors.red
+                    : const Color(0xFF213F68),
+                width: 1,
+              ),
+            ),
+          ),
         ),
+
+        if (_interestRateError)
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 4,
+              top: 4,
+            ),
+            child: Text(
+              'Interest rate is required',
+              style: GoogleFonts.manrope(
+                color: Colors.red,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildContactBox() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEE0C9),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(
+          color: const Color.fromRGBO(
+            177,
+            95,
+            39,
+            0.23,
+          ),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.info_outline,
+            size: 15,
+            color: Color(0xFFC74C4C),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'If you have any questions, feel free to contact us at',
+                  style: GoogleFonts.manrope(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF223A5E),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'chopdi@geloratech.com',
+                  style: GoogleFonts.manrope(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFC74C4C),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -344,13 +521,13 @@ class _EditTransactionBottomSheetState
             fontWeight: FontWeight.w600,
           ),
           contentPadding:
-              const EdgeInsets.symmetric(
+          const EdgeInsets.symmetric(
             horizontal: 8,
             vertical: 7,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius:
-                BorderRadius.circular(6),
+            BorderRadius.circular(6),
             borderSide: const BorderSide(
               color: Color.fromRGBO(170, 185, 207, 1),
               width: 0.8,
@@ -358,7 +535,7 @@ class _EditTransactionBottomSheetState
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius:
-                BorderRadius.circular(6),
+            BorderRadius.circular(6),
             borderSide: const BorderSide(
               color: Color.fromRGBO(170, 185, 207, 1),
               width: 1,
@@ -379,7 +556,7 @@ class _EditTransactionBottomSheetState
         ),
         decoration: BoxDecoration(
           borderRadius:
-              BorderRadius.circular(6),
+          BorderRadius.circular(6),
           border: Border.all(
             color: const Color(0xFFBFC7D2),
             width: 0.8,
@@ -439,7 +616,7 @@ class _EditTransactionBottomSheetState
       ),
       decoration: BoxDecoration(
         borderRadius:
-            BorderRadius.circular(6),
+        BorderRadius.circular(6),
         border: Border.all(
           color: const Color(0xFFBFC7D2),
           width: 0.8,
@@ -481,7 +658,7 @@ class _EditTransactionBottomSheetState
   Widget _buildDescriptionField() {
     return Column(
       crossAxisAlignment:
-          CrossAxisAlignment.end,
+      CrossAxisAlignment.end,
       children: [
         SizedBox(
           height: 55,
@@ -501,27 +678,27 @@ class _EditTransactionBottomSheetState
               counterText: '',
               hintText: 'Description',
               contentPadding:
-                  const EdgeInsets.all(8),
+              const EdgeInsets.all(8),
               hintStyle: GoogleFonts.manrope(
                 color: const Color(0xFF8B929B),
                 fontSize: 9,
               ),
               enabledBorder:
-                  OutlineInputBorder(
+              OutlineInputBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
                 borderSide:
-                    const BorderSide(
+                const BorderSide(
                   color: Color(0xFFBFC7D2),
                   width: 0.8,
                 ),
               ),
               focusedBorder:
-                  OutlineInputBorder(
+              OutlineInputBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
                 borderSide:
-                    const BorderSide(
+                const BorderSide(
                   color: Color(0xFF213F68),
                   width: 1,
                 ),
@@ -549,11 +726,39 @@ class _EditTransactionBottomSheetState
       return;
     }
 
+    if (interestRateController.text.trim().isEmpty) {
+      setState(() {
+        _interestRateError = true;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        _interestRateFocusNode.requestFocus();
+
+        final fieldContext =
+            _interestRateKey.currentContext;
+
+        if (fieldContext != null) {
+          Scrollable.ensureVisible(
+            fieldContext,
+            duration:
+            const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            alignment: 0.25,
+          );
+        }
+      });
+
+      return;
+    }
+
     if (interestRate == null ||
         interestRate < 0) {
-      _showError(
-        'Please enter a valid interest rate',
-      );
+      setState(() {
+        _interestRateError = true;
+      });
+
       return;
     }
 
@@ -604,12 +809,12 @@ class _EditTransactionBottomSheetState
         interestRate > 0) {
       calculatedInterest =
           InterestCalculator.calculate(
-        principal: amount,
-        rate: interestRate,
-        startDate: selectedDate,
-        interestType: interestType,
-        frequency: interestFrequency,
-      );
+            principal: amount,
+            rate: interestRate,
+            startDate: selectedDate,
+            interestType: interestType,
+            frequency: interestFrequency,
+          );
     }
 
     // Save recalculated interest
@@ -621,7 +826,7 @@ class _EditTransactionBottomSheetState
     // ============================================================
 
     await IsarService.isar.writeTxn(
-      () async {
+          () async {
         await IsarService.isar.transactions.put(
           transaction,
         );
@@ -633,7 +838,7 @@ class _EditTransactionBottomSheetState
     // ============================================================
 
     final customer =
-        await IsarService.isar.customers.get(
+    await IsarService.isar.customers.get(
       transaction.customerId,
     );
 
@@ -647,13 +852,13 @@ class _EditTransactionBottomSheetState
     if (calculatedInterest > 0 &&
         interestFrequency.isNotEmpty) {
       final interestPeriod =
-          InterestCalculator.getInterestPeriod(
+      InterestCalculator.getInterestPeriod(
         startDate: selectedDate,
         frequency: interestFrequency,
       );
 
       final notificationService =
-          NotificationService(
+      NotificationService(
         IsarService.isar,
       );
 

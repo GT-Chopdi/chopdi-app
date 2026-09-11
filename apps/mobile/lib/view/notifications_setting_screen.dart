@@ -529,7 +529,7 @@ class _NotificationSettingsScreenState
             height: 40,
             child: Center(
               child: Icon(
-                Icons.arrow_back,
+                Icons.arrow_back_ios_new,
                 size: 19,
                 color: darkBlue,
               ),
