@@ -611,6 +611,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
       builder: (_) => ExportPdfBottomSheet(
         customer: customer,
         transactions: transactions,
+        isTookLoan: true,
       ),
     );
   }
