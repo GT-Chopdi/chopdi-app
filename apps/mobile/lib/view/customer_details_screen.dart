@@ -585,20 +585,14 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   void showEditCustomerBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      backgroundColor: const Color(0xffFDF8F2),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(30),
-        ),
-      ),
-      builder: (_) {
+      useSafeArea: false,
+      builder: (context) {
         return EditCustomerBottomSheet(
-          customer: widget.customer,
-          onSaved: () async {
-            await loadCustomer();
-            await loadTransactions();
-            setState(() {});
+          customer: customer,
+          onSaved: () {
+            // refresh customer data
           },
         );
       },

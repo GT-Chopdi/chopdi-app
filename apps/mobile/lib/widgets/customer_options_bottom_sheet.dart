@@ -10,7 +10,7 @@ import 'package:mychopdi/data/repository/repositories.dart';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:flutter/services.dart' show rootBundle, SystemUiOverlayStyle;
+import 'package:flutter/services.dart' show rootBundle, SystemUiOverlayStyle, FilteringTextInputFormatter, LengthLimitingTextInputFormatter;
 import 'package:printing/printing.dart';
 
 class CustomerOptionsBottomSheet extends StatelessWidget {
@@ -206,19 +206,26 @@ class _OptionTile extends StatelessWidget {
 
 
 class EditCustomerBottomSheet extends StatefulWidget {
-
   final Customer customer;
   final VoidCallback onSaved;
-  const EditCustomerBottomSheet({super.key, required this.customer, required this.onSaved});
+
+  const EditCustomerBottomSheet({
+    super.key,
+    required this.customer,
+    required this.onSaved,
+  });
 
   @override
   State<EditCustomerBottomSheet> createState() =>
       _EditCustomerBottomSheetState();
 }
 
-class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
-  late TextEditingController nameController = TextEditingController();
-  late TextEditingController phoneController = TextEditingController();
+class _EditCustomerBottomSheetState
+    extends State<EditCustomerBottomSheet> {
+  late TextEditingController nameController;
+  late TextEditingController phoneController;
+
+  bool isSaving = false;
 
   @override
   void initState() {
@@ -240,61 +247,197 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
     super.dispose();
   }
 
-  InputDecoration inputDecoration(String hint) {
+  InputDecoration inputDecoration(
+    String hint, {
+    String? errorText,
+  }) {
     return InputDecoration(
       hintText: hint,
+      errorText: errorText,
       filled: true,
-      fillColor: Color.fromRGBO(255, 248, 240, 1),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      fillColor: const Color.fromRGBO(255, 248, 240, 1),
+
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Colors.grey.shade300,
+        ),
       ),
+
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(
           color: Color(0xff2F477A),
+          width: 1.5,
+        ),
+      ),
+
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(
+          color: Colors.red,
+        ),
+      ),
+
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(
+          color: Colors.red,
+          width: 1.5,
         ),
       ),
     );
   }
 
+  String? _phoneError() {
+    final phone = phoneController.text.trim();
+
+    // Phone number is optional.
+    if (phone.isEmpty) {
+      return null;
+    }
+
+    // If entered, it must contain exactly 10 digits.
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+      return "Phone number must be exactly 10 digits";
+    }
+
+    return null;
+  }
+
+  Future<void> _saveChanges() async {
+    final phoneError = _phoneError();
+
+    if (phoneError != null) {
+      setState(() {});
+      return;
+    }
+
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter customer name"),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isSaving = true;
+    });
+
+    try {
+      await Repositories.customers.update(
+        widget.customer,
+        name: name,
+        phone: phoneController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      widget.onSaved();
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint("UPDATE CUSTOMER ERROR: $e");
+
+      if (!mounted) return;
+
+      setState(() {
+        isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Failed to update customer: $e",
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child :Container(
+    final keyboardHeight =
+        MediaQuery.of(context).viewInsets.bottom;
+
+    final phoneError = _phoneError();
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+
+      // Move the complete bottom sheet above the keyboard.
+      padding: EdgeInsets.only(
+        bottom: keyboardHeight,
+      ),
+
+      child: Material(
+        color: Colors.transparent,
+
+        child: Container(
+          width: double.infinity,
+
           decoration: const BoxDecoration(
             color: Color.fromRGBO(255, 248, 240, 1),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(30),
+
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
             ),
           ),
-          padding: const EdgeInsets.all(20),
+
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            20,
+          ),
+
           child: SingleChildScrollView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag,
+
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // -------------------------------------------------
+                // Drag handle
+                // -------------------------------------------------
+
                 Center(
                   child: Container(
-                    width: 55,
-                    height: 5,
+                    width: 48,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey,
+                      borderRadius:
+                          BorderRadius.circular(20),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                /// edit icon
+                // -------------------------------------------------
+                // Edit icon
+                // -------------------------------------------------
+
                 Center(
                   child: CircleAvatar(
                     radius: 34,
-                    backgroundColor: const Color(0xffEAF2FF),
-                    child: Icon(
+                    backgroundColor:
+                        const Color(0xffEAF2FF),
+                    child: const Icon(
                       Icons.edit,
                       size: 32,
                       color: Color(0xff2F477A),
@@ -304,35 +447,58 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 const SizedBox(height: 14),
 
+                // -------------------------------------------------
+                // Title
+                // -------------------------------------------------
+
                 Center(
                   child: Text(
                     "Edit Customer Details",
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xff223A5E),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 Center(
                   child: Text(
                     "Edit name, phone or loan details",
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          const Color.fromRGBO(
+                        34,
+                        58,
+                        94,
+                        0.62,
+                      ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 28),
 
+                // -------------------------------------------------
+                // Name
+                // -------------------------------------------------
+
                 Text(
                   "Name",
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(
+                      34,
+                      58,
+                      94,
+                      0.62,
+                    ),
                   ),
                 ),
 
@@ -340,16 +506,30 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 TextField(
                   controller: nameController,
-                  decoration: inputDecoration("Customer Name"),
+
+                  textCapitalization:
+                      TextCapitalization.words,
+
+                  decoration:
+                      inputDecoration("Customer Name"),
                 ),
 
                 const SizedBox(height: 18),
+
+                // -------------------------------------------------
+                // Phone Number
+                // -------------------------------------------------
 
                 Text(
                   "Phone Number",
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(
+                      34,
+                      58,
+                      94,
+                      0.62,
+                    ),
                   ),
                 ),
 
@@ -357,29 +537,59 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 TextField(
                   controller: phoneController,
+
                   keyboardType: TextInputType.phone,
-                  decoration: inputDecoration("Phone Number"),
+
+                  // Only allow digits and maximum 10 digits.
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+
+                  onChanged: (_) {
+                    setState(() {});
+                  },
+
+                  decoration: inputDecoration(
+                    "Phone Number",
+                    errorText: phoneError,
+                  ),
                 ),
 
-                const SizedBox(height: 34),
+                // Reduce spacing when keyboard is open.
+                SizedBox(
+                  height: keyboardHeight > 0 ? 30 : 34,
+                ),
+
+                // -------------------------------------------------
+                // Buttons
+                // -------------------------------------------------
 
                 Row(
                   children: [
-
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(55),
+                          minimumSize:
+                              const Size.fromHeight(55),
+
                           side: const BorderSide(
                             color: Color(0xff2F477A),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+
+                        onPressed: isSaving
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                              },
+
                         child: const Text(
                           "Cancel",
                           style: TextStyle(
@@ -395,43 +605,52 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ChopdiColors.navy,
-                          minimumSize: const Size.fromHeight(55),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                          backgroundColor:
+                              ChopdiColors.navy,
+
+                          minimumSize:
+                              const Size.fromHeight(55),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () async{
-                          // Through the repository so the edit is queued for
-                          // sync, and guarded by the version the client last saw
-                          // so a concurrent change is detected instead of
-                          // silently overwritten.
-                          await Repositories.customers.update(
-                            widget.customer,
-                            name: nameController.text,
-                            phone: phoneController.text,
-                          );
 
-                            widget.onSaved();
+                        onPressed:
+                            isSaving ? null : _saveChanges,
 
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          "Save Changes",
-                          style: TextStyle(
-                            color: ChopdiColors.cream,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                "Save Changes",
+                                style: TextStyle(
+                                  color:
+                                      ChopdiColors.cream,
+                                  fontWeight:
+                                      FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 30),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
+      ),
     );
   }
 }
