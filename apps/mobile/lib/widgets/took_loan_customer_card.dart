@@ -25,10 +25,11 @@ class TookLoanCustomerCard extends StatelessWidget {
           .customerIdEqualTo(customer.id)
           .voidedAtIsNull()
           .watch(
-        fireImmediately: true,
-      ),
+            fireImmediately: true,
+          ),
       builder: (context, snapshot) {
-        final transactions = snapshot.data ?? <Transaction>[];
+        final transactions =
+            snapshot.data ?? <Transaction>[];
 
         // ============================================================
         // TOTAL LOAN TAKEN
@@ -37,11 +38,11 @@ class TookLoanCustomerCard extends StatelessWidget {
         final double totalLoanTaken = transactions
             .where(
               (tx) => tx.type == TransactionType.took,
-        )
+            )
             .fold<double>(
-          0,
+              0,
               (sum, tx) => sum + tx.amount,
-        );
+            );
 
         // ============================================================
         // TOTAL PAID
@@ -50,11 +51,11 @@ class TookLoanCustomerCard extends StatelessWidget {
         final double totalPaid = transactions
             .where(
               (tx) => tx.type == TransactionType.paid,
-        )
+            )
             .fold<double>(
-          0,
+              0,
               (sum, tx) => sum + tx.amount,
-        );
+            );
 
         // ============================================================
         // TOTAL INTEREST
@@ -64,33 +65,33 @@ class TookLoanCustomerCard extends StatelessWidget {
         final double totalInterest = transactions
             .where(
               (tx) => tx.type == TransactionType.took,
-        )
+            )
             .fold<double>(
-          0,
+              0,
               (sum, tx) {
-            try {
-              return sum +
-                  InterestCalculator.calculate(
-                    principal: tx.amount,
-                    rate: tx.interestRate,
-                    startDate: tx.date,
-                    interestType: tx.interestType,
-                    frequency: tx.interestFrequency,
-                  );
-            } catch (e) {
-              debugPrint(
-                '[TookLoanCustomerCard] '
+                try {
+                  return sum +
+                      InterestCalculator.calculate(
+                        principal: tx.amount,
+                        rate: tx.interestRate,
+                        startDate: tx.date,
+                        interestType: tx.interestType,
+                        frequency: tx.interestFrequency,
+                      );
+                } catch (e) {
+                  debugPrint(
+                    '[TookLoanCustomerCard] '
                     'Interest calculation failed '
                     'transaction=${tx.id}: $e',
-              );
+                  );
 
-              return sum;
-            }
-          },
-        );
+                  return sum;
+                }
+              },
+            );
 
         // ============================================================
-        // OUTSTANDING / PENDING
+        // OUTSTANDING
         //
         // Total Taken
         // + Interest
@@ -99,11 +100,22 @@ class TookLoanCustomerCard extends StatelessWidget {
         // ============================================================
 
         final double outstanding =
-        (totalLoanTaken + totalInterest - totalPaid)
-            .clamp(
+            (totalLoanTaken + totalInterest - totalPaid)
+                .clamp(
           0.0,
           double.infinity,
         );
+
+        // ============================================================
+        // OUTSTANDING COLOR
+        //
+        // ₹0     -> Black
+        // > ₹0   -> Green
+        // ============================================================
+
+        final Color outstandingColor = outstanding == 0
+            ? Colors.black
+            : Colors.green;
 
         // ============================================================
         // DEBUG
@@ -111,12 +123,12 @@ class TookLoanCustomerCard extends StatelessWidget {
 
         debugPrint(
           '[TookLoanCustomerCard] '
-              'customer=${customer.name}, '
-              'customerId=${customer.id}, '
-              'totalLoanTaken=$totalLoanTaken, '
-              'totalInterest=$totalInterest, '
-              'totalPaid=$totalPaid, '
-              'outstanding=$outstanding',
+          'customer=${customer.name}, '
+          'customerId=${customer.id}, '
+          'totalLoanTaken=$totalLoanTaken, '
+          'totalInterest=$totalInterest, '
+          'totalPaid=$totalPaid, '
+          'outstanding=$outstanding',
         );
 
         return InkWell(
@@ -125,7 +137,8 @@ class TookLoanCustomerCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => TookLoanCustomerDetailsScreen(
+                builder: (_) =>
+                    TookLoanCustomerDetailsScreen(
                   customer: customer,
                 ),
               ),
@@ -158,7 +171,8 @@ class TookLoanCustomerCard extends StatelessWidget {
 
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: ChopdiColors.lightGray,
+                  backgroundColor:
+                      ChopdiColors.lightGray,
                   child: Text(
                     customer.name.isNotEmpty
                         ? customer.name[0].toUpperCase()
@@ -180,10 +194,12 @@ class TookLoanCustomerCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
                         customer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -197,6 +213,8 @@ class TookLoanCustomerCard extends StatelessWidget {
                         customer.phone.isEmpty
                             ? "No phone number"
                             : customer.phone,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -210,14 +228,16 @@ class TookLoanCustomerCard extends StatelessWidget {
                       // ==================================================
 
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding:
+                            const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xffEEF3FA),
+                          color:
+                              const Color(0xffEEF3FA),
                           borderRadius:
-                          BorderRadius.circular(12),
+                              BorderRadius.circular(12),
                         ),
                         child: Text(
                           "Loan: ₹${totalLoanTaken.toStringAsFixed(0)}",
@@ -235,51 +255,41 @@ class TookLoanCustomerCard extends StatelessWidget {
                 const SizedBox(width: 8),
 
                 // ====================================================
-                // OUTSTANDING + INTEREST + STATUS
+                // OUTSTANDING + INTEREST
                 // ====================================================
 
                 Column(
                   mainAxisAlignment:
-                  MainAxisAlignment.center,
+                      MainAxisAlignment.center,
                   crossAxisAlignment:
-                  CrossAxisAlignment.end,
+                      CrossAxisAlignment.end,
                   children: [
+                    // ==================================================
                     // OUTSTANDING INCLUDING INTEREST
+                    // ==================================================
+
                     Text(
                       "₹${outstanding.toStringAsFixed(0)}",
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: outstanding > 0
-                            ? Colors.green
-                            : Colors.grey,
+                        color: outstandingColor,
                       ),
                     ),
 
                     const SizedBox(height: 2),
 
+                    // ==================================================
                     // INTEREST
+                    // ==================================================
+
                     Text(
                       "Interest: ₹${totalInterest.toStringAsFixed(0)}",
                       style: GoogleFonts.manrope(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFC74C4C),
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    // STATUS
-                    Text(
-                      outstanding > 0
-                          ? "Pending"
-                          : "Settled",
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        color: outstanding > 0
-                            ? Colors.green
-                            : Colors.grey,
+                        color:
+                            const Color(0xFFC74C4C),
                       ),
                     ),
                   ],
