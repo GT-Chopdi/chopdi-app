@@ -25,19 +25,38 @@ class _TookLoanCustomerListSectionState
 
   late List<Customer> filteredCustomers;
 
+  // ============================================================
+  // FILTER VALUES
+  // ============================================================
+
+  String selectedStatus = "All";
+  String selectedDate = "This Month";
+
+  DateTime? fromDate;
+  DateTime? toDate;
+
+  // ============================================================
+  // SORT
+  // ============================================================
+
+  String selectedSort = "Name (A-Z)";
+
   @override
   void initState() {
     super.initState();
+
     filteredCustomers = List.from(widget.customers);
   }
 
   @override
   void didUpdateWidget(
-    TookLoanCustomerListSection oldWidget,
-  ) {
+      TookLoanCustomerListSection oldWidget,
+      ) {
     super.didUpdateWidget(oldWidget);
 
-    filteredCustomers = List.from(widget.customers);
+    if (oldWidget.customers != widget.customers) {
+      applyFilters();
+    }
   }
 
   @override
@@ -46,41 +65,203 @@ class _TookLoanCustomerListSectionState
     super.dispose();
   }
 
-  void searchCustomer(String value) {
+  // ============================================================
+  // APPLY SEARCH + FILTER
+  // ============================================================
+
+  void applyFilters() {
+    final search = searchController.text.toLowerCase().trim();
+
+    final result = widget.customers.where((customer) {
+      // ========================================================
+      // SEARCH
+      // ========================================================
+
+      final matchesSearch =
+          search.isEmpty ||
+              customer.name.toLowerCase().contains(search) ||
+              customer.phone.contains(search);
+
+      // ========================================================
+      // STATUS FILTER
+      // ========================================================
+
+      bool matchesStatus = true;
+
+      if (selectedStatus != "All") {
+        matchesStatus =
+            customer.status.toLowerCase() ==
+                selectedStatus.toLowerCase();
+      }
+
+      // ========================================================
+      // DATE FILTER
+      // ========================================================
+
+      bool matchesDate = true;
+
+      // --------------------------------------------------------
+      // THIS MONTH
+      // --------------------------------------------------------
+
+      if (selectedDate == "This Month") {
+        final now = DateTime.now();
+
+        final firstDayOfMonth = DateTime(
+          now.year,
+          now.month,
+          1,
+        );
+
+        final nextMonth = DateTime(
+          now.year,
+          now.month + 1,
+          1,
+        );
+
+        matchesDate =
+            !customer.updatedAt.isBefore(firstDayOfMonth) &&
+                customer.updatedAt.isBefore(nextMonth);
+      }
+
+      // --------------------------------------------------------
+      // CUSTOM DATE
+      // --------------------------------------------------------
+
+      if (selectedDate == "Custom") {
+        if (fromDate != null) {
+          final startDate = DateTime(
+            fromDate!.year,
+            fromDate!.month,
+            fromDate!.day,
+          );
+
+          matchesDate =
+              matchesDate &&
+                  !customer.updatedAt.isBefore(startDate);
+        }
+
+        if (toDate != null) {
+          final endDate = DateTime(
+            toDate!.year,
+            toDate!.month,
+            toDate!.day,
+            23,
+            59,
+            59,
+          );
+
+          matchesDate =
+              matchesDate &&
+                  !customer.updatedAt.isAfter(endDate);
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
+    }).toList();
+
+    // ============================================================
+    // SORT RESULT
+    // ============================================================
+
+    if (selectedSort == "Name (A-Z)") {
+      result.sort(
+            (a, b) => a.name.toLowerCase().compareTo(
+          b.name.toLowerCase(),
+        ),
+      );
+    } else if (selectedSort == "Name (Z-A)") {
+      result.sort(
+            (a, b) => b.name.toLowerCase().compareTo(
+          a.name.toLowerCase(),
+        ),
+      );
+    }
+
     setState(() {
-      filteredCustomers = widget.customers.where((customer) {
-        return customer.name
-                .toLowerCase()
-                .contains(value.toLowerCase()) ||
-            customer.phone.contains(value);
-      }).toList();
+      filteredCustomers = result;
     });
   }
 
-  void showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const CustomerFilterBottomSheet(),
-    );
+  // ============================================================
+  // SEARCH
+  // ============================================================
+
+  void searchCustomer(String value) {
+    applyFilters();
   }
 
-  void showSortSheet() {
-    showModalBottomSheet(
+  // ============================================================
+  // FILTER BOTTOM SHEET
+  // ============================================================
+
+  Future<void> showFilterSheet() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => const SortBottomSheet(),
+      isScrollControlled: true,
+      builder: (_) {
+        return CustomerFilterBottomSheet(
+          selectedStatus: selectedStatus,
+          selectedDate: selectedDate,
+          fromDate: fromDate,
+          toDate: toDate,
+        );
+      },
     );
+
+    // User closed without Apply
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      selectedStatus = result["status"] ?? "All";
+      selectedDate = result["date"] ?? "This Month";
+
+      fromDate = result["from"];
+      toDate = result["to"];
+    });
+
+    applyFilters();
   }
+
+  // ============================================================
+  // SORT BOTTOM SHEET
+  // ============================================================
+
+  Future<void> showSortSheet() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return const SortBottomSheet();
+      },
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      selectedSort = result;
+    });
+
+    applyFilters();
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // =========================
-        // CUSTOMERS HEADER
-        // =========================
+        // ========================================================
+        // HEADER
+        // ========================================================
 
         Row(
           children: [
@@ -95,27 +276,30 @@ class _TookLoanCustomerListSectionState
                     color: ChopdiColors.navy,
                   ),
                 ),
-
                 Text(
                   "Manage all your customers",
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color: const Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(
+                      34,
+                      58,
+                      94,
+                      0.62,
+                    ),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
-
             const Spacer(),
           ],
         ),
 
         const SizedBox(height: 20),
 
-        // =========================
+        // ========================================================
         // SEARCH + FILTER
-        // =========================
+        // ========================================================
 
         Row(
           children: [
@@ -125,12 +309,19 @@ class _TookLoanCustomerListSectionState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: const Color.fromRGBO(170, 185, 207, 1),
+                    color: const Color.fromRGBO(
+                      170,
+                      185,
+                      207,
+                      1,
+                    ),
                   ),
                 ),
                 child: TextField(
                   controller: searchController,
                   onChanged: searchCustomer,
+                  textAlignVertical: TextAlignVertical.center,
+
                   decoration: InputDecoration(
                     prefixIcon: Padding(
                       padding: const EdgeInsets.all(12),
@@ -142,11 +333,11 @@ class _TookLoanCustomerListSectionState
                       ),
                     ),
                     hintText: "Search by name and phone number",
-                    hintStyle: TextStyle(fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
+                    hintStyle: const TextStyle(
+                      fontSize: 12,
                     ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
@@ -154,6 +345,7 @@ class _TookLoanCustomerListSectionState
 
             const SizedBox(width: 10),
 
+            // FILTER BUTTON
             InkWell(
               onTap: showFilterSheet,
               borderRadius: BorderRadius.circular(25),
@@ -165,7 +357,12 @@ class _TookLoanCustomerListSectionState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: const Color.fromRGBO(170, 185, 207, 1),
+                    color: const Color.fromRGBO(
+                      170,
+                      185,
+                      207,
+                      1,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -175,10 +372,10 @@ class _TookLoanCustomerListSectionState
                       height: 24,
                       width: 24,
                     ),
-
                     const SizedBox(width: 5),
-
-                    const Text("Filter"),
+                    const Text(
+                      "Filter",
+                    ),
                   ],
                 ),
               ),
@@ -188,9 +385,9 @@ class _TookLoanCustomerListSectionState
 
         const SizedBox(height: 15),
 
-        // =========================
+        // ========================================================
         // COUNT + SORT
-        // =========================
+        // ========================================================
 
         Row(
           children: [
@@ -205,23 +402,20 @@ class _TookLoanCustomerListSectionState
 
             GestureDetector(
               onTap: showSortSheet,
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.swap_vert,
                     size: 16,
                   ),
-
-                  SizedBox(width: 4),
-
+                  const SizedBox(width: 4),
                   Text(
-                    "Sort by : Name (A-Z)",
-                    style: TextStyle(
+                    "Sort by : $selectedSort",
+                    style: const TextStyle(
                       fontSize: 11,
                     ),
                   ),
-
-                  Icon(
+                  const Icon(
                     Icons.arrow_drop_down,
                   ),
                 ],
@@ -232,23 +426,43 @@ class _TookLoanCustomerListSectionState
 
         const SizedBox(height: 10),
 
-        // =========================
-        // TOOK LOAN CUSTOMER CARDS
-        // =========================
+        // ========================================================
+        // EMPTY STATE
+        // ========================================================
 
-        ...List.generate(
-          filteredCustomers.length,
-          (index) {
-            return Padding(
-              padding: const EdgeInsets.only(
-                bottom: 10,
+        if (filteredCustomers.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: 30,
+            ),
+            child: Center(
+              child: Text(
+                "No customers found",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              child: TookLoanCustomerCard(
-                customer: filteredCustomers[index],
-              ),
-            );
-          },
-        ),
+            ),
+          )
+        else
+        // ======================================================
+        // TOOK LOAN CUSTOMER CARDS
+        // ======================================================
+
+          ...List.generate(
+            filteredCustomers.length,
+                (index) {
+              return Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 10,
+                ),
+                child: TookLoanCustomerCard(
+                  customer: filteredCustomers[index],
+                ),
+              );
+            },
+          ),
       ],
     );
   }

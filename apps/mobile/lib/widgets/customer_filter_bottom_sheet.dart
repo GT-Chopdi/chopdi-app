@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class CustomerFilterBottomSheet extends StatefulWidget {
-  const CustomerFilterBottomSheet({super.key});
+  final String selectedStatus;
+  final String selectedDate;
+  final DateTime? fromDate;
+  final DateTime? toDate;
+  const CustomerFilterBottomSheet({super.key,  required this.selectedStatus,
+    required this.selectedDate,
+    this.fromDate,
+    this.toDate,});
 
   @override
   State<CustomerFilterBottomSheet> createState() =>
