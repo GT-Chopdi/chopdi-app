@@ -153,29 +153,32 @@ class CustomerCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-
                     Text(
                       "₹${balance.toStringAsFixed(0)}",
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: balance >= 0
+                        color: balance == 0
+                            ? Colors.black
+                            : balance > 0
                             ? ChopdiColors.red
                             : Colors.green,
                       ),
                     ),
 
-                    const SizedBox(height: 3),
+                    if (balance != 0) ...[
+                      const SizedBox(height: 3),
 
-                    Text(
-                      balance >= 0 ? "Pending" : "Settled",
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        color: balance >= 0
-                            ? ChopdiColors.red
-                            : Colors.green,
+                      Text(
+                        balance > 0 ? "Pending" : "Settled",
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          color: balance > 0
+                              ? ChopdiColors.red
+                              : Colors.green,
+                        ),
                       ),
-                    ),
+                    ],
 
                     const SizedBox(height: 4),
                   ],
