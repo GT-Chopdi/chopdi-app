@@ -7,6 +7,11 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/summary_tile.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
+import 'dart:typed_data';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart' show rootBundle, SystemUiOverlayStyle;
+import 'package:printing/printing.dart';
 
 class CustomerOptionsBottomSheet extends StatelessWidget {
   const CustomerOptionsBottomSheet({
@@ -564,8 +569,23 @@ class AccountSummaryBottomSheet extends StatelessWidget {
   }
 }
 
-
 class ExportPdfBottomSheet extends StatelessWidget {
+  final Customer customer;
+  final List<Transaction> transactions;
+  /// true = Took Loan tab
+  /// false = Gave Loan tab
+  final bool isTookLoan;
+
+  const ExportPdfBottomSheet({
+    super.key,
+    required this.customer,
+    required this.transactions,
+    this.isTookLoan = false,
+  });
+
+  // ============================================================
+  // INTEREST CALCULATION
+  // ============================================================
 
   double calculateInterest(Transaction tx) {
     final days = DateTime.now().difference(tx.date).inDays;
@@ -580,349 +600,1720 @@ class ExportPdfBottomSheet extends StatelessWidget {
 
     if (tx.interestType == "Simple Interest") {
       return tx.amount * tx.interestRate * time / 100;
-    } else {
-      return tx.amount *
-          (pow(1 + tx.interestRate / 100, time) - 1);
+    }
+
+    return tx.amount *
+        (pow(1 + tx.interestRate / 100, time) - 1);
+  }
+
+  // ============================================================
+  // TRANSACTION TYPE
+  // ============================================================
+
+  String transactionTypeText(TransactionType type) {
+    switch (type) {
+      case TransactionType.gave:
+        return "Given";
+
+      case TransactionType.received:
+        return "Received";
+
+      case TransactionType.took:
+        return "Took";
+
+      case TransactionType.paid:
+        return "Paid";
     }
   }
 
-  final Customer customer;
-  final List<Transaction> transactions;
-  const ExportPdfBottomSheet({
-    super.key,
-    required this.customer,
-    required this.transactions,
-  });
+  // ============================================================
+  // TOTAL GIVEN
+  // ============================================================
 
-  Future<void> generatePdf() async {
+  double get totalGiven {
+    return transactions
+        .where(
+          (tx) => tx.type == TransactionType.gave,
+        )
+        .fold<double>(
+          0,
+          (sum, tx) => sum + tx.amount,
+        );
+  }
 
-    final totalGiven = transactions
-        .where((e) => e.type == TransactionType.gave)
-        .fold<double>(0, (sum, e) => sum + e.amount);
+  // ============================================================
+  // TOTAL RECEIVED
+  // ============================================================
 
-    final totalReceived = transactions
-        .where((e) => e.type == TransactionType.received)
-        .fold<double>(0, (sum, e) => sum + e.amount);
+  double get totalReceived {
+    return transactions
+        .where(
+          (tx) => tx.type == TransactionType.received,
+        )
+        .fold<double>(
+          0,
+          (sum, tx) => sum + tx.amount,
+        );
+  }
 
-    final totalInterest = transactions.fold<double>(
-        0, (sum, e) => sum + calculateInterest(e));
+  // ============================================================
+  // TOTAL TOOK
+  // ============================================================
 
-    final outstanding =
-        totalGiven + totalInterest - totalReceived;
+  double get totalTook {
+    return transactions
+        .where((tx) => tx.type == TransactionType.took)
+        .fold<double>(
+          0,
+          (sum, tx) => sum + tx.amount,
+        );
+  }
 
-    // Use these values in your PDF
 
-    print(customer.name);
-    print(customer.phone);
-    print(totalGiven);
-    print(totalReceived);
-    print(totalInterest);
-    print(outstanding);
+  // ============================================================
+  // TOTAL PAID
+  // ============================================================
 
-    for (final tx in transactions) {
-      print(tx.amount);
-      print(tx.date);
-      print(tx.paymentMode);
+  double get totalPaid {
+    return transactions
+        .where(
+          (tx) => tx.type == TransactionType.paid,
+        )
+        .fold<double>(
+          0,
+          (sum, tx) => sum + tx.amount,
+        );
+  }
+
+  // ============================================================
+  // TOTAL INTEREST
+  // ============================================================
+
+  double get totalInterest {
+    final interestTransactions = isTookLoan
+        ? transactions.where(
+            (tx) => tx.type == TransactionType.took,
+          )
+        : transactions.where(
+            (tx) => tx.type == TransactionType.gave,
+          );
+
+    return interestTransactions.fold<double>(
+      0,
+      (sum, tx) => sum + calculateInterest(tx),
+    );
+  }
+
+  // ============================================================
+  // OUTSTANDING
+  // ============================================================
+
+  // double get outstanding {
+  //   return totalGiven +
+  //       totalInterest -
+  //       totalReceived;
+  // }
+  double get pdfPrincipal {
+    return isTookLoan ? totalTook : totalGiven;
+  }
+
+  double get pdfPaid {
+    return isTookLoan ? totalPaid : totalReceived;
+  }
+
+  double get pdfOutstanding {
+    return (pdfPrincipal + totalInterest - pdfPaid)
+        .clamp(0.0, double.infinity);
+  }
+  double get outstanding => pdfOutstanding;
+
+  // ============================================================
+  // MONEY FORMAT
+  // ============================================================
+
+  String money(double value) {
+    final formatter = NumberFormat("#,##0.00");
+
+    // Unicode U+20B9 = Indian Rupee symbol
+    return "\u20B9${formatter.format(value)}";
+  }
+
+  // ============================================================
+  // LOAD LOGO
+  // ============================================================
+
+  Future<pw.MemoryImage> loadLogo() async {
+    final logoData = await rootBundle.load(
+      "assets/app_logo.png",
+    );
+
+    return pw.MemoryImage(
+      logoData.buffer.asUint8List(),
+    );
+  }
+
+  List<Transaction> get pdfTransactions {
+    return transactions.where((tx) {
+      if (isTookLoan) {
+        return tx.type == TransactionType.took ||
+            tx.type == TransactionType.paid;
+      }
+
+      return tx.type == TransactionType.gave ||
+          tx.type == TransactionType.received;
+    }).toList();
+  }
+
+  // ============================================================
+  // GENERATE PDF
+  // ============================================================
+
+  Future<Uint8List> generatePdf() async {
+    final pdf = pw.Document();
+
+    // ==========================================================
+    // LOAD UNICODE FONTS
+    // ==========================================================
+
+    // These fonts support:
+    // ₹
+    // Devanagari
+    // English
+    // Numbers
+    //
+    // printing package provides these fonts directly.
+    final regularFont =
+        await PdfGoogleFonts.notoSansDevanagariRegular();
+
+    final boldFont =
+        await PdfGoogleFonts.notoSansDevanagariBold();
+
+    // ==========================================================
+    // LOAD LOGO
+    // ==========================================================
+
+    final logo = await loadLogo();
+
+    // ==========================================================
+    // SORT TRANSACTIONS
+    // ==========================================================
+
+    final sortedTransactions = [...pdfTransactions]
+      ..sort(
+        (a, b) => b.date.compareTo(a.date),
+      );
+
+    // ==========================================================
+    // GENERATED DATE
+    // ==========================================================
+
+    final generatedDate = DateFormat(
+      "dd MMM yyyy, hh:mm a",
+    ).format(DateTime.now());
+
+    // ==========================================================
+    // COLORS
+    // ==========================================================
+
+    const navy = PdfColor.fromInt(
+      0xff223A5E,
+    );
+
+    const blue = PdfColor.fromInt(
+      0xff2F5D9F,
+    );
+
+    const lightBlue = PdfColor.fromInt(
+      0xffEEF5FC,
+    );
+
+    const cream = PdfColor.fromInt(
+      0xffFFF8F0,
+    );
+
+    // ==========================================================
+    // PDF PAGE
+    // ==========================================================
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+
+        // ======================================================
+        // ⭐ IMPORTANT FONT FIX
+        // ======================================================
+
+        theme: pw.ThemeData.withFont(
+          base: regularFont,
+          bold: boldFont,
+        ),
+
+        margin: const pw.EdgeInsets.fromLTRB(
+          38,
+          30,
+          38,
+          38,
+        ),
+
+        // ======================================================
+        // HEADER
+        // ======================================================
+
+        header: (context) {
+          return pw.Column(
+            children: [
+              pw.Row(
+                crossAxisAlignment:
+                    pw.CrossAxisAlignment.center,
+                children: [
+                  // LOGO
+                  pw.Container(
+                    width: 40,
+                    height: 40,
+                    decoration: pw.BoxDecoration(
+                      color: lightBlue,
+                      borderRadius:
+                          pw.BorderRadius.circular(10),
+                    ),
+                    padding:
+                        const pw.EdgeInsets.all(5),
+                    child: pw.Image(
+                      logo,
+                      fit: pw.BoxFit.contain,
+                    ),
+                  ),
+
+                  pw.SizedBox(width: 10),
+
+                  // BRAND
+                  pw.Column(
+                    crossAxisAlignment:
+                        pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "Chopdi",
+                        style: pw.TextStyle(
+                          fontSize: 22,
+                          fontWeight:
+                              pw.FontWeight.bold,
+                          color: navy,
+                        ),
+                      ),
+
+                      pw.SizedBox(height: 2),
+
+                      pw.Text(
+                        "Your trusted digital ledger",
+                        style: const pw.TextStyle(
+                          fontSize: 7.5,
+                          color:
+                              PdfColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  pw.Spacer(),
+
+                  // STATEMENT LABEL
+                  pw.Container(
+                    padding:
+                        const pw.EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration:
+                        pw.BoxDecoration(
+                      color: lightBlue,
+                      borderRadius:
+                          pw.BorderRadius.circular(7),
+                    ),
+                    child: pw.Text(
+                      "ACCOUNT STATEMENT",
+                      style: pw.TextStyle(
+                        fontSize: 7.5,
+                        fontWeight:
+                            pw.FontWeight.bold,
+                        color: navy,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 12),
+
+              pw.Container(
+                height: 2,
+                width: double.infinity,
+                color: blue,
+              ),
+            ],
+          );
+        },
+
+        // ======================================================
+        // FOOTER
+        // ======================================================
+
+        footer: (context) {
+          return pw.Container(
+            padding:
+                const pw.EdgeInsets.only(
+              top: 10,
+            ),
+            decoration:
+                const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(
+                  color: PdfColors.grey300,
+                ),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Text(
+                  "Generated by Chopdi",
+                  style:
+                      const pw.TextStyle(
+                    fontSize: 7.5,
+                    color:
+                        PdfColors.grey600,
+                  ),
+                ),
+
+                pw.SizedBox(width: 5),
+
+                pw.Text(
+                  "•",
+                  style:
+                      const pw.TextStyle(
+                    fontSize: 7.5,
+                    color:
+                        PdfColors.grey400,
+                  ),
+                ),
+
+                pw.SizedBox(width: 5),
+
+                pw.Text(
+                  generatedDate,
+                  style:
+                      const pw.TextStyle(
+                    fontSize: 7.5,
+                    color:
+                        PdfColors.grey600,
+                  ),
+                ),
+
+                pw.Spacer(),
+
+                pw.Text(
+                  "Page ${context.pageNumber} of ${context.pagesCount}",
+                  style:
+                      const pw.TextStyle(
+                    fontSize: 7.5,
+                    color:
+                        PdfColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+
+        // ======================================================
+        // PAGE CONTENT
+        // ======================================================
+
+        build: (context) {
+          return [
+            pw.SizedBox(height: 20),
+
+            // ==================================================
+            // TITLE
+            // ==================================================
+
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    isTookLoan
+                      ? "Took Loan Statement"
+                      : "Customer Statement",
+                    style: pw.TextStyle(
+                      fontSize: 21,
+                      fontWeight:
+                          pw.FontWeight.bold,
+                      color: navy,
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 5),
+
+                  pw.Text(
+                    isTookLoan
+                      ? "Loan summary and repayment history"
+                      : "Account summary and transaction history",
+                    style:
+                        const pw.TextStyle(
+                      fontSize: 9,
+                      color:
+                          PdfColors.blueGrey500,
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 4),
+
+                  pw.Text(
+                    "As of ${DateFormat("dd MMM yyyy, hh:mm a").format(DateTime.now())}",
+                    style:
+                        const pw.TextStyle(
+                      fontSize: 8,
+                      color:
+                          PdfColors.blueGrey500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 22),
+
+            // ==================================================
+            // CUSTOMER CARD
+            // ==================================================
+
+            pw.Container(
+              width: double.infinity,
+              padding:
+                  const pw.EdgeInsets.all(18),
+
+              decoration:
+                  pw.BoxDecoration(
+                color: lightBlue,
+                borderRadius:
+                    pw.BorderRadius.circular(14),
+                border: pw.Border.all(
+                  color:
+                      const PdfColor.fromInt(
+                    0xffD6E5F5,
+                  ),
+                ),
+              ),
+
+              child: pw.Row(
+                children: [
+                  // CUSTOMER INITIAL
+                  pw.Container(
+                    width: 52,
+                    height: 52,
+
+                    decoration:
+                        pw.BoxDecoration(
+                      color: navy,
+                      borderRadius:
+                          pw.BorderRadius.circular(
+                        26,
+                      ),
+                    ),
+
+                    child: pw.Center(
+                      child: pw.Text(
+                        customer.name.isNotEmpty
+                            ? customer.name[0]
+                                .toUpperCase()
+                            : "?",
+                        style:
+                            pw.TextStyle(
+                          fontSize: 21,
+                          fontWeight:
+                              pw.FontWeight.bold,
+                          color:
+                              PdfColors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  pw.SizedBox(width: 14),
+
+                  // CUSTOMER DETAILS
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment:
+                          pw.CrossAxisAlignment
+                              .start,
+                      children: [
+                        pw.Text(
+                          customer.name,
+                          style: pw.TextStyle(
+                            fontSize: 18,
+                            fontWeight:
+                                pw.FontWeight.bold,
+                            color: navy,
+                          ),
+                        ),
+
+                        pw.SizedBox(height: 5),
+
+                        pw.Text(
+                          customer.phone,
+                          style:
+                              const pw.TextStyle(
+                            fontSize: 9,
+                            color:
+                                PdfColors.grey700,
+                          ),
+                        ),
+
+                        pw.SizedBox(height: 5),
+
+                        pw.Text(
+                          "${transactions.length} transaction${transactions.length == 1 ? '' : 's'}",
+                          style:
+                              const pw.TextStyle(
+                            fontSize: 8,
+                            color:
+                                PdfColors.grey600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // CURRENT BALANCE
+                  pw.Column(
+                    crossAxisAlignment:
+                        pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        "CURRENT BALANCE",
+                        style:
+                            pw.TextStyle(
+                          fontSize: 7.5,
+                          fontWeight:
+                              pw.FontWeight.bold,
+                          color:
+                              PdfColors.grey600,
+                        ),
+                      ),
+
+                      pw.SizedBox(height: 5),
+
+                      pw.Text(
+                        money(outstanding),
+                        style:
+                            pw.TextStyle(
+                          fontSize: 17,
+                          fontWeight:
+                              pw.FontWeight.bold,
+                          color: outstanding > 0
+                              ? PdfColors.red800
+                              : PdfColors.green800,
+                        ),
+                      ),
+
+                      pw.SizedBox(height: 3),
+
+                      pw.Text(
+                        outstanding > 0
+                            ? "Outstanding"
+                            : "Settled",
+                        style:
+                            const pw.TextStyle(
+                          fontSize: 8,
+                          color:
+                              PdfColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 22),
+
+            // ==================================================
+            // ACCOUNT OVERVIEW
+            // ==================================================
+
+            pw.Text(
+              "Account Overview",
+              style: pw.TextStyle(
+                fontSize: 15,
+                fontWeight:
+                    pw.FontWeight.bold,
+                color: navy,
+              ),
+            ),
+
+            pw.SizedBox(height: 10),
+
+            pw.Row(
+              children: [
+                summaryCard(
+                  title: isTookLoan ? "YOU TOOK" : "YOU GAVE",
+                  value: money(pdfPrincipal),
+                  subtitle: isTookLoan
+                      ? "Total loan taken"
+                      : "Total given",
+                  valueColor: navy,
+                ),
+
+                pw.SizedBox(width: 9),
+
+                summaryCard(
+                  title: isTookLoan ? "YOU PAID" : "YOU RECEIVED",
+                  value: money(pdfPaid),
+                  subtitle: isTookLoan
+                      ? "Total repaid"
+                      : "Total received",
+                  valueColor: PdfColors.green800,
+                ),
+
+                pw.SizedBox(width: 9),
+
+                summaryCard(
+                  title: "INTEREST",
+                  value: money(totalInterest),
+                  subtitle: "Calculated interest",
+                  valueColor: PdfColors.orange800,
+                ),
+              ],
+            ),
+
+            pw.SizedBox(height: 24),
+
+            // ==================================================
+            // TRANSACTION HISTORY
+            // ==================================================
+
+            pw.Row(
+              children: [
+                pw.Text(
+                  "Transaction History",
+                  style: pw.TextStyle(
+                    fontSize: 15,
+                    fontWeight:
+                        pw.FontWeight.bold,
+                    color: navy,
+                  ),
+                ),
+
+                pw.Spacer(),
+
+                pw.Text(
+                  "${transactions.length} records",
+                  style:
+                      const pw.TextStyle(
+                    fontSize: 8,
+                    color:
+                        PdfColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+
+            pw.SizedBox(height: 10),
+
+            // TRANSACTION TABLE
+            sortedTransactions.isEmpty
+                ? emptyTransactions()
+                : transactionTable(
+                    sortedTransactions,
+                  ),
+
+            pw.SizedBox(height: 22),
+
+            // ==================================================
+            // ACCOUNT SUMMARY
+            // ==================================================
+
+            pw.Container(
+              width: double.infinity,
+
+              padding:
+                  const pw.EdgeInsets.all(17),
+
+              decoration:
+                  pw.BoxDecoration(
+                color: cream,
+                borderRadius:
+                    pw.BorderRadius.circular(12),
+                border: pw.Border.all(
+                  color:
+                      const PdfColor.fromInt(
+                    0xffE9D8C5,
+                  ),
+                ),
+              ),
+
+              child: pw.Column(
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Text(
+                        "Account Summary",
+                        style:
+                            pw.TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              pw.FontWeight.bold,
+                          color: navy,
+                        ),
+                      ),
+
+                      pw.Spacer(),
+
+                      pw.Text(
+                        "FINAL BALANCE",
+                        style:
+                            const pw.TextStyle(
+                          fontSize: 7,
+                          color:
+                              PdfColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  pw.SizedBox(height: 12),
+
+                  finalSummaryRow(
+                    isTookLoan ? "Total Taken" : "Total Given",
+                    money(pdfPrincipal),
+                  ),
+
+                  finalSummaryRow(
+                    isTookLoan ? "Total Paid" : "Total Received",
+                    money(pdfPaid),
+                  ),
+
+                  finalSummaryRow(
+                    "Total Interest",
+                    money(totalInterest),
+                  ),
+
+                  pw.SizedBox(height: 6),
+
+                  pw.Container(
+                    padding:
+                        const pw.EdgeInsets.only(
+                      top: 11,
+                    ),
+
+                    decoration:
+                        const pw.BoxDecoration(
+                      border: pw.Border(
+                        top: pw.BorderSide(
+                          color:
+                              PdfColors.grey300,
+                        ),
+                      ),
+                    ),
+
+                    child: pw.Row(
+                      children: [
+                        pw.Text(
+                          "Outstanding Balance",
+                          style:
+                              pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight:
+                                pw.FontWeight.bold,
+                            color: navy,
+                          ),
+                        ),
+
+                        pw.Spacer(),
+
+                        pw.Text(
+                          money(pdfOutstanding),
+                          style:
+                              pw.TextStyle(
+                            fontSize: 14,
+                            fontWeight:
+                                pw.FontWeight.bold,
+                            color: pdfOutstanding > 0
+                                ? PdfColors.red800
+                                : PdfColors.green800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 25),
+
+            // ==================================================
+            // THANK YOU
+            // ==================================================
+
+            pw.Container(
+              width: double.infinity,
+
+              padding:
+                  const pw.EdgeInsets.symmetric(
+                vertical: 15,
+              ),
+
+              child: pw.Column(
+                children: [
+                  pw.Container(
+                    width: 30,
+                    height: 30,
+                    padding:
+                        const pw.EdgeInsets.all(4),
+
+                    decoration:
+                        pw.BoxDecoration(
+                      color: lightBlue,
+                      borderRadius:
+                          pw.BorderRadius.circular(8),
+                    ),
+
+                    child: pw.Image(
+                      logo,
+                      fit: pw.BoxFit.contain,
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 7),
+
+                  pw.Text(
+                    "Thank you for using Chopdi",
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight:
+                          pw.FontWeight.bold,
+                      color: navy,
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 3),
+
+                  pw.Text(
+                    "Keep your records simple. Keep them with Chopdi.",
+                    style:
+                        const pw.TextStyle(
+                      fontSize: 7.5,
+                      color:
+                          PdfColors.grey600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ];
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  // ============================================================
+  // SUMMARY CARD
+  // ============================================================
+
+  pw.Widget summaryCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required PdfColor valueColor,
+  }) {
+    return pw.Expanded(
+      child: pw.Container(
+        padding:
+            const pw.EdgeInsets.all(12),
+
+        decoration:
+            pw.BoxDecoration(
+          color: PdfColors.white,
+          borderRadius:
+              pw.BorderRadius.circular(10),
+          border: pw.Border.all(
+            color: PdfColors.grey300,
+          ),
+        ),
+
+        child: pw.Column(
+          crossAxisAlignment:
+              pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              title,
+              style: pw.TextStyle(
+                fontSize: 7.5,
+                fontWeight:
+                    pw.FontWeight.bold,
+                color: PdfColors.grey700,
+              ),
+            ),
+
+            pw.SizedBox(height: 7),
+
+            pw.Text(
+              value,
+              style: pw.TextStyle(
+                fontSize: 13,
+                fontWeight:
+                    pw.FontWeight.bold,
+                color: valueColor,
+              ),
+            ),
+
+            pw.SizedBox(height: 3),
+
+            pw.Text(
+              subtitle,
+              style:
+                  const pw.TextStyle(
+                fontSize: 7,
+                color:
+                    PdfColors.grey600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // TRANSACTION TABLE
+  // ============================================================
+
+  pw.Widget transactionTable(
+    List<Transaction> sortedTransactions,
+  ) {
+    return pw.Table(
+      border: pw.TableBorder(
+        top: const pw.BorderSide(
+          color: PdfColors.grey300,
+        ),
+        bottom: const pw.BorderSide(
+          color: PdfColors.grey300,
+        ),
+        horizontalInside:
+            const pw.BorderSide(
+          color: PdfColors.grey200,
+        ),
+      ),
+
+      columnWidths: {
+        0: const pw.FlexColumnWidth(1.35),
+        1: const pw.FlexColumnWidth(1.15),
+        2: const pw.FlexColumnWidth(1.35),
+        3: const pw.FlexColumnWidth(1.2),
+        4: const pw.FlexColumnWidth(2.0),
+      },
+
+      children: [
+        // HEADER
+        pw.TableRow(
+          decoration:
+              const pw.BoxDecoration(
+            color: PdfColors.grey100,
+          ),
+
+          children: [
+            tableHeader("DATE"),
+            tableHeader("TYPE"),
+            tableHeader(
+              "AMOUNT",
+              align: pw.TextAlign.right,
+            ),
+            tableHeader("MODE"),
+            tableHeader("DESCRIPTION"),
+          ],
+        ),
+
+        // TRANSACTION ROWS
+        ...sortedTransactions.map(
+          (tx) {
+            return pw.TableRow(
+              children: [
+                tableCell(
+                  DateFormat(
+                    "dd MMM yyyy",
+                  ).format(tx.date),
+                ),
+
+                transactionTypeCell(
+                  tx.type,
+                ),
+
+                tableCell(
+                  money(tx.amount),
+                  align:
+                      pw.TextAlign.right,
+                  bold: true,
+                ),
+
+                tableCell(
+                  tx.paymentMode.isEmpty
+                      ? "-"
+                      : tx.paymentMode,
+                ),
+
+                tableCell(
+                  tx.description.isEmpty
+                      ? "-"
+                      : tx.description,
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // EMPTY TRANSACTIONS
+  // ============================================================
+
+  pw.Widget emptyTransactions() {
+    return pw.Container(
+      width: double.infinity,
+
+      padding:
+          const pw.EdgeInsets.symmetric(
+        vertical: 30,
+      ),
+
+      decoration:
+          pw.BoxDecoration(
+        border: pw.Border.all(
+          color: PdfColors.grey300,
+        ),
+        borderRadius:
+            pw.BorderRadius.circular(10),
+      ),
+
+      child: pw.Center(
+        child: pw.Text(
+          "No transactions available",
+          style:
+              const pw.TextStyle(
+            fontSize: 9,
+            color:
+                PdfColors.grey600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // TABLE HEADER
+  // ============================================================
+
+  pw.Widget tableHeader(
+    String text, {
+    pw.TextAlign align =
+        pw.TextAlign.left,
+  }) {
+    return pw.Padding(
+      padding:
+          const pw.EdgeInsets.symmetric(
+        horizontal: 7,
+        vertical: 10,
+      ),
+
+      child: pw.Text(
+        text,
+        textAlign: align,
+
+        style: pw.TextStyle(
+          fontSize: 7.5,
+          fontWeight:
+              pw.FontWeight.bold,
+          color:
+              PdfColors.grey700,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // TABLE CELL
+  // ============================================================
+
+  pw.Widget tableCell(
+    String text, {
+    pw.TextAlign align =
+        pw.TextAlign.left,
+    bool bold = false,
+  }) {
+    return pw.Padding(
+      padding:
+          const pw.EdgeInsets.symmetric(
+        horizontal: 7,
+        vertical: 11,
+      ),
+
+      child: pw.Text(
+        text,
+        textAlign: align,
+
+        style: pw.TextStyle(
+          fontSize: 8.5,
+          fontWeight: bold
+              ? pw.FontWeight.bold
+              : pw.FontWeight.normal,
+          color:
+              PdfColors.grey900,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // TRANSACTION TYPE CELL
+  // ============================================================
+
+  pw.Widget transactionTypeCell(
+    TransactionType type,
+  ) {
+    PdfColor background;
+    PdfColor textColor;
+
+    switch (type) {
+      case TransactionType.gave:
+        background = PdfColors.blue50;
+        textColor = PdfColors.blue900;
+        break;
+
+      case TransactionType.received:
+        background = PdfColors.green50;
+        textColor = PdfColors.green800;
+        break;
+
+      case TransactionType.took:
+        background = PdfColors.orange50;
+        textColor = PdfColors.orange800;
+        break;
+
+      case TransactionType.paid:
+        background = PdfColors.red50;
+        textColor = PdfColors.red800;
+        break;
     }
 
-    // Generate pdf...
+    return pw.Padding(
+      padding:
+          const pw.EdgeInsets.symmetric(
+        horizontal: 5,
+        vertical: 7,
+      ),
+
+      child: pw.Container(
+        padding:
+            const pw.EdgeInsets.symmetric(
+          horizontal: 6,
+          vertical: 4,
+        ),
+
+        decoration:
+            pw.BoxDecoration(
+          color: background,
+          borderRadius:
+              pw.BorderRadius.circular(5),
+        ),
+
+        child: pw.Text(
+          transactionTypeText(type),
+          textAlign:
+              pw.TextAlign.center,
+
+          style: pw.TextStyle(
+            fontSize: 7.5,
+            fontWeight:
+                pw.FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
   }
+
+  // ============================================================
+  // FINAL SUMMARY ROW
+  // ============================================================
+
+  pw.Widget finalSummaryRow(
+    String title,
+    String value,
+  ) {
+    return pw.Padding(
+      padding:
+          const pw.EdgeInsets.symmetric(
+        vertical: 5,
+      ),
+
+      child: pw.Row(
+        children: [
+          pw.Text(
+            title,
+            style:
+                const pw.TextStyle(
+              fontSize: 8.5,
+              color:
+                  PdfColors.grey700,
+            ),
+          ),
+
+          pw.Spacer(),
+
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight:
+                  pw.FontWeight.bold,
+              color:
+                  PdfColors.grey900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // VIEW PDF
+  // ============================================================
+
+  Future<void> viewPdf(
+      BuildContext context,
+    ) async {
+      try {
+        final bytes = await generatePdf();
+
+        if (!context.mounted) return;
+
+        const previewColor = Color(0xff223A5E);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => Scaffold(
+              // ==================================================
+              // TOP APP BAR
+              // ==================================================
+              appBar: AppBar(
+                title: const Text(
+                  "PDF Preview",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                backgroundColor: previewColor,
+                foregroundColor: Colors.white,
+
+                elevation: 0,
+
+                // Makes the status-bar area use the same color
+                systemOverlayStyle:
+                    const SystemUiOverlayStyle(
+                  statusBarColor: previewColor,
+                  statusBarIconBrightness:
+                      Brightness.light,
+                  statusBarBrightness:
+                      Brightness.dark,
+                ),
+              ),
+
+              // ==================================================
+              // PDF PREVIEW
+              // ==================================================
+              body: PdfPreview(
+                build: (format) async {
+                  return bytes;
+                },
+
+                // Show only Print and Share
+                allowPrinting: true,
+                allowSharing: true,
+
+                // Hide page format and orientation controls
+                canChangePageFormat: false,
+                canChangeOrientation: false,
+
+                // Hide the Debug toggle
+                canDebug: false,
+
+                pdfFileName: "${customer.name}_Chopdi.pdf",
+
+                // Bottom action bar
+                actionBarTheme: const PdfActionBarTheme(
+                  backgroundColor: previewColor,
+                  iconColor: Colors.white,
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Unable to generate PDF: $e",
+            ),
+          ),
+        );
+      }
+    }
+
+  // ============================================================
+  // DOWNLOAD PDF
+  // ============================================================
+
+  Future<void> downloadPdf(
+    BuildContext context,
+  ) async {
+    try {
+      final bytes = await generatePdf();
+
+      final safeName = customer.name
+          .replaceAll(
+            RegExp(r'[^\w\s-]'),
+            '',
+          )
+          .trim()
+          .replaceAll(
+            ' ',
+            '_',
+          );
+
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename:
+            "${safeName.isEmpty ? 'Customer' : safeName}_Chopdi.pdf",
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            "Unable to export PDF: $e",
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // BOTTOM SHEET UI
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child : Container(
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(255, 248, 240, 1),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(30),
-            ),
+      child: Container(
+        decoration:
+            const BoxDecoration(
+          color: Color.fromRGBO(
+            255,
+            248,
+            240,
+            1,
           ),
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
 
-                /// drag handle
-                Container(
-                  width: 55,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                /// icon
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: const Color.fromRGBO(170, 185, 207, 0.6),
-                  child: Image.asset('assets/export_pdf.png',height: 150, width: 150),
-                ),
-
-                const SizedBox(height: 14),
-
-                Text(
-                  "Export PDF",
-                  style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: ChopdiColors.navy,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  "Download this customer's chopdi as PDF",
-                  style: GoogleFonts.manrope(
-                    color: ChopdiColors.navy,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // _ledgerPreview(),
-
-                Center(
-                  child: Row(
-                    children: [
-                      SizedBox(width: 95),
-                      SizedBox(
-                        height: 60,
-                        width: 60,
-                        child: Image.asset("assets/app_logo.png")
-                      ),
-
-                      // const SizedBox(width: 5),
-
-                      Text(
-                        "Chopdi",
-                        style: GoogleFonts.manrope(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: ChopdiColors.navy
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(253, 237, 217, 1),
-                    border: Border.all(
-                      color: Color.fromRGBO(177, 95, 39, 0.23),
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-
-                      Image.asset("assets/download_warning.png"),
-
-                      const SizedBox(width: 14),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-
-                            Text(
-                              "This will export all transactions and details of this\ncustomer’s chopdi.",
-                              style: GoogleFonts.manrope(
-                                color: Color.fromRGBO(34, 58, 94, 1),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ChopdiColors.navy,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.download,color: ChopdiColors.cream),
-                    label: const Text(
-                      "Download PDF",
-                      style: TextStyle(
-                        color: ChopdiColors.cream,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onPressed: () {
-
-                      /// generate pdf here
-                      generatePdf();
-
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-              ],
-            ),
+          borderRadius:
+              BorderRadius.vertical(
+            top: Radius.circular(30),
           ),
         ),
-    );
-  }
 
-  // Widget _ledgerPreview() {
-  //   return Container(
-  //     padding: const EdgeInsets.all(18),
-  //     decoration: BoxDecoration(
-  //       color: Color.fromRGBO(255, 248, 240, 1),
-  //       borderRadius: BorderRadius.circular(18),
-  //       border: Border.all(color: Color.fromRGBO(170, 185, 207, 1)),
-  //     ),
-  //     child: Column(
-  //       children: [
+        padding:
+            const EdgeInsets.all(20),
 
-  //         Row(
-  //           children: [
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // ==================================================
+              // DRAG HANDLE
+              // ==================================================
 
-  //             Image.asset('assets/app_logo.png',height: 50,width: 50),
+              Container(
+                width: 55,
+                height: 5,
 
-  //             SizedBox(width: 10),
+                decoration:
+                    BoxDecoration(
+                  color:
+                      Colors.grey.shade400,
+                  borderRadius:
+                      BorderRadius.circular(
+                    20,
+                  ),
+                ),
+              ),
 
-  //             Text(
-  //               "Chopdi",
-  //               style: TextStyle(
-  //                 fontSize: 28,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
+              const SizedBox(height: 24),
 
-  //             Spacer(),
+              // ==================================================
+              // PDF ICON
+              // ==================================================
 
-  //             Text(
-  //               "Ledger Summary",
-  //               style: TextStyle(
-  //                 fontWeight: FontWeight.w600,
-  //               ),
-  //             )
-  //           ],
-  //         ),
+              CircleAvatar(
+                radius: 30,
 
-  //         const SizedBox(height: 18),
+                backgroundColor:
+                    const Color(
+                  0xffDCE4F2,
+                ),
 
-  //         const Align(
-  //           alignment: Alignment.centerLeft,
-  //           child: Text(
-  //             "Customer Details",
-  //             style: TextStyle(
-  //               fontWeight: FontWeight.w600,
-  //             ),
-  //           ),
-  //         ),
+                child: Image.asset(
+                  "assets/export_pdf.png",
+                  width: 32,
+                  height: 32,
+                ),
+              ),
 
-  //         const SizedBox(height: 8),
+              const SizedBox(height: 14),
 
-  //         const Align(
-  //           alignment: Alignment.centerLeft,
-  //           child: Text(
-  //             "Rahul",
-  //             style: TextStyle(
-  //               fontSize: 26,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //         ),
+              // ==================================================
+              // TITLE
+              // ==================================================
 
-  //         const SizedBox(height: 5),
+              Text(
+                "Export PDF",
+                style:
+                    GoogleFonts.manrope(
+                  fontSize: 18,
+                  fontWeight:
+                      FontWeight.w700,
+                  color:
+                      ChopdiColors.navy,
+                ),
+              ),
 
-  //         const Align(
-  //           alignment: Alignment.centerLeft,
-  //           child: Text(
-  //             "+91 98675 45673",
-  //             style: TextStyle(color: Colors.grey),
-  //           ),
-  //         ),
+              const SizedBox(height: 6),
 
-  //         const SizedBox(height: 20),
+              Text(
+                "Create a professional statement for ${customer.name}",
+                textAlign:
+                    TextAlign.center,
 
-  //         _row("Loan Amount", "₹15,000"),
+                style:
+                    GoogleFonts.manrope(
+                  fontSize: 12,
+                  color:
+                      ChopdiColors.navy,
+                ),
+              ),
 
-  //         _row("Interest Rate", "12%"),
+              const SizedBox(height: 24),
 
-  //         _row("Total Received", "₹3000",
-  //             valueColor: Colors.green),
+              // ==================================================
+              // INFO CARD
+              // ==================================================
 
-  //         _row("Outstanding", "₹12,150",
-  //             valueColor: Colors.red),
+              Container(
+                width: double.infinity,
 
-  //         const SizedBox(height: 28),
+                padding:
+                    const EdgeInsets.all(16),
 
-  //         const Divider(),
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xffFDEDD9,
+                  ),
 
-  //         const SizedBox(height: 15),
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
 
-  //         const Text(
-  //           "Generated on 27 July 2026",
-  //           style: TextStyle(
-  //             fontSize: 11,
-  //             color: Colors.grey,
-  //           ),
-  //         ),
+                  border:
+                      Border.all(
+                    color:
+                        const Color.fromRGBO(
+                      177,
+                      95,
+                      39,
+                      0.25,
+                    ),
+                  ),
+                ),
 
-  //         const SizedBox(height: 6),
+                child: Row(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
 
-  //         const Text(
-  //           "Thank You for using Chopdi",
-  //           style: TextStyle(
-  //             color: Color(0xff29416A),
-  //           ),
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
+                  children: [
+                    Image.asset(
+                      "assets/download_warning.png",
+                      width: 26,
+                      height: 26,
+                    ),
 
-  Widget _row(
-    String title,
-    String value, {
-    Color valueColor = Colors.black,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        children: [
+                    const SizedBox(width: 12),
 
-          Expanded(
-            child: Text(title),
+                    Expanded(
+                      child: Text(
+                        "The PDF includes ${customer.name}'s details, complete transaction history and account summary.",
+
+                        style:
+                            GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight:
+                              FontWeight.w600,
+                          color:
+                              ChopdiColors.navy,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ==================================================
+              // VIEW PDF
+              // ==================================================
+
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+
+                child:
+                    OutlinedButton.icon(
+                  onPressed: () {
+                    viewPdf(context);
+                  },
+
+                  icon:
+                      const Icon(
+                    Icons.visibility_outlined,
+                    color:
+                        ChopdiColors.navy,
+                  ),
+
+                  label: Text(
+                    "View PDF",
+                    style:
+                        GoogleFonts.manrope(
+                      color:
+                          ChopdiColors.navy,
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
+                  ),
+
+                  style:
+                      OutlinedButton.styleFrom(
+                    side:
+                        const BorderSide(
+                      color:
+                          ChopdiColors.navy,
+                    ),
+
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // ==================================================
+              // DOWNLOAD PDF
+              // ==================================================
+
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+
+                child:
+                    ElevatedButton.icon(
+                  onPressed: () {
+                    downloadPdf(context);
+                  },
+
+                  icon:
+                      const Icon(
+                    Icons.download_outlined,
+                    color:
+                        ChopdiColors.cream,
+                  ),
+
+                  label: Text(
+                    "Download PDF",
+                    style:
+                        GoogleFonts.manrope(
+                      color:
+                          ChopdiColors.cream,
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
+                  ),
+
+                  style:
+                      ElevatedButton.styleFrom(
+                    backgroundColor:
+                        ChopdiColors.navy,
+
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // ==================================================
+              // CANCEL
+              // ==================================================
+
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+
+                child: Text(
+                  "Cancel",
+                  style:
+                      GoogleFonts.manrope(
+                    color:
+                        ChopdiColors.navy,
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontWeight: FontWeight.bold,
-            ),
-          )
-        ],
+        ),
       ),
     );
   }
