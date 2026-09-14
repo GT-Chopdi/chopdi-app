@@ -223,9 +223,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           children: [
             IconButton(
               icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: ChopdiColors.navy),
-              onPressed: () => Navigator.pop(context),
+                Icons.arrow_back_ios_new,
+                color: ChopdiColors.navy,
+              ),
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => const MainScreen(),
+                  ),
+                      (route) => false,
+                );
+              },
             ),
             const Spacer(),
             IconButton(
