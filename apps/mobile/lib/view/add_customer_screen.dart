@@ -162,62 +162,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     return cleaned;
   }
 
-  // Future<void> selectContact(Contact contact) async {
-  //   if (contact.phones.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text(
-  //           'This contact does not have a phone number',
-  //         ),
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   final phoneNumber =
-  //       normalizePhoneNumber(contact.phones.first.number);
-
-  //   final contactName =
-  //       contact.displayName ?? 'Unknown';
-
-  //   // // Check existing customer
-  //   // final existingCustomer =
-  //   //     await IsarService.getCustomerByPhone(phoneNumber);
-  //   final existingCustomer =
-  //       await IsarService.getCustomerByPhoneAndChopdi(
-  //     phoneNumber,
-  //     widget.chopdiId,
-  //   );
-
-  //   if (!mounted) return;
-
-  //   // Existing customer
-  //   if (existingCustomer != null) {
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (_) => CustomerDetailsScreen(
-  //           customer: existingCustomer,
-  //         ),
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   // New customer
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) => CustomerDetailsAdd(
-  //         contactName: contactName,
-  //         contactPhone: phoneNumber,
-  //         chopdiId: widget.chopdiId,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Future<void> selectContact(Contact contact) async {
   // Phone number is optional.

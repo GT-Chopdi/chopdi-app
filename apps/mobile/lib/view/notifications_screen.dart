@@ -1,3 +1,1228 @@
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:isar_community/isar.dart';
+// import 'package:mychopdi/model/notification.dart';
+// import 'package:mychopdi/service/local_notification_service.dart';
+// import 'package:mychopdi/service/notification_service.dart';
+// import 'package:mychopdi/utils/app_colors.dart';
+
+// class NotificationsScreen extends StatefulWidget {
+//   final Isar isar;
+//   final int chopdiId;
+
+//   const NotificationsScreen({
+//     super.key,
+//     required this.isar,
+//     required this.chopdiId,
+//   });
+
+//   @override
+//   State<NotificationsScreen> createState() =>
+//       _NotificationsScreenState();
+// }
+
+// class _NotificationsScreenState
+//     extends State<NotificationsScreen> {
+//   late final NotificationService notificationService;
+
+//   final LocalNotificationService
+//       localNotificationService =
+//       LocalNotificationService.instance;
+
+//   bool _notificationsEnabled = true;
+//   bool _loadingNotificationSetting = true;
+
+//   @override
+//   void initState() {
+//     super.initState();
+
+//     notificationService =
+//         NotificationService(widget.isar);
+
+//     _loadNotificationSetting();
+//   }
+
+//   // ============================================================
+//   // LOAD MASTER SETTING
+//   // ============================================================
+
+//   Future<void> _loadNotificationSetting() async {
+//     final enabled =
+//         await localNotificationService
+//             .areNotificationsEnabled();
+
+//     if (!mounted) {
+//       return;
+//     }
+
+//     setState(() {
+//       _notificationsEnabled = enabled;
+//       _loadingNotificationSetting = false;
+//     });
+//   }
+
+//   // ============================================================
+//   // TOGGLE NOTIFICATIONS
+//   // ============================================================
+
+//   Future<void> _toggleNotifications() async {
+//     final bool newValue =
+//         !_notificationsEnabled;
+
+//     if (!newValue) {
+//       await _disableNotifications();
+//     } else {
+//       await _enableNotifications();
+//     }
+//   }
+
+//   // ============================================================
+//   // DISABLE
+//   // ============================================================
+
+//   Future<void> _disableNotifications() async {
+//     await localNotificationService
+//         .setNotificationsEnabled(
+//       false,
+//       database: widget.isar,
+//     );
+
+//     if (!mounted) {
+//       return;
+//     }
+
+//     setState(() {
+//       _notificationsEnabled = false;
+//     });
+
+//     await _showNotificationStatusDialog(
+//       enabled: false,
+//     );
+//   }
+
+//   // ============================================================
+//   // ENABLE
+//   // ============================================================
+
+//   Future<void> _enableNotifications() async {
+//     await localNotificationService
+//         .setNotificationsEnabled(
+//       true,
+//       database: widget.isar,
+//     );
+
+//     // Ask for OS notification permission.
+//     await localNotificationService
+//         .requestPermission();
+
+//     // Restore payment/daily reminders according
+//     // to the existing settings.
+//     await localNotificationService
+//         .syncNotifications(
+//       database: widget.isar,
+//     );
+
+//     if (!mounted) {
+//       return;
+//     }
+
+//     setState(() {
+//       _notificationsEnabled = true;
+//     });
+
+//     await _showNotificationStatusDialog(
+//       enabled: true,
+//     );
+//   }
+
+//   // ============================================================
+//   // BUILD
+//   // ============================================================
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor:
+//           const Color(0xffFFF3E2),
+//       body: SafeArea(
+//         child: LayoutBuilder(
+//           builder: (
+//             context,
+//             constraints,
+//           ) {
+//             final width = constraints.maxWidth;
+
+//             final horizontalPadding =
+//                 width < 360
+//                     ? 12.0
+//                     : width < 600
+//                         ? 18.0
+//                         : 24.0;
+
+//             return Padding(
+//               padding: EdgeInsets.symmetric(
+//                 horizontal: horizontalPadding,
+//               ),
+//               child: Column(
+//                 children: [
+//                   const SizedBox(height: 18),
+
+//                   // ==================================================
+//                   // HEADER
+//                   // ==================================================
+
+//                   _buildHeader(),
+
+//                   const SizedBox(height: 20),
+
+//                   // ==================================================
+//                   // NOTIFICATIONS
+//                   // ==================================================
+
+//                   Expanded(
+//                     child:
+//                         StreamBuilder<
+//                             List<NotificationModel>>(
+//                       stream: notificationService
+//                           .watchNotifications(
+//                         widget.chopdiId,
+//                       ),
+//                       builder: (
+//                         context,
+//                         snapshot,
+//                       ) {
+//                         if (snapshot.connectionState ==
+//                                 ConnectionState.waiting &&
+//                             !snapshot.hasData) {
+//                           return const Center(
+//                             child:
+//                                 CircularProgressIndicator(
+//                               color:
+//                                   ChopdiColors.navy,
+//                             ),
+//                           );
+//                         }
+
+//                         final notifications =
+//                             snapshot.data ?? [];
+
+//                         if (notifications
+//                             .isEmpty) {
+//                           return _emptyNotifications();
+//                         }
+
+//                         return ListView.separated(
+//                           padding:
+//                               const EdgeInsets.only(
+//                             bottom: 20,
+//                           ),
+//                           itemCount:
+//                               notifications.length,
+//                           separatorBuilder:
+//                               (_, _) =>
+//                                   const SizedBox(
+//                             height: 12,
+//                           ),
+//                           itemBuilder:
+//                               (context, index) {
+//                             final notification =
+//                                 notifications[
+//                                     index];
+
+//                             return _notificationTile(
+//                               context,
+//                               notification,
+//                             );
+//                           },
+//                         );
+//                       },
+//                     ),
+//                   ),
+
+//                   const SizedBox(height: 20),
+//                 ],
+//               ),
+//             );
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   // ============================================================
+//   // HEADER
+//   // ============================================================
+
+//   Widget _buildHeader() {
+//     return Row(
+//       children: [
+//         InkWell(
+//           borderRadius:
+//               BorderRadius.circular(20),
+//           onTap: () {
+//             Navigator.pop(context);
+//           },
+//           child: const Padding(
+//             padding: EdgeInsets.all(4),
+//             child: Icon(
+//               Icons.arrow_back_ios_new,
+//               color: ChopdiColors.navy,
+//             ),
+//           ),
+//         ),
+
+//         const SizedBox(width: 12),
+
+//         Expanded(
+//           child: Text(
+//             'Notifications',
+//             style: GoogleFonts.manrope(
+//               fontSize: 24,
+//               fontWeight: FontWeight.bold,
+//               color: ChopdiColors.navy,
+//             ),
+//           ),
+//         ),
+
+//         // ========================================================
+//         // MARK ALL AS READ
+//         // ========================================================
+
+//         StreamBuilder<int>(
+//           stream: notificationService
+//               .watchUnreadCount(
+//             widget.chopdiId,
+//           ),
+//           builder: (
+//             context,
+//             snapshot,
+//           ) {
+//             final unreadCount =
+//                 snapshot.data ?? 0;
+
+//             if (unreadCount == 0) {
+//               return const SizedBox.shrink();
+//             }
+
+//             return IconButton(
+//               tooltip: 'Mark all as read',
+//               onPressed: () async {
+//                 await notificationService
+//                     .markAllAsRead(
+//                   widget.chopdiId,
+//                 );
+
+//                 if (!mounted) {
+//                   return;
+//                 }
+
+//                 await _showSimpleDialog(
+//                   title: 'All Read',
+//                   message:
+//                       'All notifications have been marked as read.',
+//                   icon: Icons.done_all,
+//                 );
+//               },
+//               icon: const Icon(
+//                 Icons.done_all,
+//                 color: ChopdiColors.navy,
+//                 size: 22,
+//               ),
+//             );
+//           },
+//         ),
+//       ],
+//     );
+//   }
+
+//   // ============================================================
+//   // NOTIFICATION TILE
+//   // ============================================================
+
+//   Widget _notificationTile(
+//     BuildContext context,
+//     NotificationModel notification,
+//   ) {
+//     final iconColor =
+//         _getNotificationColor(
+//       notification.type,
+//     );
+
+//     final icon =
+//         _getNotificationIcon(
+//       notification.type,
+//     );
+
+//     return GestureDetector(
+//       onTap: () async {
+//         if (!notification.isRead) {
+//           await notificationService
+//               .markAsRead(
+//             notification.id,
+//           );
+
+//           if (!mounted) {
+//             return;
+//           }
+
+//           await _showSimpleDialog(
+//             title: 'Notification Read',
+//             message:
+//                 'This notification has been marked as read.',
+//             icon: Icons.mark_email_read_outlined,
+//           );
+//         }
+//       },
+//       onLongPress: () {
+//         _showNotificationOptions(
+//           context,
+//           notification,
+//         );
+//       },
+//       child: AnimatedContainer(
+//         duration:
+//             const Duration(milliseconds: 200),
+//         padding:
+//             const EdgeInsets.all(14),
+//         decoration: BoxDecoration(
+//           color: notification.isRead
+//               ? Colors.white.withValues(
+//                   alpha: .35,
+//                 )
+//               : Colors.white.withValues(
+//                   alpha: .65,
+//                 ),
+//           borderRadius:
+//               BorderRadius.circular(14),
+//           border: Border.all(
+//             color: notification.isRead
+//                 ? Colors.grey.shade300
+//                 : iconColor.withValues(
+//                     alpha: .45,
+//                   ),
+//             width:
+//                 notification.isRead
+//                     ? 1
+//                     : 1.4,
+//           ),
+//         ),
+//         child: Column(
+//           crossAxisAlignment:
+//               CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               crossAxisAlignment:
+//                   CrossAxisAlignment.start,
+//               children: [
+//                 // ==================================================
+//                 // ICON
+//                 // ==================================================
+
+//                 CircleAvatar(
+//                   radius: 22,
+//                   backgroundColor:
+//                       iconColor.withValues(
+//                     alpha: .15,
+//                   ),
+//                   child: Icon(
+//                     icon,
+//                     color: iconColor,
+//                     size: 23,
+//                   ),
+//                 ),
+
+//                 const SizedBox(width: 14),
+
+//                 // ==================================================
+//                 // TITLE + SUBTITLE
+//                 // ==================================================
+
+//                 Expanded(
+//                   child: Column(
+//                     crossAxisAlignment:
+//                         CrossAxisAlignment.start,
+//                     children: [
+//                       Row(
+//                         children: [
+//                           if (!notification.isRead)
+//                             Container(
+//                               width: 8,
+//                               height: 8,
+//                               margin:
+//                                   const EdgeInsets
+//                                       .only(
+//                                 right: 7,
+//                                 top: 2,
+//                               ),
+//                               decoration:
+//                                   BoxDecoration(
+//                                 color: iconColor,
+//                                 shape:
+//                                     BoxShape.circle,
+//                               ),
+//                             ),
+//                           Expanded(
+//                             child: Text(
+//                               notification.title,
+//                               maxLines: 2,
+//                               overflow:
+//                                   TextOverflow
+//                                       .ellipsis,
+//                               style:
+//                                   GoogleFonts
+//                                       .manrope(
+//                                 fontWeight:
+//                                     FontWeight.bold,
+//                                 fontSize: 16,
+//                                 color:
+//                                     ChopdiColors
+//                                         .navy,
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+
+//                       const SizedBox(height: 5),
+
+//                       Text(
+//                         notification.subtitle,
+//                         maxLines: 4,
+//                         overflow:
+//                             TextOverflow.ellipsis,
+//                         style:
+//                             GoogleFonts.manrope(
+//                           fontSize: 13,
+//                           height: 1.35,
+//                           color:
+//                               ChopdiColors.navy,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+
+//                 const SizedBox(width: 8),
+
+//                 // ==================================================
+//                 // TIME
+//                 // ==================================================
+
+//                 Text(
+//                   _formatNotificationTime(
+//                     notification.createdAt,
+//                   ),
+//                   textAlign:
+//                       TextAlign.right,
+//                   style:
+//                       GoogleFonts.manrope(
+//                     fontSize: 10,
+//                     color:
+//                         Colors.grey.shade700,
+//                   ),
+//                 ),
+//               ],
+//             ),
+
+//             const SizedBox(height: 12),
+
+//             // ======================================================
+//             // READ / UNREAD STATUS
+//             // ======================================================
+
+//             Row(
+//               children: [
+//                 Icon(
+//                   notification.isRead
+//                       ? Icons
+//                           .mark_email_read_outlined
+//                       : Icons
+//                           .mark_email_unread_outlined,
+//                   size: 15,
+//                   color: notification.isRead
+//                       ? Colors.grey.shade600
+//                       : iconColor,
+//                 ),
+
+//                 const SizedBox(width: 5),
+
+//                 Text(
+//                   notification.isRead
+//                       ? 'Read'
+//                       : 'Unread',
+//                   style:
+//                       GoogleFonts.manrope(
+//                     fontSize: 11,
+//                     fontWeight:
+//                         FontWeight.w700,
+//                     color:
+//                         notification.isRead
+//                             ? Colors.grey
+//                                 .shade600
+//                             : iconColor,
+//                   ),
+//                 ),
+
+//                 const Spacer(),
+
+//                 // ==================================================
+//                 // EXPLICIT MARK AS READ BUTTON
+//                 // ==================================================
+
+//                 if (!notification.isRead)
+//                   TextButton.icon(
+//                     onPressed: () async {
+//                       await notificationService
+//                           .markAsRead(
+//                         notification.id,
+//                       );
+
+//                       if (!mounted) {
+//                         return;
+//                       }
+
+//                       await _showSimpleDialog(
+//                         title:
+//                             'Notification Read',
+//                         message:
+//                             'This notification has been marked as read.',
+//                         icon: Icons
+//                             .mark_email_read_outlined,
+//                       );
+//                     },
+//                     style:
+//                         TextButton.styleFrom(
+//                       padding:
+//                           const EdgeInsets
+//                               .symmetric(
+//                         horizontal: 8,
+//                         vertical: 4,
+//                       ),
+//                       minimumSize:
+//                           Size.zero,
+//                       tapTargetSize:
+//                           MaterialTapTargetSize
+//                               .shrinkWrap,
+//                     ),
+//                     icon: const Icon(
+//                       Icons.done,
+//                       size: 15,
+//                     ),
+//                     label: Text(
+//                       'Mark as read',
+//                       style:
+//                           GoogleFonts.manrope(
+//                         fontSize: 11,
+//                         fontWeight:
+//                             FontWeight.w700,
+//                       ),
+//                     ),
+//                   ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   // ============================================================
+//   // ICON
+//   // ============================================================
+
+//   IconData _getNotificationIcon(
+//     String type,
+//   ) {
+//     switch (type) {
+//       case 'interest_calculated':
+//         return Icons.percent_rounded;
+
+//       case 'interest_updated':
+//         return Icons.currency_rupee_rounded;
+
+//       case 'app_update':
+//         return Icons.system_update_rounded;
+
+//       case 'payment_reminder':
+//         return Icons
+//             .notifications_active_rounded;
+
+//       default:
+//         return Icons.notifications_none;
+//     }
+//   }
+
+//   // ============================================================
+//   // COLOR
+//   // ============================================================
+
+//   Color _getNotificationColor(
+//     String type,
+//   ) {
+//     switch (type) {
+//       case 'interest_calculated':
+//         return Colors.green;
+
+//       case 'interest_updated':
+//         return Colors.orange;
+
+//       case 'app_update':
+//         return Colors.blue;
+
+//       case 'payment_reminder':
+//         return Colors.red;
+
+//       default:
+//         return ChopdiColors.navy;
+//     }
+//   }
+
+//   // ============================================================
+//   // EMPTY STATE
+//   // ============================================================
+
+//   Widget _emptyNotifications() {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment:
+//             MainAxisAlignment.center,
+//         children: [
+//           Container(
+//             height: 72,
+//             width: 72,
+//             decoration: BoxDecoration(
+//               color: ChopdiColors.navy
+//                   .withValues(alpha: .08),
+//               shape: BoxShape.circle,
+//             ),
+//             child: const Icon(
+//               Icons.notifications_none,
+//               size: 36,
+//               color: ChopdiColors.navy,
+//             ),
+//           ),
+
+//           const SizedBox(height: 16),
+
+//           Text(
+//             'No Notifications',
+//             style: GoogleFonts.manrope(
+//               fontSize: 18,
+//               fontWeight: FontWeight.bold,
+//               color: ChopdiColors.navy,
+//             ),
+//           ),
+
+//           const SizedBox(height: 6),
+
+//           Text(
+//             'You\'re all caught up!',
+//             style: GoogleFonts.manrope(
+//               fontSize: 13,
+//               color: Colors.grey.shade600,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   // ============================================================
+//   // NOTIFICATION OPTIONS
+//   // ============================================================
+
+//   void _showNotificationOptions(
+//     BuildContext context,
+//     NotificationModel notification,
+//   ) {
+//     showModalBottomSheet(
+//       context: context,
+//       backgroundColor:
+//           const Color(0xffFFF8F0),
+//       shape:
+//           const RoundedRectangleBorder(
+//         borderRadius:
+//             BorderRadius.vertical(
+//           top: Radius.circular(24),
+//         ),
+//       ),
+//       builder: (sheetContext) {
+//         return SafeArea(
+//           child: Padding(
+//             padding:
+//                 const EdgeInsets.fromLTRB(
+//               20,
+//               18,
+//               20,
+//               20,
+//             ),
+//             child: Column(
+//               mainAxisSize:
+//                   MainAxisSize.min,
+//               children: [
+//                 Container(
+//                   width: 50,
+//                   height: 5,
+//                   decoration:
+//                       BoxDecoration(
+//                     color:
+//                         Colors.grey.shade400,
+//                     borderRadius:
+//                         BorderRadius.circular(
+//                       50,
+//                     ),
+//                   ),
+//                 ),
+
+//                 const SizedBox(height: 20),
+
+//                 // ==================================================
+//                 // READ / UNREAD
+//                 // ==================================================
+
+//                 ListTile(
+//                   leading: Icon(
+//                     notification.isRead
+//                         ? Icons
+//                             .mark_email_unread_outlined
+//                         : Icons
+//                             .mark_email_read_outlined,
+//                     color:
+//                         ChopdiColors.navy,
+//                   ),
+//                   title: Text(
+//                     notification.isRead
+//                         ? 'Mark as unread'
+//                         : 'Mark as read',
+//                     style:
+//                         GoogleFonts.manrope(
+//                       fontWeight:
+//                           FontWeight.w600,
+//                       color:
+//                           ChopdiColors.navy,
+//                     ),
+//                   ),
+//                   onTap: () async {
+//                     if (notification.isRead) {
+//                       await notificationService
+//                           .markAsUnread(
+//                         notification.id,
+//                       );
+//                     } else {
+//                       await notificationService
+//                           .markAsRead(
+//                         notification.id,
+//                       );
+//                     }
+
+//                     if (sheetContext.mounted) {
+//                       Navigator.pop(
+//                         sheetContext,
+//                       );
+//                     }
+//                   },
+//                 ),
+
+//                 // ==================================================
+//                 // DELETE
+//                 // ==================================================
+
+//                 ListTile(
+//                   leading: const Icon(
+//                     Icons.delete_outline,
+//                     color: Colors.red,
+//                   ),
+//                   title: Text(
+//                     'Delete notification',
+//                     style:
+//                         GoogleFonts.manrope(
+//                       fontWeight:
+//                           FontWeight.w600,
+//                       color: Colors.red,
+//                     ),
+//                   ),
+//                   onTap: () async {
+//                     Navigator.pop(
+//                       sheetContext,
+//                     );
+
+//                     await _confirmDelete(
+//                       notification,
+//                     );
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+//   // ============================================================
+//   // CONFIRM DELETE
+//   // ============================================================
+
+//   Future<void> _confirmDelete(
+//     NotificationModel notification,
+//   ) async {
+//     if (!mounted) {
+//       return;
+//     }
+
+//     final shouldDelete =
+//         await showDialog<bool>(
+//       context: context,
+//       builder: (dialogContext) {
+//         return AlertDialog(
+//           backgroundColor:
+//               const Color(0xffFFF8F0),
+//           shape:
+//               RoundedRectangleBorder(
+//             borderRadius:
+//                 BorderRadius.circular(18),
+//           ),
+//           title: Text(
+//             'Delete Notification?',
+//             style:
+//                 GoogleFonts.manrope(
+//               fontSize: 18,
+//               fontWeight:
+//                   FontWeight.w700,
+//               color:
+//                   ChopdiColors.navy,
+//             ),
+//           ),
+//           content: Text(
+//             'Are you sure you want to delete this notification?',
+//             style:
+//                 GoogleFonts.manrope(
+//               fontSize: 13,
+//               height: 1.4,
+//               color:
+//                   Colors.grey.shade700,
+//             ),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.pop(
+//                   dialogContext,
+//                   false,
+//                 );
+//               },
+//               child: Text(
+//                 'Cancel',
+//                 style:
+//                     GoogleFonts.manrope(
+//                   fontWeight:
+//                       FontWeight.w700,
+//                   color:
+//                       Colors.grey.shade700,
+//                 ),
+//               ),
+//             ),
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.pop(
+//                   dialogContext,
+//                   true,
+//                 );
+//               },
+//               child: Text(
+//                 'Delete',
+//                 style:
+//                     GoogleFonts.manrope(
+//                   fontWeight:
+//                       FontWeight.w700,
+//                   color: Colors.red,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+
+//     if (shouldDelete == true) {
+//       await notificationService
+//           .deleteNotification(
+//         notification.id,
+//       );
+//     }
+//   }
+
+//   // ============================================================
+//   // STATUS DIALOG
+//   // ============================================================
+
+//   Future<void> _showNotificationStatusDialog({
+//     required bool enabled,
+//   }) async {
+//     if (!mounted) {
+//       return;
+//     }
+
+//     await showDialog<void>(
+//       context: context,
+//       barrierDismissible: true,
+//       builder: (dialogContext) {
+//         return AlertDialog(
+//           backgroundColor:
+//               const Color(0xffFFF8F0),
+//           shape:
+//               RoundedRectangleBorder(
+//             borderRadius:
+//                 BorderRadius.circular(18),
+//           ),
+//           title: Row(
+//             children: [
+//               Container(
+//                 width: 38,
+//                 height: 38,
+//                 decoration:
+//                     BoxDecoration(
+//                   color: enabled
+//                       ? Colors.green
+//                           .withValues(
+//                           alpha: .12,
+//                         )
+//                       : Colors.red.withValues(
+//                           alpha: .12,
+//                         ),
+//                   shape: BoxShape.circle,
+//                 ),
+//                 child: Icon(
+//                   enabled
+//                       ? Icons
+//                           .notifications_active_outlined
+//                       : Icons
+//                           .notifications_off_outlined,
+//                   color: enabled
+//                       ? Colors.green
+//                       : Colors.red,
+//                   size: 21,
+//                 ),
+//               ),
+
+//               const SizedBox(width: 10),
+
+//               Expanded(
+//                 child: Text(
+//                   enabled
+//                       ? 'Notifications Enabled'
+//                       : 'Notifications Disabled',
+//                   style:
+//                       GoogleFonts.manrope(
+//                     fontSize: 18,
+//                     fontWeight:
+//                         FontWeight.w700,
+//                     color:
+//                         ChopdiColors.navy,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           content: Text(
+//             enabled
+//                 ? 'You will receive notifications for payment reminders, interest updates and other important alerts.'
+//                 : 'You will no longer receive notifications from Chopdi until you enable them again.',
+//             style:
+//                 GoogleFonts.manrope(
+//               fontSize: 13,
+//               height: 1.4,
+//               fontWeight:
+//                   FontWeight.w500,
+//               color:
+//                   Colors.grey.shade700,
+//             ),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.of(
+//                   dialogContext,
+//                 ).pop();
+//               },
+//               child: Text(
+//                 'OK',
+//                 style:
+//                     GoogleFonts.manrope(
+//                   fontSize: 14,
+//                   fontWeight:
+//                       FontWeight.w700,
+//                   color:
+//                       ChopdiColors.navy,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+//   // ============================================================
+//   // SIMPLE DIALOG
+//   // ============================================================
+
+//   Future<void> _showSimpleDialog({
+//     required String title,
+//     required String message,
+//     required IconData icon,
+//   }) async {
+//     if (!mounted) {
+//       return;
+//     }
+
+//     await showDialog<void>(
+//       context: context,
+//       builder: (dialogContext) {
+//         return AlertDialog(
+//           backgroundColor:
+//               const Color(0xffFFF8F0),
+//           shape:
+//               RoundedRectangleBorder(
+//             borderRadius:
+//                 BorderRadius.circular(18),
+//           ),
+//           title: Row(
+//             children: [
+//               Container(
+//                 width: 38,
+//                 height: 38,
+//                 decoration:
+//                     BoxDecoration(
+//                   color:
+//                       ChopdiColors.navy
+//                           .withValues(
+//                     alpha: .10,
+//                   ),
+//                   shape: BoxShape.circle,
+//                 ),
+//                 child: Icon(
+//                   icon,
+//                   color:
+//                       ChopdiColors.navy,
+//                   size: 21,
+//                 ),
+//               ),
+
+//               const SizedBox(width: 10),
+
+//               Expanded(
+//                 child: Text(
+//                   title,
+//                   style:
+//                       GoogleFonts.manrope(
+//                     fontSize: 18,
+//                     fontWeight:
+//                         FontWeight.w700,
+//                     color:
+//                         ChopdiColors.navy,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           content: Text(
+//             message,
+//             style:
+//                 GoogleFonts.manrope(
+//               fontSize: 13,
+//               height: 1.4,
+//               color:
+//                   Colors.grey.shade700,
+//             ),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.pop(
+//                   dialogContext,
+//                 );
+//               },
+//               child: Text(
+//                 'OK',
+//                 style:
+//                     GoogleFonts.manrope(
+//                   fontWeight:
+//                       FontWeight.w700,
+//                   color:
+//                       ChopdiColors.navy,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+//   // ============================================================
+//   // TIME FORMAT
+//   // ============================================================
+
+//   String _formatNotificationTime(
+//     DateTime dateTime,
+//   ) {
+//     final now = DateTime.now();
+
+//     final difference =
+//         now.difference(dateTime);
+
+//     if (difference.isNegative) {
+//       return 'Just now';
+//     }
+
+//     if (difference.inSeconds < 60) {
+//       return 'Just now';
+//     }
+
+//     if (difference.inMinutes < 60) {
+//       final minutes =
+//           difference.inMinutes;
+
+//       return minutes == 1
+//           ? '1 min ago'
+//           : '$minutes mins ago';
+//     }
+
+//     if (difference.inHours < 24) {
+//       final hours =
+//           difference.inHours;
+
+//       return hours == 1
+//           ? '1 hour ago'
+//           : '$hours hours ago';
+//     }
+
+//     if (difference.inDays == 1) {
+//       return 'Yesterday';
+//     }
+
+//     if (difference.inDays < 7) {
+//       return '${difference.inDays} days ago';
+//     }
+
+//     final day =
+//         dateTime.day
+//             .toString()
+//             .padLeft(2, '0');
+
+//     final month =
+//         dateTime.month
+//             .toString()
+//             .padLeft(2, '0');
+
+//     final year =
+//         dateTime.year.toString();
+
+//     return '$day/$month/$year';
+//   }
+// }
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
@@ -21,12 +1246,10 @@ class NotificationsScreen extends StatefulWidget {
       _NotificationsScreenState();
 }
 
-class _NotificationsScreenState
-    extends State<NotificationsScreen> {
+class _NotificationsScreenState extends State<NotificationsScreen> {
   late final NotificationService notificationService;
 
-  final LocalNotificationService
-      localNotificationService =
+  final LocalNotificationService localNotificationService =
       LocalNotificationService.instance;
 
   bool _notificationsEnabled = true;
@@ -36,8 +1259,7 @@ class _NotificationsScreenState
   void initState() {
     super.initState();
 
-    notificationService =
-        NotificationService(widget.isar);
+    notificationService = NotificationService(widget.isar);
 
     _loadNotificationSetting();
   }
@@ -48,8 +1270,7 @@ class _NotificationsScreenState
 
   Future<void> _loadNotificationSetting() async {
     final enabled =
-        await localNotificationService
-            .areNotificationsEnabled();
+        await localNotificationService.areNotificationsEnabled();
 
     if (!mounted) {
       return;
@@ -66,8 +1287,7 @@ class _NotificationsScreenState
   // ============================================================
 
   Future<void> _toggleNotifications() async {
-    final bool newValue =
-        !_notificationsEnabled;
+    final bool newValue = !_notificationsEnabled;
 
     if (!newValue) {
       await _disableNotifications();
@@ -81,8 +1301,7 @@ class _NotificationsScreenState
   // ============================================================
 
   Future<void> _disableNotifications() async {
-    await localNotificationService
-        .setNotificationsEnabled(
+    await localNotificationService.setNotificationsEnabled(
       false,
       database: widget.isar,
     );
@@ -105,20 +1324,14 @@ class _NotificationsScreenState
   // ============================================================
 
   Future<void> _enableNotifications() async {
-    await localNotificationService
-        .setNotificationsEnabled(
+    await localNotificationService.setNotificationsEnabled(
       true,
       database: widget.isar,
     );
 
-    // Ask for OS notification permission.
-    await localNotificationService
-        .requestPermission();
+    await localNotificationService.requestPermission();
 
-    // Restore payment/daily reminders according
-    // to the existing settings.
-    await localNotificationService
-        .syncNotifications(
+    await localNotificationService.syncNotifications(
       database: widget.isar,
     );
 
@@ -142,22 +1355,17 @@ class _NotificationsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xffFFF3E2),
+      backgroundColor: const Color(0xffFFF3E2),
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (
-            context,
-            constraints,
-          ) {
+          builder: (context, constraints) {
             final width = constraints.maxWidth;
 
-            final horizontalPadding =
-                width < 360
-                    ? 12.0
-                    : width < 600
-                        ? 18.0
-                        : 24.0;
+            final horizontalPadding = width < 360
+                ? 12.0
+                : width < 600
+                    ? 18.0
+                    : 24.0;
 
             return Padding(
               padding: EdgeInsets.symmetric(
@@ -180,54 +1388,36 @@ class _NotificationsScreenState
                   // ==================================================
 
                   Expanded(
-                    child:
-                        StreamBuilder<
-                            List<NotificationModel>>(
-                      stream: notificationService
-                          .watchNotifications(
+                    child: StreamBuilder<List<NotificationModel>>(
+                      stream: notificationService.watchNotifications(
                         widget.chopdiId,
                       ),
-                      builder: (
-                        context,
-                        snapshot,
-                      ) {
+                      builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                                 ConnectionState.waiting &&
                             !snapshot.hasData) {
                           return const Center(
-                            child:
-                                CircularProgressIndicator(
-                              color:
-                                  ChopdiColors.navy,
+                            child: CircularProgressIndicator(
+                              color: ChopdiColors.navy,
                             ),
                           );
                         }
 
-                        final notifications =
-                            snapshot.data ?? [];
+                        final notifications = snapshot.data ?? [];
 
-                        if (notifications
-                            .isEmpty) {
+                        if (notifications.isEmpty) {
                           return _emptyNotifications();
                         }
 
                         return ListView.separated(
-                          padding:
-                              const EdgeInsets.only(
+                          padding: const EdgeInsets.only(
                             bottom: 20,
                           ),
-                          itemCount:
-                              notifications.length,
-                          separatorBuilder:
-                              (_, _) =>
-                                  const SizedBox(
-                            height: 12,
-                          ),
-                          itemBuilder:
-                              (context, index) {
-                            final notification =
-                                notifications[
-                                    index];
+                          itemCount: notifications.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final notification = notifications[index];
 
                             return _notificationTile(
                               context,
@@ -257,8 +1447,7 @@ class _NotificationsScreenState
     return Row(
       children: [
         InkWell(
-          borderRadius:
-              BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             Navigator.pop(context);
           },
@@ -289,16 +1478,11 @@ class _NotificationsScreenState
         // ========================================================
 
         StreamBuilder<int>(
-          stream: notificationService
-              .watchUnreadCount(
+          stream: notificationService.watchUnreadCount(
             widget.chopdiId,
           ),
-          builder: (
-            context,
-            snapshot,
-          ) {
-            final unreadCount =
-                snapshot.data ?? 0;
+          builder: (context, snapshot) {
+            final unreadCount = snapshot.data ?? 0;
 
             if (unreadCount == 0) {
               return const SizedBox.shrink();
@@ -307,20 +1491,8 @@ class _NotificationsScreenState
             return IconButton(
               tooltip: 'Mark all as read',
               onPressed: () async {
-                await notificationService
-                    .markAllAsRead(
+                await notificationService.markAllAsRead(
                   widget.chopdiId,
-                );
-
-                if (!mounted) {
-                  return;
-                }
-
-                await _showSimpleDialog(
-                  title: 'All Read',
-                  message:
-                      'All notifications have been marked as read.',
-                  icon: Icons.done_all,
                 );
               },
               icon: const Icon(
@@ -343,86 +1515,107 @@ class _NotificationsScreenState
     BuildContext context,
     NotificationModel notification,
   ) {
-    final iconColor =
-        _getNotificationColor(
+    final iconColor = _getNotificationColor(
       notification.type,
     );
 
-    final icon =
-        _getNotificationIcon(
+    final icon = _getNotificationIcon(
       notification.type,
     );
+
+    final bool isUnread = !notification.isRead;
 
     return GestureDetector(
+      // ==========================================================
+      // TAP
+      // ==========================================================
+
       onTap: () async {
-        if (!notification.isRead) {
-          await notificationService
-              .markAsRead(
+        // Tapping an unread notification automatically
+        // changes it to read.
+        if (isUnread) {
+          await notificationService.markAsRead(
             notification.id,
           );
-
-          if (!mounted) {
-            return;
-          }
-
-          await _showSimpleDialog(
-            title: 'Notification Read',
-            message:
-                'This notification has been marked as read.',
-            icon: Icons.mark_email_read_outlined,
-          );
         }
+
+        // No popup/dialog here.
+        // The StreamBuilder automatically rebuilds the tile
+        // with the read appearance.
       },
+
+      // ==========================================================
+      // LONG PRESS
+      // ==========================================================
+
       onLongPress: () {
         _showNotificationOptions(
           context,
           notification,
         );
       },
+
       child: AnimatedContainer(
-        duration:
-            const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: notification.isRead
-              ? Colors.white.withValues(
-                  alpha: .35,
-                )
-              : Colors.white.withValues(
-                  alpha: .65,
-                ),
-          borderRadius:
-              BorderRadius.circular(14),
-          border: Border.all(
-            color: notification.isRead
-                ? Colors.grey.shade300
-                : iconColor.withValues(
-                    alpha: .45,
-                  ),
-            width:
-                notification.isRead
-                    ? 1
-                    : 1.4,
-          ),
+        duration: const Duration(
+          milliseconds: 250,
         ),
+        curve: Curves.easeInOut,
+
+        padding: const EdgeInsets.all(14),
+
+        decoration: BoxDecoration(
+          // ======================================================
+          // UNREAD = HIGHLIGHTED
+          // READ = SOFT
+          // ======================================================
+
+          color: isUnread
+              ? const Color(0xffEAF2FF)
+              : Colors.white,
+
+          borderRadius: BorderRadius.circular(16),
+
+          border: Border.all(
+            color: isUnread
+                ? const Color(0xffB8CCEE)
+                : Colors.grey.shade300,
+            width: isUnread ? 1.4 : 1,
+          ),
+
+          boxShadow: isUnread
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: 0.04,
+                    ),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ==================================================
                 // ICON
                 // ==================================================
 
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor:
-                      iconColor.withValues(
-                    alpha: .15,
+                AnimatedContainer(
+                  duration: const Duration(
+                    milliseconds: 250,
+                  ),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(
+                      alpha: isUnread ? .15 : .10,
+                    ),
+                    shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
@@ -443,40 +1636,38 @@ class _NotificationsScreenState
                         CrossAxisAlignment.start,
                     children: [
                       Row(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
-                          if (!notification.isRead)
+                          // ==================================================
+                          // UNREAD DOT
+                          // ==================================================
+
+                          if (isUnread)
                             Container(
                               width: 8,
                               height: 8,
-                              margin:
-                                  const EdgeInsets
-                                      .only(
+                              margin: const EdgeInsets.only(
                                 right: 7,
-                                top: 2,
+                                top: 5,
                               ),
-                              decoration:
-                                  BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: iconColor,
-                                shape:
-                                    BoxShape.circle,
+                                shape: BoxShape.circle,
                               ),
                             ),
+
                           Expanded(
                             child: Text(
                               notification.title,
                               maxLines: 2,
-                              overflow:
-                                  TextOverflow
-                                      .ellipsis,
-                              style:
-                                  GoogleFonts
-                                      .manrope(
-                                fontWeight:
-                                    FontWeight.bold,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.manrope(
+                                fontWeight: isUnread
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
                                 fontSize: 16,
-                                color:
-                                    ChopdiColors
-                                        .navy,
+                                color: ChopdiColors.navy,
                               ),
                             ),
                           ),
@@ -488,14 +1679,13 @@ class _NotificationsScreenState
                       Text(
                         notification.subtitle,
                         maxLines: 4,
-                        overflow:
-                            TextOverflow.ellipsis,
-                        style:
-                            GoogleFonts.manrope(
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.manrope(
                           fontSize: 13,
                           height: 1.35,
-                          color:
-                              ChopdiColors.navy,
+                          color: ChopdiColors.navy.withValues(
+                            alpha: isUnread ? .85 : .65,
+                          ),
                         ),
                       ),
                     ],
@@ -512,112 +1702,17 @@ class _NotificationsScreenState
                   _formatNotificationTime(
                     notification.createdAt,
                   ),
-                  textAlign:
-                      TextAlign.right,
-                  style:
-                      GoogleFonts.manrope(
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.manrope(
                     fontSize: 10,
-                    color:
-                        Colors.grey.shade700,
+                    fontWeight: isUnread
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: isUnread
+                        ? ChopdiColors.navy
+                        : Colors.grey.shade600,
                   ),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // ======================================================
-            // READ / UNREAD STATUS
-            // ======================================================
-
-            Row(
-              children: [
-                Icon(
-                  notification.isRead
-                      ? Icons
-                          .mark_email_read_outlined
-                      : Icons
-                          .mark_email_unread_outlined,
-                  size: 15,
-                  color: notification.isRead
-                      ? Colors.grey.shade600
-                      : iconColor,
-                ),
-
-                const SizedBox(width: 5),
-
-                Text(
-                  notification.isRead
-                      ? 'Read'
-                      : 'Unread',
-                  style:
-                      GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        notification.isRead
-                            ? Colors.grey
-                                .shade600
-                            : iconColor,
-                  ),
-                ),
-
-                const Spacer(),
-
-                // ==================================================
-                // EXPLICIT MARK AS READ BUTTON
-                // ==================================================
-
-                if (!notification.isRead)
-                  TextButton.icon(
-                    onPressed: () async {
-                      await notificationService
-                          .markAsRead(
-                        notification.id,
-                      );
-
-                      if (!mounted) {
-                        return;
-                      }
-
-                      await _showSimpleDialog(
-                        title:
-                            'Notification Read',
-                        message:
-                            'This notification has been marked as read.',
-                        icon: Icons
-                            .mark_email_read_outlined,
-                      );
-                    },
-                    style:
-                        TextButton.styleFrom(
-                      padding:
-                          const EdgeInsets
-                              .symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      minimumSize:
-                          Size.zero,
-                      tapTargetSize:
-                          MaterialTapTargetSize
-                              .shrinkWrap,
-                    ),
-                    icon: const Icon(
-                      Icons.done,
-                      size: 15,
-                    ),
-                    label: Text(
-                      'Mark as read',
-                      style:
-                          GoogleFonts.manrope(
-                        fontSize: 11,
-                        fontWeight:
-                            FontWeight.w700,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ],
@@ -630,9 +1725,7 @@ class _NotificationsScreenState
   // ICON
   // ============================================================
 
-  IconData _getNotificationIcon(
-    String type,
-  ) {
+  IconData _getNotificationIcon(String type) {
     switch (type) {
       case 'interest_calculated':
         return Icons.percent_rounded;
@@ -644,11 +1737,10 @@ class _NotificationsScreenState
         return Icons.system_update_rounded;
 
       case 'payment_reminder':
-        return Icons
-            .notifications_active_rounded;
+        return Icons.notifications_active_rounded;
 
       default:
-        return Icons.notifications_none;
+        return Icons.notifications_none_rounded;
     }
   }
 
@@ -656,9 +1748,7 @@ class _NotificationsScreenState
   // COLOR
   // ============================================================
 
-  Color _getNotificationColor(
-    String type,
-  ) {
+  Color _getNotificationColor(String type) {
     switch (type) {
       case 'interest_calculated':
         return Colors.green;
@@ -684,15 +1774,15 @@ class _NotificationsScreenState
   Widget _emptyNotifications() {
     return Center(
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             height: 72,
             width: 72,
             decoration: BoxDecoration(
-              color: ChopdiColors.navy
-                  .withValues(alpha: .08),
+              color: ChopdiColors.navy.withValues(
+                alpha: .08,
+              ),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -737,40 +1827,35 @@ class _NotificationsScreenState
   ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-          const Color(0xffFFF8F0),
-      shape:
-          const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(
+      backgroundColor: const Color(0xffFFF8F0),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(24),
         ),
       ),
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               20,
               18,
               20,
               20,
             ),
             child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // ==================================================
+                // HANDLE
+                // ==================================================
+
                 Container(
                   width: 50,
                   height: 5,
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        Colors.grey.shade400,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
                     borderRadius:
-                        BorderRadius.circular(
-                      50,
-                    ),
+                        BorderRadius.circular(50),
                   ),
                 ),
 
@@ -783,42 +1868,32 @@ class _NotificationsScreenState
                 ListTile(
                   leading: Icon(
                     notification.isRead
-                        ? Icons
-                            .mark_email_unread_outlined
-                        : Icons
-                            .mark_email_read_outlined,
-                    color:
-                        ChopdiColors.navy,
+                        ? Icons.mark_email_unread_outlined
+                        : Icons.mark_email_read_outlined,
+                    color: ChopdiColors.navy,
                   ),
                   title: Text(
                     notification.isRead
                         ? 'Mark as unread'
                         : 'Mark as read',
-                    style:
-                        GoogleFonts.manrope(
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          ChopdiColors.navy,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w600,
+                      color: ChopdiColors.navy,
                     ),
                   ),
                   onTap: () async {
                     if (notification.isRead) {
-                      await notificationService
-                          .markAsUnread(
+                      await notificationService.markAsUnread(
                         notification.id,
                       );
                     } else {
-                      await notificationService
-                          .markAsRead(
+                      await notificationService.markAsRead(
                         notification.id,
                       );
                     }
 
                     if (sheetContext.mounted) {
-                      Navigator.pop(
-                        sheetContext,
-                      );
+                      Navigator.pop(sheetContext);
                     }
                   },
                 ),
@@ -834,17 +1909,13 @@ class _NotificationsScreenState
                   ),
                   title: Text(
                     'Delete notification',
-                    style:
-                        GoogleFonts.manrope(
-                      fontWeight:
-                          FontWeight.w600,
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w600,
                       color: Colors.red,
                     ),
                   ),
                   onTap: () async {
-                    Navigator.pop(
-                      sheetContext,
-                    );
+                    Navigator.pop(sheetContext);
 
                     await _confirmDelete(
                       notification,
@@ -870,37 +1941,28 @@ class _NotificationsScreenState
       return;
     }
 
-    final shouldDelete =
-        await showDialog<bool>(
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor:
-              const Color(0xffFFF8F0),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(18),
+          backgroundColor: const Color(0xffFFF8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
             'Delete Notification?',
-            style:
-                GoogleFonts.manrope(
+            style: GoogleFonts.manrope(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.w700,
-              color:
-                  ChopdiColors.navy,
+              fontWeight: FontWeight.w700,
+              color: ChopdiColors.navy,
             ),
           ),
           content: Text(
             'Are you sure you want to delete this notification?',
-            style:
-                GoogleFonts.manrope(
+            style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
-              color:
-                  Colors.grey.shade700,
+              color: Colors.grey.shade700,
             ),
           ),
           actions: [
@@ -913,15 +1975,13 @@ class _NotificationsScreenState
               },
               child: Text(
                 'Cancel',
-                style:
-                    GoogleFonts.manrope(
-                  fontWeight:
-                      FontWeight.w700,
-                  color:
-                      Colors.grey.shade700,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade700,
                 ),
               ),
             ),
+
             TextButton(
               onPressed: () {
                 Navigator.pop(
@@ -931,10 +1991,8 @@ class _NotificationsScreenState
               },
               child: Text(
                 'Delete',
-                style:
-                    GoogleFonts.manrope(
-                  fontWeight:
-                      FontWeight.w700,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w700,
                   color: Colors.red,
                 ),
               ),
@@ -945,8 +2003,7 @@ class _NotificationsScreenState
     );
 
     if (shouldDelete == true) {
-      await notificationService
-          .deleteNotification(
+      await notificationService.deleteNotification(
         notification.id,
       );
     }
@@ -968,23 +2025,18 @@ class _NotificationsScreenState
       barrierDismissible: true,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor:
-              const Color(0xffFFF8F0),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(18),
+          backgroundColor: const Color(0xffFFF8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
           title: Row(
             children: [
               Container(
                 width: 38,
                 height: 38,
-                decoration:
-                    BoxDecoration(
+                decoration: BoxDecoration(
                   color: enabled
-                      ? Colors.green
-                          .withValues(
+                      ? Colors.green.withValues(
                           alpha: .12,
                         )
                       : Colors.red.withValues(
@@ -994,10 +2046,8 @@ class _NotificationsScreenState
                 ),
                 child: Icon(
                   enabled
-                      ? Icons
-                          .notifications_active_outlined
-                      : Icons
-                          .notifications_off_outlined,
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_off_outlined,
                   color: enabled
                       ? Colors.green
                       : Colors.red,
@@ -1012,13 +2062,10 @@ class _NotificationsScreenState
                   enabled
                       ? 'Notifications Enabled'
                       : 'Notifications Disabled',
-                  style:
-                      GoogleFonts.manrope(
+                  style: GoogleFonts.manrope(
                     fontSize: 18,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        ChopdiColors.navy,
+                    fontWeight: FontWeight.w700,
+                    color: ChopdiColors.navy,
                   ),
                 ),
               ),
@@ -1028,129 +2075,24 @@ class _NotificationsScreenState
             enabled
                 ? 'You will receive notifications for payment reminders, interest updates and other important alerts.'
                 : 'You will no longer receive notifications from Chopdi until you enable them again.',
-            style:
-                GoogleFonts.manrope(
+            style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
-              fontWeight:
-                  FontWeight.w500,
-              color:
-                  Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop();
+                Navigator.of(dialogContext).pop();
               },
               child: Text(
                 'OK',
-                style:
-                    GoogleFonts.manrope(
+                style: GoogleFonts.manrope(
                   fontSize: 14,
-                  fontWeight:
-                      FontWeight.w700,
-                  color:
-                      ChopdiColors.navy,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // SIMPLE DIALOG
-  // ============================================================
-
-  Future<void> _showSimpleDialog({
-    required String title,
-    required String message,
-    required IconData icon,
-  }) async {
-    if (!mounted) {
-      return;
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor:
-              const Color(0xffFFF8F0),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(18),
-          ),
-          title: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration:
-                    BoxDecoration(
-                  color:
-                      ChopdiColors.navy
-                          .withValues(
-                    alpha: .10,
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color:
-                      ChopdiColors.navy,
-                  size: 21,
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              Expanded(
-                child: Text(
-                  title,
-                  style:
-                      GoogleFonts.manrope(
-                    fontSize: 18,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        ChopdiColors.navy,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            message,
-            style:
-                GoogleFonts.manrope(
-              fontSize: 13,
-              height: 1.4,
-              color:
-                  Colors.grey.shade700,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-              },
-              child: Text(
-                'OK',
-                style:
-                    GoogleFonts.manrope(
-                  fontWeight:
-                      FontWeight.w700,
-                  color:
-                      ChopdiColors.navy,
+                  fontWeight: FontWeight.w700,
+                  color: ChopdiColors.navy,
                 ),
               ),
             ),
@@ -1169,8 +2111,7 @@ class _NotificationsScreenState
   ) {
     final now = DateTime.now();
 
-    final difference =
-        now.difference(dateTime);
+    final difference = now.difference(dateTime);
 
     if (difference.isNegative) {
       return 'Just now';
@@ -1181,8 +2122,7 @@ class _NotificationsScreenState
     }
 
     if (difference.inMinutes < 60) {
-      final minutes =
-          difference.inMinutes;
+      final minutes = difference.inMinutes;
 
       return minutes == 1
           ? '1 min ago'
@@ -1190,8 +2130,7 @@ class _NotificationsScreenState
     }
 
     if (difference.inHours < 24) {
-      final hours =
-          difference.inHours;
+      final hours = difference.inHours;
 
       return hours == 1
           ? '1 hour ago'
@@ -1206,18 +2145,15 @@ class _NotificationsScreenState
       return '${difference.inDays} days ago';
     }
 
-    final day =
-        dateTime.day
-            .toString()
-            .padLeft(2, '0');
+    final day = dateTime.day
+        .toString()
+        .padLeft(2, '0');
 
-    final month =
-        dateTime.month
-            .toString()
-            .padLeft(2, '0');
+    final month = dateTime.month
+        .toString()
+        .padLeft(2, '0');
 
-    final year =
-        dateTime.year.toString();
+    final year = dateTime.year.toString();
 
     return '$day/$month/$year';
   }
