@@ -283,15 +283,18 @@ class TookLoanCustomerCard extends StatelessWidget {
                     // INTEREST
                     // ==================================================
 
-                    Text(
-                      "Interest: ₹${totalInterest.toStringAsFixed(0)}",
-                      style: GoogleFonts.manrope(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            const Color(0xFFC74C4C),
+                    if (totalInterest > 0) ...[
+                      const SizedBox(height: 2),
+
+                      Text(
+                        "Interest: ₹${totalInterest.toStringAsFixed(0)}",
+                        style: GoogleFonts.manrope(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFC74C4C),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],

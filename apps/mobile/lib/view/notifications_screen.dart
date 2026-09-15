@@ -123,92 +123,116 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  Future<void> _markAllUnreadAsRead() async {
+    try {
+      await notificationService.markAllAsRead(
+        widget.chopdiId,
+      );
+    } catch (e) {
+      debugPrint(
+        'Error marking notifications as read on exit: $e',
+      );
+    }
+  }
+
   // ============================================================
   // BUILD
   // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffFFF3E2),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-            final horizontalPadding = width < 360
-                ? 12.0
-                : width < 600
-                    ? 18.0
-                    : 24.0;
+        await _markAllUnreadAsRead();
 
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 18),
-
-                  // ==================================================
-                  // HEADER
-                  // ==================================================
-
-                  _buildHeader(),
-
-                  const SizedBox(height: 20),
-
-                  // ==================================================
-                  // NOTIFICATIONS
-                  // ==================================================
-
-                  Expanded(
-                    child: StreamBuilder<List<NotificationModel>>(
-                      stream: notificationService.watchNotifications(
-                        widget.chopdiId,
-                      ),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                                ConnectionState.waiting &&
-                            !snapshot.hasData) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: ChopdiColors.navy,
-                            ),
-                          );
-                        }
-
-                        final notifications = snapshot.data ?? [];
-
-                        if (notifications.isEmpty) {
-                          return _emptyNotifications();
-                        }
-
-                        return ListView.separated(
-                          padding: const EdgeInsets.only(
-                            bottom: 20,
-                          ),
-                          itemCount: notifications.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final notification = notifications[index];
-
-                            return _notificationTile(
-                              context,
-                              notification,
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xffFFF3E2),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+      
+              final horizontalPadding = width < 360
+                  ? 12.0
+                  : width < 600
+                      ? 18.0
+                      : 24.0;
+      
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 18),
+      
+                    // ==================================================
+                    // HEADER
+                    // ==================================================
+      
+                    _buildHeader(),
+      
+                    const SizedBox(height: 20),
+      
+                    // ==================================================
+                    // NOTIFICATIONS
+                    // ==================================================
+      
+                    Expanded(
+                      child: StreamBuilder<List<NotificationModel>>(
+                        stream: notificationService.watchNotifications(
+                          widget.chopdiId,
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                                  ConnectionState.waiting &&
+                              !snapshot.hasData) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: ChopdiColors.navy,
+                              ),
                             );
-                          },
-                        );
-                      },
+                          }
+      
+                          final notifications = snapshot.data ?? [];
+      
+                          if (notifications.isEmpty) {
+                            return _emptyNotifications();
+                          }
+      
+                          return ListView.separated(
+                            padding: const EdgeInsets.only(
+                              bottom: 20,
+                            ),
+                            itemCount: notifications.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final notification = notifications[index];
+      
+                              return _notificationTile(
+                                context,
+                                notification,
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
-            );
-          },
+      
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -223,8 +247,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            Navigator.pop(context);
+          onTap: () async {
+            await _markAllUnreadAsRead();
+
+            if (mounted) {
+              Navigator.pop(context);
+            }
           },
           child: const Padding(
             padding: EdgeInsets.all(4),
