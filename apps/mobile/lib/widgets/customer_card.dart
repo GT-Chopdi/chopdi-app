@@ -7,7 +7,6 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 
-
 class CustomerCard extends StatelessWidget {
   final Customer customer;
 
@@ -17,35 +16,35 @@ class CustomerCard extends StatelessWidget {
   });
 
   Future<double> getBalance(int customerId) async {
+    final list = await IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(customerId)
+        // Deleted entries are voided, not removed.
+        // Exclude them from the balance.
+        .voidedAtIsNull()
+        .findAll();
 
-   final list = await IsarService.isar.transactions
-       .filter()
-       .customerIdEqualTo(customerId)
-       // Deleted entries are voided, not removed, so every read must exclude
-       // them or a deleted loan reappears in the balance.
-       .voidedAtIsNull()
-       .findAll();
+    double balance = 0;
 
-   double balance = 0;
-
-   for(final tx in list){
-      if(tx.type == TransactionType.gave){
-         balance += tx.amount;
-      }else{
-         balance -= tx.amount;
+    for (final tx in list) {
+      if (tx.type == TransactionType.gave) {
+        balance += tx.amount;
+      } else {
+        balance -= tx.amount;
       }
-   }
-   return balance;
+    }
+
+    return balance;
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
-        .filter()
-        .customerIdEqualTo(customer.id)
-        .voidedAtIsNull()
-        .watch(fireImmediately: true),
+          .filter()
+          .customerIdEqualTo(customer.id)
+          .voidedAtIsNull()
+          .watch(fireImmediately: true),
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
@@ -59,6 +58,15 @@ class CustomerCard extends StatelessWidget {
           }
         }
 
+        // ============================================================
+        // AMOUNT COLOR
+        // ============================================================
+
+        final Color balanceColor = balance == 0
+            ? Colors.black
+            : balance > 0
+                ? ChopdiColors.red
+                : Colors.green;
 
         return InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -75,20 +83,35 @@ class CustomerCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color.fromRGBO(170, 185, 207, 0.2),
+              color: const Color.fromRGBO(
+                170,
+                185,
+                207,
+                0.2,
+              ),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color.fromRGBO(170, 185, 207, 1),
+                color: const Color.fromRGBO(
+                  170,
+                  185,
+                  207,
+                  1,
+                ),
               ),
             ),
             child: Row(
               children: [
+                // ======================================================
+                // CUSTOMER AVATAR
+                // ======================================================
 
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
-                    customer.name[0].toUpperCase(),
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : '?',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -99,13 +122,18 @@ class CustomerCard extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
+                // ======================================================
+                // CUSTOMER DETAILS
+                // ======================================================
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       Text(
                         customer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -119,6 +147,8 @@ class CustomerCard extends StatelessWidget {
                         customer.phone.isEmpty
                             ? "No phone number"
                             : customer.phone,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -127,20 +157,18 @@ class CustomerCard extends StatelessWidget {
 
                       const SizedBox(height: 8),
 
+                      // ==================================================
+                      // LOAN CHIP
+                      // ==================================================
+
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-
                           _chip(
                             "Loan: ₹${balance.toStringAsFixed(0)}",
                             const Color(0xffEEF3FA),
                           ),
-
-                          // _chip(
-                          //   "Interest: ${customer.interest}%",
-                          //   const Color(0xffEEF3FA),
-                          // ),
                         ],
                       ),
                     ],
@@ -149,36 +177,17 @@ class CustomerCard extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
+                // ======================================================
+                // BALANCE
+                // ======================================================
 
-                    Text(
-                      "₹${balance.toStringAsFixed(0)}",
-                      style: GoogleFonts.manrope(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: balance >= 0
-                            ? ChopdiColors.red
-                            : Colors.green,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      balance >= 0 ? "Pending" : "Settled",
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        color: balance >= 0
-                            ? ChopdiColors.red
-                            : Colors.green,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-                  ],
+                Text(
+                  "₹${balance.toStringAsFixed(0)}",
+                  style: GoogleFonts.manrope(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: balanceColor,
+                  ),
                 ),
               ],
             ),
@@ -188,7 +197,14 @@ class CustomerCard extends StatelessWidget {
     );
   }
 
-  Widget _chip(String text, Color color) {
+  // ============================================================
+  // CHIP
+  // ============================================================
+
+  Widget _chip(
+    String text,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 8,
@@ -208,8 +224,4 @@ class CustomerCard extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on String {
-  void toInt() {}
 }

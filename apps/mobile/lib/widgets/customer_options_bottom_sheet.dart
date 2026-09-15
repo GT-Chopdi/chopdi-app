@@ -10,7 +10,7 @@ import 'package:mychopdi/data/repository/repositories.dart';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:flutter/services.dart' show rootBundle, SystemUiOverlayStyle;
+import 'package:flutter/services.dart' show rootBundle, SystemUiOverlayStyle, FilteringTextInputFormatter, LengthLimitingTextInputFormatter;
 import 'package:printing/printing.dart';
 
 class CustomerOptionsBottomSheet extends StatelessWidget {
@@ -206,19 +206,26 @@ class _OptionTile extends StatelessWidget {
 
 
 class EditCustomerBottomSheet extends StatefulWidget {
-
   final Customer customer;
   final VoidCallback onSaved;
-  const EditCustomerBottomSheet({super.key, required this.customer, required this.onSaved});
+
+  const EditCustomerBottomSheet({
+    super.key,
+    required this.customer,
+    required this.onSaved,
+  });
 
   @override
   State<EditCustomerBottomSheet> createState() =>
       _EditCustomerBottomSheetState();
 }
 
-class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
-  late TextEditingController nameController = TextEditingController();
-  late TextEditingController phoneController = TextEditingController();
+class _EditCustomerBottomSheetState
+    extends State<EditCustomerBottomSheet> {
+  late TextEditingController nameController;
+  late TextEditingController phoneController;
+
+  bool isSaving = false;
 
   @override
   void initState() {
@@ -240,61 +247,197 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
     super.dispose();
   }
 
-  InputDecoration inputDecoration(String hint) {
+  InputDecoration inputDecoration(
+    String hint, {
+    String? errorText,
+  }) {
     return InputDecoration(
       hintText: hint,
+      errorText: errorText,
       filled: true,
-      fillColor: Color.fromRGBO(255, 248, 240, 1),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      fillColor: const Color.fromRGBO(255, 248, 240, 1),
+
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Colors.grey.shade300,
+        ),
       ),
+
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(
           color: Color(0xff2F477A),
+          width: 1.5,
+        ),
+      ),
+
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(
+          color: Colors.red,
+        ),
+      ),
+
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(
+          color: Colors.red,
+          width: 1.5,
         ),
       ),
     );
   }
 
+  String? _phoneError() {
+    final phone = phoneController.text.trim();
+
+    // Phone number is optional.
+    if (phone.isEmpty) {
+      return null;
+    }
+
+    // If entered, it must contain exactly 10 digits.
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+      return "Phone number must be exactly 10 digits";
+    }
+
+    return null;
+  }
+
+  Future<void> _saveChanges() async {
+    final phoneError = _phoneError();
+
+    if (phoneError != null) {
+      setState(() {});
+      return;
+    }
+
+    final name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter customer name"),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isSaving = true;
+    });
+
+    try {
+      await Repositories.customers.update(
+        widget.customer,
+        name: name,
+        phone: phoneController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      widget.onSaved();
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint("UPDATE CUSTOMER ERROR: $e");
+
+      if (!mounted) return;
+
+      setState(() {
+        isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Failed to update customer: $e",
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child :Container(
+    final keyboardHeight =
+        MediaQuery.of(context).viewInsets.bottom;
+
+    final phoneError = _phoneError();
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+
+      // Move the complete bottom sheet above the keyboard.
+      padding: EdgeInsets.only(
+        bottom: keyboardHeight,
+      ),
+
+      child: Material(
+        color: Colors.transparent,
+
+        child: Container(
+          width: double.infinity,
+
           decoration: const BoxDecoration(
             color: Color.fromRGBO(255, 248, 240, 1),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(30),
+
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
             ),
           ),
-          padding: const EdgeInsets.all(20),
+
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            20,
+          ),
+
           child: SingleChildScrollView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag,
+
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // -------------------------------------------------
+                // Drag handle
+                // -------------------------------------------------
+
                 Center(
                   child: Container(
-                    width: 55,
-                    height: 5,
+                    width: 48,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey,
+                      borderRadius:
+                          BorderRadius.circular(20),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                /// edit icon
+                // -------------------------------------------------
+                // Edit icon
+                // -------------------------------------------------
+
                 Center(
                   child: CircleAvatar(
                     radius: 34,
-                    backgroundColor: const Color(0xffEAF2FF),
-                    child: Icon(
+                    backgroundColor:
+                        const Color(0xffEAF2FF),
+                    child: const Icon(
                       Icons.edit,
                       size: 32,
                       color: Color(0xff2F477A),
@@ -304,35 +447,58 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 const SizedBox(height: 14),
 
+                // -------------------------------------------------
+                // Title
+                // -------------------------------------------------
+
                 Center(
                   child: Text(
                     "Edit Customer Details",
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xff223A5E),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
 
                 Center(
                   child: Text(
                     "Edit name, phone or loan details",
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          const Color.fromRGBO(
+                        34,
+                        58,
+                        94,
+                        0.62,
+                      ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 28),
 
+                // -------------------------------------------------
+                // Name
+                // -------------------------------------------------
+
                 Text(
                   "Name",
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(
+                      34,
+                      58,
+                      94,
+                      0.62,
+                    ),
                   ),
                 ),
 
@@ -340,46 +506,176 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
 
                 TextField(
                   controller: nameController,
-                  decoration: inputDecoration("Customer Name"),
+
+                  textCapitalization:
+                      TextCapitalization.words,
+
+                  decoration:
+                      inputDecoration("Customer Name"),
                 ),
 
                 const SizedBox(height: 18),
+
+                // -------------------------------------------------
+                // Phone Number
+                // -------------------------------------------------
 
                 Text(
                   "Phone Number",
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(
+                      34,
+                      58,
+                      94,
+                      0.62,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 8),
 
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: inputDecoration("Phone Number"),
+                Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(255, 248, 240, 1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: phoneError != null
+                          ? Colors.red
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // ==========================================================
+                      // FIXED COUNTRY CODE
+                      // ==========================================================
+
+                      SizedBox(
+                        width: 58,
+                        child: Center(
+                          child: Text(
+                            '+91',
+                            style: GoogleFonts.manrope(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xff223A5E),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // ==========================================================
+                      // DIVIDER
+                      // ==========================================================
+
+                      Container(
+                        width: 1,
+                        height: 32,
+                        color: const Color(0xffB8C4D4),
+                      ),
+
+                      // ==========================================================
+                      // PHONE NUMBER
+                      // ==========================================================
+
+                      Expanded(
+                        child: TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(10),
+                          ],
+
+                          onChanged: (_) {
+                            setState(() {});
+                          },
+
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            color: const Color(0xff5F6570),
+                          ),
+
+                          decoration: InputDecoration(
+                            hintText: 'Phone Number',
+                            hintStyle: GoogleFonts.manrope(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 34),
+                // ============================================================
+                // PHONE ERROR
+                // ============================================================
+
+                if (phoneError != null) ...[
+                  const SizedBox(height: 6),
+
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      phoneError,
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Reduce spacing when keyboard is open.
+                SizedBox(
+                  height: keyboardHeight > 0 ? 30 : 34,
+                ),
+
+                // -------------------------------------------------
+                // Buttons
+                // -------------------------------------------------
 
                 Row(
                   children: [
-
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(55),
+                          minimumSize:
+                              const Size.fromHeight(55),
+
                           side: const BorderSide(
                             color: Color(0xff2F477A),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+
+                        onPressed: isSaving
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                              },
+
                         child: const Text(
                           "Cancel",
                           style: TextStyle(
@@ -395,43 +691,52 @@ class _EditCustomerBottomSheetState extends State<EditCustomerBottomSheet> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ChopdiColors.navy,
-                          minimumSize: const Size.fromHeight(55),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                          backgroundColor:
+                              ChopdiColors.navy,
+
+                          minimumSize:
+                              const Size.fromHeight(55),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () async{
-                          // Through the repository so the edit is queued for
-                          // sync, and guarded by the version the client last saw
-                          // so a concurrent change is detected instead of
-                          // silently overwritten.
-                          await Repositories.customers.update(
-                            widget.customer,
-                            name: nameController.text,
-                            phone: phoneController.text,
-                          );
 
-                            widget.onSaved();
+                        onPressed:
+                            isSaving ? null : _saveChanges,
 
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          "Save Changes",
-                          style: TextStyle(
-                            color: ChopdiColors.cream,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                "Save Changes",
+                                style: TextStyle(
+                                  color:
+                                      ChopdiColors.cream,
+                                  fontWeight:
+                                      FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 30),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
+      ),
     );
   }
 }
@@ -2330,265 +2635,305 @@ class DeleteCustomerBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<DeleteCustomerBottomSheet> createState() =>  _DeleteCustomerBottomSheetState();
+  State<DeleteCustomerBottomSheet> createState() =>
+      _DeleteCustomerBottomSheetState();
 }
 
-class _DeleteCustomerBottomSheetState extends State<DeleteCustomerBottomSheet> {
+class _DeleteCustomerBottomSheetState
+    extends State<DeleteCustomerBottomSheet> {
   bool agreed = false;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child :Container(
-          decoration: const BoxDecoration(
-            color: Color.fromRGBO(255, 248, 240, 1),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(30),
-            ),
-          ),
-          padding: const EdgeInsets.all(22),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
 
-                /// Drag Handle
-                Container(
-                  width: 60,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(20),
+          // Responsive values for phones, small phones and tablets.
+          final horizontalPadding = width < 360
+              ? 14.0
+              : width < 600
+                  ? 20.0
+                  : 28.0;
+
+          final contentMaxWidth = width > 600 ? 600.0 : width;
+
+          final titleFontSize = width < 360 ? 15.0 : 16.0;
+          final bodyFontSize = width < 360 ? 11.0 : 12.0;
+          final checkboxFontSize = width < 360 ? 12.0 : 13.0;
+          final buttonHeight = width < 360 ? 50.0 : 54.0;
+          final buttonGap = width < 360 ? 8.0 : 12.0;
+
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: contentMaxWidth,
+              ),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(255, 248, 240, 1),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(30),
                   ),
                 ),
-
-                const SizedBox(height: 26),
-
-                /// Delete Icon
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: const Color(0xffFFE7E3),
-                  child: Icon(
-                    Icons.delete_outline,
-                    size: 34,
-                    color: Colors.red.shade400,
-                  ),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  12,
+                  horizontalPadding,
+                  16,
                 ),
-
-                const SizedBox(height: 18),
-
-                Text(
-                  "Delete ${widget.customerName}?",
-                  style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: ChopdiColors.navy,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  "This action cannot be undone",
-                  style: GoogleFonts.manrope(
-                    color: ChopdiColors.navy,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                /// Warning Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(255, 248, 240, 1),
-                    border: Border.all(
-                      color: const Color(0xFFC74C4C),
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Drag handle
+                      Container(
+                        width: width < 360 ? 48 : 60,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
 
+                      SizedBox(height: width < 360 ? 18 : 24),
+
+                      // Delete icon
                       CircleAvatar(
-                        radius: 18,
+                        radius: width < 360 ? 30 : 34,
                         backgroundColor: const Color(0xffFFE7E3),
                         child: Icon(
-                          Icons.warning_amber_rounded,
+                          Icons.delete_outline,
+                          size: width < 360 ? 30 : 34,
                           color: Colors.red.shade400,
                         ),
                       ),
 
-                      const SizedBox(width: 14),
+                      SizedBox(height: width < 360 ? 14 : 18),
 
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                      // Title
+                      Text(
+                        "Delete ${widget.customerName}?",
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.manrope(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.w700,
+                          color: ChopdiColors.navy,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        "This action cannot be undone",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.manrope(
+                          color: ChopdiColors.navy,
+                          fontSize: bodyFontSize,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+
+                      SizedBox(height: width < 360 ? 20 : 28),
+
+                      // Warning card
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(width < 360 ? 12 : 18),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(255, 248, 240, 1),
+                          border: Border.all(
+                            color: const Color(0xFFC74C4C),
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-
-                            Text(
-                              "All customer data will be permanently deleted including:",
-                              style: GoogleFonts.manrope(
-                                color: Color(0xffE4554B),
-                                fontWeight: FontWeight.w600,
+                            CircleAvatar(
+                              radius: width < 360 ? 16 : 18,
+                              backgroundColor: const Color(0xffFFE7E3),
+                              child: Icon(
+                                Icons.warning_amber_rounded,
+                                size: width < 360 ? 19 : 21,
+                                color: Colors.red.shade400,
                               ),
                             ),
 
-                            const SizedBox(height: 10),
+                            SizedBox(width: width < 360 ? 10 : 14),
 
-                            Text(
-                              "• Customer Details",
-                              style: GoogleFonts.manrope(
-                                color: Color(0xffE4554B),
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            Text(
-                              "• Ledger and Transactions",
-                              style: GoogleFonts.manrope(
-                                color: Color(0xffE4554B),
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            Text(
-                              "• Notes and reminders",
-                              style: GoogleFonts.manrope(
-                                color: Color(0xffE4554B),
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            Text(
-                              "• Loan information",
-                              style: GoogleFonts.manrope(
-                                color: Color(0xffE4554B),
+                            Expanded(
+                              child: Text(
+                                "All customer data will be permanently deleted including:\n\n"
+                                "• Customer Details\n"
+                                "• Ledger and Transactions\n"
+                                "• Notes and reminders\n"
+                                "• Loan information",
+                                softWrap: true,
+                                style: GoogleFonts.manrope(
+                                  color: const Color(0xffE4554B),
+                                  fontSize: bodyFontSize,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
+
+                      SizedBox(height: width < 360 ? 16 : 22),
+
+                      // Confirmation checkbox
+                      Material(
+                        color: const Color.fromRGBO(255, 248, 240, 1),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                            ),
+                          ),
+                          child: CheckboxListTile(
+                            value: agreed,
+                            activeColor: Colors.red,
+                            checkboxShape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            controlAffinity:
+                                ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: width < 360 ? 6 : 12,
+                              vertical: width < 360 ? 2 : 4,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            title: Text(
+                              "I understand this action cannot be undone.",
+                              softWrap: true,
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w700,
+                                color: ChopdiColors.navy,
+                                fontSize: checkboxFontSize,
+                                height: 1.25,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                agreed = value ?? false;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: width < 360 ? 18 : 28),
+
+                      // --------------------------------------------------
+                      // BUTTONS
+                      // Always kept in ONE ROW.
+                      // FittedBox prevents "Delete Customer" from
+                      // wrapping into two lines on narrow devices.
+                      // --------------------------------------------------
+                      SizedBox(
+                        width: double.infinity,
+                        height: buttonHeight,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: buttonHeight,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: width < 360 ? 6 : 12,
+                                    ),
+                                    side: const BorderSide(
+                                      color: Color(0xffF26C63),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      "Cancel",
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      style: TextStyle(
+                                        color: Color(0xff2F477A),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(width: buttonGap),
+
+                            Expanded(
+                              child: SizedBox(
+                                height: buttonHeight,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        const Color(0xffD5544D),
+                                    disabledBackgroundColor:
+                                        const Color(0xffE6A19D),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: width < 360 ? 4 : 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  onPressed:
+                                      agreed ? widget.onDelete : null,
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      "Delete Customer",
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 22),
-
-                /// Checkbox
-                Material(
-                  color: const Color.fromRGBO(255, 248, 240, 1),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                    child: CheckboxListTile(
-                      value: agreed,
-                      activeColor: Colors.red,
-                      checkboxShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      title: Text(
-                        "I understand this action cannot be undone.",
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w700,
-                          color: ChopdiColors.navy,
-                          fontSize: 14
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          agreed = value ?? false;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                Row(
-                  children: [
-
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize:
-                              const Size.fromHeight(54),
-                          side: const BorderSide(
-                            color: Color(0xffF26C63),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
-                            color: Color(0xff2F477A),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xffD5544D),
-                          minimumSize:
-                              const Size.fromHeight(54),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: agreed
-                            ? widget.onDelete
-                            : null,
-                        child: const Text(
-                          "Delete Customer",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
+      ),
     );
   }
 }

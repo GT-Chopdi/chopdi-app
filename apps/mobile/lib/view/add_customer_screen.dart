@@ -13,7 +13,11 @@ import '../widgets/search_box.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final int chopdiId;
-  const AddCustomerScreen({super.key,required this.chopdiId});
+
+  const AddCustomerScreen({
+    super.key,
+    required this.chopdiId,
+  });
 
   @override
   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
@@ -21,7 +25,8 @@ class AddCustomerScreen extends StatefulWidget {
 
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final TextEditingController searchController = TextEditingController();
-  final ScrollController _contactsScrollController = ScrollController();
+  final ScrollController _contactsScrollController =
+      ScrollController();
 
   List<Contact> contacts = [];
   List<Contact> filteredContacts = [];
@@ -35,14 +40,18 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     loadContacts();
   }
 
+  // ============================================================
   // LOAD REAL DEVICE CONTACTS
+  // ============================================================
 
   Future<void> loadContacts() async {
     try {
-      setState(() {
-        isLoading = true;
-        permissionDenied = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+          permissionDenied = false;
+        });
+      }
 
       // Request contacts permission
       final permissionStatus =
@@ -113,17 +122,65 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Unable to load contacts: $e",
-          ),
-        ),
+      _showErrorDialog(
+        "Unable to load contacts: $e",
       );
     }
   }
 
+  // ============================================================
+  // ERROR POPUP
+  // ============================================================
+
+  void _showErrorDialog(String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xffFFF8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: const Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xff223A5E),
+            ),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.4,
+              color: Colors.black87,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xff223A5E),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ============================================================
   // SEARCH CONTACTS
+  // ============================================================
 
   void search(String value) {
     final query = value.trim().toLowerCase();
@@ -146,9 +203,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             phone.contains(query);
       }).toList();
     });
+
+    // Reset list position after filtering.
+    if (_contactsScrollController.hasClients) {
+      _contactsScrollController.jumpTo(0);
+    }
   }
 
-  // SELECT CONTACT
+  // ============================================================
+  // NORMALIZE PHONE NUMBER
+  // ============================================================
 
   String normalizePhoneNumber(String phone) {
     String cleaned =
@@ -162,121 +226,80 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     return cleaned;
   }
 
-  // Future<void> selectContact(Contact contact) async {
-  //   if (contact.phones.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text(
-  //           'This contact does not have a phone number',
-  //         ),
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   final phoneNumber =
-  //       normalizePhoneNumber(contact.phones.first.number);
-
-  //   final contactName =
-  //       contact.displayName ?? 'Unknown';
-
-  //   // // Check existing customer
-  //   // final existingCustomer =
-  //   //     await IsarService.getCustomerByPhone(phoneNumber);
-  //   final existingCustomer =
-  //       await IsarService.getCustomerByPhoneAndChopdi(
-  //     phoneNumber,
-  //     widget.chopdiId,
-  //   );
-
-  //   if (!mounted) return;
-
-  //   // Existing customer
-  //   if (existingCustomer != null) {
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (_) => CustomerDetailsScreen(
-  //           customer: existingCustomer,
-  //         ),
-  //       ),
-  //     );
-
-  //     return;
-  //   }
-
-  //   // New customer
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) => CustomerDetailsAdd(
-  //         contactName: contactName,
-  //         contactPhone: phoneNumber,
-  //         chopdiId: widget.chopdiId,
-  //       ),
-  //     ),
-  //   );
-  // }
+  // ============================================================
+  // SELECT CONTACT
+  // ============================================================
 
   Future<void> selectContact(Contact contact) async {
-  // Phone number is optional.
-  final phoneNumber = contact.phones.isNotEmpty
-      ? normalizePhoneNumber(contact.phones.first.number)
-      : '';
+    // Phone number is optional.
+    final phoneNumber = contact.phones.isNotEmpty
+        ? normalizePhoneNumber(
+            contact.phones.first.number,
+          )
+        : '';
 
-  final contactName = contact.displayName ?? 'Unknown';
+    final contactName =
+        contact.displayName ?? 'Unknown';
 
-  // Only check duplicate when a phone number exists.
-  if (phoneNumber.isNotEmpty) {
-    final existingCustomer =
-        await IsarService.getCustomerByPhoneAndChopdi(
-      phoneNumber,
-      widget.chopdiId,
-    );
+    // Only check duplicate when a phone number exists.
+    if (phoneNumber.isNotEmpty) {
+      final existingCustomer =
+          await IsarService.getCustomerByPhoneAndChopdi(
+        phoneNumber,
+        widget.chopdiId,
+      );
+
+      if (!mounted) return;
+
+      if (existingCustomer != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CustomerDetailsScreen(
+              customer: existingCustomer,
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
 
     if (!mounted) return;
 
-    if (existingCustomer != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomerDetailsScreen(
-            customer: existingCustomer,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerDetailsAdd(
+          contactName: contactName,
+          contactPhone: phoneNumber,
+          chopdiId: widget.chopdiId,
         ),
-      );
-
-      return;
-    }
+      ),
+    );
   }
 
-  if (!mounted) return;
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CustomerDetailsAdd(
-        contactName: contactName,
-        contactPhone: phoneNumber,
-        chopdiId: widget.chopdiId,
-      ),
-    ),
-  );
-}
+  // ============================================================
+  // SCROLL TO LETTER
+  // ============================================================
 
   void _scrollToLetter(String letter) {
     if (filteredContacts.isEmpty) {
       return;
     }
 
-    // '#' means contacts that don't start with A-Z
+    if (!_contactsScrollController.hasClients) {
+      return;
+    }
+
+    // '#' means contacts that don't start with A-Z.
     if (letter == '#') {
       _contactsScrollController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
+
       return;
     }
 
@@ -289,7 +312,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           return false;
         }
 
-        return name.toUpperCase().startsWith(letter);
+        return name
+            .toUpperCase()
+            .startsWith(letter);
       },
     );
 
@@ -297,109 +322,167 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       return;
     }
 
-    // Approximate height of each ContactTile.
-    const double itemHeight = 65;
+    /*
+      ContactTile can have slightly different heights depending
+      on screen size and text wrapping.
+
+      We therefore use a responsive estimated height instead
+      of a large fixed height.
+    */
+
+    final screenWidth =
+        MediaQuery.of(context).size.width;
+
+    double itemHeight;
+
+    if (screenWidth < 360) {
+      itemHeight = 60;
+    } else if (screenWidth < 600) {
+      itemHeight = 64;
+    } else {
+      itemHeight = 68;
+    }
 
     final offset = index * itemHeight;
 
+    final maxScroll =
+        _contactsScrollController.position.maxScrollExtent;
+
+    final safeOffset =
+        offset.clamp(0.0, maxScroll);
+
     _contactsScrollController.animateTo(
-      offset.clamp(
-        0.0,
-        _contactsScrollController
-            .position
-            .maxScrollExtent,
-      ),
-      duration: const Duration(milliseconds: 300),
+      safeOffset,
+      duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
   }
 
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
   @override
   void dispose() {
     searchController.dispose();
+    _contactsScrollController.dispose();
     super.dispose();
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    final width = size.width;
-    final height = size.height;
-
     return Scaffold(
       backgroundColor: const Color(0xffF8EEDC),
+      resizeToAvoidBottomInset: true,
 
       body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: width * 0.05,
-                vertical: height * 0.02,
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
 
+            // Responsive horizontal padding.
+            final horizontalPadding = width < 360
+                ? 14.0
+                : width < 600
+                    ? 18.0
+                    : width * 0.05;
+
+            // Responsive vertical padding.
+            final verticalPadding = height < 600
+                ? 8.0
+                : height < 800
+                    ? 14.0
+                    : 18.0;
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding,
+              ),
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
-
                 children: [
-                  const SizedBox(height: 16),
-
-                  // ------------------------------------------------
+                  // ==================================================
                   // HEADER
-                  // ------------------------------------------------
+                  // ==================================================
 
                   Row(
                     children: [
                       InkWell(
+                        borderRadius:
+                            BorderRadius.circular(20),
                         onTap: () {
                           Navigator.pop(context);
                         },
-
-                        child: const Icon(
-                          Icons.arrow_back_ios_new,
-                          size: 20,
-                          color: Color(0xff223A5E),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 20,
+                            color: Color(0xff223A5E),
+                          ),
                         ),
                       ),
 
                       const SizedBox(width: 12),
 
-                      const Text(
-                        "Add Customer",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff223A5E),
+                      Flexible(
+                        child: Text(
+                          "Add Customer",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: width < 360
+                                ? 17
+                                : 18,
+                            fontWeight:
+                                FontWeight.w700,
+                            color:
+                                const Color(0xff223A5E),
+                          ),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: height < 600
+                        ? 14
+                        : 22,
+                  ),
 
-                  // ------------------------------------------------
+                  // ==================================================
                   // SEARCH
-                  // ------------------------------------------------
+                  // ==================================================
 
                   SearchBox(
                     controller: searchController,
                     onChanged: search,
                   ),
 
-                  const SizedBox(height: 18),
+                  SizedBox(
+                    height: height < 600
+                        ? 12
+                        : 18,
+                  ),
 
-                  // ------------------------------------------------
+                  // ==================================================
                   // ADD NEW CUSTOMER
-                  // ------------------------------------------------
+                  // ==================================================
+
                   AddNewCustomerCard(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => AddNewCustomerScreen(
+                          builder: (_) =>
+                              AddNewCustomerScreen(
                             chopdiId: widget.chopdiId,
                           ),
                         ),
@@ -407,11 +490,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 22),
+                  SizedBox(
+                    height: height < 600
+                        ? 14
+                        : 20,
+                  ),
 
-                  // ------------------------------------------------
-                  // ALL CONTACTS
-                  // ------------------------------------------------
+                  // ==================================================
+                  // ALL CONTACTS HEADER
+                  // ==================================================
 
                   const Text(
                     "All Contacts",
@@ -424,92 +511,138 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                   const SizedBox(height: 8),
 
+                  // ==================================================
+                  // CONTACT AREA
+                  // ==================================================
+
                   Expanded(
-                    child: buildContactsList(),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // --------------------------------------------
+                        // CONTACT LIST
+                        // --------------------------------------------
+
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: width < 360
+                                ? 20
+                                : 24,
+                          ),
+                          child: buildContactsList(),
+                        ),
+
+                        // --------------------------------------------
+                        // ALPHABET INDEX
+                        // --------------------------------------------
+
+                        if (!isLoading &&
+                            !permissionDenied &&
+                            filteredContacts.isNotEmpty)
+                          Positioned(
+                            right: 0,
+                            top: 4,
+                            bottom: 4,
+                            child: LayoutBuilder(
+                              builder:
+                                  (context, indexConstraints) {
+                                return SizedBox(
+                                  width: width < 360
+                                      ? 20
+                                      : 22,
+                                  height:
+                                      indexConstraints.maxHeight,
+                                  child: AlphabetIndex(
+                                    onLetterSelected:
+                                        _scrollToLetter,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-
-            // ALPHABET INDEX
-
-            Positioned(
-              right: 6,
-              top: 260,
-
-              child: SizedBox(
-                height:
-                    MediaQuery.of(context).size.height *
-                        0.62,
-
-                // child: const AlphabetIndex(),
-                child: AlphabetIndex(
-                  onLetterSelected: _scrollToLetter,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // CONTACT LIST
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget buildContactsList() {
-    // Loading
+    // ==========================================================
+    // LOADING
+    // ==========================================================
+
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    // Permission denied
+    // ==========================================================
+    // PERMISSION DENIED
+    // ==========================================================
+
     if (permissionDenied) {
       return Center(
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-
-          children: [
-            const Icon(
-              Icons.contacts_outlined,
-              size: 50,
-              color: Color(0xff223A5E),
-            ),
-
-            const SizedBox(height: 12),
-
-            const Text(
-              "Contacts permission is required",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 20,
+          ),
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.contacts_outlined,
+                size: 50,
                 color: Color(0xff223A5E),
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            ElevatedButton(
-              onPressed: loadContacts,
-
-              child: const Text(
-                "Allow Contacts",
+              const Text(
+                "Contacts permission is required",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xff223A5E),
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 12),
+
+              ElevatedButton(
+                onPressed: loadContacts,
+                child: const Text(
+                  "Allow Contacts",
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    // No contacts
+    // ==========================================================
+    // NO CONTACTS
+    // ==========================================================
+
     if (filteredContacts.isEmpty) {
       return const Center(
         child: Text(
           "No contacts found",
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xff223A5E),
             fontSize: 16,
@@ -518,11 +651,22 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       );
     }
 
+    // ==========================================================
+    // CONTACT LIST
+    // ==========================================================
+
     return ListView.builder(
       controller: _contactsScrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior:
+          ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.only(
+        bottom: 12,
+      ),
       itemCount: filteredContacts.length,
       itemBuilder: (_, index) {
-        final contact = filteredContacts[index];
+        final contact =
+            filteredContacts[index];
 
         final phone = contact.phones.isNotEmpty
             ? contact.phones.first.number
