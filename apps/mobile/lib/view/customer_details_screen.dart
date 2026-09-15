@@ -5,6 +5,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/service/phone_call_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
@@ -13,7 +14,6 @@ import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
@@ -180,28 +180,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     return DateTime.now()
         .difference(firstLoanTransaction!.date)
         .inDays;
-  }
-
-  Future<void> makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(
-        phoneUri,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open phone dialer'),
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -393,7 +371,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                   GestureDetector(
                     onTap: () {
-                      makePhoneCall(customer.phone);
+                      PhoneCallService.makePhoneCall(
+                        context,
+                        customer.phone,
+                      );
                     },
                     child: CircleAvatar(
                       radius: 22,
