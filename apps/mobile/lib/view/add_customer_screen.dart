@@ -220,51 +220,50 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   // }
 
   Future<void> selectContact(Contact contact) async {
-  // Phone number is optional.
-  final phoneNumber = contact.phones.isNotEmpty
-      ? normalizePhoneNumber(contact.phones.first.number)
-      : '';
+    // Phone number is optional.
+    final phoneNumber = contact.phones.isNotEmpty
+        ? normalizePhoneNumber(contact.phones.first.number)
+        : '';
 
-  final contactName = contact.displayName ?? 'Unknown';
+    final contactName = contact.displayName ?? 'Unknown';
 
-  // Only check duplicate when a phone number exists.
-  if (phoneNumber.isNotEmpty) {
-    final existingCustomer =
-        await IsarService.getCustomerByPhoneAndChopdi(
-      phoneNumber,
-      widget.chopdiId,
-    );
+    // Only check duplicate when a phone number exists.
+    if (phoneNumber.isNotEmpty) {
+      final existingCustomer =
+      await IsarService.getCustomerByPhoneAndChopdi(
+        phoneNumber,
+        widget.chopdiId,
+      );
+
+      if (!mounted) return;
+
+      if (existingCustomer != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CustomerDetailsScreen(
+              customer: existingCustomer,
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
 
     if (!mounted) return;
 
-    if (existingCustomer != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomerDetailsScreen(
-            customer: existingCustomer,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerDetailsAdd(
+          contactName: contactName,
+          contactPhone: phoneNumber,
+          chopdiId: widget.chopdiId,
         ),
-      );
-
-      return;
-    }
-  }
-
-  if (!mounted) return;
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CustomerDetailsAdd(
-        contactName: contactName,
-        contactPhone: phoneNumber,
-        chopdiId: widget.chopdiId,
       ),
-    ),
-  );
-}
-
+    );
+  }
   void _scrollToLetter(String letter) {
     if (filteredContacts.isEmpty) {
       return;
