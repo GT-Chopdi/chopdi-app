@@ -13,7 +13,7 @@ import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
-import 'package:mychopdi/service/phone_call_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
@@ -182,409 +182,298 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         .inDays;
   }
 
+  Future<void> makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(
+        phoneUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to open phone dialer'),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    final width = size.width;
+    final height = size.height;
+
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
 
-      // ------------------------------------------------------------
-      // TOP APP BAR
-      // ------------------------------------------------------------
       appBar: AppBar(
         backgroundColor: ChopdiColors.cream,
         elevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+        title: Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: ChopdiColors.navy,
+              ),
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => const MainScreen(),
+                  ),
+                      (route) => false,
+                );
+              },
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(
+                Icons.more_vert,
+                color: ChopdiColors.navy,
+              ),
+              onPressed: () {
+                showCustomerOptionsBottomSheet(context);
+              },
+            ),
+          ],
+        ),
+      ),
+
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          color: AppColors.background,
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: ChopdiColors.navy,
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.82, // Change this value
+                          child: MoneyGaveBottomSheet(
+                            customer:widget.customer,
+                            onSaved:loadTransactions,
+                            isEdit:false,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFC74C4C),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "You Gave ₹",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                onPressed: () => Navigator.pop(context),
-                tooltip: 'Back',
               ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(
-                  Icons.more_vert,
-                  color: ChopdiColors.navy,
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.82, // Change this value
+                          child: MoneyReceiveBottomSheet(
+                            customer: widget.customer,
+                            onSaved: loadTransactions,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF00901B),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "You Got ₹",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  showCustomerOptionsBottomSheet(context);
-                },
-                tooltip: 'Customer options',
               ),
             ],
           ),
         ),
       ),
 
-      // ------------------------------------------------------------
-      // BOTTOM ACTION BAR
-      // ------------------------------------------------------------
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
 
-            final horizontalPadding = width < 360
-                ? 10.0
-                : width < 600
-                    ? 16.0
-                    : 24.0;
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: ChopdiColors.lightGray,
+                  child: Text(
+                    customer.name[0],
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: ChopdiColors.navy,
+                    ),
+                  ),
+                ),
 
-            final gap = width < 360 ? 8.0 : 14.0;
+                const SizedBox(width: 14),
 
-            final buttonFontSize = width < 360
-                ? 15.0
-                : width < 600
-                    ? 18.0
-                    : 20.0;
+                Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
 
-            return Container(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                10,
-                horizontalPadding,
-                10,
-              ),
-              color: AppColors.background,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: width < 360 ? 50 : 54,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return MoneyGaveBottomSheet(
-                                customer: widget.customer,
-                                onSaved: loadTransactions,
-                                isEdit: false,
-                              );
-                            },
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC74C4C),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: width < 360 ? 4 : 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            "You Gave ₹",
-                            maxLines: 1,
-                            softWrap: false,
-                            style: TextStyle(
-                              fontSize: buttonFontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      Text(
+                        customer.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                          color: ChopdiColors.navy,
                         ),
                       ),
+
+                      const SizedBox(height: 1),
+
+                      Row(
+                        children: [
+                          Text(
+                            customer.phone,
+                            style: const TextStyle(
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(width: 4),      
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const Spacer(),
+
+                  GestureDetector(
+                    onTap: () {
+                      makePhoneCall(customer.phone);
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
+                      child: Image.asset('assets/call_logo.png')
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 22),
+
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
+
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(255, 248, 240, 1),
+                borderRadius:
+                    BorderRadius.circular(16),
+
+                border: Border.all(
+                  color: Color(0xFFAAB9CF),
+                ),
+              ),
+
+              child: Row(
+                children: [
+
+                  Expanded(
+                    child: _infoItem(
+                      'assets/total_given.png',
+                      "Total Given",
+                      "₹${totalGiven.toStringAsFixed(0)}",
+                      ChopdiColors.navy,
                     ),
                   ),
 
-                  SizedBox(width: gap),
+                  Container(
+                    width: 1,
+                    height: 55,
+                    color: Colors.grey.shade300,
+                  ),
 
                   Expanded(
-                    child: SizedBox(
-                      height: width < 360 ? 50 : 54,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return MoneyReceiveBottomSheet(
-                                customer: widget.customer,
-                                onSaved: loadTransactions,
-                              );
-                            },
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00901B),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: width < 360 ? 4 : 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            "You Got ₹",
-                            maxLines: 1,
-                            softWrap: false,
-                            style: TextStyle(
-                              fontSize: buttonFontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: _infoItem(
+                      'assets/total_interest.png',
+                      "Total Interest",
+                      "₹${totalInterest.toStringAsFixed(0)}",
+                      Color(0xFF00901B),
+                    ),
+                  ),
+
+                  Container(
+                    width: 1,
+                    height: 55,
+                    color: Colors.grey.shade300,
+                  ),
+
+                  Expanded(
+                    child: _infoItem(
+                      'assets/outstanding.png',
+                      "Outstanding",
+                      "₹${outstanding.toStringAsFixed(0)}",
+                      Color(0xFFC74C4C),
                     ),
                   ),
                 ],
               ),
-            );
-          },
-        ),
-      ),
+            ),
 
-      // ------------------------------------------------------------
-      // BODY
-      // ------------------------------------------------------------
-      body: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
+            const SizedBox(height: 20),
 
-            final horizontalPadding = width < 360
-                ? 12.0
-                : width < 600
-                    ? 16.0
-                    : 24.0;
+            const SizedBox(height: 12),
 
-            final avatarRadius = width < 360
-                ? 25.0
-                : width < 600
-                    ? 30.0
-                    : 34.0;
-
-            final nameFontSize = width < 360
-                ? 18.0
-                : width < 600
-                    ? 22.0
-                    : 24.0;
-
-            final phoneFontSize = width < 360 ? 11.0 : 13.0;
-
-            return SingleChildScrollView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
-              physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                8,
-                horizontalPadding,
-                24,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 700,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ------------------------------------------------
-                      // CUSTOMER HEADER
-                      // ------------------------------------------------
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: avatarRadius,
-                            backgroundColor: ChopdiColors.lightGray,
-                            child: Text(
-                              customer.name.isNotEmpty
-                                  ? customer.name[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                fontSize: avatarRadius * 0.9,
-                                fontWeight: FontWeight.bold,
-                                color: ChopdiColors.navy,
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(
-                            width: width < 360 ? 10 : 14,
-                          ),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  customer.name.isNotEmpty
-                                      ? customer.name
-                                      : "Customer",
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: nameFontSize,
-                                    color: ChopdiColors.navy,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 2),
-
-                                if (customer.phone.trim().isNotEmpty)
-                                  Text(
-                                    customer.phone,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: phoneFontSize,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          GestureDetector(
-                            onTap: () {
-                              PhoneCallService.makePhoneCall(
-                                context,
-                                customer.phone,
-                              );
-                            },
-                            child: CircleAvatar(
-                              radius: width < 360 ? 20 : 22,
-                              backgroundColor:
-                                  const Color.fromRGBO(
-                                141,
-                                208,
-                                113,
-                                0.34,
-                              ),
-                              child: Image.asset(
-                                'assets/call_logo.png',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: width < 360 ? 16 : 22),
-
-                      // ------------------------------------------------
-                      // ACCOUNT SUMMARY CARD
-                      // ------------------------------------------------
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: width < 360 ? 8 : 12,
-                          vertical: width < 360 ? 10 : 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color.fromRGBO(
-                            255,
-                            248,
-                            240,
-                            1,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: const Color(0xFFAAB9CF),
-                          ),
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, cardConstraints) {
-                            // Keep all three values in a row. The content
-                            // inside each Expanded item scales down rather
-                            // than overflowing on small screens.
-                            return Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: _infoItem(
-                                    'assets/total_given.png',
-                                    "Total Given",
-                                    "₹${totalGiven.toStringAsFixed(0)}",
-                                    ChopdiColors.navy,
-                                  ),
-                                ),
-
-                                Container(
-                                  width: 1,
-                                  height: width < 360 ? 48 : 55,
-                                  color: Colors.grey.shade300,
-                                ),
-
-                                Expanded(
-                                  child: _infoItem(
-                                    'assets/total_interest.png',
-                                    "Total Interest",
-                                    "₹${totalInterest.toStringAsFixed(0)}",
-                                    const Color(0xFF00901B),
-                                  ),
-                                ),
-
-                                Container(
-                                  width: 1,
-                                  height: width < 360 ? 48 : 55,
-                                  color: Colors.grey.shade300,
-                                ),
-
-                                Expanded(
-                                  child: _infoItem(
-                                    'assets/outstanding.png',
-                                    "Outstanding",
-                                    "₹${outstanding.toStringAsFixed(0)}",
-                                    const Color(0xFFC74C4C),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-
-                      SizedBox(height: width < 360 ? 16 : 20),
-
-                      // ------------------------------------------------
-                      // TRANSACTIONS
-                      // ------------------------------------------------
-                      TransactionTable(
-                        transactions: transactions,
-                        onChanged: loadTransactions,
-                        customerId: customer.id,
-                      ),
-
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+            TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+          ],
         ),
       ),
     );
   }
-
 
   Widget _infoItem(
     String imagePath,
@@ -592,74 +481,53 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     String value,
     Color valueColor,
   ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.maxWidth;
-
-        final iconRadius = availableWidth < 85 ? 13.0 : 16.0;
-        final iconSize = availableWidth < 85 ? 15.0 : 18.0;
-        final titleSize = availableWidth < 85 ? 8.0 : 10.0;
-        final valueSize = availableWidth < 85 ? 14.0 : 18.0;
-
-        return SizedBox(
-          width: double.infinity,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: iconRadius,
-                backgroundColor: const Color(0xFFFFD7BE),
-                child: Image.asset(
-                  imagePath,
-                  width: iconSize,
-                  height: iconSize,
-                  fit: BoxFit.contain,
-                ),
-              ),
-
-              const SizedBox(height: 5),
-
-              SizedBox(
-                height: 30,
-                child: Center(
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.manrope(
-                      fontSize: titleSize,
-                      fontWeight: FontWeight.w700,
-                      color: ChopdiColors.navy,
-                      height: 1.15,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 2),
-
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  softWrap: false,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: valueSize,
-                    fontWeight: FontWeight.bold,
-                    color: valueColor,
-                  ),
-                ),
-              ),
-            ],
+    return SizedBox(
+      height: 90,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: const Color(0xFFFFD7BE),
+            child: Image.asset(
+              imagePath,
+              width: 18,
+              height: 18,
+              fit: BoxFit.contain,
+            ),
           ),
-        );
-      },
+
+          SizedBox(
+            height: 30,
+            child: Center(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.manrope(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: ChopdiColors.navy,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ),
+
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
-
 
   void showCustomerOptionsBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -725,14 +593,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   void showEditCustomerBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      useSafeArea: false,
-      builder: (context) {
+      backgroundColor: const Color(0xffFDF8F2),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
+      ),
+      builder: (_) {
         return EditCustomerBottomSheet(
-          customer: customer,
-          onSaved: () {
-            // refresh customer data
+          customer: widget.customer,
+          onSaved: () async {
+            await loadCustomer();
+            await loadTransactions();
+            setState(() {});
           },
         );
       },

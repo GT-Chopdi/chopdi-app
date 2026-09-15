@@ -15,7 +15,7 @@ import 'sync_queue.dart';
 
 class CustomerRepository {
   CustomerRepository(this._isar, {SyncQueue queue = const SyncQueue()})
-      : _queue = queue;
+    : _queue = queue;
 
   final Isar _isar;
   final SyncQueue _queue;
@@ -28,12 +28,14 @@ class CustomerRepository {
   // CREATE
   // ============================================================
 
-  /// [chopdiId] and [loanType] are required because every list in the app
-  /// filters on them: the home screen shows `chopdiId == active && loanType ==
-  /// "gave"`, the took-loan screen the same with `"took"`. A row created without
-  /// them saves and syncs correctly and is invisible in the UI — a failure that
-  /// looks like the write never happened. Requiring them makes that unbuildable
-  /// rather than merely discouraged.
+  /// Always creates a NEW customer record.
+  ///
+  /// IMPORTANT:
+  /// A previously deleted customer is NEVER reused.
+  /// The new customer gets:
+  /// - a new Isar id
+  /// - a new UUID
+  /// - deletedAt == null
   Future<Customer> create({
     required String name,
     required String phone,
@@ -44,20 +46,24 @@ class CustomerRepository {
     bool received = false,
   }) async {
     final cleanName = _validateName(name);
+    final cleanPhone = phone.trim();
+
     final now = DateTime.now().toUtc();
 
-    final customer = Customer()
-      ..uuid = _uuid.v7()
-      ..name = cleanName
-      ..phone = phone.trim()
-      ..notes = notes.trim()
-      ..status = status
-      ..received = received
-      ..chopdiId = chopdiId
-      ..loanType = loanType
-      ..version = 0
-      ..updatedAt = now
-      ..syncStatus = SyncStatus.pending;
+    final customer =
+        Customer()
+          ..uuid = _uuid.v7()
+          ..name = cleanName
+          ..phone = cleanPhone
+          ..notes = notes.trim()
+          ..status = status
+          ..received = received
+          ..chopdiId = chopdiId
+          ..loanType = loanType
+          ..version = 0
+          ..updatedAt = now
+          ..deletedAt = null
+          ..syncStatus = SyncStatus.pending;
 
     await _isar.writeTxn(() async {
       await _isar.customers.put(customer);
@@ -78,24 +84,55 @@ class CustomerRepository {
   }
 
   // ============================================================
+  // FIND BY UUID
+  // ============================================================
+
+  Future<Customer?> findByUuid(String uuid) {
+    return _isar.customers.filter().uuidEqualTo(uuid).findFirst();
+  }
+
+  // ============================================================
+  // FIND ACTIVE CUSTOMER BY PHONE
+  // ============================================================
+
+  /// Returns ONLY an active customer.
+  ///
+  /// A soft-deleted customer is intentionally ignored.
+  ///
+  /// This is important when the user:
+  ///
+  /// 1. Creates customer A
+  /// 2. Deletes customer A
+  /// 3. Adds the same phone number again
+  ///
+  /// The deleted customer must NOT be returned here.
+  Future<Customer?> findActiveByPhone(String phone) {
+    final cleanPhone = phone.trim();
+
+    if (cleanPhone.isEmpty) {
+      return Future.value(null);
+    }
+
+    return _isar.customers
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .and()
+        .deletedAtIsNull()
+        .findFirst();
+  }
+
+  // ============================================================
+  // ACTIVE CUSTOMERS
+  // ============================================================
+
+  Future<List<Customer>> active() {
+    return _isar.customers.filter().deletedAtIsNull().findAll();
+  }
+
+  // ============================================================
   // MIGRATE OLD CUSTOMERS
   // ============================================================
 
-  /// Migrates customers created before UUID-based sync was introduced.
-  ///
-  /// Old local customers may have:
-  ///
-  ///     uuid == ''
-  ///
-  /// They cannot be used by LedgerRepository because ledger entries need a
-  /// permanent customerUuid for synchronization.
-  ///
-  /// This method only assigns a UUID to customers that do not already have one.
-  /// Existing UUIDs are never changed.
-  ///
-  /// IMPORTANT:
-  /// This is intended for legacy/local customers that have not previously
-  /// received a server UUID.
   Future<int> migrateLegacyCustomers() async {
     final customers = await _isar.customers.where().findAll();
 
@@ -117,13 +154,6 @@ class CustomerRepository {
           ..version = customer.version
           ..updatedAt = DateTime.now().toUtc();
 
-        // We deliberately do NOT enqueue a customer create here.
-        //
-        // These customers may already be represented by old/local data.
-        // The UUID is first needed so newly-created ledger entries can refer
-        // to this customer safely.
-        //
-        // Existing old transactions without UUID remain local legacy rows.
         await _isar.customers.put(customer);
 
         migratedCount++;
@@ -133,10 +163,10 @@ class CustomerRepository {
     return migratedCount;
   }
 
-  /// Makes sure one particular customer has a UUID.
-  ///
-  /// This is used immediately before creating a ledger entry, so even if
-  /// startup migration did not run, an old customer can still be used.
+  // ============================================================
+  // ENSURE MIGRATED
+  // ============================================================
+
   Future<Customer> ensureMigrated(Customer customer) async {
     if (customer.uuid.trim().isNotEmpty) {
       return customer;
@@ -184,9 +214,7 @@ class CustomerRepository {
     }
 
     if (customer.deletedAt != null) {
-      throw const RepositoryException(
-        'This customer has been deleted.',
-      );
+      throw const RepositoryException('This customer has been deleted.');
     }
 
     if (name != null) {
@@ -271,23 +299,23 @@ class CustomerRepository {
     Customer customer, {
     String reason = 'Customer deleted',
   }) async {
-    // IMPORTANT:
-    // If this is a legacy customer, give it a UUID first.
     final migratedCustomer = await ensureMigrated(customer);
 
     if (migratedCustomer.deletedAt != null) {
       return;
     }
 
-    final entries = await _isar.transactions
-        .filter()
-        .customerIdEqualTo(migratedCustomer.id)
-        .voidedAtIsNull()
-        .findAll();
+    final entries =
+        await _isar.transactions
+            .filter()
+            .customerIdEqualTo(migratedCustomer.id)
+            .voidedAtIsNull()
+            .findAll();
 
     final now = DateTime.now().toUtc();
 
     await _isar.writeTxn(() async {
+      // Void all old transactions.
       for (final tx in entries) {
         tx
           ..voidedAt = now
@@ -297,10 +325,6 @@ class CustomerRepository {
 
         await _isar.transactions.put(tx);
 
-        // Old transactions may not have UUIDs.
-        //
-        // Such transactions stay local and are voided locally.
-        // New/migrated transactions are queued for server sync.
         if (tx.uuid.trim().isNotEmpty) {
           await _queue.enqueueVoid(
             _isar,
@@ -312,6 +336,7 @@ class CustomerRepository {
         }
       }
 
+      // Soft delete customer.
       migratedCustomer
         ..deletedAt = now
         ..updatedAt = now
@@ -328,20 +353,6 @@ class CustomerRepository {
       );
     });
   }
-
-  // ============================================================
-  // FIND
-  // ============================================================
-
-  Future<Customer?> findByUuid(String uuid) =>
-      _isar.customers.filter().uuidEqualTo(uuid).findFirst();
-
-  // ============================================================
-  // ACTIVE CUSTOMERS
-  // ============================================================
-
-  Future<List<Customer>> active() =>
-      _isar.customers.filter().deletedAtIsNull().findAll();
 
   // ============================================================
   // SERVER PULL
@@ -363,10 +374,10 @@ class CustomerRepository {
           await _isar.customers.filter().uuidEqualTo(uuid).findFirst();
 
       final hadPendingLocalEdit =
-          existing != null &&
-          existing.syncStatus == SyncStatus.pending;
+          existing != null && existing.syncStatus == SyncStatus.pending;
 
-      row = existing ??
+      row =
+          existing ??
           (Customer()
             ..uuid = uuid
             ..version = version
