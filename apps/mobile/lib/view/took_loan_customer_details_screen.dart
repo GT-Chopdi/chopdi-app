@@ -13,7 +13,7 @@ import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:mychopdi/service/phone_call_service.dart';
 
 class TookLoanCustomerDetailsScreen extends StatefulWidget {
 
@@ -162,27 +162,6 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
         .inDays;
   }
 
-  Future<void> makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(
-        phoneUri,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open phone dialer'),
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -364,7 +343,10 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
                   GestureDetector(
                     onTap: () {
-                      makePhoneCall(customer.phone);
+                      PhoneCallService.makePhoneCall(
+                        context,
+                        customer.phone,
+                      );
                     },
                     child: CircleAvatar(
                       radius: 22,
