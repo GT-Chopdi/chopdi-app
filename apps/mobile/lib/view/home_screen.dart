@@ -18,6 +18,8 @@ import 'package:mychopdi/widgets/home_header.dart';
 import 'package:mychopdi/widgets/loan_toggle.dart';
 import 'package:mychopdi/widgets/summary_card.dart';
 
+import 'customer_details_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -57,11 +59,22 @@ class _HomeScreenState extends State<HomeScreen> {
     if (currentChopdi == null) return;
 
     if (isGaveLoanSelected) {
-      await Navigator.push(
+      final Customer? customer = await Navigator.push<Customer>(
         context,
         MaterialPageRoute(
           builder: (_) => AddCustomerScreen(
             chopdiId: currentChopdi!.id,
+          ),
+        ),
+      );
+
+      if (!mounted || customer == null) return;
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CustomerDetailsScreen(
+            customer: customer,
           ),
         ),
       );
@@ -74,16 +87,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       );
-
     }
 
-    // When Add Customer screen is popped,
-    // HomeScreen automatically becomes visible again.
     if (!mounted) return;
 
     setState(() {});
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
+
+import '../model/customer.dart';
 
 class TookLoanCustomerDetailAdd extends StatefulWidget {
   final String contactName;
@@ -27,68 +30,102 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
   bool isSaving = false;
 
   Future<void> addCustomer() async {
+    // ============================================================
+    // PHONE NUMBER
+    // ============================================================
+
     final phone = widget.contactPhone.trim();
 
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter phone number"),
-        ),
-      );
-      return;
-    }
+    // Remove spaces, +, -, brackets, etc.
+    String finalPhone =
+    phone.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Remove +91, spaces, -, etc.
-    final cleanedPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    String finalPhone = cleanedPhone;
-
-    // Remove Indian country code
-    if (finalPhone.startsWith('91') && finalPhone.length == 12) {
+    // Remove Indian country code +91
+    if (finalPhone.startsWith('91') &&
+        finalPhone.length == 12) {
       finalPhone = finalPhone.substring(2);
     }
 
-    // Validate 10 digit number
-    if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Please enter a valid 10-digit phone number",
-          ),
-        ),
-      );
-      return;
-    }
+    // ============================================================
+    // PHONE IS OPTIONAL
+    // ============================================================
+    //
+    // Empty phone is completely valid.
+    // Do NOT show an error and do NOT block the user.
+    //
 
-    setState(() {
-      isSaving = true;
-    });
-
-    try {
-      // Check duplicate again
-      final existingCustomer =
-          await IsarService.getCustomerByPhone(finalPhone);
-
-      if (existingCustomer != null) {
+    if (finalPhone.isNotEmpty) {
+      // If phone exists, it MUST be exactly 10 digits.
+      if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
         if (!mounted) return;
-
-        setState(() {
-          isSaving = false;
-        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("This lender already exists"),
+            content: Text(
+              "Please enter a valid 10-digit phone number",
+            ),
           ),
         );
 
         return;
       }
+    }
 
-      // See took_loan_add_new_lender_screen.dart: the repository mints the uuid
-      // that LedgerRepository requires before an entry can be added, and queues
-      // the create for sync in the same transaction.
-      final customer = await Repositories.customers.create(
+    // ============================================================
+    // START SAVING
+    // ============================================================
+
+    if (mounted) {
+      setState(() {
+        isSaving = true;
+      });
+    }
+
+    try {
+      // ==========================================================
+      // DUPLICATE CHECK
+      // ==========================================================
+      //
+      // Only check when a phone number exists.
+      // Empty phone numbers are allowed.
+      //
+
+      if (finalPhone.isNotEmpty) {
+        final existingCustomer =
+        await IsarService.isar.customers
+            .filter()
+            .phoneEqualTo(finalPhone)
+            .and()
+            .chopdiIdEqualTo(widget.chopdiId)
+            .and()
+            .deletedAtIsNull()
+            .findFirst();
+
+        if (existingCustomer != null) {
+          if (!mounted) return;
+
+          setState(() {
+            isSaving = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "This lender already exists",
+              ),
+            ),
+          );
+
+          return;
+        }
+      }
+
+      // ==========================================================
+      // CREATE NEW LENDER
+      // ==========================================================
+
+      final customer =
+      await Repositories.customers.create(
         name: widget.contactName.trim(),
         phone: finalPhone,
         chopdiId: widget.chopdiId,
@@ -98,13 +135,17 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
 
       if (!mounted) return;
 
-      // Go directly to CustomerDetailsScreen
+      // ==========================================================
+      // OPEN CUSTOMER DETAILS
+      // ==========================================================
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => TookLoanCustomerDetailsScreen(
-            customer: customer,
-          ),
+          builder: (_) =>
+              TookLoanCustomerDetailsScreen(
+                customer: customer,
+              ),
         ),
       );
     } catch (e) {
@@ -116,12 +157,13 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Failed to add lender: $e"),
+          content: Text(
+            "Failed to add lender: $e",
+          ),
         ),
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

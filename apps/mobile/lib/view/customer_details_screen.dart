@@ -575,7 +575,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   // ============================================================
   // INFO ITEM
   // ============================================================
-
   Widget _infoItem(
       String imagePath,
       String title,
@@ -583,9 +582,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       Color valueColor,
       ) {
     return SizedBox(
-      height: 90,
+      height: 75,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
             radius: 16,
@@ -599,7 +599,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           ),
 
           SizedBox(
-            height: 30,
+            height: 24,
             child: Center(
               child: Text(
                 title,
@@ -610,19 +610,25 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
-                  height: 1.2,
+                  height: 1.1,
                 ),
               ),
             ),
           ),
 
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: GoogleFonts.manrope(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                ),
+              ),
             ),
           ),
         ],
