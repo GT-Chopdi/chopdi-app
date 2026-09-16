@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
@@ -16,7 +17,6 @@ import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
 import 'package:mychopdi/service/phone_call_service.dart';
 
 class TookLoanCustomerDetailsScreen extends StatefulWidget {
-
   final Customer customer;
 
   const TookLoanCustomerDetailsScreen({
@@ -25,26 +25,34 @@ class TookLoanCustomerDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State createState() => _CustomerDetailsScreenState();
+  State<TookLoanCustomerDetailsScreen> createState() =>
+      _CustomerDetailsScreenState();
 }
 
-class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
-
-  int selectedTab = 0;
-  int bottomIndex = 1; 
+class _CustomerDetailsScreenState
+    extends State<TookLoanCustomerDetailsScreen> {
   List<Transaction> transactions = [];
+
   late Customer customer;
+
+  // ============================================================
+  // CUSTOMER
+  // ============================================================
 
   Future<void> loadCustomer() async {
     final updatedCustomer =
-        await IsarService.isar.customers.get(widget.customer.id);
+    await IsarService.isar.customers.get(widget.customer.id);
 
-    if (updatedCustomer != null) {
+    if (updatedCustomer != null && mounted) {
       setState(() {
         customer = updatedCustomer;
       });
     }
   }
+
+  // ============================================================
+  // TRANSACTIONS
+  // ============================================================
 
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
@@ -55,7 +63,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
     // Newest transaction first
     loadedTransactions.sort(
-      (a, b) => b.date.compareTo(a.date),
+          (a, b) => b.date.compareTo(a.date),
     );
 
     if (!mounted) return;
@@ -65,51 +73,89 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
     });
   }
 
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
+
     customer = widget.customer;
 
     loadCustomer();
     loadTransactions();
   }
 
+  // ============================================================
+  // CHECK WHETHER MONEY WAS EVER TAKEN
+  // ============================================================
+
+  bool get hasTakenLoan {
+    return transactions.any(
+          (tx) => tx.type == TransactionType.took,
+    );
+  }
+
+  // ============================================================
+  // TOTAL TAKEN
+  // ============================================================
+
   double get totalGiven {
     return transactions
         .where((e) => e.type == TransactionType.took)
-        .fold(0.0, (sum, e) => sum + e.amount);
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
   }
+
+  // ============================================================
+  // TOTAL PAID
+  // ============================================================
 
   double get totalReceived {
     return transactions
         .where((e) => e.type == TransactionType.paid)
-        .fold(0.0, (sum, e) => sum + e.amount);
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
   }
 
+  // ============================================================
+  // TOTAL INTEREST
+  // ============================================================
 
   double get totalInterest {
     return transactions
         .where((e) => e.type == TransactionType.took)
         .fold(
-          0.0,
+      0.0,
           (sum, tx) =>
-              sum +
-              InterestCalculator.calculate(
-                principal: tx.amount,
-                rate: tx.interestRate,
-                startDate: tx.date,
-                interestType: tx.interestType,
-                frequency: tx.interestFrequency,
-              ),
-        );
+      sum +
+          InterestCalculator.calculate(
+            principal: tx.amount,
+            rate: tx.interestRate,
+            startDate: tx.date,
+            interestType: tx.interestType,
+            frequency: tx.interestFrequency,
+          ),
+    );
   }
 
+  // ============================================================
+  // OUTSTANDING
+  // ============================================================
+
   double get outstanding {
-    // return totalGiven + totalInterest - totalReceived;
     return (totalGiven + totalInterest - totalReceived)
         .clamp(0.0, double.infinity);
   }
+
+  // ============================================================
+  // INTEREST CALCULATION
+  // ============================================================
 
   double calculateInterest(Transaction tx) {
     final days = DateTime.now().difference(tx.date).inDays;
@@ -126,10 +172,18 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
       return tx.amount * tx.interestRate * time / 100;
     } else {
       return tx.amount *
-              (pow(1 + tx.interestRate / 100, time) - 1);
+          (pow(
+            1 + tx.interestRate / 100,
+            time,
+          ) -
+              1);
     }
   }
-  
+
+  // ============================================================
+  // LAST PAID TRANSACTION
+  // ============================================================
+
   Transaction? get lastReceivedTransaction {
     final received = transactions
         .where((e) => e.type == TransactionType.paid)
@@ -137,22 +191,34 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
     if (received.isEmpty) return null;
 
-    received.sort((a, b) => b.date.compareTo(a.date));
+    received.sort(
+          (a, b) => b.date.compareTo(a.date),
+    );
 
     return received.first;
   }
 
+  // ============================================================
+  // FIRST TAKEN LOAN TRANSACTION
+  // ============================================================
+
   Transaction? get firstLoanTransaction {
-    final gave = transactions
+    final took = transactions
         .where((e) => e.type == TransactionType.took)
         .toList();
 
-    if (gave.isEmpty) return null;
+    if (took.isEmpty) return null;
 
-    gave.sort((a, b) => a.date.compareTo(b.date));
+    took.sort(
+          (a, b) => a.date.compareTo(b.date),
+    );
 
-    return gave.first;
+    return took.first;
   }
+
+  // ============================================================
+  // LOAN DAYS
+  // ============================================================
 
   int get loanDays {
     if (firstLoanTransaction == null) return 0;
@@ -162,6 +228,9 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
         .inDays;
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +242,10 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
 
+      // ==========================================================
+      // APP BAR
+      // ==========================================================
+
       appBar: AppBar(
         backgroundColor: ChopdiColors.cream,
         elevation: 0,
@@ -181,11 +254,17 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
         title: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: ChopdiColors.navy),
-              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: ChopdiColors.navy,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
+
             const Spacer(),
+
             IconButton(
               icon: const Icon(
                 Icons.more_vert,
@@ -199,12 +278,21 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
         ),
       ),
 
+      // ==========================================================
+      // BOTTOM ACTION BUTTONS
+      // ==========================================================
+
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(16),
           color: AppColors.background,
           child: Row(
             children: [
+              // ====================================================
+              // YOU TOOK
+              // ALWAYS VISIBLE
+              // ====================================================
+
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
@@ -214,18 +302,18 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                       backgroundColor: Colors.transparent,
                       builder: (context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.82, // Change this value
+                          heightFactor: 0.82,
                           child: TookLoanMoneyGaveBottomSheet(
-                            customer:widget.customer,
-                            onSaved:loadTransactions,
-                            isEdit:false,
+                            customer: widget.customer,
+                            onSaved: loadTransactions,
+                            isEdit: false,
                           ),
                         );
                       },
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFC74C4C),
+                    backgroundColor: const Color(0xFFC74C4C),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     minimumSize: const Size.fromHeight(54),
@@ -243,62 +331,80 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                 ),
               ),
 
-              const SizedBox(width: 14),
+              // ====================================================
+              // YOU PAID
+              //
+              // SHOW ONLY AFTER FIRST TOOK TRANSACTION
+              // ====================================================
 
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return FractionallySizedBox(
-                          heightFactor: 0.82, // Change this value
-                          child: TookLoanMoneyReceivedBottomSheet(
-                            customer: widget.customer,
-                            onSaved: loadTransactions,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF00901B),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (hasTakenLoan) ...[
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return FractionallySizedBox(
+                            heightFactor: 0.82,
+                            child:
+                            TookLoanMoneyReceivedBottomSheet(
+                              customer: widget.customer,
+                              onSaved: loadTransactions,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00901B),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    "You Paid ₹",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    child: const Text(
+                      "You Paid ₹",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
       ),
 
+      // ==========================================================
+      // BODY
+      // ==========================================================
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ======================================================
+            // CUSTOMER HEADER
+            // ======================================================
+
             Row(
               children: [
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
-                    customer.name[0],
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : "?",
                     style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -309,13 +415,14 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
                 const SizedBox(width: 14),
 
-                Column(
+                Expanded(
+                  child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    CrossAxisAlignment.start,
                     children: [
-
                       Text(
                         customer.name,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
                           fontWeight: FontWeight.bold,
                           fontSize: 22,
@@ -325,56 +432,68 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
 
                       const SizedBox(height: 1),
 
-                      Row(
-                        children: [
-                          Text(
-                            customer.phone,
-                            style: GoogleFonts.manrope(
-                              color: Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(width: 4),      
-                        ],
+                      Text(
+                        customer.phone,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.manrope(
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   ),
+                ),
 
-                  const Spacer(),
+                const SizedBox(width: 8),
 
-                  GestureDetector(
-                    onTap: () {
-                      PhoneCallService.makePhoneCall(
-                        context,
-                        customer.phone,
-                      );
-                    },
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
-                      child: Image.asset('assets/call_logo.png')
+                GestureDetector(
+                  onTap: () {
+                    PhoneCallService.makePhoneCall(
+                      context,
+                      customer.phone,
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor:
+                    const Color.fromRGBO(
+                      141,
+                      208,
+                      113,
+                      0.34,
+                    ),
+                    child: Image.asset(
+                      'assets/call_logo.png',
                     ),
                   ),
+                ),
               ],
             ),
 
             const SizedBox(height: 22),
 
+            // ======================================================
+            // SUMMARY
+            // ======================================================
+
             Container(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
-
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.05,
+                vertical: height * 0.02,
+              ),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(255, 248, 240, 1),
-                borderRadius:
-                    BorderRadius.circular(16),
-
+                color: const Color.fromRGBO(
+                  255,
+                  248,
+                  240,
+                  1,
+                ),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Color(0xFFAAB9CF),
+                  color: const Color(0xFFAAB9CF),
                 ),
               ),
-
               child: Row(
                 children: [
-
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
@@ -395,7 +514,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                       'assets/total_interest.png',
                       "Interest Due",
                       "₹${totalInterest.toStringAsFixed(0)}",
-                      Color(0xFF00901B),
+                      const Color(0xFF00901B),
                     ),
                   ),
 
@@ -410,68 +529,64 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                       'assets/outstanding.png',
                       "Outstanding",
                       "₹${outstanding.toStringAsFixed(0)}",
-                      Color(0xFFC74C4C),
+                      const Color(0xFFC74C4C),
                     ),
                   ),
-
-                  // Container(
-                  //   width: 1,
-                  //   height: 55,
-                  //   color: Colors.grey.shade300,
-                  // ),
-
-                  // Expanded(
-                  //   child: _infoItem(
-                  //     'assets/uil_calender.png',
-                  //     "Since",
-                  //     "$loanDays Days",
-                  //     ChopdiColors.navy,
-                  //   ),
-                  // ),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            const SizedBox(height: 12),
+            // ======================================================
+            // TRANSACTION TABLE
+            //
+            // NO EXTRA TABS
+            // ======================================================
 
-            // TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
             TookLoanTransactionTable(
               transactions: transactions,
               onChanged: loadTransactions,
               customerId: customer.id,
             ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
+  // ============================================================
+  // INFO ITEM
+  // ============================================================
+
   Widget _infoItem(
-    String imagePath,
-    String title,
-    String value,
-    Color valueColor,
-  ) {
+      String imagePath,
+      String title,
+      String value,
+      Color valueColor,
+      ) {
     return SizedBox(
       height: 90,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircleAvatar(
-            radius: 16,
+            radius: 15,
             backgroundColor: const Color(0xFFFFD7BE),
             child: Image.asset(
               imagePath,
-              width: 18,
-              height: 18,
+              width: 17,
+              height: 17,
               fit: BoxFit.contain,
             ),
           ),
 
+          const SizedBox(height: 5),
+
           SizedBox(
-            height: 30,
+            height: 25,
             child: Center(
               child: Text(
                 title,
@@ -479,22 +594,28 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
-                  height: 1.2,
+                  height: 1.1,
                 ),
               ),
             ),
           ),
 
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
+          const SizedBox(height: 2),
+
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
             ),
           ),
         ],
@@ -502,10 +623,17 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
     );
   }
 
-  void showCustomerOptionsBottomSheet(BuildContext context) {
+  // ============================================================
+  // CUSTOMER OPTIONS
+  // ============================================================
+
+  void showCustomerOptionsBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Color.fromRGBO(253, 237, 217, 1),
+      backgroundColor:
+      const Color.fromRGBO(253, 237, 217, 1),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -514,55 +642,75 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
       ),
       builder: (_) {
         return CustomerOptionsBottomSheet(
-
           onEdit: () {
-            Navigator.pop(context); // Close first bottom sheet
+            Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 200), () {
-              showEditCustomerBottomSheet(context);
-            });
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                showEditCustomerBottomSheet(context);
+              },
+            );
           },
 
           onSummary: () {
-            Navigator.pop(context); // Close first bottom sheet
+            Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 200), () {
-              return showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => AccountSummaryBottomSheet(
-                  totalGiven: totalGiven,
-                  totalOutstanding: outstanding,
-                  totalInterest: totalInterest,
-                  lastPayment: lastReceivedTransaction,
-                  firstLoan: firstLoanTransaction,
-                ),
-              );
-            });
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                return showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) =>
+                      AccountSummaryBottomSheet(
+                        totalGiven: totalGiven,
+                        totalOutstanding: outstanding,
+                        totalInterest: totalInterest,
+                        lastPayment:
+                        lastReceivedTransaction,
+                        firstLoan:
+                        firstLoanTransaction,
+                      ),
+                );
+              },
+            );
           },
 
           onExport: () {
             Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 250), () {
-              showExportPdfBottomSheet(context);
-            });
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showExportPdfBottomSheet(context);
+              },
+            );
           },
 
           onDelete: () {
             Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 250), () {
-              showDeleteCustomerBottomSheet(context);
-            });
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showDeleteCustomerBottomSheet(context);
+              },
+            );
           },
         );
       },
     );
   }
 
-  void showEditCustomerBottomSheet(BuildContext context) {
+  // ============================================================
+  // EDIT CUSTOMER
+  // ============================================================
+
+  void showEditCustomerBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -578,14 +726,23 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
           onSaved: () async {
             await loadCustomer();
             await loadTransactions();
-            setState(() {});
+
+            if (mounted) {
+              setState(() {});
+            }
           },
         );
       },
     );
   }
 
-  void showExportPdfBottomSheet(BuildContext context) {
+  // ============================================================
+  // EXPORT PDF
+  // ============================================================
+
+  void showExportPdfBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -598,7 +755,13 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
     );
   }
 
-  void showDeleteCustomerBottomSheet(BuildContext context) {
+  // ============================================================
+  // DELETE CUSTOMER
+  // ============================================================
+
+  void showDeleteCustomerBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -606,41 +769,39 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
       builder: (_) {
         return DeleteCustomerBottomSheet(
           customerName: widget.customer.name,
-          onDelete: () async{
-
-            // Navigator.pop(context);
-
-            // Delete customer from database
+          onDelete: () async {
             await IsarService.isar.writeTxn(() async {
-
               await IsarService.isar.transactions
                   .filter()
                   .customerIdEqualTo(widget.customer.id)
                   .deleteAll();
 
               await IsarService.isar.customers.delete(
-                  widget.customer.id);
-
+                widget.customer.id,
+              );
             });
 
             if (mounted) {
-              // Navigator.pop(context); // Close delete sheet
-              // Navigator.pop(context); // Back to home
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (_) => const MainScreen(),
                 ),
-                (route) => false,
+                    (route) => false,
               );
             }
-
           },
         );
       },
     );
   }
- 
-  void showAllNotesBottomSheet(BuildContext context) {
+
+  // ============================================================
+  // ALL NOTES
+  // ============================================================
+
+  void showAllNotesBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

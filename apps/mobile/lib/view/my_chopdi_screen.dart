@@ -753,11 +753,11 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
       children: [
         Text(
           title,
-          maxLines: 2, // Allows long text to wrap instead of shrink
+          maxLines: 3, // Allows long text to wrap instead of shrink
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.manrope(
-            fontSize: 10,
-            height: 1.2, // Tighter line spacing for wrapped text
+            fontSize: 11,
+            height: 1.1, // Tighter line spacing for wrapped text
             fontWeight: FontWeight.w600,
             color: const Color.fromRGBO(34, 58, 94, 1),
           ),
