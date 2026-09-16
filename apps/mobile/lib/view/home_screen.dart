@@ -52,6 +52,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================================
+  // SWIPE BETWEEN LOAN SECTIONS
+  // ==========================================================
+
+  void _handleSwipe(DragEndDetails details) {
+    if (details.primaryVelocity == null) return;
+
+    // Swipe right → I Gave Loan
+    if (details.primaryVelocity! > 0) {
+      if (!isGaveLoanSelected) {
+        setState(() {
+          isGaveLoanSelected = true;
+        });
+      }
+    }
+
+    // Swipe left → I Took Loan
+    else if (details.primaryVelocity! < 0) {
+      if (isGaveLoanSelected) {
+        setState(() {
+          isGaveLoanSelected = false;
+        });
+      }
+    }
+  }
+
+  // ==========================================================
   // ADD CUSTOMER / ADD LOAN
   // ==========================================================
 
@@ -93,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {});
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,9 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-
           onPressed: _openAddScreen,
-
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.max,
@@ -155,10 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(14),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               // ==================================================
               // HEADER
@@ -166,7 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               HomeHeader(
                 currentChopdi: currentChopdi,
-
                 onChopdiChanged: (chopdi) {
                   setState(() {
                     currentChopdi = chopdi;
@@ -182,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               LoanToggle(
                 isGaveLoanSelected: isGaveLoanSelected,
-
                 onChanged: (value) {
                   setState(() {
                     isGaveLoanSelected = value;
@@ -193,13 +214,17 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 18),
 
               // ==================================================
-              // CONTENT
+              // CONTENT WITH SWIPE SUPPORT
               // ==================================================
 
               Expanded(
-                child: isGaveLoanSelected
-                    ? _buildGaveLoanContent()
-                    : _buildTookLoanContent(),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragEnd: _handleSwipe,
+                  child: isGaveLoanSelected
+                      ? _buildGaveLoanContent()
+                      : _buildTookLoanContent(),
+                ),
               ),
             ],
           ),
@@ -246,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> {
             .watch(
           fireImmediately: true,
         ),
-
         builder: (context, snapshot) {
           final allCustomers = snapshot.data ?? [];
 
@@ -258,11 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return ListView(
             physics: const BouncingScrollPhysics(),
-
             padding: const EdgeInsets.only(
               bottom: 100,
             ),
-
             children: [
               // ==========================================
               // SUMMARY CARD
@@ -284,9 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.only(
                     top: 40,
                   ),
-
                   alignment: Alignment.center,
-
                   child: _buildEmptyState(context),
                 )
 
@@ -373,15 +393,12 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
       ),
-
       child: Column(
         mainAxisSize: MainAxisSize.min,
-
         children: [
           SizedBox(
             width: 120,
             height: 100,
-
             child: Image.asset(
               'assets/home_screen_book.png',
               fit: BoxFit.contain,
@@ -392,9 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           Text(
             'No customers yet!',
-
             textAlign: TextAlign.center,
-
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
               fontSize: titleFontSize,
@@ -407,9 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             'Start by adding a customer and\n'
                 'keep track of your loans easily',
-
             textAlign: TextAlign.center,
-
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
               fontSize: descriptionFontSize,
@@ -424,7 +437,6 @@ class _HomeScreenState extends State<HomeScreen> {
             constraints: BoxConstraints(
               maxWidth: width * 0.65,
             ),
-
             child: Image.asset(
               'assets/line_home.png',
               height: 105,
