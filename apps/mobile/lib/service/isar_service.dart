@@ -220,14 +220,22 @@ class IsarService {
   }
 
   static Future<Customer?> getCustomerByPhoneAndChopdi(
-    String phone,
-    int chopdiId,
-  ) async {
+      String phone,
+      int chopdiId,
+      ) async {
+    final cleanPhone = phone.trim();
+
+    if (cleanPhone.isEmpty) {
+      return null;
+    }
+
     return await isar.customers
         .filter()
-        .phoneEqualTo(phone)
+        .phoneEqualTo(cleanPhone)
         .and()
         .chopdiIdEqualTo(chopdiId)
+        .and()
+        .deletedAtIsNull()
         .findFirst();
   }
 

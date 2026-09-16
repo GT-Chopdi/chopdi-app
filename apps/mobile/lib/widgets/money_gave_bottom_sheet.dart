@@ -11,6 +11,8 @@ import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/repository/repositories.dart';
+
 class MoneyGaveBottomSheet extends StatefulWidget {
   final Customer customer;
   final VoidCallback onSaved;
@@ -1232,9 +1234,7 @@ class _MoneyGaveBottomSheetState
     // AMOUNT VALIDATION
     // ==========================================================
 
-    if (amountController.text
-        .trim()
-        .isEmpty) {
+    if (amountController.text.trim().isEmpty) {
       setState(() {
         _amountError = true;
       });
@@ -1245,13 +1245,11 @@ class _MoneyGaveBottomSheetState
       return;
     }
 
-    final amount =
-    double.tryParse(
+    final amount = double.tryParse(
       amountController.text.trim(),
     );
 
-    if (amount == null ||
-        amount <= 0) {
+    if (amount == null || amount <= 0) {
       _showError(
         "Please enter a valid amount",
       );
@@ -1263,16 +1261,12 @@ class _MoneyGaveBottomSheetState
     // INTEREST RATE REQUIRED VALIDATION
     // ==========================================================
 
-    if (interestController.text
-        .trim()
-        .isEmpty) {
+    if (interestController.text.trim().isEmpty) {
       setState(() {
-        _interestRateError =
-        true;
+        _interestRateError = true;
       });
 
-      _interestFocusNode
-          .requestFocus();
+      _interestFocusNode.requestFocus();
 
       _scrollToField(
         _interestKey,
@@ -1285,21 +1279,16 @@ class _MoneyGaveBottomSheetState
     // INTEREST RATE NUMBER VALIDATION
     // ==========================================================
 
-    final rate =
-    double.tryParse(
-      interestController.text
-          .trim(),
+    final rate = double.tryParse(
+      interestController.text.trim(),
     );
 
-    if (rate == null ||
-        rate < 0) {
+    if (rate == null || rate < 0) {
       setState(() {
-        _interestRateError =
-        true;
+        _interestRateError = true;
       });
 
-      _interestFocusNode
-          .requestFocus();
+      _interestFocusNode.requestFocus();
 
       _scrollToField(
         _interestKey,
@@ -1310,6 +1299,64 @@ class _MoneyGaveBottomSheetState
 
     try {
       // ========================================================
+      // GET CURRENT ACTIVE CUSTOMER
+      // ========================================================
+      //
+      // Important:
+      // widget.customer may contain the OLD deleted customer.
+      // Find the current active record using the phone number.
+      //
+      // ========================================================
+// GET CURRENT CUSTOMER BY ID
+// ========================================================
+//
+// DO NOT use phone number here.
+//
+// Phone number is optional, so a customer can have:
+// phone = ""
+//
+// The Isar customer ID is the correct local identity.
+// If the customer was deleted, deletedAt will be non-null.
+//
+
+      debugPrint('========== CUSTOMER DEBUG ==========');
+      debugPrint('Widget customer ID: ${widget.customer.id}');
+      debugPrint('Widget customer UUID: ${widget.customer.uuid}');
+      debugPrint('Widget customer name: ${widget.customer.name}');
+      debugPrint('Widget customer phone: "${widget.customer.phone}"');
+      debugPrint('Widget deletedAt: ${widget.customer.deletedAt}');
+
+      final activeCustomer =
+      await IsarService.isar.customers.get(
+        widget.customer.id,
+      );
+
+      debugPrint('========== ACTIVE CUSTOMER DEBUG ==========');
+
+      if (activeCustomer != null) {
+        debugPrint('Active customer ID: ${activeCustomer.id}');
+        debugPrint('Active customer UUID: ${activeCustomer.uuid}');
+        debugPrint('Active customer name: ${activeCustomer.name}');
+        debugPrint('Active customer phone: "${activeCustomer.phone}"');
+        debugPrint(
+          'Active customer deletedAt: ${activeCustomer.deletedAt}',
+        );
+      } else {
+        debugPrint('Active customer: NULL');
+      }
+
+// Customer doesn't exist OR was soft deleted.
+      if (activeCustomer == null ||
+          activeCustomer.deletedAt != null) {
+        if (!mounted) return;
+
+        _showError(
+          'This customer is no longer available. Please reopen the customer and try again.',
+        );
+
+        return;
+      }
+      // ========================================================
       // CALCULATE INTEREST
       // ========================================================
 
@@ -1318,52 +1365,43 @@ class _MoneyGaveBottomSheetState
         principal: amount,
         rate: rate,
         startDate: selectedDate,
-        interestType:
-        interestType,
-        frequency:
-        interestFrequency,
+        interestType: interestType,
+        frequency: interestFrequency,
       );
 
       // ========================================================
       // CREATE TRANSACTION
       // ========================================================
+      //
+      // IMPORTANT:
+      // Use activeCustomer.id, NOT widget.customer.id.
+      //
 
-      final tx =
-      Transaction()
-        ..customerId =
-            widget.customer.id
-        ..amountPaise =
-        Money.toPaise(
+      final tx = Transaction()
+        ..customerId = activeCustomer.id
+        ..amountPaise = Money.toPaise(
           amount,
         )
-        ..interest =
-            calculatedInterest
+        ..interest = calculatedInterest
         ..interestRateBp =
-        Money
-            .rateToBasisPoints(
+        Money.rateToBasisPoints(
           rate,
         )
-        ..date =
-            selectedDate
-        ..type =
-            TransactionType.gave
+        ..date = selectedDate
+        ..type = TransactionType.gave
         ..description =
-        descriptionController
-            .text
-            .trim()
-        ..paymentMode =
-            paymentMode
-        ..interestType =
-            interestType
-        ..interestFrequency =
-            interestFrequency;
+        descriptionController.text.trim()
+        ..paymentMode = paymentMode
+        ..interestType = interestType
+        ..interestFrequency = interestFrequency;
 
       // ========================================================
       // SAVE TRANSACTION
       // ========================================================
 
-      await TransactionService
-          .addTransaction(tx);
+      await TransactionService.addTransaction(
+        tx,
+      );
 
       // ========================================================
       // SYNC NOTIFICATIONS
@@ -1372,8 +1410,7 @@ class _MoneyGaveBottomSheetState
       await LocalNotificationService
           .instance
           .syncNotifications(
-        database:
-        IsarService.isar,
+        database: IsarService.isar,
       );
 
       // ========================================================
@@ -1381,12 +1418,10 @@ class _MoneyGaveBottomSheetState
       // ========================================================
 
       final localNotificationService =
-          LocalNotificationService
-              .instance;
+          LocalNotificationService.instance;
 
       final prefs =
-      await SharedPreferences
-          .getInstance();
+      await SharedPreferences.getInstance();
 
       final paymentReminderEnabled =
           prefs.getBool(
@@ -1403,16 +1438,12 @@ class _MoneyGaveBottomSheetState
 
         await localNotificationService
             .scheduleCustomerPaymentReminder(
-          customer:
-          widget.customer,
-          loanDate:
-          selectedDate,
+          customer: activeCustomer,
+          loanDate: selectedDate,
           interestFrequency:
           interestFrequency,
-          reminderType:
-          reminderType,
-          amount:
-          amount,
+          reminderType: reminderType,
+          amount: amount,
         );
       }
 
@@ -1420,8 +1451,7 @@ class _MoneyGaveBottomSheetState
       // INTEREST NOTIFICATION
       // ========================================================
 
-      if (calculatedInterest >
-          0) {
+      if (calculatedInterest > 0) {
         final notificationService =
         NotificationService(
           IsarService.isar,
@@ -1429,14 +1459,10 @@ class _MoneyGaveBottomSheetState
 
         await notificationService
             .createInterestNotification(
-          chopdiId:
-          widget.customer.chopdiId,
-          customerName:
-          widget.customer.name,
-          interestAmount:
-          calculatedInterest,
-          customerId:
-          widget.customer.id,
+          chopdiId: activeCustomer.chopdiId,
+          customerName: activeCustomer.name,
+          interestAmount: calculatedInterest,
+          customerId: activeCustomer.id,
         );
       }
 
@@ -1447,8 +1473,7 @@ class _MoneyGaveBottomSheetState
       widget.onSaved();
 
       if (mounted) {
-        FocusScope.of(context)
-            .unfocus();
+        FocusScope.of(context).unfocus();
 
         Navigator.pop(
           context,
@@ -1470,11 +1495,8 @@ class _MoneyGaveBottomSheetState
         context,
       ).showSnackBar(
         SnackBar(
-          content:
-          Text(message),
-          behavior:
-          SnackBarBehavior
-              .floating,
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }

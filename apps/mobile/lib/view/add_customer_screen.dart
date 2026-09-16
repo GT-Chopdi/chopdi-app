@@ -407,9 +407,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                       if (!mounted) return;
 
-                      if (result != null) {
+
                         Navigator.pop(context, result);
-                      }
+
                     },
                   ),
 

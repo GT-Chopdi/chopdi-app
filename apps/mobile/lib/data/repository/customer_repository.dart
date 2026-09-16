@@ -90,7 +90,25 @@ class CustomerRepository {
   Future<Customer?> findByUuid(String uuid) {
     return _isar.customers.filter().uuidEqualTo(uuid).findFirst();
   }
+  Future<Customer?> findActiveByPhoneAndChopdi(
+      String phone,
+      int chopdiId,
+      ) {
+    final cleanPhone = phone.trim();
 
+    if (cleanPhone.isEmpty) {
+      return Future.value(null);
+    }
+
+    return _isar.customers
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
+        .and()
+        .deletedAtIsNull()
+        .findFirst();
+  }
   // ============================================================
   // FIND ACTIVE CUSTOMER BY PHONE
   // ============================================================

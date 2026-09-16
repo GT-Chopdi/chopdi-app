@@ -259,7 +259,12 @@ class _CustomerDetailsScreenState
                 color: ChopdiColors.navy,
               ),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => const MainScreen(initialIndex: 0),
+                  ),
+                      (route) => false,
+                );
               },
             ),
 

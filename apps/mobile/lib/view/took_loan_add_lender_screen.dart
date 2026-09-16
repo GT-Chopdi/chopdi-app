@@ -162,11 +162,46 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
   }
 
   Future<void> selectContact(Contact contact) async {
-    if (contact.phones.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'This contact does not have a phone number',
+    // ============================================================
+    // CONTACT NAME
+    // ============================================================
+
+    final contactName =
+    contact.displayName?.trim().isNotEmpty == true
+        ? contact.displayName!.trim()
+        : 'Unknown';
+
+    // ============================================================
+    // PHONE NUMBER IS OPTIONAL
+    // ============================================================
+    //
+    // If contact has no phone number:
+    // - Do NOT show error
+    // - Do NOT block
+    // - Open Add Lender form
+    // - Pass empty phone
+    //
+
+    final phoneNumber = contact.phones.isNotEmpty
+        ? normalizePhoneNumber(
+      contact.phones.first.number,
+    )
+        : '';
+
+    // ============================================================
+    // NO PHONE NUMBER
+    // ============================================================
+
+    if (phoneNumber.isEmpty) {
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TookLoanCustomerDetailAdd(
+            contactName: contactName,
+            contactPhone: '',
+            chopdiId: widget.chopdiId,
           ),
         ),
       );
@@ -174,36 +209,40 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       return;
     }
 
-    final phoneNumber =
-        normalizePhoneNumber(contact.phones.first.number);
+    // ============================================================
+    // PHONE NUMBER EXISTS
+    // ============================================================
 
-    final contactName =
-        contact.displayName ?? 'Unknown';
-
-    // // Check existing customer
     final existingCustomer =
-        await IsarService.getCustomerByPhoneAndChopdi(
+    await IsarService.getCustomerByPhoneAndChopdi(
       phoneNumber,
       widget.chopdiId,
     );
 
     if (!mounted) return;
 
-    // Existing customer
+    // ============================================================
+    // EXISTING CUSTOMER
+    // ============================================================
+
     if (existingCustomer != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => TookLoanCustomerDetailsScreen(
-            customer: existingCustomer,
-          ),
+          builder: (_) =>
+              TookLoanCustomerDetailsScreen(
+                customer: existingCustomer,
+              ),
         ),
       );
 
       return;
     }
 
-    // New customer
+    // ============================================================
+    // NEW CUSTOMER
+    // ============================================================
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -215,7 +254,6 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       ),
     );
   }
-
   void _scrollToLetter(String letter) {
     if (filteredContacts.isEmpty) {
       return;
