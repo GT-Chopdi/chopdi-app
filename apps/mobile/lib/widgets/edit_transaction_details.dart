@@ -115,7 +115,7 @@ class _EditTransactionBottomSheetState
 
     final sheetHeight = keyboardHeight > 0
         ? availableHeight
-        : screenHeight * 0.90;
+        : screenHeight * 0.65;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),

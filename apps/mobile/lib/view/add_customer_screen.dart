@@ -10,6 +10,7 @@ import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
+import 'main_screen.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final int chopdiId;
@@ -394,8 +395,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   // ADD NEW CUSTOMER
                   // ------------------------------------------------
                   AddNewCustomerCard(
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => AddNewCustomerScreen(
@@ -403,6 +404,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           ),
                         ),
                       );
+
+                      if (!mounted) return;
+
+
+                        Navigator.pop(context, result);
+
                     },
                   ),
 

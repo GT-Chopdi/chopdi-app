@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
@@ -17,7 +18,6 @@ import 'package:mychopdi/widgets/transaction_table.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
-
   final Customer customer;
 
   const CustomerDetailsScreen({
@@ -26,39 +26,45 @@ class CustomerDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State createState() => _CustomerDetailsScreenState();
+  State<CustomerDetailsScreen> createState() =>
+      _CustomerDetailsScreenState();
 }
 
 class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
-
-  int selectedTab = 0;
-  int bottomIndex = 1; 
   List<Transaction> transactions = [];
+
   late Customer customer;
 
-  Future<void> loadCustomer() async {
-    final updatedCustomer =
-        await IsarService.isar.customers.get(widget.customer.id);
+  // ============================================================
+  // CUSTOMER
+  // ============================================================
 
-    if (updatedCustomer != null) {
+  Future<void> loadCustomer() async {
+    final updatedCustomer = await IsarService.isar.customers.get(
+      widget.customer.id,
+    );
+
+    if (updatedCustomer != null && mounted) {
       setState(() {
         customer = updatedCustomer;
       });
     }
   }
 
+  // ============================================================
+  // TRANSACTIONS
+  // ============================================================
+
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()
         .customerIdEqualTo(widget.customer.id)
-        // Deleted entries are voided rather than removed so the deletion can
-        // reach other devices; they must not appear here.
         .voidedAtIsNull()
         .findAll();
 
     // Newest transaction first
     loadedTransactions.sort(
-      (a, b) => b.date.compareTo(a.date),
+          (a, b) => b.date.compareTo(a.date),
     );
 
     if (!mounted) return;
@@ -68,68 +74,88 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     });
   }
 
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
+
     customer = widget.customer;
 
     loadCustomer();
     loadTransactions();
   }
 
+  // ============================================================
+  // CHECK WHETHER CUSTOMER HAS EVER TAKEN MONEY
+  // ============================================================
+
+  bool get hasLoanTransaction {
+    return transactions.any(
+          (tx) => tx.type == TransactionType.gave,
+    );
+  }
+
+  // ============================================================
+  // TOTAL GIVEN
+  // ============================================================
+
   double get totalGiven {
     return transactions
         .where((e) => e.type == TransactionType.gave)
-        .fold(0.0, (sum, e) => sum + e.amount);
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
   }
+
+  // ============================================================
+  // TOTAL RECEIVED
+  // ============================================================
 
   double get totalReceived {
     return transactions
         .where((e) => e.type == TransactionType.received)
-        .fold(0.0, (sum, e) => sum + e.amount);
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
   }
 
-
-  // double get totalInterest {
-  //   return transactions
-  //       .where((e) => e.type == TransactionType.gave)
-  //       .fold(
-  //         0.0,
-  //         (sum, tx) =>
-  //             sum +
-  //             InterestCalculator.calculate(
-  //               principal: tx.amount,
-  //               rate: tx.interestRate,
-  //               startDate: tx.date,
-  //               interestType: tx.interestType,
-  //               frequency: tx.interestFrequency,
-  //             ),
-  //       );
-  // }
+  // ============================================================
+  // INTEREST
+  // ============================================================
 
   double get totalInterest {
-  return transactions
-      .where(
-        (e) => e.type == TransactionType.gave,
-      )
-      .fold(
-        0.0,
-        (sum, tx) =>
-            sum +
-            InterestCalculator.calculate(
-              principal: tx.amount,
-              rate: tx.interestRate,
-              startDate: tx.date,
-              interestType: tx.interestType,
-              frequency: tx.interestFrequency,
-            ),
-      );
-}
+    return transactions
+        .where((e) => e.type == TransactionType.gave)
+        .fold(
+      0.0,
+          (sum, tx) =>
+      sum +
+          InterestCalculator.calculate(
+            principal: tx.amount,
+            rate: tx.interestRate,
+            startDate: tx.date,
+            interestType: tx.interestType,
+            frequency: tx.interestFrequency,
+          ),
+    );
+  }
+
+  // ============================================================
+  // OUTSTANDING
+  // ============================================================
 
   double get outstanding {
     return totalGiven + totalInterest - totalReceived;
   }
+
+  // ============================================================
+  // INTEREST CALCULATION
+  // ============================================================
 
   double calculateInterest(Transaction tx) {
     final days = DateTime.now().difference(tx.date).inDays;
@@ -146,33 +172,57 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       return tx.amount * tx.interestRate * time / 100;
     } else {
       return tx.amount *
-              (pow(1 + tx.interestRate / 100, time) - 1);
+          (pow(
+            1 + tx.interestRate / 100,
+            time,
+          ) -
+              1);
     }
   }
-  
+
+  // ============================================================
+  // LAST RECEIVED TRANSACTION
+  // ============================================================
+
   Transaction? get lastReceivedTransaction {
     final received = transactions
-        .where((e) => e.type == TransactionType.received)
+        .where(
+          (e) => e.type == TransactionType.received,
+    )
         .toList();
 
     if (received.isEmpty) return null;
 
-    received.sort((a, b) => b.date.compareTo(a.date));
+    received.sort(
+          (a, b) => b.date.compareTo(a.date),
+    );
 
     return received.first;
   }
 
+  // ============================================================
+  // FIRST LOAN TRANSACTION
+  // ============================================================
+
   Transaction? get firstLoanTransaction {
     final gave = transactions
-        .where((e) => e.type == TransactionType.gave)
+        .where(
+          (e) => e.type == TransactionType.gave,
+    )
         .toList();
 
     if (gave.isEmpty) return null;
 
-    gave.sort((a, b) => a.date.compareTo(b.date));
+    gave.sort(
+          (a, b) => a.date.compareTo(b.date),
+    );
 
     return gave.first;
   }
+
+  // ============================================================
+  // LOAN DAYS
+  // ============================================================
 
   int get loanDays {
     if (firstLoanTransaction == null) return 0;
@@ -181,6 +231,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         .difference(firstLoanTransaction!.date)
         .inDays;
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +245,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
+
+      // ==========================================================
+      // APP BAR
+      // ==========================================================
 
       appBar: AppBar(
         backgroundColor: ChopdiColors.cream,
@@ -213,7 +271,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 );
               },
             ),
+
             const Spacer(),
+
             IconButton(
               icon: const Icon(
                 Icons.more_vert,
@@ -227,12 +287,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ),
       ),
 
+      // ==========================================================
+      // BOTTOM ACTION BUTTONS
+      // ==========================================================
+
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(16),
           color: AppColors.background,
           child: Row(
             children: [
+              // ====================================================
+              // YOU GAVE
+              // ====================================================
+
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
@@ -242,18 +310,18 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       backgroundColor: Colors.transparent,
                       builder: (context) {
                         return FractionallySizedBox(
-                          heightFactor: 0.82, // Change this value
+                          heightFactor: 0.82,
                           child: MoneyGaveBottomSheet(
-                            customer:widget.customer,
-                            onSaved:loadTransactions,
-                            isEdit:false,
+                            customer: widget.customer,
+                            onSaved: loadTransactions,
+                            isEdit: false,
                           ),
                         );
                       },
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFC74C4C),
+                    backgroundColor: const Color(0xFFC74C4C),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     minimumSize: const Size.fromHeight(54),
@@ -271,62 +339,79 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 ),
               ),
 
-              const SizedBox(width: 14),
+              // ====================================================
+              // YOU GOT
+              //
+              // Show ONLY after at least one GAVE transaction.
+              // ====================================================
 
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return FractionallySizedBox(
-                          heightFactor: 0.82, // Change this value
-                          child: MoneyReceiveBottomSheet(
-                            customer: widget.customer,
-                            onSaved: loadTransactions,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF00901B),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (hasLoanTransaction) ...[
+                const SizedBox(width: 14),
+
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) {
+                          return FractionallySizedBox(
+                            heightFactor: 0.82,
+                            child: MoneyReceiveBottomSheet(
+                              customer: widget.customer,
+                              onSaved: loadTransactions,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00901B),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    "You Got ₹",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    child: const Text(
+                      "You Got ₹",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
       ),
 
+      // ==========================================================
+      // BODY
+      // ==========================================================
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ======================================================
+            // CUSTOMER HEADER
+            // ======================================================
+
             Row(
               children: [
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: ChopdiColors.lightGray,
                   child: Text(
-                    customer.name[0],
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : "?",
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -337,13 +422,14 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                 const SizedBox(width: 14),
 
-                Column(
+                Expanded(
+                  child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    CrossAxisAlignment.start,
                     children: [
-
                       Text(
                         customer.name,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 22,
@@ -355,54 +441,73 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
                       Row(
                         children: [
-                          Text(
-                            customer.phone,
-                            style: const TextStyle(
-                              color: Colors.black54,
+                          Expanded(
+                            child: Text(
+                              customer.phone,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.black54,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 4),      
+                          const SizedBox(width: 4),
                         ],
                       ),
                     ],
                   ),
+                ),
 
-                  const Spacer(),
+                const SizedBox(width: 8),
 
-                  GestureDetector(
-                    onTap: () {
-                      PhoneCallService.makePhoneCall(
-                        context,
-                        customer.phone,
-                      );
-                    },
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Color.fromRGBO(141, 208, 113, 0.34),
-                      child: Image.asset('assets/call_logo.png')
+                GestureDetector(
+                  onTap: () {
+                    PhoneCallService.makePhoneCall(
+                      context,
+                      customer.phone,
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor:
+                    const Color.fromRGBO(
+                      141,
+                      208,
+                      113,
+                      0.34,
+                    ),
+                    child: Image.asset(
+                      'assets/call_logo.png',
                     ),
                   ),
+                ),
               ],
             ),
 
             const SizedBox(height: 22),
 
+            // ======================================================
+            // SUMMARY
+            // ======================================================
+
             Container(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02,),
-
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.05,
+                vertical: height * 0.02,
+              ),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(255, 248, 240, 1),
-                borderRadius:
-                    BorderRadius.circular(16),
-
+                color: const Color.fromRGBO(
+                  255,
+                  248,
+                  240,
+                  1,
+                ),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Color(0xFFAAB9CF),
+                  color: const Color(0xFFAAB9CF),
                 ),
               ),
-
               child: Row(
                 children: [
-
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
@@ -423,7 +528,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       'assets/total_interest.png',
                       "Total Interest",
                       "₹${totalInterest.toStringAsFixed(0)}",
-                      Color(0xFF00901B),
+                      const Color(0xFF00901B),
                     ),
                   ),
 
@@ -438,7 +543,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       'assets/outstanding.png',
                       "Outstanding",
                       "₹${outstanding.toStringAsFixed(0)}",
-                      Color(0xFFC74C4C),
+                      const Color(0xFFC74C4C),
                     ),
                   ),
                 ],
@@ -447,25 +552,40 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
             const SizedBox(height: 20),
 
-            const SizedBox(height: 12),
+            // ======================================================
+            // TRANSACTION TABLE
+            //
+            // NO I GAVE / I GOT TABS HERE.
+            // Show all transactions.
+            // ======================================================
 
-            TransactionTable(transactions:transactions, onChanged: loadTransactions, customerId: customer.id,),
+            TransactionTable(
+              transactions: transactions,
+              onChanged: loadTransactions,
+              customerId: customer.id,
+            ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
+  // ============================================================
+  // INFO ITEM
+  // ============================================================
   Widget _infoItem(
-    String imagePath,
-    String title,
-    String value,
-    Color valueColor,
-  ) {
+      String imagePath,
+      String title,
+      String value,
+      Color valueColor,
+      ) {
     return SizedBox(
-      height: 90,
+      height: 75,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
             radius: 16,
@@ -479,7 +599,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           ),
 
           SizedBox(
-            height: 30,
+            height: 24,
             child: Center(
               child: Text(
                 title,
@@ -490,19 +610,25 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
-                  height: 1.2,
+                  height: 1.1,
                 ),
               ),
             ),
           ),
 
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: GoogleFonts.manrope(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                ),
+              ),
             ),
           ),
         ],
@@ -510,10 +636,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     );
   }
 
-  void showCustomerOptionsBottomSheet(BuildContext context) {
+  // ============================================================
+  // CUSTOMER OPTIONS
+  // ============================================================
+
+  void showCustomerOptionsBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Color.fromRGBO(253, 237, 217, 1),
+      backgroundColor:
+      const Color.fromRGBO(253, 237, 217, 1),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -522,56 +655,75 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       ),
       builder: (_) {
         return CustomerOptionsBottomSheet(
-
           onEdit: () {
-            Navigator.pop(context); // Close first bottom sheet
+            Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 200), () {
-              showEditCustomerBottomSheet(context);
-            });
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                showEditCustomerBottomSheet(context);
+              },
+            );
           },
 
           onSummary: () {
-            Navigator.pop(context); // Close first bottom sheet
+            Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 200), () {
-              return showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => AccountSummaryBottomSheet(
-                  totalGiven: totalGiven,
-                  totalOutstanding: outstanding,
-                  totalInterest: totalInterest,
-                  lastPayment: lastReceivedTransaction,
-                  firstLoan: firstLoanTransaction,
-                ),
-              );
-            });
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                return showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) =>
+                      AccountSummaryBottomSheet(
+                        totalGiven: totalGiven,
+                        totalOutstanding: outstanding,
+                        totalInterest: totalInterest,
+                        lastPayment:
+                        lastReceivedTransaction,
+                        firstLoan:
+                        firstLoanTransaction,
+                      ),
+                );
+              },
+            );
           },
 
           onExport: () {
             Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 250), () {
-              showExportPdfBottomSheet(context);
-            });
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showExportPdfBottomSheet(context);
+              },
+            );
           },
 
-          onDelete: () async{
+          onDelete: () async {
             Navigator.pop(context);
 
-            Future.delayed(const Duration(milliseconds: 250), () {
-              showDeleteCustomerBottomSheet(context);
-            });
-            
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showDeleteCustomerBottomSheet(context);
+              },
+            );
           },
         );
       },
     );
   }
 
-  void showEditCustomerBottomSheet(BuildContext context) {
+  // ============================================================
+  // EDIT CUSTOMER
+  // ============================================================
+
+  void showEditCustomerBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -587,14 +739,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           onSaved: () async {
             await loadCustomer();
             await loadTransactions();
-            setState(() {});
+
+            if (mounted) {
+              setState(() {});
+            }
           },
         );
       },
     );
   }
 
-  void showExportPdfBottomSheet(BuildContext context) {
+  // ============================================================
+  // EXPORT PDF
+  // ============================================================
+
+  void showExportPdfBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -606,7 +767,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     );
   }
 
-  void showDeleteCustomerBottomSheet(BuildContext context) {
+  // ============================================================
+  // DELETE CUSTOMER
+  // ============================================================
+
+  void showDeleteCustomerBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -614,34 +781,33 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       builder: (_) {
         return DeleteCustomerBottomSheet(
           customerName: widget.customer.name,
-          onDelete: () async{
-
-            // Navigator.pop(context);
-
-            // Customer and entries are voided together in one transaction,
-            // each queued for sync. Deleting them separately would leave a
-            // window where a crash orphans entries against a deleted parent.
-            
-            await Repositories.customers.softDeleteWithEntries(widget.customer);
+          onDelete: () async {
+            await Repositories.customers
+                .softDeleteWithEntries(
+              widget.customer,
+            );
 
             if (mounted) {
-              // Navigator.pop(context); // Close delete sheet
-              // Navigator.pop(context); // Back to home
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (_) => const MainScreen(),
                 ),
-                (route) => false,
+                    (route) => false,
               );
             }
-
           },
         );
       },
     );
   }
- 
-  void showAllNotesBottomSheet(BuildContext context) {
+
+  // ============================================================
+  // ALL NOTES
+  // ============================================================
+
+  void showAllNotesBottomSheet(
+      BuildContext context,
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
