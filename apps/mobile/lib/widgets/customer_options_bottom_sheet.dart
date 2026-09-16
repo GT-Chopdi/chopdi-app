@@ -471,19 +471,7 @@
                       ),
                     ),
                   ),
-  
-                  const SizedBox(height: 10),
-  
-                  Center(
-                    child: Text(
-                      "Edit name, phone or loan details",
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-  
+
                   const SizedBox(height: 28),
   
                   Text(
