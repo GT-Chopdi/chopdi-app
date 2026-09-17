@@ -243,7 +243,19 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     final width = size.width;
     final height = size.height;
 
-    return Scaffold(
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const MainScreen(),
+            ),
+                (route) => false,
+          );
+        },
+        child: Scaffold(
       backgroundColor: ChopdiColors.cream,
 
       // ==========================================================
@@ -569,6 +581,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           ],
         ),
       ),
+        ),
     );
   }
 

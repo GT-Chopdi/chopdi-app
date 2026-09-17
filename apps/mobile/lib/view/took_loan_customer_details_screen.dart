@@ -327,7 +327,7 @@ class _CustomerDetailsScreenState
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC74C4C),
+                    backgroundColor: const Color(0xFF00901B),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     minimumSize: const Size.fromHeight(54),
@@ -336,7 +336,7 @@ class _CustomerDetailsScreenState
                     ),
                   ),
                   child: const Text(
-                    "You Took ₹",
+                    "You Gave ₹",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -374,7 +374,7 @@ class _CustomerDetailsScreenState
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00901B),
+                      backgroundColor: const Color(0xFFC74C4C),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       minimumSize: const Size.fromHeight(54),
@@ -383,7 +383,7 @@ class _CustomerDetailsScreenState
                       ),
                     ),
                     child: const Text(
-                      "You Paid ₹",
+                      "You Got ₹",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
