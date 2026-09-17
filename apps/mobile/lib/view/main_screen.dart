@@ -20,17 +20,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late int selectedIndex;
 
-  // final List<Widget> pages = [
-  //   HomeScreen(),
-  //   MyChopdiScreen(),
-  // ];
   late final List<Widget> pages;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   selectedIndex = widget.initialIndex;
-  // }
   @override
   void initState() {
     super.initState();

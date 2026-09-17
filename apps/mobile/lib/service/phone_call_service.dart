@@ -90,34 +90,6 @@ class PhoneCallService {
   // OPEN DIALER
   // ============================================================
 
-  // static Future<void> _openDialer(
-  //   BuildContext context,
-  //   String phoneNumber,
-  // ) async {
-  //   final Uri phoneUri = Uri(
-  //     scheme: 'tel',
-  //     path: phoneNumber,
-  //   );
-
-  //   try {
-  //     if (await canLaunchUrl(phoneUri)) {
-  //       await launchUrl(
-  //         phoneUri,
-  //         mode: LaunchMode.externalApplication,
-  //       );
-  //     } else {
-  //       if (!context.mounted) return;
-
-  //       await _showUnableToOpenDialerDialog(context);
-  //     }
-  //   } catch (e) {
-  //     debugPrint('Unable to open phone dialer: $e');
-
-  //     if (!context.mounted) return;
-
-  //     await _showUnableToOpenDialerDialog(context);
-  //   }
-  // }
   static Future<void> _openDialer(
     BuildContext context,
     String phoneNumber,
