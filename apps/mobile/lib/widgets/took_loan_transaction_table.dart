@@ -129,6 +129,7 @@ class TookLoanTransactionTable extends StatelessWidget {
     double runningBalance = 0;
 
     for (final tx in balanceTransactions) {
+      if (tx.voidedAt != null) continue;
       if (tx.type == TransactionType.took) {
         runningBalance += tx.amount;
       } else if (tx.type == TransactionType.paid) {
