@@ -34,7 +34,6 @@ class _EditTransactionBottomSheetState
   String? selectedInterestFrequency;
   String? selectedPaymentMode;
 
-  // Interest rate validation
   bool _interestRateError = false;
 
   final List<String> interestTypes = [
@@ -75,22 +74,18 @@ class _EditTransactionBottomSheetState
 
     selectedDate = transaction.date;
 
-    selectedInterestType =
-    transaction.interestType.isEmpty
+    selectedInterestType = transaction.interestType.isEmpty
         ? null
         : transaction.interestType;
 
-    selectedInterestFrequency =
-    transaction.interestFrequency.isEmpty
+    selectedInterestFrequency = transaction.interestFrequency.isEmpty
         ? null
         : transaction.interestFrequency;
 
-    selectedPaymentMode =
-    transaction.paymentMode.isEmpty
+    selectedPaymentMode = transaction.paymentMode.isEmpty
         ? null
         : transaction.paymentMode;
 
-    // Listen for interest rate changes.
     interestRateController.addListener(() {
       if (!mounted) return;
 
@@ -114,6 +109,18 @@ class _EditTransactionBottomSheetState
 
   @override
   Widget build(BuildContext context) {
+    /*
+     * You Got does not support interest functionality.
+     *
+     * Therefore:
+     * - Interest Rate is hidden
+     * - Interest Type is hidden
+     * - Interest Frequency is hidden
+     * - Interest validation/calculation is skipped
+     */
+    final bool isYouGot =
+        widget.transaction.type == TransactionType.received;
+
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return AnimatedPadding(
@@ -211,7 +218,7 @@ class _EditTransactionBottomSheetState
                       const SizedBox(height: 7),
 
                       Text(
-                        'Edit Transaction Details',
+                        'Edit Transaction',
                         style: GoogleFonts.manrope(
                           color: const Color(0xFF233E67),
                           fontSize: 14,
@@ -253,16 +260,67 @@ class _EditTransactionBottomSheetState
                       const SizedBox(height: 9),
 
                       // ====================================================
-                      // INTEREST RATE
+                      // INTEREST FIELDS
+                      //
+                      // You Got does NOT support interest.
+                      // Therefore these fields are shown only for You Gave.
                       // ====================================================
 
-                      _buildLabel('Interest Rate (%)'),
+                      if (!isYouGot) ...[
+                        // --------------------------------------------------
+                        // INTEREST RATE
+                        // --------------------------------------------------
 
-                      const SizedBox(height: 5),
+                        _buildLabel('Interest Rate (%)'),
 
-                      _buildInterestRateField(),
+                        const SizedBox(height: 5),
 
-                      const SizedBox(height: 9),
+                        _buildInterestRateField(),
+
+                        const SizedBox(height: 9),
+
+                        // --------------------------------------------------
+                        // INTEREST TYPE
+                        // --------------------------------------------------
+
+                        _buildLabel('Interest Type'),
+
+                        const SizedBox(height: 5),
+
+                        _buildDropdown(
+                          value: selectedInterestType,
+                          hint: 'Select Interest Type',
+                          items: interestTypes,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedInterestType = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 9),
+
+                        // --------------------------------------------------
+                        // INTEREST FREQUENCY
+                        // --------------------------------------------------
+
+                        _buildLabel('Interest Frequency'),
+
+                        const SizedBox(height: 5),
+
+                        _buildDropdown(
+                          value: selectedInterestFrequency,
+                          hint: 'Select Interest Frequency',
+                          items: interestFrequencies,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedInterestFrequency = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 9),
+                      ],
 
                       // ====================================================
                       // DESCRIPTION
@@ -273,48 +331,6 @@ class _EditTransactionBottomSheetState
                       const SizedBox(height: 5),
 
                       _buildDescriptionField(),
-
-                      const SizedBox(height: 9),
-
-                      // ====================================================
-                      // INTEREST TYPE
-                      // ====================================================
-
-                      _buildLabel('Interest Type'),
-
-                      const SizedBox(height: 5),
-
-                      _buildDropdown(
-                        value: selectedInterestType,
-                        hint: 'Select Interest Type',
-                        items: interestTypes,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedInterestType = value;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 9),
-
-                      // ====================================================
-                      // INTEREST FREQUENCY
-                      // ====================================================
-
-                      _buildLabel('Interest Frequency'),
-
-                      const SizedBox(height: 5),
-
-                      _buildDropdown(
-                        value: selectedInterestFrequency,
-                        hint: 'Select Interest Frequency',
-                        items: interestFrequencies,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedInterestFrequency = value;
-                          });
-                        },
-                      ),
 
                       const SizedBox(height: 9),
 
@@ -793,9 +809,12 @@ class _EditTransactionBottomSheetState
       amountController.text.trim(),
     );
 
-    final interestRate = double.tryParse(
-      interestRateController.text.trim(),
-    );
+    // ============================================================
+    // TRANSACTION TYPE
+    // ============================================================
+
+    final bool isYouGot =
+        widget.transaction.type == TransactionType.received;
 
     // ============================================================
     // AMOUNT VALIDATION
@@ -809,27 +828,42 @@ class _EditTransactionBottomSheetState
     }
 
     // ============================================================
-    // INTEREST RATE REQUIRED VALIDATION
+    // INTEREST RATE
+    //
+    // You Got does not have interest functionality.
+    // Therefore interest rate is only validated for You Gave.
     // ============================================================
 
-    if (interestRateController.text.trim().isEmpty) {
-      setState(() {
-        _interestRateError = true;
-      });
+    double? interestRate;
 
-      return;
-    }
+    if (!isYouGot) {
+      interestRate = double.tryParse(
+        interestRateController.text.trim(),
+      );
 
-    // ============================================================
-    // INTEREST RATE VALIDATION
-    // ============================================================
+      // ----------------------------------------------------------
+      // INTEREST RATE REQUIRED
+      // ----------------------------------------------------------
 
-    if (interestRate == null || interestRate < 0) {
-      setState(() {
-        _interestRateError = true;
-      });
+      if (interestRateController.text.trim().isEmpty) {
+        setState(() {
+          _interestRateError = true;
+        });
 
-      return;
+        return;
+      }
+
+      // ----------------------------------------------------------
+      // INTEREST RATE VALIDATION
+      // ----------------------------------------------------------
+
+      if (interestRate == null || interestRate < 0) {
+        setState(() {
+          _interestRateError = true;
+        });
+
+        return;
+      }
     }
 
     // ============================================================
@@ -841,24 +875,49 @@ class _EditTransactionBottomSheetState
     transaction.amountPaise =
         Money.toPaise(amount);
 
-    transaction.interestRateBp =
-        Money.rateToBasisPoints(
-          interestRate,
-        );
-
     transaction.date = selectedDate;
-
-    transaction.interestType =
-        selectedInterestType ?? '';
-
-    transaction.interestFrequency =
-        selectedInterestFrequency ?? '';
 
     transaction.paymentMode =
         selectedPaymentMode ?? '';
 
     transaction.description =
         descriptionController.text.trim();
+
+    // ============================================================
+    // INTEREST DATA
+    // ============================================================
+
+    if (isYouGot) {
+      /*
+       * You Got does not support interest.
+       *
+       * Clear any old interest values so an old transaction
+       * cannot continue carrying interest data.
+       */
+
+      transaction.interestRateBp = 0;
+
+      transaction.interestType = '';
+
+      transaction.interestFrequency = '';
+
+      transaction.interest = 0;
+    } else {
+      /*
+       * You Gave keeps the existing interest functionality.
+       */
+
+      transaction.interestRateBp =
+          Money.rateToBasisPoints(
+            interestRate!,
+          );
+
+      transaction.interestType =
+          selectedInterestType ?? '';
+
+      transaction.interestFrequency =
+          selectedInterestFrequency ?? '';
+    }
 
     // ============================================================
     // CALCULATE UPDATED INTEREST
@@ -872,8 +931,10 @@ class _EditTransactionBottomSheetState
     final interestFrequency =
         selectedInterestFrequency ?? '';
 
-    if (interestType.isNotEmpty &&
+    if (!isYouGot &&
+        interestType.isNotEmpty &&
         interestFrequency.isNotEmpty &&
+        interestRate != null &&
         interestRate > 0) {
       calculatedInterest =
           InterestCalculator.calculate(
@@ -930,13 +991,17 @@ class _EditTransactionBottomSheetState
     );
 
     final customerName =
-        customer?.name ?? "Customer";
+        customer?.name ?? 'Customer';
 
     // ============================================================
     // CREATE INTEREST UPDATED NOTIFICATION
+    //
+    // Only You Gave can reach this because calculatedInterest
+    // remains 0 for You Got.
     // ============================================================
 
-    if (calculatedInterest > 0 &&
+    if (!isYouGot &&
+        calculatedInterest > 0 &&
         interestFrequency.isNotEmpty) {
       final interestPeriod =
       InterestCalculator.getInterestPeriod(
