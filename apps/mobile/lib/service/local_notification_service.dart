@@ -525,12 +525,11 @@ class LocalNotificationService {
     required String customerName,
     required DateTime dueDate,
     required String reminderType,
+    required TransactionType transactionType,
     double? amount,
   }) async {
     await initialize();
 
-    // IMPORTANT:
-    // Never schedule if master notifications are OFF.
     final bool masterEnabled =
         await areNotificationsEnabled();
 
@@ -581,47 +580,52 @@ class LocalNotificationService {
         break;
     }
 
-    // ==========================================================
-    // DON'T SCHEDULE PAST NOTIFICATIONS
-    // ==========================================================
-
     if (scheduledDate.isBefore(DateTime.now())) {
       debugPrint(
         '[LocalNotification] '
         'Skipping past reminder: $scheduledDate',
       );
-
       return;
     }
 
-    // ==========================================================
-    // MESSAGE
-    // ==========================================================
-
     final String amountText = amount == null
         ? ''
-        : ' Amount due: ₹${amount.toStringAsFixed(2)}.';
+        : ' Amount: ₹${amount.toStringAsFixed(2)}.';
+
+    final bool isTookLoan =
+        transactionType == TransactionType.took;
+
+    final String title =
+        isTookLoan
+            ? 'Loan Repayment Reminder'
+            : 'Payment Reminder';
 
     final String body;
 
     switch (reminderType) {
       case 'oneDayBefore':
-        body =
-            '$customerName has a payment due tomorrow.'
-            '$amountText';
+        body = isTookLoan
+            ? 'You have a loan payment due tomorrow for $customerName.'
+                '$amountText'
+            : '$customerName has a payment due tomorrow.'
+                '$amountText';
         break;
 
       case 'threeDaysBefore':
-        body =
-            '$customerName has a payment due in 3 days.'
-            '$amountText';
+        body = isTookLoan
+            ? 'You have a loan payment due in 3 days for $customerName.'
+                '$amountText'
+            : '$customerName has a payment due in 3 days.'
+                '$amountText';
         break;
 
       case 'dueDate':
       default:
-        body =
-            '$customerName has a payment due today.'
-            '$amountText';
+        body = isTookLoan
+            ? 'Your loan payment to $customerName is due today.'
+                '$amountText'
+            : '$customerName has a payment due today.'
+                '$amountText';
         break;
     }
 
@@ -650,18 +654,21 @@ class LocalNotificationService {
 
     await _plugin.zonedSchedule(
       id: notificationId,
-      title: 'Payment Reminder',
+      title: title,
       body: body,
       scheduledDate: notificationDate,
       notificationDetails: details,
       androidScheduleMode:
           AndroidScheduleMode.inexactAllowWhileIdle,
-      payload: 'payment:$notificationId',
+      payload: isTookLoan
+          ? 'took_payment:$notificationId'
+          : 'payment:$notificationId',
     );
 
     debugPrint(
       '[LocalNotification] '
-      'Payment reminder scheduled: $notificationDate',
+      '${isTookLoan ? 'TOOK' : 'GAVE'} reminder scheduled: '
+      '$notificationDate',
     );
   }
 
@@ -674,6 +681,7 @@ class LocalNotificationService {
     required DateTime loanDate,
     required String interestFrequency,
     required String reminderType,
+    required TransactionType transactionType,
     double? amount,
   }) async {
     final bool masterEnabled =
@@ -684,17 +692,11 @@ class LocalNotificationService {
     }
 
     final int notificationId =
-        paymentReminderNotificationId(
-      customer.id,
-    );
+        paymentReminderNotificationId(customer.id);
 
-    // Remove previous reminder first.
-    await cancelPaymentReminder(
-      notificationId,
-    );
+    await cancelPaymentReminder(notificationId);
 
-    final DateTime dueDate =
-        calculateNextDueDate(
+    final DateTime dueDate = calculateNextDueDate(
       startDate: loanDate,
       frequency: interestFrequency,
     );
@@ -704,12 +706,18 @@ class LocalNotificationService {
       customerName: customer.name,
       dueDate: dueDate,
       reminderType: reminderType,
+      transactionType: transactionType,
       amount: amount,
     );
 
     debugPrint(
       '[LocalNotification] '
       'Customer: ${customer.name}',
+    );
+
+    debugPrint(
+      '[LocalNotification] '
+      'Loan type: $transactionType',
     );
 
     debugPrint(
@@ -981,6 +989,9 @@ class LocalNotificationService {
         loanDate: loan.date,
         interestFrequency: frequency,
         reminderType: reminderType,
+        transactionType: useCustomerOwesYou
+            ? TransactionType.gave
+            : TransactionType.took,
         amount: outstanding,
       );
     }

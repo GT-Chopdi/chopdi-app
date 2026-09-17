@@ -10,7 +10,6 @@ import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
-import 'main_screen.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final int chopdiId;

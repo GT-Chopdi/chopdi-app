@@ -94,18 +94,26 @@ class PhoneCallService {
     BuildContext context,
     String phoneNumber,
   ) async {
+    final cleanedNumber = phoneNumber.replaceAll(
+      RegExp(r'[\s\-()]'),
+      '',
+    );
+
     final Uri phoneUri = Uri(
       scheme: 'tel',
-      path: phoneNumber,
+      path: cleanedNumber,
     );
 
     try {
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(
-          phoneUri,
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
+      // Don't use canLaunchUrl() here.
+      // It can return false on some Android devices even when
+      // the dialer is actually available.
+      final launched = await launchUrl(
+        phoneUri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
         if (!context.mounted) return;
 
         await _showUnableToOpenDialerDialog(context);

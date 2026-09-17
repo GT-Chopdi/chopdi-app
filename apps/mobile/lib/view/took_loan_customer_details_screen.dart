@@ -259,11 +259,20 @@ class _CustomerDetailsScreenState
                 color: ChopdiColors.navy,
               ),
               onPressed: () {
+                // Navigator.of(context).pushAndRemoveUntil(
+                //   MaterialPageRoute(
+                //     builder: (_) => const MainScreen(initialIndex: 1),
+                //   ),
+                //       (route) => false,
+                // );
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
-                    builder: (_) => const MainScreen(initialIndex: 0),
+                    builder: (_) => const MainScreen(
+                      initialIndex: 0,
+                      initialGaveLoanSelected: false,
+                    ),
                   ),
-                      (route) => false,
+                  (route) => false,
                 );
               },
             ),
@@ -789,7 +798,10 @@ class _CustomerDetailsScreenState
             if (mounted) {
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (_) => const MainScreen(),
+                  builder: (_) => const MainScreen(
+                    initialIndex: 0,
+                    initialGaveLoanSelected: false,
+                  ),
                 ),
                     (route) => false,
               );

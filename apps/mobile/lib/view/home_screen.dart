@@ -21,7 +21,11 @@ import 'package:mychopdi/widgets/summary_card.dart';
 import 'customer_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool initialGaveLoanSelected;
+  const HomeScreen({
+    super.key,
+    this.initialGaveLoanSelected = true,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,11 +37,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Chopdi? currentChopdi;
 
   bool isGaveLoan = true;
-  bool isGaveLoanSelected = true;
+  // bool isGaveLoanSelected = true;
+  late bool isGaveLoanSelected;
 
   @override
   void initState() {
     super.initState();
+    isGaveLoanSelected = widget.initialGaveLoanSelected;
     _loadCurrentChopdi();
   }
 

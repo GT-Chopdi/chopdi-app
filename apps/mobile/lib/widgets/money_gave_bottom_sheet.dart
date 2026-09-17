@@ -11,7 +11,6 @@ import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/repository/repositories.dart';
 
 class MoneyGaveBottomSheet extends StatefulWidget {
   final Customer customer;
@@ -1307,17 +1306,17 @@ class _MoneyGaveBottomSheetState
       // Find the current active record using the phone number.
       //
       // ========================================================
-// GET CURRENT CUSTOMER BY ID
-// ========================================================
-//
-// DO NOT use phone number here.
-//
-// Phone number is optional, so a customer can have:
-// phone = ""
-//
-// The Isar customer ID is the correct local identity.
-// If the customer was deleted, deletedAt will be non-null.
-//
+      // GET CURRENT CUSTOMER BY ID
+      // ========================================================
+      //
+      // DO NOT use phone number here.
+      //
+      // Phone number is optional, so a customer can have:
+      // phone = ""
+      //
+      // The Isar customer ID is the correct local identity.
+      // If the customer was deleted, deletedAt will be non-null.
+      //
 
       debugPrint('========== CUSTOMER DEBUG ==========');
       debugPrint('Widget customer ID: ${widget.customer.id}');
@@ -1345,7 +1344,7 @@ class _MoneyGaveBottomSheetState
         debugPrint('Active customer: NULL');
       }
 
-// Customer doesn't exist OR was soft deleted.
+      // Customer doesn't exist OR was soft deleted.
       if (activeCustomer == null ||
           activeCustomer.deletedAt != null) {
         if (!mounted) return;
@@ -1443,6 +1442,7 @@ class _MoneyGaveBottomSheetState
           interestFrequency:
           interestFrequency,
           reminderType: reminderType,
+          transactionType: TransactionType.gave,
           amount: amount,
         );
       }

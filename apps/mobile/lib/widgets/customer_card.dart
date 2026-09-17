@@ -6,6 +6,7 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 
 
 class CustomerCard extends StatelessWidget {
@@ -49,15 +50,38 @@ class CustomerCard extends StatelessWidget {
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
-        double balance = 0;
+        // double balance = 0;
+
+        // for (final tx in transactions) {
+        //   if (tx.type == TransactionType.gave) {
+        //     balance += tx.amount;
+        //   } else {
+        //     balance -= tx.amount;
+        //   }
+        // }
+        double totalGiven = 0;
+        double totalReceived = 0;
+        double totalInterest = 0;
 
         for (final tx in transactions) {
           if (tx.type == TransactionType.gave) {
-            balance += tx.amount;
-          } else {
-            balance -= tx.amount;
+            totalGiven += tx.amount;
+
+            // Calculate current interest exactly like CustomerDetailsScreen
+            // totalInterest += InterestCalculator.calculate(tx);
+            totalInterest += InterestCalculator.calculate(
+              principal: tx.amount,
+              rate: tx.interestRate,
+              startDate: tx.date,
+              interestType: tx.interestType,
+              frequency: tx.interestFrequency,
+            );
+          } else if (tx.type == TransactionType.received) {
+            totalReceived += tx.amount;
           }
         }
+
+        final outstanding = totalGiven + totalInterest - totalReceived;
 
 
         return InkWell(
@@ -133,7 +157,7 @@ class CustomerCard extends StatelessWidget {
                         children: [
 
                           _chip(
-                            "Loan: ₹${balance.toStringAsFixed(0)}",
+                            "Loan: ₹${outstanding.toStringAsFixed(0)}",
                             const Color(0xffEEF3FA),
                           ),
 
@@ -154,26 +178,26 @@ class CustomerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      "₹${balance.toStringAsFixed(0)}",
+                      "₹${outstanding.toStringAsFixed(0)}",
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: balance == 0
+                        color: outstanding == 0
                             ? Colors.black
-                            : balance > 0
+                            : outstanding > 0
                             ? ChopdiColors.red
                             : Colors.green,
                       ),
                     ),
 
-                    if (balance != 0) ...[
+                    if (outstanding != 0) ...[
                       const SizedBox(height: 3),
 
                       Text(
-                        balance > 0 ? "Pending" : "Settled",
+                        outstanding > 0 ? "Pending" : "Settled",
                         style: GoogleFonts.manrope(
                           fontSize: 12,
-                          color: balance > 0
+                          color: outstanding > 0
                               ? ChopdiColors.red
                               : Colors.green,
                         ),
