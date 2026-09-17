@@ -120,6 +120,42 @@ class NotificationService {
   }
 
   // ============================================================
+  // I TOOK LOAN
+  // ============================================================
+
+  Future<int> createTookLoanNotification({
+    required int chopdiId,
+    required String customerName,
+    required double amount,
+    int? customerId,
+  }) async {
+    final enabled =
+        await LocalNotificationService.instance
+            .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
+    final notification = NotificationModel()
+      ..title = 'I Took Loan'
+      ..subtitle =
+          'You took ₹${amount.toStringAsFixed(2)} '
+          'from $customerName.'
+      ..type = 'took_loan'
+      ..createdAt = DateTime.now()
+      ..isRead = false
+      ..customerId = customerId
+      ..customerName = customerName
+      ..amount = amount
+      ..chopdiId = chopdiId;
+
+    return isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
+    });
+  }
+
+  // ============================================================
   // PAYMENT REMINDER
   // ============================================================
 

@@ -542,6 +542,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'payment_reminder':
         return Icons.notifications_active_rounded;
 
+      case 'took_loan':
+        return Icons.account_balance_wallet_rounded;
+
       default:
         return Icons.notifications_none_rounded;
     }
@@ -564,6 +567,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       case 'payment_reminder':
         return Colors.red;
+
+      case 'took_loan':
+        return Colors.orangeAccent;
 
       default:
         return ChopdiColors.navy;

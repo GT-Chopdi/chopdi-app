@@ -727,6 +727,7 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                                 loanDate: selectedDate,
                                 interestFrequency: interestFrequency,
                                 reminderType: reminderType,
+                                transactionType: TransactionType.took,
                                 amount: amount,
                               );
                             }
@@ -736,18 +737,46 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                             // ==================================================
 
                             if (interestAmount > 0) {
+                              // final notificationService =
+                              //     NotificationService(
+                              //   IsarService.isar,
+                              // );
+
+                              // await notificationService
+                              //     .createInterestNotification(
+                              //   chopdiId: widget.customer.chopdiId,
+                              //   customerName: widget.customer.name,
+                              //   interestAmount: interestAmount,
+                              //   customerId: widget.customer.id,
+                              // );
+                              // ==================================================
+                              // TOOK LOAN NOTIFICATION
+                              // ==================================================
+
                               final notificationService =
                                   NotificationService(
                                 IsarService.isar,
                               );
 
-                              await notificationService
-                                  .createInterestNotification(
+                              await notificationService.createTookLoanNotification(
                                 chopdiId: widget.customer.chopdiId,
                                 customerName: widget.customer.name,
-                                interestAmount: interestAmount,
+                                amount: amount,
                                 customerId: widget.customer.id,
                               );
+
+                              // ==================================================
+                              // INTEREST NOTIFICATION
+                              // ==================================================
+
+                              if (interestAmount > 0) {
+                                await notificationService.createInterestNotification(
+                                  chopdiId: widget.customer.chopdiId,
+                                  customerName: widget.customer.name,
+                                  interestAmount: interestAmount,
+                                  customerId: widget.customer.id,
+                                );
+                              }
                             }
 
                             widget.onSaved();
