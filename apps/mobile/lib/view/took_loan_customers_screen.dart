@@ -39,23 +39,39 @@ class _TookLoanCustomerListSectionState
   // SORT
   // ============================================================
 
-  String selectedSort = "Name (A-Z)";
+  // String selectedSort = "Name (A-Z)";
+  String selectedSort = "Recently Added";
 
   @override
   void initState() {
     super.initState();
 
+    // filteredCustomers = List.from(widget.customers);
     filteredCustomers = List.from(widget.customers);
+    _applySortWithoutSetState();
   }
 
+  // @override
+  // void didUpdateWidget(
+  //     TookLoanCustomerListSection oldWidget,
+  //     ) {
+  //   super.didUpdateWidget(oldWidget);
+
+  //   if (oldWidget.customers != widget.customers) {
+  //     applyFilters();
+  //   }
+  // }
   @override
   void didUpdateWidget(
-      TookLoanCustomerListSection oldWidget,
-      ) {
+    TookLoanCustomerListSection oldWidget,
+  ) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.customers != widget.customers) {
-      applyFilters();
+    filteredCustomers = _getFilteredCustomers();
+    _applySortWithoutSetState();
+
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -65,44 +81,27 @@ class _TookLoanCustomerListSectionState
     super.dispose();
   }
 
-  // ============================================================
-  // APPLY SEARCH + FILTER
-  // ============================================================
-
-  void applyFilters() {
+  List<Customer> _getFilteredCustomers() {
     final search = searchController.text.toLowerCase().trim();
 
-    final result = widget.customers.where((customer) {
-      // ========================================================
-      // SEARCH
-      // ========================================================
-
+    return widget.customers.where((customer) {
+      // Search
       final matchesSearch =
           search.isEmpty ||
-              customer.name.toLowerCase().contains(search) ||
-              customer.phone.contains(search);
+          customer.name.toLowerCase().contains(search) ||
+          customer.phone.contains(search);
 
-      // ========================================================
-      // STATUS FILTER
-      // ========================================================
-
+      // Status
       bool matchesStatus = true;
 
       if (selectedStatus != "All") {
         matchesStatus =
             customer.status.toLowerCase() ==
-                selectedStatus.toLowerCase();
+            selectedStatus.toLowerCase();
       }
 
-      // ========================================================
-      // DATE FILTER
-      // ========================================================
-
+      // Date
       bool matchesDate = true;
-
-      // --------------------------------------------------------
-      // THIS MONTH
-      // --------------------------------------------------------
 
       if (selectedDate == "This Month") {
         final now = DateTime.now();
@@ -121,12 +120,8 @@ class _TookLoanCustomerListSectionState
 
         matchesDate =
             !customer.updatedAt.isBefore(firstDayOfMonth) &&
-                customer.updatedAt.isBefore(nextMonth);
+            customer.updatedAt.isBefore(nextMonth);
       }
-
-      // --------------------------------------------------------
-      // CUSTOM DATE
-      // --------------------------------------------------------
 
       if (selectedDate == "Custom") {
         if (fromDate != null) {
@@ -138,7 +133,7 @@ class _TookLoanCustomerListSectionState
 
           matchesDate =
               matchesDate &&
-                  !customer.updatedAt.isBefore(startDate);
+              !customer.updatedAt.isBefore(startDate);
         }
 
         if (toDate != null) {
@@ -153,34 +148,165 @@ class _TookLoanCustomerListSectionState
 
           matchesDate =
               matchesDate &&
-                  !customer.updatedAt.isAfter(endDate);
+              !customer.updatedAt.isAfter(endDate);
         }
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch &&
+          matchesStatus &&
+          matchesDate;
     }).toList();
+  }
 
-    // ============================================================
-    // SORT RESULT
-    // ============================================================
+  // ============================================================
+  // APPLY SEARCH + FILTER
+  // ============================================================
 
-    if (selectedSort == "Name (A-Z)") {
-      result.sort(
-            (a, b) => a.name.toLowerCase().compareTo(
-          b.name.toLowerCase(),
-        ),
-      );
-    } else if (selectedSort == "Name (Z-A)") {
-      result.sort(
-            (a, b) => b.name.toLowerCase().compareTo(
-          a.name.toLowerCase(),
-        ),
-      );
-    }
+  // void applyFilters() {
+  //   final search = searchController.text.toLowerCase().trim();
+
+  //   final result = widget.customers.where((customer) {
+  //     // ========================================================
+  //     // SEARCH
+  //     // ========================================================
+
+  //     final matchesSearch =
+  //         search.isEmpty ||
+  //             customer.name.toLowerCase().contains(search) ||
+  //             customer.phone.contains(search);
+
+  //     // ========================================================
+  //     // STATUS FILTER
+  //     // ========================================================
+
+  //     bool matchesStatus = true;
+
+  //     if (selectedStatus != "All") {
+  //       matchesStatus =
+  //           customer.status.toLowerCase() ==
+  //               selectedStatus.toLowerCase();
+  //     }
+
+  //     // ========================================================
+  //     // DATE FILTER
+  //     // ========================================================
+
+  //     bool matchesDate = true;
+
+  //     // --------------------------------------------------------
+  //     // THIS MONTH
+  //     // --------------------------------------------------------
+
+  //     if (selectedDate == "This Month") {
+  //       final now = DateTime.now();
+
+  //       final firstDayOfMonth = DateTime(
+  //         now.year,
+  //         now.month,
+  //         1,
+  //       );
+
+  //       final nextMonth = DateTime(
+  //         now.year,
+  //         now.month + 1,
+  //         1,
+  //       );
+
+  //       matchesDate =
+  //           !customer.updatedAt.isBefore(firstDayOfMonth) &&
+  //               customer.updatedAt.isBefore(nextMonth);
+  //     }
+
+  //     // --------------------------------------------------------
+  //     // CUSTOM DATE
+  //     // --------------------------------------------------------
+
+  //     if (selectedDate == "Custom") {
+  //       if (fromDate != null) {
+  //         final startDate = DateTime(
+  //           fromDate!.year,
+  //           fromDate!.month,
+  //           fromDate!.day,
+  //         );
+
+  //         matchesDate =
+  //             matchesDate &&
+  //                 !customer.updatedAt.isBefore(startDate);
+  //       }
+
+  //       if (toDate != null) {
+  //         final endDate = DateTime(
+  //           toDate!.year,
+  //           toDate!.month,
+  //           toDate!.day,
+  //           23,
+  //           59,
+  //           59,
+  //         );
+
+  //         matchesDate =
+  //             matchesDate &&
+  //                 !customer.updatedAt.isAfter(endDate);
+  //       }
+  //     }
+
+  //     return matchesSearch && matchesStatus && matchesDate;
+  //   }).toList();
+
+  //   // ============================================================
+  //   // SORT RESULT
+  //   // ============================================================
+
+  //   if (selectedSort == "Name (A-Z)") {
+  //     result.sort(
+  //           (a, b) => a.name.toLowerCase().compareTo(
+  //         b.name.toLowerCase(),
+  //       ),
+  //     );
+  //   } else if (selectedSort == "Name (Z-A)") {
+  //     result.sort(
+  //           (a, b) => b.name.toLowerCase().compareTo(
+  //         a.name.toLowerCase(),
+  //       ),
+  //     );
+  //   }
+
+  //   setState(() {
+  //     filteredCustomers = result;
+  //   });
+  // }
+  void applyFilters() {
+    final result = _getFilteredCustomers();
+
+    _applySortToList(result);
 
     setState(() {
       filteredCustomers = result;
     });
+  }
+
+  void _applySortToList(List<Customer> customers) {
+    if (selectedSort == "Name (A-Z)") {
+      customers.sort(
+        (a, b) => a.name.toLowerCase().compareTo(
+          b.name.toLowerCase(),
+        ),
+      );
+    } else if (selectedSort == "Name (Z-A)") {
+      customers.sort(
+        (a, b) => b.name.toLowerCase().compareTo(
+          a.name.toLowerCase(),
+        ),
+      );
+    } else if (selectedSort == "Recently Added") {
+      customers.sort(
+        (a, b) => b.updatedAt.compareTo(a.updatedAt),
+      );
+    }
+  }
+
+  void _applySortWithoutSetState() {
+    _applySortToList(filteredCustomers);
   }
 
   // ============================================================

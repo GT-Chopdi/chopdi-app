@@ -84,6 +84,8 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
+      // Mark the customer as recently active.
+      await _touchCustomerInTxn(customer.id, now);
       await _queue.enqueueCreate(
         _isar,
         entity: 'ledger_entry',
@@ -210,6 +212,9 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(draft);
+      // Mark the customer as recently active.
+      await _touchCustomerInTxn(customer!.id, now);
+
 
       await _queue.enqueueCreate(
         _isar,
@@ -255,12 +260,32 @@ class LedgerRepository {
     if (description != null) tx.description = _validateDescription(description);
     if (paymentMode != null) tx.paymentMode = paymentMode.trim();
 
+    // tx
+    //   ..updatedAt = DateTime.now().toUtc()
+    //   ..syncStatus = SyncStatus.pending;
+
+    // await _isar.writeTxn(() async {
+    //   await _isar.transactions.put(tx);
+    //   await _queue.enqueueUpdate(
+    //     _isar,
+    //     entity: 'ledger_entry',
+    //     entityId: tx.uuid,
+    //     expectedVersion: tx.version,
+    //     payload: _payloadFor(tx),
+    //   );
+    // });
+    final now = DateTime.now().toUtc();
+
     tx
-      ..updatedAt = DateTime.now().toUtc()
+      ..updatedAt = now
       ..syncStatus = SyncStatus.pending;
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
+
+      // Editing a transaction makes its customer recently active.
+      await _touchCustomerInTxn(tx.customerId, now);
+
       await _queue.enqueueUpdate(
         _isar,
         entity: 'ledger_entry',
@@ -302,6 +327,8 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
+      // Voiding a transaction is also customer activity.
+      await _touchCustomerInTxn(tx.customerId, now);
       await _queue.enqueueVoid(
         _isar,
         entity: 'ledger_entry',
@@ -336,6 +363,27 @@ class LedgerRepository {
       0,
       (sum, tx) => sum + SyncPayload.signedPaise(tx.type, tx.amountPaise),
     );
+  }
+
+  /// Updates the customer's activity timestamp.
+  ///
+  /// This must be called from an existing Isar write transaction.
+  /// It intentionally does not enqueue a customer sync operation because
+  /// this timestamp represents local "recent activity" for the customer;
+  /// the ledger entry itself is already synced separately.
+  Future<void> _touchCustomerInTxn(
+    int customerId,
+    DateTime now,
+  ) async {
+    final customer = await _isar.customers.get(customerId);
+
+    if (customer == null || customer.deletedAt != null) {
+      return;
+    }
+
+    customer.updatedAt = now;
+
+    await _isar.customers.put(customer);
   }
 
   Map<String, dynamic> _payloadFor(Transaction tx) => {
