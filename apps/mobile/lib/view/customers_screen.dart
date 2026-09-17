@@ -43,14 +43,6 @@ class _CustomerListSectionState extends State<CustomerListSection> {
       applySortWithoutSetState();
   }
 
-  // @override
-  // void didUpdateWidget(CustomerListSection oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-
-  //   if (oldWidget.customers != widget.customers) {
-  //     applyFilters();
-  //   }
-  // }
   @override
   void didUpdateWidget(CustomerListSection oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -151,91 +143,6 @@ class _CustomerListSectionState extends State<CustomerListSection> {
   // APPLY SEARCH + FILTER
   // ============================================================
 
-  // void applyFilters() {
-  //   final search = searchController.text.toLowerCase().trim();
-
-  //   setState(() {
-  //     filteredCustomers = widget.customers.where((customer) {
-  //       // Search
-  //       final matchesSearch =
-  //           search.isEmpty ||
-  //               customer.name.toLowerCase().contains(search) ||
-  //               customer.phone.contains(search);
-
-  //       // Status
-  //       bool matchesStatus = true;
-
-  //       if (selectedStatus != "All") {
-  //         matchesStatus =
-  //             customer.status.toLowerCase() ==
-  //                 selectedStatus.toLowerCase();
-  //       }
-
-  //       // Date
-  //       bool matchesDate = true;
-
-  //       if (selectedDate == "This Month") {
-  //         final now = DateTime.now();
-
-  //         final firstDayOfMonth = DateTime(
-  //           now.year,
-  //           now.month,
-  //           1,
-  //         );
-
-  //         final nextMonth = DateTime(
-  //           now.year,
-  //           now.month + 1,
-  //           1,
-  //         );
-
-  //         matchesDate =
-  //             customer.updatedAt.isAfter(
-  //               firstDayOfMonth.subtract(
-  //                 const Duration(seconds: 1),
-  //               ),
-  //             ) &&
-  //                 customer.updatedAt.isBefore(nextMonth);
-  //       }
-
-  //       if (selectedDate == "Custom") {
-  //         if (fromDate != null) {
-  //           final startDate = DateTime(
-  //             fromDate!.year,
-  //             fromDate!.month,
-  //             fromDate!.day,
-  //           );
-
-  //           matchesDate =
-  //               matchesDate &&
-  //                   !customer.updatedAt.isBefore(startDate);
-  //         }
-
-  //         if (toDate != null) {
-  //           final endDate = DateTime(
-  //             toDate!.year,
-  //             toDate!.month,
-  //             toDate!.day,
-  //             23,
-  //             59,
-  //             59,
-  //           );
-
-  //           matchesDate =
-  //               matchesDate &&
-  //                   !customer.updatedAt.isAfter(endDate);
-  //         }
-  //       }
-
-  //       return matchesSearch &&
-  //           matchesStatus &&
-  //           matchesDate;
-  //     }).toList();
-
-  //     // Apply sorting AFTER filtering
-  //     applySortWithoutSetState();
-  //   });
-  // }
   void applyFilters() {
     final customers = _getFilteredCustomers();
 
@@ -244,21 +151,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
       applySortWithoutSetState();
     });
   }
-  // void applySortWithoutSetState() {
-  //   if (selectedSort == "Name (A-Z)") {
-  //     filteredCustomers.sort(
-  //           (a, b) => a.name.toLowerCase().compareTo(
-  //         b.name.toLowerCase(),
-  //       ),
-  //     );
-  //   } else if (selectedSort == "Name (Z-A)") {
-  //     filteredCustomers.sort(
-  //           (a, b) => b.name.toLowerCase().compareTo(
-  //         a.name.toLowerCase(),
-  //       ),
-  //     );
-  //   }
-  // }
+
   void applySortWithoutSetState() {
     if (selectedSort == "Name (A-Z)") {
       filteredCustomers.sort(

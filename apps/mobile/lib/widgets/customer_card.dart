@@ -50,15 +50,6 @@ class CustomerCard extends StatelessWidget {
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
-        // double balance = 0;
-
-        // for (final tx in transactions) {
-        //   if (tx.type == TransactionType.gave) {
-        //     balance += tx.amount;
-        //   } else {
-        //     balance -= tx.amount;
-        //   }
-        // }
         double totalGiven = 0;
         double totalReceived = 0;
         double totalInterest = 0;
