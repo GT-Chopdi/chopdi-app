@@ -53,17 +53,17 @@ class _CustomerDetailsScreenState
   // ============================================================
   // TRANSACTIONS
   // ============================================================
-
+  
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()
         .customerIdEqualTo(widget.customer.id)
+        .voidedAtIsNull()
         .sortByDate()
         .findAll();
 
-    // Newest transaction first
     loadedTransactions.sort(
-          (a, b) => b.date.compareTo(a.date),
+      (a, b) => b.date.compareTo(a.date),
     );
 
     if (!mounted) return;
