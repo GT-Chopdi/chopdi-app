@@ -9,13 +9,18 @@ import 'package:mychopdi/data/repository/repositories.dart';
 class AddNewCustomerScreen extends StatefulWidget {
   final int chopdiId;
 
-  const AddNewCustomerScreen({super.key, required this.chopdiId});
+  const AddNewCustomerScreen({
+    super.key,
+    required this.chopdiId,
+  });
 
   @override
-  State<AddNewCustomerScreen> createState() => _AddNewCustomerScreenState();
+  State<AddNewCustomerScreen> createState() =>
+      _AddNewCustomerScreenState();
 }
 
-class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
+class _AddNewCustomerScreenState
+    extends State<AddNewCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController();
@@ -47,17 +52,98 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
     });
 
     try {
-      // Check for duplicate customer only when phone number is provided.
+      // ------------------------------------------------------------
+      // CHECK DUPLICATE CUSTOMER
+      // ------------------------------------------------------------
+      //
+      // Customer uniqueness is based on:
+      //
+      //     name + phone + chopdiId
+      //
+      // Phone is optional.
+      //
+      // Examples:
+      //
+      // Existing: john + ""
+      // New:      john + ""
+      // RESULT:   DUPLICATE
+      //
+      // Existing: john + ""
+      // New:      john + "98765"
+      // RESULT:   CREATE NEW
+      //
+      // Existing: john + "98765"
+      // New:      john + "98765"
+      // RESULT:   DUPLICATE
+      //
+      // Existing: john + "98765"
+      // New:      john + "12345"
+      // RESULT:   CREATE NEW
+      //
+      // Existing: john + "98765"
+      // New:      alex + "98765"
+      // RESULT:   CREATE NEW
+      //
+      // Deleted customers are ignored.
+      // ------------------------------------------------------------
+
       Customer? existingCustomer;
 
-      if (phone.isNotEmpty) {
+      // ------------------------------------------------------------
+      // PHONE IS OPTIONAL
+      // ------------------------------------------------------------
+      //
+      // We MUST perform the duplicate check even when the phone
+      // number is empty.
+      //
+      // This fixes:
+      //
+      // john + no phone
+      // john + no phone
+      //
+      // previously creating duplicate customers.
+      // ------------------------------------------------------------
+
+      if (phone.isEmpty) {
+        // Isar does not need phoneEqualTo() here because we are
+        // specifically checking customers whose phone is empty.
+        //
+        // First get active customers in this Chopdi with the same
+        // name, then verify that their phone is also empty.
+
+        final customers = await IsarService.isar.customers
+            .filter()
+            .deletedAtIsNull()
+            .chopdiIdEqualTo(widget.chopdiId)
+            .nameEqualTo(name)
+            .findAll();
+
+        for (final customer in customers) {
+          if (customer.phone.trim().isEmpty) {
+            existingCustomer = customer;
+            break;
+          }
+        }
+      } else {
+        // ----------------------------------------------------------
+        // PHONE EXISTS
+        // ----------------------------------------------------------
+        //
+        // Match name + phone + chopdiId.
+        // ----------------------------------------------------------
+
         existingCustomer = await IsarService.isar.customers
             .filter()
             .deletedAtIsNull()
+            .chopdiIdEqualTo(widget.chopdiId)
             .nameEqualTo(name)
             .phoneEqualTo(phone)
             .findFirst();
       }
+
+      // ------------------------------------------------------------
+      // CUSTOMER ALREADY EXISTS
+      // ------------------------------------------------------------
 
       if (existingCustomer != null) {
         if (!mounted) return;
@@ -105,7 +191,8 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
                   height: 1.4,
                 ),
               ),
-              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              actionsPadding:
+              const EdgeInsets.fromLTRB(16, 0, 16, 14),
               actions: [
                 SizedBox(
                   width: double.infinity,
@@ -116,7 +203,9 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ChopdiColors.navy,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -145,7 +234,10 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
         return;
       }
 
-      // Create customer through repository.
+      // ------------------------------------------------------------
+      // CREATE CUSTOMER
+      // ------------------------------------------------------------
+
       final customer = await Repositories.customers.create(
         name: name,
         phone: phone,
@@ -203,6 +295,10 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
               children: [
                 SizedBox(height: height * 0.02),
 
+                // --------------------------------------------------
+                // HEADER
+                // --------------------------------------------------
+
                 Row(
                   children: [
                     InkWell(
@@ -231,6 +327,10 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
 
                 const SizedBox(height: 18),
 
+                // --------------------------------------------------
+                // CUSTOMER DETAILS
+                // --------------------------------------------------
+
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: width * 0.05,
@@ -239,10 +339,13 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF8F0),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFAAB9CF)),
+                    border: Border.all(
+                      color: const Color(0xFFAAB9CF),
+                    ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
                     children: [
                       Text(
                         "Customer Details",
@@ -264,7 +367,8 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
                         hint: "Customer Name",
                         icon: Icons.person_outline,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          if (value == null ||
+                              value.trim().isEmpty) {
                             return "Enter customer name";
                           }
 
@@ -285,15 +389,18 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
                         keyboardType: TextInputType.number,
                         maxLength: 10,
                         validator: (value) {
-                          final phone = value?.trim() ?? '';
+                          final phone =
+                              value?.trim() ?? '';
 
                           // Phone is optional.
                           if (phone.isEmpty) {
                             return null;
                           }
 
-                          // If entered, it MUST contain exactly 10 digits.
-                          if (!RegExp(r'^[0-9]{10}$').hasMatch(phone)) {
+                          // If entered, it MUST contain exactly
+                          // 10 digits.
+                          if (!RegExp(r'^[0-9]{10}$')
+                              .hasMatch(phone)) {
                             return "Enter a valid 10-digit phone number";
                           }
 
@@ -306,52 +413,69 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
 
                 const SizedBox(height: 60),
 
+                // --------------------------------------------------
+                // ADD CUSTOMER
+                // --------------------------------------------------
+
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _isSaving ? null : saveCustomer,
+                    onPressed:
+                    _isSaving ? null : saveCustomer,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       backgroundColor: ChopdiColors.navy,
-                      disabledBackgroundColor: ChopdiColors.navy.withValues(
+                      disabledBackgroundColor:
+                      ChopdiColors.navy.withValues(
                         alpha: 0.5,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius:
+                        BorderRadius.circular(6),
                       ),
                     ),
                     child: _isSaving
                         ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                      width: 20,
+                      height: 20,
+                      child:
+                      CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                         : Text(
-                            "Add Customer",
-                            style: GoogleFonts.manrope(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
+                      "Add Customer",
+                      style: GoogleFonts.manrope(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 12),
 
+                // --------------------------------------------------
+                // CANCEL
+                // --------------------------------------------------
+
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: _isSaving ? null : () => Navigator.pop(context),
+                    onPressed: _isSaving
+                        ? null
+                        : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: ChopdiColors.navy),
+                      side: const BorderSide(
+                        color: ChopdiColors.navy,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius:
+                        BorderRadius.circular(6),
                       ),
                     ),
                     child: Text(
@@ -372,6 +496,10 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
     );
   }
 
+  // ------------------------------------------------------------------
+  // LABEL
+  // ------------------------------------------------------------------
+
   Widget _label(String text) {
     return Text(
       text,
@@ -383,6 +511,10 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
     );
   }
 
+  // ------------------------------------------------------------------
+  // TEXT FIELD
+  // ------------------------------------------------------------------
+
   Widget _textField({
     required TextEditingController controller,
     required String hint,
@@ -393,12 +525,17 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
   }) {
     final normalBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFFAAB9CF)),
+      borderSide: const BorderSide(
+        color: Color(0xFFAAB9CF),
+      ),
     );
 
     final focusedBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: ChopdiColors.navy, width: 1.2),
+      borderSide: const BorderSide(
+        color: ChopdiColors.navy,
+        width: 1.2,
+      ),
     );
 
     return TextFormField(
@@ -406,13 +543,22 @@ class _AddNewCustomerScreenState extends State<AddNewCustomerScreen> {
       keyboardType: keyboardType,
       validator: validator,
       maxLength: maxLength,
-      style: GoogleFonts.manrope(fontSize: 13),
+      style: GoogleFonts.manrope(
+        fontSize: 13,
+      ),
       decoration: InputDecoration(
         isDense: true,
         counterText: "",
         hintText: hint,
-        hintStyle: GoogleFonts.manrope(fontSize: 12, color: ChopdiColors.navy),
-        prefixIcon: Icon(icon, size: 18, color: ChopdiColors.navy),
+        hintStyle: GoogleFonts.manrope(
+          fontSize: 12,
+          color: ChopdiColors.navy,
+        ),
+        prefixIcon: Icon(
+          icon,
+          size: 18,
+          color: ChopdiColors.navy,
+        ),
         filled: true,
         fillColor: const Color(0xFFFFF8F0),
         contentPadding: const EdgeInsets.symmetric(
