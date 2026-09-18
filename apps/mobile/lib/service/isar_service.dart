@@ -54,24 +54,12 @@ class IsarService {
       // ---------------------------------------------------------------
       // Repair old rows which existed before UUID/chopdi migration.
       // ---------------------------------------------------------------
-      //
-      // This is intentionally idempotent:
-      // - Existing UUIDs are never replaced.
-      // - Existing chopdiId values are never replaced.
-      // - Existing customerUuid values are never replaced.
-      // - Existing transaction UUIDs are never replaced.
-      //
-      // This fixes old local data which otherwise causes:
-      //
-      // RepositoryException:
-      // This customer has not been migrated yet.
-      //
       await _repairLegacyIdentities();
 
       // Housekeeping only.
       unawaited(
         LocalMigration.pruneBackups(dir.path).catchError(
-          (Object e) => debugPrint(
+              (Object e) => debugPrint(
             '[chopdi] backup pruning skipped: $e',
           ),
         ),
@@ -87,8 +75,6 @@ class IsarService {
 
   /// Repairs old Customer and Transaction rows that were created before
   /// UUID-based synchronization was introduced.
-  ///
-  /// This does NOT replace existing identities.
   static Future<void> _repairLegacyIdentities() async {
     try {
       await isar.writeTxn(() async {
@@ -97,15 +83,6 @@ class IsarService {
         // ---------------------------------------------------------------
         // 1. Customers
         // ---------------------------------------------------------------
-        //
-        // Old customers can have:
-        //
-        // uuid = ''
-        //
-        // The repository refuses to create transactions for such customers
-        // because a transaction now references customerUuid.
-        //
-        // Give those old rows a permanent local UUID.
         for (final customer in customers) {
           if (customer.uuid.isEmpty) {
             customer.uuid = _uuid.v7();
@@ -114,10 +91,10 @@ class IsarService {
 
             debugPrint(
               '[chopdi] repaired customer '
-              'id=${customer.id} '
-              'name=${customer.name} '
-              'uuid=${customer.uuid} '
-              'chopdiId=${customer.chopdiId}',
+                  'id=${customer.id} '
+                  'name=${customer.name} '
+                  'uuid=${customer.uuid} '
+                  'chopdiId=${customer.chopdiId}',
             );
           }
         }
@@ -125,15 +102,8 @@ class IsarService {
         // ---------------------------------------------------------------
         // 2. Transactions
         // ---------------------------------------------------------------
-        //
-        // Old transactions can have:
-        //
-        // uuid = ''
-        // customerUuid = ''
-        //
-        // Resolve their customer using the legacy local customerId.
         final transactions =
-            await isar.transactions.where().findAll();
+        await isar.transactions.where().findAll();
 
         for (final transaction in transactions) {
           bool changed = false;
@@ -156,8 +126,8 @@ class IsarService {
 
           // If customerUuid was missing, use the legacy local customerId.
           customer ??= await isar.customers.get(
-              transaction.customerId,
-            );
+            transaction.customerId,
+          );
 
           if (customer != null) {
             // Only fill customerUuid when it is missing.
@@ -167,8 +137,6 @@ class IsarService {
             }
 
             // Old transactions also need the same Chopdi as their customer.
-            //
-            // Do NOT overwrite a non-zero existing chopdiId.
             if (transaction.chopdiId == 0 &&
                 customer.chopdiId != 0) {
               transaction.chopdiId = customer.chopdiId;
@@ -181,26 +149,32 @@ class IsarService {
 
             debugPrint(
               '[chopdi] repaired transaction '
-              'id=${transaction.id} '
-              'uuid=${transaction.uuid} '
-              'customerId=${transaction.customerId} '
-              'customerUuid=${transaction.customerUuid} '
-              'chopdiId=${transaction.chopdiId}',
+                  'id=${transaction.id} '
+                  'uuid=${transaction.uuid} '
+                  'customerId=${transaction.customerId} '
+                  'customerUuid=${transaction.customerUuid} '
+                  'chopdiId=${transaction.chopdiId}',
             );
           }
         }
       });
 
-      debugPrint('[chopdi] legacy identity repair completed');
+      debugPrint(
+        '[chopdi] legacy identity repair completed',
+      );
     } catch (error, stack) {
       debugPrint(
         '[chopdi] legacy identity repair failed: '
-        '$error\n$stack',
+            '$error\n$stack',
       );
 
       // Do not crash application startup because of repair.
     }
   }
+
+  // -------------------------------------------------------------------
+  // GET ALL ACTIVE CUSTOMERS
+  // -------------------------------------------------------------------
 
   static Future<List<Customer>> getCustomers() async {
     return await isar.customers
@@ -209,15 +183,37 @@ class IsarService {
         .findAll();
   }
 
+  // -------------------------------------------------------------------
+  // GET CUSTOMER BY PHONE
+  // -------------------------------------------------------------------
+  //
+  // Keep this method because other parts of your application may already
+  // be using it.
+  //
+  // NOTE:
+  // This method checks phone only.
+  // For creating a customer, use getCustomerByNameAndPhone().
+  // -------------------------------------------------------------------
+
   static Future<Customer?> getCustomerByPhone(
-    String phone,
-  ) async {
+      String phone,
+      ) async {
+    final cleanPhone = phone.trim();
+
+    if (cleanPhone.isEmpty) {
+      return null;
+    }
+
     return await isar.customers
         .filter()
-        .phoneEqualTo(phone)
+        .phoneEqualTo(cleanPhone)
         .deletedAtIsNull()
         .findFirst();
   }
+
+  // -------------------------------------------------------------------
+  // GET CUSTOMER BY PHONE + CHOPDI
+  // -------------------------------------------------------------------
 
   static Future<Customer?> getCustomerByPhoneAndChopdi(
       String phone,
@@ -238,6 +234,107 @@ class IsarService {
         .deletedAtIsNull()
         .findFirst();
   }
+
+  // -------------------------------------------------------------------
+  // GET CUSTOMER BY NAME + PHONE + CHOPDI
+  // -------------------------------------------------------------------
+  //
+  // This is the duplicate check used when creating a customer.
+  //
+  // Rules:
+  //
+  // 1. john + empty
+  //    john + empty
+  //    => DUPLICATE
+  //
+  // 2. john + empty
+  //    john + 98765
+  //    => NEW
+  //
+  // 3. john + 98765
+  //    john + 98765
+  //    => DUPLICATE
+  //
+  // 4. john + 98765
+  //    john + 12345
+  //    => NEW
+  //
+  // Different chopdiId values are treated as separate customers.
+  // -------------------------------------------------------------------
+
+  static Future<Customer?> getCustomerByNameAndPhone(
+      String name,
+      String phone,
+      int chopdiId,
+      ) async {
+    final cleanName = name.trim();
+    final cleanPhone = phone.trim();
+
+    // Name is required.
+    if (cleanName.isEmpty) {
+      return null;
+    }
+
+    // ---------------------------------------------------------------
+    // PHONE IS EMPTY
+    // ---------------------------------------------------------------
+    //
+    // If both names are the same and both phone numbers are empty,
+    // it is a duplicate.
+    // ---------------------------------------------------------------
+
+    if (cleanPhone.isEmpty) {
+      final customers = await isar.customers
+          .filter()
+          .chopdiIdEqualTo(chopdiId)
+          .and()
+          .deletedAtIsNull()
+          .findAll();
+
+      for (final customer in customers) {
+        if (customer.name.trim().toLowerCase() ==
+            cleanName.toLowerCase()) {
+          if (customer.phone.trim().isEmpty) {
+            return customer;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // ---------------------------------------------------------------
+    // PHONE EXISTS
+    // ---------------------------------------------------------------
+    //
+    // Match:
+    // name + phone + chopdiId
+    //
+    // Name comparison is case-insensitive.
+    // ---------------------------------------------------------------
+
+    final customers = await isar.customers
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
+        .and()
+        .deletedAtIsNull()
+        .findAll();
+
+    for (final customer in customers) {
+      if (customer.name.trim().toLowerCase() ==
+          cleanName.toLowerCase()) {
+        return customer;
+      }
+    }
+
+    return null;
+  }
+
+  // -------------------------------------------------------------------
+  // SUMMARY
+  // -------------------------------------------------------------------
 
   static Future<SummaryData> getSummary() async {
     final customers = await getCustomers();

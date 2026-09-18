@@ -17,7 +17,8 @@ class CustomerDetailsAdd extends StatefulWidget {
   });
 
   @override
-  State<CustomerDetailsAdd> createState() => _CustomerDetailsAddState();
+  State<CustomerDetailsAdd> createState() =>
+      _CustomerDetailsAddState();
 }
 
 class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
@@ -26,11 +27,17 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
   bool isSaving = false;
 
+  // -------------------------------------------------------------------
+  // ADD CUSTOMER
+  // -------------------------------------------------------------------
+
   Future<void> addCustomer() async {
     final phone = widget.contactPhone.trim();
 
-    // Phone number is optional.
-    // Do not validate length for contacts coming from the device.
+    // ---------------------------------------------------------------
+    // NORMALIZE PHONE
+    // ---------------------------------------------------------------
+
     String finalPhone = '';
 
     if (phone.isNotEmpty) {
@@ -47,6 +54,23 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       }
     }
 
+    // ---------------------------------------------------------------
+    // NORMALIZE NAME
+    // ---------------------------------------------------------------
+
+    final customerName = widget.contactName.trim();
+
+    // Name is required.
+    if (customerName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Customer name is required"),
+        ),
+      );
+
+      return;
+    }
+
     if (!mounted) return;
 
     setState(() {
@@ -54,43 +78,71 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
     });
 
     try {
-      // ----------------------------------------------------------
-      // CHECK DUPLICATE ONLY WHEN PHONE EXISTS
-      // ----------------------------------------------------------
-      if (finalPhone.isNotEmpty) {
-        final existingCustomer =
-            await IsarService.getCustomerByPhone(finalPhone);
+      // -------------------------------------------------------------
+      // CHECK DUPLICATE
+      // -------------------------------------------------------------
+      //
+      // Match:
+      //
+      //     name + phone + chopdiId
+      //
+      // Examples:
+      //
+      // john + empty       => john + empty
+      // DUPLICATE
+      //
+      // john + empty       => john + 98765
+      // NEW
+      //
+      // john + 98765       => john + 98765
+      // DUPLICATE
+      //
+      // john + 98765       => john + 12345
+      // NEW
+      //
+      // JOHN + 98765       => john + 98765
+      // DUPLICATE
+      //
+      // -------------------------------------------------------------
 
-        if (existingCustomer != null) {
-          if (!mounted) return;
+      final existingCustomer =
+      await IsarService.getCustomerByNameAndPhone(
+        customerName,
+        finalPhone,
+        widget.chopdiId,
+      );
 
-          setState(() {
-            isSaving = false;
-          });
+      if (existingCustomer != null) {
+        if (!mounted) return;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                "This customer already exists",
-              ),
-            ),
-          );
+        setState(() {
+          isSaving = false;
+        });
 
-          return;
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Customer already exists"),
+          ),
+        );
+
+        return;
       }
 
-      // ----------------------------------------------------------
+      // -------------------------------------------------------------
       // CREATE CUSTOMER
-      // Phone can be empty and does not have to be 10 digits.
-      // ----------------------------------------------------------
+      // -------------------------------------------------------------
+
       final customer = await Repositories.customers.create(
-        name: widget.contactName.trim(),
+        name: customerName,
         phone: finalPhone,
         chopdiId: widget.chopdiId,
         loanType: "gave",
         status: "Pending",
       );
+
+      // -------------------------------------------------------------
+      // OPEN CUSTOMER DETAILS
+      // -------------------------------------------------------------
 
       if (!mounted) return;
 
@@ -134,9 +186,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --------------------------------------------------
+              // -----------------------------------------------------
               // BACK BUTTON
-              // --------------------------------------------------
+              // -----------------------------------------------------
+
               IconButton(
                 onPressed: isSaving
                     ? null
@@ -151,9 +204,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
               const SizedBox(height: 18),
 
-              // --------------------------------------------------
+              // -----------------------------------------------------
               // PROFILE
-              // --------------------------------------------------
+              // -----------------------------------------------------
+
               Row(
                 children: [
                   CircleAvatar(
@@ -176,7 +230,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      CrossAxisAlignment.start,
                       children: [
                         Text(
                           widget.contactName,
@@ -222,9 +276,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
               const SizedBox(height: 28),
 
-              // --------------------------------------------------
-              // ADD CUSTOMER
-              // --------------------------------------------------
+              // -----------------------------------------------------
+              // ADD CUSTOMER BUTTON
+              // -----------------------------------------------------
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -233,7 +288,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     disabledBackgroundColor:
-                        primaryColor.withValues(alpha: 0.5),
+                    primaryColor.withValues(alpha: 0.5),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -241,29 +296,30 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                   ),
                   child: isSaving
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                       : const Text(
-                          "Add Customer",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                    "Add Customer",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              // --------------------------------------------------
+              // -----------------------------------------------------
               // CANCEL
-              // --------------------------------------------------
+              // -----------------------------------------------------
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
