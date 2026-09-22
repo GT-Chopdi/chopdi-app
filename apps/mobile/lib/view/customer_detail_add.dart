@@ -4,6 +4,8 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 
+import '../l10n/app_localizations.dart';
+
 class CustomerDetailsAdd extends StatefulWidget {
   final String contactName;
   final String contactPhone;
@@ -21,7 +23,8 @@ class CustomerDetailsAdd extends StatefulWidget {
       _CustomerDetailsAddState();
 }
 
-class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
+class _CustomerDetailsAddState
+    extends State<CustomerDetailsAdd> {
   static const Color primaryColor = Color(0xFF233B63);
   static const Color backgroundColor = Color(0xFFFDF0DE);
 
@@ -32,6 +35,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
   // -------------------------------------------------------------------
 
   Future<void> addCustomer() async {
+    final l10n = AppLocalizations.of(context);
+
     final phone = widget.contactPhone.trim();
 
     // ---------------------------------------------------------------
@@ -58,13 +63,18 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
     // NORMALIZE NAME
     // ---------------------------------------------------------------
 
-    final customerName = widget.contactName.trim();
+    final customerName =
+    widget.contactName.trim();
 
     // Name is required.
     if (customerName.isEmpty) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Customer name is required"),
+        SnackBar(
+          content: Text(
+            l10n.nameRequired,
+          ),
         ),
       );
 
@@ -81,10 +91,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       // -------------------------------------------------------------
       // CHECK DUPLICATE
       // -------------------------------------------------------------
-      //
+
       // Match:
       //
-      //     name + phone + chopdiId
+      // name + phone + chopdiId
       //
       // Examples:
       //
@@ -102,8 +112,6 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       //
       // JOHN + 98765       => john + 98765
       // DUPLICATE
-      //
-      // -------------------------------------------------------------
 
       final existingCustomer =
       await IsarService.getCustomerByNameAndPhone(
@@ -120,8 +128,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Customer already exists"),
+          SnackBar(
+            content: Text(
+              l10n.customerAlreadyExists,
+            ),
           ),
         );
 
@@ -132,7 +142,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       // CREATE CUSTOMER
       // -------------------------------------------------------------
 
-      final customer = await Repositories.customers.create(
+      final customer =
+      await Repositories.customers.create(
         name: customerName,
         phone: finalPhone,
         chopdiId: widget.chopdiId,
@@ -164,7 +175,7 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Failed to add customer: $e",
+            '${l10n.failedToAddCustomerWithError}: $e',
           ),
         ),
       );
@@ -173,7 +184,10 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
   @override
   Widget build(BuildContext context) {
-    final phoneDisplay = widget.contactPhone.trim();
+    final l10n = AppLocalizations.of(context);
+
+    final phoneDisplay =
+    widget.contactPhone.trim();
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -184,7 +198,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
             vertical: 12,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               // -----------------------------------------------------
               // BACK BUTTON
@@ -199,7 +214,8 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                   color: primaryColor,
                 ),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints:
+                const BoxConstraints(),
               ),
 
               const SizedBox(height: 18),
@@ -212,14 +228,17 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Colors.grey.shade300,
+                    backgroundColor:
+                    Colors.grey.shade300,
                     child: Text(
                       widget.contactName.isNotEmpty
-                          ? widget.contactName[0].toUpperCase()
+                          ? widget.contactName[0]
+                          .toUpperCase()
                           : "?",
                       style: GoogleFonts.manrope(
                         fontSize: 26,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                        FontWeight.bold,
                         color: primaryColor,
                       ),
                     ),
@@ -235,10 +254,12 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                         Text(
                           widget.contactName,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          overflow:
+                          TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontWeight:
+                            FontWeight.w600,
                             color: primaryColor,
                           ),
                         ),
@@ -247,14 +268,16 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
 
                         Text(
                           phoneDisplay.isEmpty
-                              ? "No phone number"
+                              ? l10n.noPhoneNumber
                               : phoneDisplay,
                           style: TextStyle(
                             fontSize: 12,
-                            color: phoneDisplay.isEmpty
+                            color:
+                            phoneDisplay.isEmpty
                                 ? Colors.black45
                                 : Colors.black54,
-                            fontStyle: phoneDisplay.isEmpty
+                            fontStyle:
+                            phoneDisplay.isEmpty
                                 ? FontStyle.italic
                                 : FontStyle.normal,
                           ),
@@ -284,31 +307,39 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: isSaving ? null : addCustomer,
+                  onPressed:
+                  isSaving ? null : addCustomer,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     disabledBackgroundColor:
-                    primaryColor.withValues(alpha: 0.5),
+                    primaryColor.withValues(
+                      alpha: 0.5,
+                    ),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                    shape:
+                    RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(6),
                     ),
                   ),
                   child: isSaving
                       ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(
+                    child:
+                    CircularProgressIndicator(
                       strokeWidth: 2,
                       color: Colors.white,
                     ),
                   )
-                      : const Text(
-                    "Add Customer",
-                    style: TextStyle(
+                      : Text(
+                    l10n.addCustomer,
+                    style:
+                    const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight:
+                      FontWeight.w500,
                     ),
                   ),
                 ),
@@ -326,21 +357,28 @@ class _CustomerDetailsAddState extends State<CustomerDetailsAdd> {
                 child: OutlinedButton(
                   onPressed: isSaving
                       ? null
-                      : () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
+                      : () => Navigator.pop(
+                    context,
+                  ),
+                  style:
+                  OutlinedButton.styleFrom(
                     side: const BorderSide(
                       color: primaryColor,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                    shape:
+                    RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(6),
                     ),
                   ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(
+                  child: Text(
+                    l10n.cancel,
+                    style:
+                    const TextStyle(
                       color: primaryColor,
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight:
+                      FontWeight.w500,
                     ),
                   ),
                 ),

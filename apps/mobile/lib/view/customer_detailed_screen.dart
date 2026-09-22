@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
-class CustomerDetailScreen extends StatefulWidget {
+class CustomerDetailScreen
+    extends StatefulWidget {
   final String customerName;
   final String phoneNumber;
 
@@ -15,12 +17,19 @@ class CustomerDetailScreen extends StatefulWidget {
       _CustomerDetailScreenState();
 }
 
-class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
-  static const Color primaryColor = Color(0xFF223A5E);
-  static const Color giveColor = Colors.red;
-  static const Color getColor = Colors.green;
+class _CustomerDetailScreenState
+    extends State<CustomerDetailScreen> {
+  static const Color primaryColor =
+  Color(0xFF223A5E);
 
-  List<Map<String, dynamic>> transactions = [
+  static const Color giveColor =
+      Colors.red;
+
+  static const Color getColor =
+      Colors.green;
+
+  List<Map<String, dynamic>> transactions =
+  [
     {
       "type": "Get",
       "amount": 500,
@@ -57,82 +66,134 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return total;
   }
 
+  String _formatAmount(double amount) {
+    if (amount == amount.truncate()) {
+      return amount.toInt().toString();
+    }
+
+    return amount.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    double balance = getTotal() - giveTotal();
+    final l10n =
+    AppLocalizations.of(context);
+
+    final double balance =
+        getTotal() - giveTotal();
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor:
+      Colors.grey.shade100,
 
       appBar: AppBar(
-        backgroundColor: primaryColor,
-        title: Text(widget.customerName),
+        backgroundColor:
+        primaryColor,
+        title: Text(
+          widget.customerName,
+        ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.call),
+            icon: const Icon(
+              Icons.call,
+            ),
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(
+              Icons.more_vert,
+            ),
           ),
         ],
       ),
 
       body: Column(
         children: [
-
           Container(
             color: primaryColor,
-            padding: const EdgeInsets.all(20),
+            padding:
+            const EdgeInsets.all(20),
             child: Column(
               children: [
-
                 CircleAvatar(
                   radius: 35,
-                  backgroundColor: Colors.white,
+                  backgroundColor:
+                  Colors.white,
                   child: Text(
-                    widget.customerName[0].toUpperCase(),
-                    style: const TextStyle(
+                    widget.customerName
+                        .isNotEmpty
+                        ? widget.customerName[0]
+                        .toUpperCase()
+                        : '?',
+                    style:
+                    const TextStyle(
                       fontSize: 28,
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
+                      color:
+                      primaryColor,
+                      fontWeight:
+                      FontWeight.bold,
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(
+                  height: 10,
+                ),
 
                 Text(
                   widget.phoneNumber,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style:
+                  const TextStyle(
+                    color:
+                    Colors.white70,
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(
+                  height: 20,
+                ),
 
                 Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                  shape:
+                  RoundedRectangleBorder(
+                    borderRadius:
+                    BorderRadius
+                        .circular(
+                      15,
+                    ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(18),
+                    padding:
+                    const EdgeInsets
+                        .all(18),
                     child: Row(
                       mainAxisAlignment:
-                          MainAxisAlignment.spaceAround,
+                      MainAxisAlignment
+                          .spaceAround,
                       children: [
-
                         Column(
                           children: [
-                            const Text("You Will Give"),
-                            const SizedBox(height: 8),
                             Text(
-                              "₹ ${giveTotal()}",
-                              style: const TextStyle(
-                                color: giveColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                              l10n
+                                  .youWillGive,
+                            ),
+
+                            const SizedBox(
+                              height: 8,
+                            ),
+
+                            Text(
+                              "₹ ${_formatAmount(giveTotal())}",
+                              style:
+                              const TextStyle(
+                                color:
+                                giveColor,
+                                fontWeight:
+                                FontWeight
+                                    .bold,
+                                fontSize:
+                                18,
                               ),
                             ),
                           ],
@@ -141,19 +202,33 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         Container(
                           width: 1,
                           height: 50,
-                          color: Colors.grey.shade300,
+                          color: Colors
+                              .grey
+                              .shade300,
                         ),
 
                         Column(
                           children: [
-                            const Text("You Will Get"),
-                            const SizedBox(height: 8),
                             Text(
-                              "₹ ${getTotal()}",
-                              style: const TextStyle(
-                                color: getColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                              l10n
+                                  .youWillGet,
+                            ),
+
+                            const SizedBox(
+                              height: 8,
+                            ),
+
+                            Text(
+                              "₹ ${_formatAmount(getTotal())}",
+                              style:
+                              const TextStyle(
+                                color:
+                                getColor,
+                                fontWeight:
+                                FontWeight
+                                    .bold,
+                                fontSize:
+                                18,
                               ),
                             ),
                           ],
@@ -163,16 +238,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(
+                  height: 15,
+                ),
 
                 Text(
                   balance >= 0
-                      ? "Balance : ₹ $balance"
-                      : "Balance : -₹ ${balance.abs()}",
-                  style: const TextStyle(
+                      ? "${l10n.balance} : ₹ ${_formatAmount(balance)}"
+                      : "${l10n.balance} : -₹ ${_formatAmount(balance.abs())}",
+                  style:
+                  const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                    FontWeight.bold,
                   ),
                 ),
               ],
@@ -181,94 +260,156 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
           Expanded(
             child: transactions.isEmpty
-                ? const Center(
-                    child: Text("No Transactions"),
-                  )
+                ? Center(
+              child: Text(
+                l10n
+                    .noTransactions,
+              ),
+            )
                 : ListView.builder(
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) {
-                      final item = transactions[index];
+              itemCount:
+              transactions.length,
+              itemBuilder:
+                  (context, index) {
+                final item =
+                transactions[
+                index];
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 8,
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                item["type"] == "Get"
-                                    ? Colors.green.shade100
-                                    : Colors.red.shade100,
-                            child: Icon(
-                              item["type"] == "Get"
-                                  ? Icons.arrow_downward
-                                  : Icons.arrow_upward,
-                              color: item["type"] == "Get"
-                                  ? Colors.green
-                                  : Colors.red,
-                            ),
-                          ),
-                          title: Text(item["type"]),
-                          subtitle: Text(item["date"]),
-                          trailing: Text(
-                            "₹ ${item["amount"]}",
-                            style: TextStyle(
-                              color: item["type"] == "Get"
-                                  ? Colors.green
-                                  : Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                final bool isGet =
+                    item["type"] ==
+                        "Get";
+
+                return Card(
+                  margin:
+                  const EdgeInsets
+                      .symmetric(
+                    horizontal: 15,
+                    vertical: 8,
                   ),
+                  child: ListTile(
+                    leading:
+                    CircleAvatar(
+                      backgroundColor:
+                      isGet
+                          ? Colors
+                          .green
+                          .shade100
+                          : Colors
+                          .red
+                          .shade100,
+                      child: Icon(
+                        isGet
+                            ? Icons
+                            .arrow_downward
+                            : Icons
+                            .arrow_upward,
+                        color: isGet
+                            ? Colors
+                            .green
+                            : Colors
+                            .red,
+                      ),
+                    ),
+
+                    title: Text(
+                      isGet
+                          ? l10n.get
+                          : l10n.give,
+                    ),
+
+                    subtitle:
+                    Text(
+                      item["date"],
+                    ),
+
+                    trailing:
+                    Text(
+                      "₹ ${item["amount"]}",
+                      style:
+                      TextStyle(
+                        color: isGet
+                            ? Colors
+                            .green
+                            : Colors
+                            .red,
+                        fontWeight:
+                        FontWeight
+                            .bold,
+                        fontSize:
+                        18,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
 
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar:
+      SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(15),
+          padding:
+          const EdgeInsets.all(15),
           child: Row(
             children: [
-
               Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: giveColor,
-                    padding: const EdgeInsets.symmetric(
+                child:
+                ElevatedButton(
+                  style:
+                  ElevatedButton
+                      .styleFrom(
+                    backgroundColor:
+                    giveColor,
+                    padding:
+                    const EdgeInsets
+                        .symmetric(
                       vertical: 15,
                     ),
                   ),
                   onPressed: () {
                     // Open Give Transaction Screen
                   },
-                  child: const Text(
-                    "GIVE",
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    l10n.give,
+                    style:
+                    const TextStyle(
+                      color:
+                      Colors.white,
+                    ),
                   ),
                 ),
               ),
 
-              const SizedBox(width: 15),
+              const SizedBox(
+                width: 15,
+              ),
 
               Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: getColor,
-                    padding: const EdgeInsets.symmetric(
+                child:
+                ElevatedButton(
+                  style:
+                  ElevatedButton
+                      .styleFrom(
+                    backgroundColor:
+                    getColor,
+                    padding:
+                    const EdgeInsets
+                        .symmetric(
                       vertical: 15,
                     ),
                   ),
                   onPressed: () {
                     // Open Get Transaction Screen
                   },
-                  child: const Text(
-                    "GET",
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    l10n.get,
+                    style:
+                    const TextStyle(
+                      color:
+                      Colors.white,
+                    ),
                   ),
                 ),
               ),

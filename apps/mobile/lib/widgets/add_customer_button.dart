@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/view/add_customer_screen.dart';
 
@@ -19,6 +20,8 @@ class AddCustomerButton extends StatefulWidget {
 class _AddCustomerButtonState extends State<AddCustomerButton> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return FloatingActionButton.extended(
       backgroundColor: const Color(0xff243B67),
       elevation: 2,
@@ -36,9 +39,9 @@ class _AddCustomerButtonState extends State<AddCustomerButton> {
         Icons.add,
         color: Colors.white,
       ),
-      label: const Text(
-        "Add Customer",
-        style: TextStyle(
+      label: Text(
+        l10n.addCustomer,
+        style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w600,
         ),

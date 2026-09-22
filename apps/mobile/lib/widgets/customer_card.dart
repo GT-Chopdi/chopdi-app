@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
-
 
 class CustomerCard extends StatelessWidget {
   final Customer customer;
@@ -18,35 +18,35 @@ class CustomerCard extends StatelessWidget {
   });
 
   Future<double> getBalance(int customerId) async {
+    final list = await IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(customerId)
+        .voidedAtIsNull()
+        .findAll();
 
-   final list = await IsarService.isar.transactions
-       .filter()
-       .customerIdEqualTo(customerId)
-       // Deleted entries are voided, not removed, so every read must exclude
-       // them or a deleted loan reappears in the balance.
-       .voidedAtIsNull()
-       .findAll();
+    double balance = 0;
 
-   double balance = 0;
-
-   for(final tx in list){
-      if(tx.type == TransactionType.gave){
-         balance += tx.amount;
-      }else{
-         balance -= tx.amount;
+    for (final tx in list) {
+      if (tx.type == TransactionType.gave) {
+        balance += tx.amount;
+      } else {
+        balance -= tx.amount;
       }
-   }
-   return balance;
+    }
+
+    return balance;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
-        .filter()
-        .customerIdEqualTo(customer.id)
-        .voidedAtIsNull()
-        .watch(fireImmediately: true),
+          .filter()
+          .customerIdEqualTo(customer.id)
+          .voidedAtIsNull()
+          .watch(fireImmediately: true),
       builder: (context, snapshot) {
         final transactions = snapshot.data ?? [];
 
@@ -58,8 +58,6 @@ class CustomerCard extends StatelessWidget {
           if (tx.type == TransactionType.gave) {
             totalGiven += tx.amount;
 
-            // Calculate current interest exactly like CustomerDetailsScreen
-            // totalInterest += InterestCalculator.calculate(tx);
             totalInterest += InterestCalculator.calculate(
               principal: tx.amount,
               rate: tx.interestRate,
@@ -72,8 +70,8 @@ class CustomerCard extends StatelessWidget {
           }
         }
 
-        final outstanding = totalGiven + totalInterest - totalReceived;
-
+        final outstanding =
+            totalGiven + totalInterest - totalReceived;
 
         return InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -98,7 +96,6 @@ class CustomerCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-
                 CircleAvatar(
                   radius: 22,
                   backgroundColor: ChopdiColors.lightGray,
@@ -118,7 +115,6 @@ class CustomerCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       Text(
                         customer.name,
                         style: GoogleFonts.manrope(
@@ -132,7 +128,7 @@ class CustomerCard extends StatelessWidget {
 
                       Text(
                         customer.phone.isEmpty
-                            ? "No phone number"
+                            ? l10n.noPhoneNumber
                             : customer.phone,
                         style: GoogleFonts.manrope(
                           fontSize: 12,
@@ -146,16 +142,10 @@ class CustomerCard extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-
                           _chip(
-                            "Loan: ₹${outstanding.toStringAsFixed(0)}",
+                            "${l10n.loan}: ₹${outstanding.toStringAsFixed(0)}",
                             const Color(0xffEEF3FA),
                           ),
-
-                          // _chip(
-                          //   "Interest: ${customer.interest}%",
-                          //   const Color(0xffEEF3FA),
-                          // ),
                         ],
                       ),
                     ],
@@ -185,7 +175,9 @@ class CustomerCard extends StatelessWidget {
                       const SizedBox(height: 3),
 
                       Text(
-                        outstanding > 0 ? "Pending" : "Settled",
+                        outstanding > 0
+                            ? l10n.pending
+                            : l10n.settled,
                         style: GoogleFonts.manrope(
                           fontSize: 12,
                           color: outstanding > 0
@@ -226,8 +218,4 @@ class CustomerCard extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on String {
-  void toInt() {}
 }

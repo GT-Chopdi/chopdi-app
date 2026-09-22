@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/widgets/create_new_chopdi.dart';
 
 class CreatedChopdiBottomSheet extends StatelessWidget {
@@ -11,6 +12,8 @@ class CreatedChopdiBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       height: 420,
       decoration: const BoxDecoration(
@@ -21,16 +24,16 @@ class CreatedChopdiBottomSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-
           const SizedBox(height: 20),
 
-          const Text("Current Chopdi"),
+          Text(
+            l10n.currentChopdi,
+          ),
 
           const Spacer(),
 
           ElevatedButton.icon(
             onPressed: () async {
-
               Navigator.pop(context);
 
               await Future.delayed(
@@ -47,7 +50,9 @@ class CreatedChopdiBottomSheet extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.add),
-            label: const Text("Add New Chopdi"),
+            label: Text(
+              l10n.addNewChopdi,
+            ),
           ),
 
           const SizedBox(height: 20),

@@ -6,6 +6,7 @@ import 'package:mychopdi/view/took_loan_customer_detail_add.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 import 'package:mychopdi/widgets/took_loan_add_new_lender_card.dart';
 
+import '../l10n/app_localizations.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
@@ -45,7 +46,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
       // Request contacts permission
       final permissionStatus =
-          await FlutterContacts.permissions.request(
+      await FlutterContacts.permissions.request(
         PermissionType.read,
       );
 
@@ -73,13 +74,13 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
       // Sort alphabetically
       validContacts.sort(
-        (a, b) {
+            (a, b) {
           final nameA = a.displayName ?? '';
           final nameB = b.displayName ?? '';
 
           return nameA.toLowerCase().compareTo(
-                nameB.toLowerCase(),
-              );
+            nameB.toLowerCase(),
+          );
         },
       );
 
@@ -99,7 +100,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       for (final contact in validContacts.take(5)) {
         debugPrint(
           "NAME: ${contact.displayName}, "
-          "PHONE: ${contact.phones.map((p) => p.number).toList()}",
+              "PHONE: ${contact.phones.map((p) => p.number).toList()}",
         );
       }
     } catch (e, stackTrace) {
@@ -135,7 +136,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
       filteredContacts = contacts.where((contact) {
         final name =
-            (contact.displayName ?? '').toLowerCase();
+        (contact.displayName ?? '').toLowerCase();
 
         final phone = contact.phones.isNotEmpty
             ? contact.phones.first.number.toLowerCase()
@@ -151,7 +152,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
   String normalizePhoneNumber(String phone) {
     String cleaned =
-        phone.replaceAll(RegExp(r'[^0-9]'), '');
+    phone.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (cleaned.startsWith('91') &&
         cleaned.length == 12) {
@@ -270,9 +271,9 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
     }
 
     final index = filteredContacts.indexWhere(
-      (contact) {
+          (contact) {
         final name =
-            (contact.displayName ?? '').trim();
+        (contact.displayName ?? '').trim();
 
         if (name.isEmpty) {
           return false;
@@ -331,7 +332,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                CrossAxisAlignment.start,
 
                 children: [
                   const SizedBox(height: 16),
@@ -428,8 +429,8 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
               child: SizedBox(
                 height:
-                    MediaQuery.of(context).size.height *
-                        0.62,
+                MediaQuery.of(context).size.height *
+                    0.62,
 
                 // child: const AlphabetIndex(),
                 child: AlphabetIndex(
@@ -448,20 +449,18 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
   // ------------------------------------------------------------
 
   Widget buildContactsList() {
-    // Loading
+    final l10n = AppLocalizations.of(context);
+
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    // Permission denied
     if (permissionDenied) {
       return Center(
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.contacts_outlined,
@@ -471,9 +470,9 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
             const SizedBox(height: 12),
 
-            const Text(
-              "Contacts permission is required",
-              style: TextStyle(
+            Text(
+              l10n.contactsPermissionRequired,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xff223A5E),
@@ -484,22 +483,18 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
             ElevatedButton(
               onPressed: loadContacts,
-
-              child: const Text(
-                "Allow Contacts",
-              ),
+              child: Text(l10n.allowContacts),
             ),
           ],
         ),
       );
     }
 
-    // No contacts
     if (filteredContacts.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          "No contacts found",
-          style: TextStyle(
+          l10n.noContactsFound,
+          style: const TextStyle(
             color: Color(0xff223A5E),
             fontSize: 16,
           ),
@@ -515,10 +510,10 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
         final phone = contact.phones.isNotEmpty
             ? contact.phones.first.number
-            : "No phone number";
+            : l10n.noPhoneNumber;
 
         return ContactTile(
-          name: contact.displayName ?? 'Unknown',
+          name: contact.displayName ?? l10n.unknownContact,
           phone: phone,
           onTap: () {
             selectContact(contact);

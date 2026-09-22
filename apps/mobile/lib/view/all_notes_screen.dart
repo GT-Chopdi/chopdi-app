@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/add_note_bottom_sheet.dart';
 import 'package:mychopdi/widgets/edit_note_bottom_sheet.dart';
@@ -9,6 +10,8 @@ class AllNotesBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Stack(
       children: [
         Container(
@@ -45,18 +48,20 @@ class AllNotesBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              const Text(
-                "All Notes",
-                style: TextStyle(
+              Text(
+                l10n.allNotes,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xff24365D),
                   fontSize: 18,
                 ),
               ),
 
-              const Text(
-                "5 Notes",
-                style: TextStyle(color: Colors.grey),
+              Text(
+                l10n.notesCount(5),
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -67,11 +72,11 @@ class AllNotesBottomSheet extends StatelessWidget {
                     16,
                     0,
                     16,
-                    90, // leave space for FAB
+                    90,
                   ),
                   itemCount: 5,
                   itemBuilder: (_, index) {
-                    bool important = index == 0;
+                    final bool important = index == 0;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -79,7 +84,12 @@ class AllNotesBottomSheet extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: important
                             ? const Color(0xffFFF7F5)
-                            : Color.fromRGBO(255, 248, 240, 1),
+                            : const Color.fromRGBO(
+                          255,
+                          248,
+                          240,
+                          1,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: important
@@ -111,12 +121,12 @@ class AllNotesBottomSheet extends StatelessWidget {
                           Expanded(
                             child: Column(
                               crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              CrossAxisAlignment.start,
                               children: [
                                 if (important)
-                                  const Text(
-                                    "Important Note",
-                                    style: TextStyle(
+                                  Text(
+                                    l10n.importantNote,
+                                    style: const TextStyle(
                                       color: Colors.red,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -124,6 +134,7 @@ class AllNotesBottomSheet extends StatelessWidget {
 
                                 const SizedBox(height: 2),
 
+                                // Dynamic note content.
                                 const Text(
                                   "Customer requested payment extension until 30 July 2026",
                                   style: TextStyle(
@@ -134,6 +145,7 @@ class AllNotesBottomSheet extends StatelessWidget {
 
                                 const SizedBox(height: 5),
 
+                                // Dynamic note date.
                                 const Text(
                                   "24 July 2026",
                                   style: TextStyle(
@@ -145,21 +157,13 @@ class AllNotesBottomSheet extends StatelessWidget {
                             ),
                           ),
 
-                          // PopupMenuButton(
-                          //   itemBuilder: (_) => const [
-                          //     PopupMenuItem(
-                          //       value: 1,
-                          //       child: Text("Edit"),
-                          //     ),
-                          //     PopupMenuItem(
-                          //       value: 2,
-                          //       child: Text("Delete"),
-                          //     ),
-                          //   ],
-                          // ),
-
                           PopupMenuButton<String>(
-                            color: Color.fromRGBO(255, 248, 240, 1),
+                            color: const Color.fromRGBO(
+                              255,
+                              248,
+                              240,
+                              1,
+                            ),
                             elevation: 8,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -171,23 +175,13 @@ class AllNotesBottomSheet extends StatelessWidget {
                             ),
                             offset: const Offset(-10, 35),
                             onSelected: (value) {
-                              // switch (value) {
-                              //   case "edit":
-                              //     // Edit Note
-                              //     break;
-
-                              //   case "important":
-                              //     // Mark as Important
-                              //     break;
-
-                              //   case "delete":
-                              //     // Delete Note
-                              //     break;
-                              // }
                               if (value == "edit") {
-                                Future.delayed(const Duration(milliseconds: 150), () {
-                                  showEditNoteBottomSheet(context);
-                                });
+                                Future.delayed(
+                                  const Duration(milliseconds: 150),
+                                      () {
+                                    showEditNoteBottomSheet(context);
+                                  },
+                                );
                               }
 
                               if (value == "important") {
@@ -210,7 +204,7 @@ class AllNotesBottomSheet extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      "Edit Note",
+                                      l10n.editNote,
                                       style: GoogleFonts.roboto(
                                         fontSize: 13,
                                         color: const Color(0xff24365D),
@@ -233,7 +227,7 @@ class AllNotesBottomSheet extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      "Mark as important",
+                                      l10n.markAsImportant,
                                       style: GoogleFonts.roboto(
                                         fontSize: 13,
                                         color: const Color(0xff24365D),
@@ -256,7 +250,7 @@ class AllNotesBottomSheet extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      "Delete Note",
+                                      l10n.deleteNote,
                                       style: GoogleFonts.roboto(
                                         fontSize: 13,
                                         color: Colors.red,
@@ -289,7 +283,6 @@ class AllNotesBottomSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(30),
             ),
             onPressed: () {
-              // Open Add Note Bottom Sheet
               showAddNoteBottomSheet(context);
             },
             icon: const Icon(
@@ -298,7 +291,7 @@ class AllNotesBottomSheet extends StatelessWidget {
               size: 18,
             ),
             label: Text(
-              "Add Note",
+              l10n.addNote,
               style: GoogleFonts.roboto(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -328,4 +321,4 @@ class AllNotesBottomSheet extends StatelessWidget {
       builder: (_) => const AddNoteBottomSheet(),
     );
   }
-} 
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 
@@ -18,7 +19,7 @@ class CreateChopdiBottomSheet extends StatefulWidget {
 class _CreateChopdiBottomSheetState
     extends State<CreateChopdiBottomSheet> {
   final TextEditingController nameController =
-      TextEditingController();
+  TextEditingController();
 
   bool isSaving = false;
 
@@ -29,12 +30,13 @@ class _CreateChopdiBottomSheetState
   }
 
   Future<void> _createChopdi() async {
+    final l10n = AppLocalizations.of(context);
     final name = nameController.text.trim();
 
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter Chopdi name"),
+        SnackBar(
+          content: Text(l10n.pleaseEnterChopdiName),
         ),
       );
       return;
@@ -46,7 +48,7 @@ class _CreateChopdiBottomSheetState
 
     try {
       final chopdi =
-          await ChopdiService.createChopdi(name);
+      await ChopdiService.createChopdi(name);
 
       if (!mounted) return;
 
@@ -66,7 +68,7 @@ class _CreateChopdiBottomSheetState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Failed to create Chopdi: $e",
+            "${l10n.failedToCreateChopdi}: $e",
           ),
         ),
       );
@@ -75,6 +77,8 @@ class _CreateChopdiBottomSheetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     final keyboardHeight =
         MediaQuery.of(context).viewInsets.bottom;
 
@@ -87,32 +91,23 @@ class _CreateChopdiBottomSheetState
       child: Material(
         color: Colors.transparent,
         child: Container(
-          // No margin.
-          // This makes the sheet full width like
-          // the Khatabook-style bottom sheet.
           margin: EdgeInsets.zero,
-
           padding: const EdgeInsets.fromLTRB(
             20,
             12,
             20,
             20,
           ),
-
           decoration: const BoxDecoration(
             color: AppColors.card,
-
-            // Only top corners are rounded.
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
           ),
-
           child: SingleChildScrollView(
             keyboardDismissBehavior:
-                ScrollViewKeyboardDismissBehavior.onDrag,
-
+            ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -123,7 +118,7 @@ class _CreateChopdiBottomSheetState
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     borderRadius:
-                        BorderRadius.circular(20),
+                    BorderRadius.circular(20),
                   ),
                 ),
 
@@ -132,44 +127,36 @@ class _CreateChopdiBottomSheetState
                 // Input field
                 TextField(
                   controller: nameController,
-
                   textCapitalization:
-                      TextCapitalization.words,
-
+                  TextCapitalization.words,
                   decoration: InputDecoration(
                     hintText:
-                        "Enter Shop/Business name",
-
+                    l10n.enterShopBusinessName,
                     hintStyle: const TextStyle(
                       color: Color(0xff7B869C),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
-
                     contentPadding:
-                        const EdgeInsets.symmetric(
+                    const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 18,
                     ),
-
                     enabledBorder:
-                        OutlineInputBorder(
+                    OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(14),
-
+                      BorderRadius.circular(14),
                       borderSide:
-                          const BorderSide(
+                      const BorderSide(
                         color: Color(0xffB9C9E8),
                       ),
                     ),
-
                     focusedBorder:
-                        OutlineInputBorder(
+                    OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(14),
-
+                      BorderRadius.circular(14),
                       borderSide:
-                          const BorderSide(
+                      const BorderSide(
                         color: Color(0xff243B67),
                         width: 1.5,
                       ),
@@ -177,57 +164,46 @@ class _CreateChopdiBottomSheetState
                   ),
                 ),
 
-                // Original spacing when keyboard
-                // is closed.
-                //
-                // Reduce it when keyboard is open
-                // so the sheet fits above keyboard.
                 SizedBox(
-                  height:
-                      keyboardHeight > 0
-                          ? 40
-                          : 120,
+                  height: keyboardHeight > 0
+                      ? 40
+                      : 120,
                 ),
 
                 // Create button
                 SizedBox(
                   width: double.infinity,
                   height: 58,
-
                   child: ElevatedButton(
                     style:
-                        ElevatedButton.styleFrom(
+                    ElevatedButton.styleFrom(
                       backgroundColor:
-                          const Color(0xff243B67),
-
+                      const Color(0xff243B67),
                       elevation: 0,
-
                       shape:
-                          RoundedRectangleBorder(
+                      RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.circular(16),
+                        BorderRadius.circular(16),
                       ),
                     ),
-
                     onPressed:
-                        isSaving
-                            ? null
-                            : _createChopdi,
-
+                    isSaving
+                        ? null
+                        : _createChopdi,
                     child: isSaving
                         ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : const Text(
-                            "Create",
-
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight:
-                                  FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+                      color: Colors.white,
+                    )
+                        : Text(
+                      l10n.create,
+                      style:
+                      const TextStyle(
+                        fontSize: 20,
+                        fontWeight:
+                        FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],

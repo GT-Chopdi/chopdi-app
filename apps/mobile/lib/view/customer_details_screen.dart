@@ -16,7 +16,7 @@ import 'package:mychopdi/widgets/money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class CustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
 
@@ -239,7 +239,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
+    final l10n = AppLocalizations.of(context);
     final width = size.width;
     final height = size.height;
 
@@ -341,9 +341,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    "You Gave ₹",
-                    style: TextStyle(
+                  child: Text(
+                    l10n.youGave,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -387,9 +387,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "You Got ₹",
-                      style: TextStyle(
+                    child: Text(
+                    l10n.youGot,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),
@@ -523,7 +523,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
-                      "Total Given",
+                      l10n.totalGiven,
                       "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
@@ -538,7 +538,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      "Total Interest",
+                      l10n.totalInterest,
                       "₹${totalInterest.toStringAsFixed(0)}",
                       const Color(0xFF00901B),
                     ),
@@ -553,7 +553,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/outstanding.png',
-                      "Outstanding",
+                        l10n.outstanding,
                       "₹${outstanding.toStringAsFixed(0)}",
                       const Color(0xFFC74C4C),
                     ),

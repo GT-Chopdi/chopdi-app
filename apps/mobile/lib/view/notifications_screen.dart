@@ -5,6 +5,7 @@ import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final Isar isar;
@@ -45,7 +46,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _loadNotificationSetting() async {
     final enabled =
-        await localNotificationService.areNotificationsEnabled();
+    await localNotificationService.areNotificationsEnabled();
 
     if (!mounted) {
       return;
@@ -158,13 +159,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-      
+
               final horizontalPadding = width < 360
                   ? 12.0
                   : width < 600
-                      ? 18.0
-                      : 24.0;
-      
+                  ? 18.0
+                  : 24.0;
+
               return Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: horizontalPadding,
@@ -172,19 +173,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 18),
-      
+
                     // ==================================================
                     // HEADER
                     // ==================================================
-      
+
                     _buildHeader(),
-      
+
                     const SizedBox(height: 20),
-      
+
                     // ==================================================
                     // NOTIFICATIONS
                     // ==================================================
-      
+
                     Expanded(
                       child: StreamBuilder<List<NotificationModel>>(
                         stream: notificationService.watchNotifications(
@@ -192,7 +193,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
-                                  ConnectionState.waiting &&
+                              ConnectionState.waiting &&
                               !snapshot.hasData) {
                             return const Center(
                               child: CircularProgressIndicator(
@@ -200,23 +201,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ),
                             );
                           }
-      
+
                           final notifications = snapshot.data ?? [];
-      
+
                           if (notifications.isEmpty) {
                             return _emptyNotifications();
                           }
-      
+
                           return ListView.separated(
                             padding: const EdgeInsets.only(
                               bottom: 20,
                             ),
                             itemCount: notifications.length,
                             separatorBuilder: (_, _) =>
-                                const SizedBox(height: 12),
+                            const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final notification = notifications[index];
-      
+
                               return _notificationTile(
                                 context,
                                 notification,
@@ -226,7 +227,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         },
                       ),
                     ),
-      
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -243,6 +244,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         InkWell(
@@ -267,7 +269,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         Expanded(
           child: Text(
-            'Notifications',
+            l10n.notifications,
             style: GoogleFonts.manrope(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -292,7 +294,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             }
 
             return IconButton(
-              tooltip: 'Mark all as read',
+              tooltip: l10n.markAllAsRead,
               onPressed: () async {
                 await notificationService.markAllAsRead(
                   widget.chopdiId,
@@ -315,9 +317,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   Widget _notificationTile(
-    BuildContext context,
-    NotificationModel notification,
-  ) {
+      BuildContext context,
+      NotificationModel notification,
+      ) {
     final iconColor = _getNotificationColor(
       notification.type,
     );
@@ -387,14 +389,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           boxShadow: isUnread
               ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: 0.04,
-                    ),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: 0.04,
+              ),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ]
               : null,
         ),
 
@@ -436,11 +438,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    CrossAxisAlignment.start,
                     children: [
                       Row(
                         crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        CrossAxisAlignment.start,
                         children: [
                           // ==================================================
                           // UNREAD DOT
@@ -503,6 +505,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                 Text(
                   _formatNotificationTime(
+                    context,
                     notification.createdAt,
                   ),
                   textAlign: TextAlign.right,
@@ -581,6 +584,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   Widget _emptyNotifications() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -604,7 +608,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const SizedBox(height: 16),
 
           Text(
-            'No Notifications',
+            l10n.noNotifications,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -615,7 +619,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const SizedBox(height: 6),
 
           Text(
-            'You\'re all caught up!',
+            l10n.allCaughtUp,
             style: GoogleFonts.manrope(
               fontSize: 13,
               color: Colors.grey.shade600,
@@ -631,9 +635,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   void _showNotificationOptions(
-    BuildContext context,
-    NotificationModel notification,
-  ) {
+      BuildContext context,
+      NotificationModel notification,
+      ) {
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xffFFF8F0),
@@ -664,7 +669,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade400,
                     borderRadius:
-                        BorderRadius.circular(50),
+                    BorderRadius.circular(50),
                   ),
                 ),
 
@@ -683,8 +688,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   title: Text(
                     notification.isRead
-                        ? 'Mark as unread'
-                        : 'Mark as read',
+                        ? l10n.markAsUnread
+                        : l10n.markAsRead,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w600,
                       color: ChopdiColors.navy,
@@ -717,7 +722,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     color: Colors.red,
                   ),
                   title: Text(
-                    'Delete notification',
+                    l10n.deleteNotification,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w600,
                       color: Colors.red,
@@ -744,8 +749,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   Future<void> _confirmDelete(
-    NotificationModel notification,
-  ) async {
+      NotificationModel notification,
+      ) async {
+    final l10n = AppLocalizations.of(context);
     if (!mounted) {
       return;
     }
@@ -759,7 +765,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Delete Notification?',
+            l10n.deleteNotificationTitle,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -767,7 +773,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
           ),
           content: Text(
-            'Are you sure you want to delete this notification?',
+            l10n.confirmDeleteNotification,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -783,7 +789,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 );
               },
               child: Text(
-                'Cancel',
+                l10n.cancel,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: Colors.grey.shade700,
@@ -799,7 +805,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 );
               },
               child: Text(
-                'Delete',
+                l10n.delete,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: Colors.red,
@@ -825,6 +831,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _showNotificationStatusDialog({
     required bool enabled,
   }) async {
+    final l10n = AppLocalizations.of(context);
     if (!mounted) {
       return;
     }
@@ -846,11 +853,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 decoration: BoxDecoration(
                   color: enabled
                       ? Colors.green.withValues(
-                          alpha: .12,
-                        )
+                    alpha: .12,
+                  )
                       : Colors.red.withValues(
-                          alpha: .12,
-                        ),
+                    alpha: .12,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -869,8 +876,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Expanded(
                 child: Text(
                   enabled
-                      ? 'Notifications Enabled'
-                      : 'Notifications Disabled',
+                      ? l10n.notificationsEnabled
+                      : l10n.notificationsDisabled,
                   style: GoogleFonts.manrope(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -882,8 +889,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           content: Text(
             enabled
-                ? 'You will receive notifications for payment reminders, interest updates and other important alerts.'
-                : 'You will no longer receive notifications from Chopdi until you enable them again.',
+                ? l10n.notificationsEnabledDescription
+                : l10n.notificationsDisabledDescription,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -897,7 +904,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Navigator.of(dialogContext).pop();
               },
               child: Text(
-                'OK',
+                l10n.ok,
                 style: GoogleFonts.manrope(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -916,42 +923,44 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ============================================================
 
   String _formatNotificationTime(
-    DateTime dateTime,
-  ) {
+      BuildContext context,
+      DateTime dateTime,
+      ) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
 
     final difference = now.difference(dateTime);
 
     if (difference.isNegative) {
-      return 'Just now';
+      return l10n.justNow;
     }
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return l10n.justNow;
     }
 
     if (difference.inMinutes < 60) {
       final minutes = difference.inMinutes;
 
       return minutes == 1
-          ? '1 min ago'
-          : '$minutes mins ago';
+          ? l10n.minuteAgo
+          : l10n.minutesAgo(minutes);
     }
 
     if (difference.inHours < 24) {
       final hours = difference.inHours;
 
       return hours == 1
-          ? '1 hour ago'
-          : '$hours hours ago';
+          ? l10n.hourAgo
+          : l10n.hoursAgo(hours);
     }
 
     if (difference.inDays == 1) {
-      return 'Yesterday';
+      return l10n.yesterday;
     }
 
     if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return l10n.daysAgo(difference.inDays);
     }
 
     final day = dateTime.day

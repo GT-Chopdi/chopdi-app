@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
@@ -19,14 +20,16 @@ class TookLoanCustomerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
           .filter()
           .customerIdEqualTo(customer.id)
           .voidedAtIsNull()
           .watch(
-            fireImmediately: true,
-          ),
+        fireImmediately: true,
+      ),
       builder: (context, snapshot) {
         final transactions =
             snapshot.data ?? <Transaction>[];
@@ -38,11 +41,11 @@ class TookLoanCustomerCard extends StatelessWidget {
         final double totalLoanTaken = transactions
             .where(
               (tx) => tx.type == TransactionType.took,
-            )
+        )
             .fold<double>(
-              0,
+          0,
               (sum, tx) => sum + tx.amount,
-            );
+        );
 
         // ============================================================
         // TOTAL PAID
@@ -51,84 +54,71 @@ class TookLoanCustomerCard extends StatelessWidget {
         final double totalPaid = transactions
             .where(
               (tx) => tx.type == TransactionType.paid,
-            )
+        )
             .fold<double>(
-              0,
+          0,
               (sum, tx) => sum + tx.amount,
-            );
+        );
 
         // ============================================================
         // TOTAL INTEREST
-        // Same calculation as TookLoanCustomerDetailsScreen
         // ============================================================
 
         final double totalInterest = transactions
             .where(
               (tx) => tx.type == TransactionType.took,
-            )
+        )
             .fold<double>(
-              0,
+          0,
               (sum, tx) {
-                try {
-                  return sum +
-                      InterestCalculator.calculate(
-                        principal: tx.amount,
-                        rate: tx.interestRate,
-                        startDate: tx.date,
-                        interestType: tx.interestType,
-                        frequency: tx.interestFrequency,
-                      );
-                } catch (e) {
-                  debugPrint(
-                    '[TookLoanCustomerCard] '
+            try {
+              return sum +
+                  InterestCalculator.calculate(
+                    principal: tx.amount,
+                    rate: tx.interestRate,
+                    startDate: tx.date,
+                    interestType: tx.interestType,
+                    frequency: tx.interestFrequency,
+                  );
+            } catch (e) {
+              debugPrint(
+                '[TookLoanCustomerCard] '
                     'Interest calculation failed '
                     'transaction=${tx.id}: $e',
-                  );
+              );
 
-                  return sum;
-                }
-              },
-            );
+              return sum;
+            }
+          },
+        );
 
         // ============================================================
         // OUTSTANDING
-        //
-        // Total Taken
-        // + Interest
-        // - Paid
-        // = Outstanding
         // ============================================================
 
         final double outstanding =
-            (totalLoanTaken + totalInterest - totalPaid)
-                .clamp(
+        (totalLoanTaken + totalInterest - totalPaid)
+            .clamp(
           0.0,
           double.infinity,
         );
 
         // ============================================================
         // OUTSTANDING COLOR
-        //
-        // ₹0     -> Black
-        // > ₹0   -> Green
         // ============================================================
 
         final Color outstandingColor = outstanding == 0
             ? Colors.black
             : Colors.green;
 
-        // ============================================================
-        // DEBUG
-        // ============================================================
-
         debugPrint(
           '[TookLoanCustomerCard] '
-          'customer=${customer.name}, '
-          'customerId=${customer.id}, '
-          'totalLoanTaken=$totalLoanTaken, '
-          'totalInterest=$totalInterest, '
-          'totalPaid=$totalPaid, '
-          'outstanding=$outstanding',
+              'customer=${customer.name}, '
+              'customerId=${customer.id}, '
+              'totalLoanTaken=$totalLoanTaken, '
+              'totalInterest=$totalInterest, '
+              'totalPaid=$totalPaid, '
+              'outstanding=$outstanding',
         );
 
         return InkWell(
@@ -139,8 +129,8 @@ class TookLoanCustomerCard extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) =>
                     TookLoanCustomerDetailsScreen(
-                  customer: customer,
-                ),
+                      customer: customer,
+                    ),
               ),
             );
           },
@@ -172,7 +162,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 22,
                   backgroundColor:
-                      ChopdiColors.lightGray,
+                  ChopdiColors.lightGray,
                   child: Text(
                     customer.name.isNotEmpty
                         ? customer.name[0].toUpperCase()
@@ -194,7 +184,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    CrossAxisAlignment.start,
                     children: [
                       Text(
                         customer.name,
@@ -211,7 +201,7 @@ class TookLoanCustomerCard extends StatelessWidget {
 
                       Text(
                         customer.phone.isEmpty
-                            ? "No phone number"
+                            ? l10n.noPhoneNumber
                             : customer.phone,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -229,18 +219,18 @@ class TookLoanCustomerCard extends StatelessWidget {
 
                       Container(
                         padding:
-                            const EdgeInsets.symmetric(
+                        const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xffEEF3FA),
+                          const Color(0xffEEF3FA),
                           borderRadius:
-                              BorderRadius.circular(12),
+                          BorderRadius.circular(12),
                         ),
                         child: Text(
-                          "Loan: ₹${totalLoanTaken.toStringAsFixed(0)}",
+                          '${l10n.loan}: ₹${totalLoanTaken.toStringAsFixed(0)}',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -260,16 +250,12 @@ class TookLoanCustomerCard extends StatelessWidget {
 
                 Column(
                   mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  MainAxisAlignment.center,
                   crossAxisAlignment:
-                      CrossAxisAlignment.end,
+                  CrossAxisAlignment.end,
                   children: [
-                    // ==================================================
-                    // OUTSTANDING INCLUDING INTEREST
-                    // ==================================================
-
                     Text(
-                      "₹${outstanding.toStringAsFixed(0)}",
+                      '₹${outstanding.toStringAsFixed(0)}',
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -285,9 +271,8 @@ class TookLoanCustomerCard extends StatelessWidget {
 
                     if (totalInterest > 0) ...[
                       const SizedBox(height: 2),
-
                       Text(
-                        "Interest: ₹${totalInterest.toStringAsFixed(0)}",
+                        '${l10n.interest}: ₹${totalInterest.toStringAsFixed(0)}',
                         style: GoogleFonts.manrope(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,

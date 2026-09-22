@@ -8,6 +8,7 @@ import 'package:mychopdi/service/notification_service.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class EditTransactionBottomSheet extends StatefulWidget {
   final Transaction transaction;
@@ -109,6 +110,7 @@ class _EditTransactionBottomSheetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     /*
      * You Got does not support interest functionality.
      *
@@ -218,7 +220,7 @@ class _EditTransactionBottomSheetState
                       const SizedBox(height: 7),
 
                       Text(
-                        'Edit Transaction',
+                        l10n.editTransaction,
                         style: GoogleFonts.manrope(
                           color: const Color(0xFF233E67),
                           fontSize: 14,
@@ -232,7 +234,7 @@ class _EditTransactionBottomSheetState
                       // AMOUNT
                       // ====================================================
 
-                      _buildLabel('Amount'),
+                      _buildLabel(l10n.amount),
 
                       const SizedBox(height: 5),
 
@@ -251,7 +253,7 @@ class _EditTransactionBottomSheetState
                       // DATE
                       // ====================================================
 
-                      _buildLabel('Date'),
+                      _buildLabel(l10n.date),
 
                       const SizedBox(height: 5),
 
@@ -271,7 +273,7 @@ class _EditTransactionBottomSheetState
                         // INTEREST RATE
                         // --------------------------------------------------
 
-                        _buildLabel('Interest Rate (%)'),
+                        _buildLabel(l10n.interestRatePercent),
 
                         const SizedBox(height: 5),
 
@@ -283,13 +285,13 @@ class _EditTransactionBottomSheetState
                         // INTEREST TYPE
                         // --------------------------------------------------
 
-                        _buildLabel('Interest Type'),
+                        _buildLabel(l10n.interestType),
 
                         const SizedBox(height: 5),
 
                         _buildDropdown(
                           value: selectedInterestType,
-                          hint: 'Select Interest Type',
+                          hint: l10n.selectInterestType,
                           items: interestTypes,
                           onChanged: (value) {
                             setState(() {
@@ -304,13 +306,13 @@ class _EditTransactionBottomSheetState
                         // INTEREST FREQUENCY
                         // --------------------------------------------------
 
-                        _buildLabel('Interest Frequency'),
+                        _buildLabel(l10n.interestFrequency),
 
                         const SizedBox(height: 5),
 
                         _buildDropdown(
                           value: selectedInterestFrequency,
-                          hint: 'Select Interest Frequency',
+                          hint: l10n.selectInterestFrequency,
                           items: interestFrequencies,
                           onChanged: (value) {
                             setState(() {
@@ -326,7 +328,7 @@ class _EditTransactionBottomSheetState
                       // DESCRIPTION
                       // ====================================================
 
-                      _buildLabel('Description'),
+                      _buildLabel(l10n.description),
 
                       const SizedBox(height: 5),
 
@@ -338,13 +340,13 @@ class _EditTransactionBottomSheetState
                       // PAYMENT MODE
                       // ====================================================
 
-                      _buildLabel('Payment Mode (Optional)'),
+                      _buildLabel(l10n.paymentModeOptional),
 
                       const SizedBox(height: 5),
 
                       _buildDropdown(
                         value: selectedPaymentMode,
-                        hint: 'Select Payment Mode',
+                        hint: l10n.selectPaymentMode,
                         items: paymentModes,
                         onChanged: (value) {
                           setState(() {
@@ -401,7 +403,7 @@ class _EditTransactionBottomSheetState
                             ),
                           ),
                           child: Text(
-                            'Cancel',
+                            l10n.cancel,
                             style: GoogleFonts.manrope(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -433,7 +435,7 @@ class _EditTransactionBottomSheetState
                             ),
                           ),
                           child: Text(
-                            'Save Changes',
+                            l10n.saveChanges,
                             style: GoogleFonts.manrope(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -457,6 +459,7 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   Widget _buildInterestRateField() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -509,7 +512,7 @@ class _EditTransactionBottomSheetState
                   width: 1,
                 ),
               ),
-              hintText: 'Enter Interest Rate',
+              hintText: l10n.enterInterestRate,
               hintStyle: GoogleFonts.manrope(
                 color: const Color(0xFF8B929B),
                 fontSize: 10,
@@ -529,7 +532,7 @@ class _EditTransactionBottomSheetState
               top: 4,
             ),
             child: Text(
-              'Interest rate is required',
+              l10n.interestRateRequired,
               style: GoogleFonts.manrope(
                 color: Colors.red,
                 fontSize: 9,
@@ -645,7 +648,7 @@ class _EditTransactionBottomSheetState
         child: Row(
           children: [
             Text(
-              DateFormat('dd MMM yyyy')
+              DateFormat('dd MMM yyyy', Localizations.localeOf(context).toLanguageTag())
                   .format(selectedDate),
               style: GoogleFonts.manrope(
                 color: const Color(0xFF233E67),
@@ -687,6 +690,32 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
   // DROPDOWN
   // ==========================================================================
+
+  String _localizedDropdownValue(BuildContext context, String value) {
+    final l10n = AppLocalizations.of(context);
+    switch (value) {
+      case 'Simple Interest':
+        return l10n.simpleInterest;
+      case 'Compound Interest':
+        return l10n.compoundInterest;
+      case 'Monthly':
+        return l10n.monthly;
+      case 'Yearly':
+        return l10n.yearly;
+      case 'Daily':
+        return l10n.daily;
+      case 'Cash':
+        return l10n.cash;
+      case 'UPI':
+        return l10n.upi;
+      case 'Bank Transfer':
+        return l10n.bankTransfer;
+      case 'Other':
+        return l10n.other;
+      default:
+        return value;
+    }
+  }
 
   Widget _buildDropdown({
     required String? value,
@@ -732,7 +761,7 @@ class _EditTransactionBottomSheetState
           items: items.map((item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item),
+              child: Text(_localizedDropdownValue(context, item)),
             );
           }).toList(),
           onChanged: onChanged,
@@ -746,6 +775,7 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   Widget _buildDescriptionField() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment:
       CrossAxisAlignment.end,
@@ -766,7 +796,7 @@ class _EditTransactionBottomSheetState
             ),
             decoration: InputDecoration(
               counterText: '',
-              hintText: 'Description',
+              hintText: l10n.description,
               contentPadding:
               const EdgeInsets.all(8),
               hintStyle: GoogleFonts.manrope(
@@ -805,6 +835,7 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   Future<void> _saveChanges() async {
+    final l10n = AppLocalizations.of(context);
     final amount = double.tryParse(
       amountController.text.trim(),
     );
@@ -822,7 +853,7 @@ class _EditTransactionBottomSheetState
 
     if (amount == null || amount <= 0) {
       _showError(
-        'Please enter a valid amount',
+        l10n.pleaseEnterValidAmount,
       );
       return;
     }
@@ -991,7 +1022,7 @@ class _EditTransactionBottomSheetState
     );
 
     final customerName =
-        customer?.name ?? 'Customer';
+        customer?.name ?? l10n.customer;
 
     // ============================================================
     // CREATE INTEREST UPDATED NOTIFICATION

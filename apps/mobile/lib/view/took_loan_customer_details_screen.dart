@@ -16,6 +16,8 @@ import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
 import 'package:mychopdi/service/phone_call_service.dart';
 
+import '../l10n/app_localizations.dart';
+
 class TookLoanCustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
 
@@ -53,7 +55,7 @@ class _CustomerDetailsScreenState
   // ============================================================
   // TRANSACTIONS
   // ============================================================
-  
+
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()
@@ -63,7 +65,7 @@ class _CustomerDetailsScreenState
         .findAll();
 
     loadedTransactions.sort(
-      (a, b) => b.date.compareTo(a.date),
+          (a, b) => b.date.compareTo(a.date),
     );
 
     if (!mounted) return;
@@ -234,6 +236,8 @@ class _CustomerDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     final size = MediaQuery.of(context).size;
 
     final width = size.width;
@@ -266,7 +270,7 @@ class _CustomerDetailsScreenState
                       initialGaveLoanSelected: false,
                     ),
                   ),
-                  (route) => false,
+                      (route) => false,
                 );
               },
             ),
@@ -329,9 +333,9 @@ class _CustomerDetailsScreenState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    "You Gave ₹",
-                    style: TextStyle(
+                  child: Text(
+                    l10n.youGave,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -341,7 +345,6 @@ class _CustomerDetailsScreenState
 
               // ====================================================
               // YOU PAID
-              //
               // SHOW ONLY AFTER FIRST TOOK TRANSACTION
               // ====================================================
 
@@ -376,9 +379,9 @@ class _CustomerDetailsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "You Got ₹",
-                      style: TextStyle(
+                    child: Text(
+                      l10n.youGot,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),
@@ -462,8 +465,7 @@ class _CustomerDetailsScreenState
                   },
                   child: CircleAvatar(
                     radius: 22,
-                    backgroundColor:
-                    const Color.fromRGBO(
+                    backgroundColor: const Color.fromRGBO(
                       141,
                       208,
                       113,
@@ -505,7 +507,7 @@ class _CustomerDetailsScreenState
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
-                      "Total Taken",
+                      l10n.totalTaken,
                       "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
@@ -520,7 +522,7 @@ class _CustomerDetailsScreenState
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      "Interest Due",
+                      l10n.interestDue,
                       "₹${totalInterest.toStringAsFixed(0)}",
                       const Color(0xFF00901B),
                     ),
@@ -535,7 +537,7 @@ class _CustomerDetailsScreenState
                   Expanded(
                     child: _infoItem(
                       'assets/outstanding.png',
-                      "Outstanding",
+                      l10n.outstanding,
                       "₹${outstanding.toStringAsFixed(0)}",
                       const Color(0xFFC74C4C),
                     ),
@@ -548,8 +550,6 @@ class _CustomerDetailsScreenState
 
             // ======================================================
             // TRANSACTION TABLE
-            //
-            // NO EXTRA TABS
             // ======================================================
 
             TookLoanTransactionTable(

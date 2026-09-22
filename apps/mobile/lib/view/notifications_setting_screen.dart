@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:mychopdi/utils/app_colors.dart';
@@ -302,7 +303,7 @@ class _NotificationSettingsScreenState
       if (!mounted) return;
 
       await _showSuccess(
-        'Notification settings saved successfully.',
+        AppLocalizations.of(context).notificationSettingsSavedSuccessfully,
       );
 
       if (!mounted) return;
@@ -316,7 +317,7 @@ class _NotificationSettingsScreenState
       if (!mounted) return;
 
       await _showError(
-        'Unable to save notification settings.',
+        AppLocalizations.of(context).unableToSaveNotificationSettings,
       );
     } finally {
       if (mounted) {
@@ -340,7 +341,7 @@ class _NotificationSettingsScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            'Error',
+            AppLocalizations.of(context).error,
             style: GoogleFonts.manrope(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -361,7 +362,7 @@ class _NotificationSettingsScreenState
                 Navigator.of(dialogContext).pop();
               },
               child: Text(
-                'OK',
+                AppLocalizations.of(context).ok,
                 style: GoogleFonts.manrope(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -388,7 +389,7 @@ class _NotificationSettingsScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            'Success',
+            AppLocalizations.of(context).success,
             style: GoogleFonts.manrope(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -409,7 +410,7 @@ class _NotificationSettingsScreenState
                 Navigator.of(dialogContext).pop();
               },
               child: Text(
-                'OK',
+                AppLocalizations.of(context).ok,
                 style: GoogleFonts.manrope(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -448,64 +449,64 @@ class _NotificationSettingsScreenState
           },
           child: _loading
               ? const Center(
-                  child: CircularProgressIndicator(),
-                )
+            child: CircularProgressIndicator(),
+          )
               : LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        14,
-                        horizontalPadding,
-                        keyboardVisible ? 30 : 18,
-                      ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: maxWidth,
-                            minHeight: constraints.maxHeight - 32,
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.stretch,
-                            children: [
-                              _buildHeader(screenWidth),
-
-                              const SizedBox(height: 12),
-
-                              _buildTopInformation(screenWidth),
-
-                              const SizedBox(height: 12),
-
-                              _buildPaymentReminderCard(
-                                screenWidth,
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              _buildDailyReminderCard(
-                                screenWidth,
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              _buildSecurityBox(screenWidth),
-
-                              const SizedBox(height: 20),
-
-                              _buildSaveButton(screenWidth),
-
-                              const SizedBox(height: 14),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  14,
+                  horizontalPadding,
+                  keyboardVisible ? 30 : 18,
                 ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: maxWidth,
+                      minHeight: constraints.maxHeight - 32,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(screenWidth),
+
+                        const SizedBox(height: 12),
+
+                        _buildTopInformation(screenWidth),
+
+                        const SizedBox(height: 12),
+
+                        _buildPaymentReminderCard(
+                          screenWidth,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        _buildDailyReminderCard(
+                          screenWidth,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        _buildSecurityBox(screenWidth),
+
+                        const SizedBox(height: 20),
+
+                        _buildSaveButton(screenWidth),
+
+                        const SizedBox(height: 14),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -545,7 +546,7 @@ class _NotificationSettingsScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Notification Settings',
+                AppLocalizations.of(context).notificationSettings,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
@@ -558,7 +559,7 @@ class _NotificationSettingsScreenState
               const SizedBox(height: 1),
 
               Text(
-                'Manage app notifications',
+                AppLocalizations.of(context).manageAppNotifications,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
@@ -613,7 +614,7 @@ class _NotificationSettingsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Choose what you want to be notified about.',
+                  AppLocalizations.of(context).chooseNotificationAbout,
                   softWrap: true,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
@@ -625,7 +626,7 @@ class _NotificationSettingsScreenState
                 const SizedBox(height: 2),
 
                 Text(
-                  'You can change these settings anytime.',
+                  AppLocalizations.of(context).changeSettingsAnytime,
                   softWrap: true,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
@@ -686,11 +687,11 @@ class _NotificationSettingsScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Payment Due Reminders',
+                          AppLocalizations.of(context).paymentDueReminders,
                           softWrap: true,
                           style: GoogleFonts.manrope(
                             fontSize:
-                                _sectionTitleFontSize(screenWidth),
+                            _sectionTitleFontSize(screenWidth),
                             fontWeight: FontWeight.w700,
                             color: darkBlue,
                           ),
@@ -699,11 +700,11 @@ class _NotificationSettingsScreenState
                         const SizedBox(height: 3),
 
                         Text(
-                          'Get notified when a customer’s payment due date is approaching.',
+                          AppLocalizations.of(context).paymentDueRemindersDescription,
                           softWrap: true,
                           style: GoogleFonts.manrope(
                             fontSize:
-                                _descriptionFontSize(screenWidth),
+                            _descriptionFontSize(screenWidth),
                             height: 1.2,
                             fontWeight: FontWeight.w400,
                             color: secondaryText,
@@ -737,8 +738,8 @@ class _NotificationSettingsScreenState
           // REMIND ME
           // ===============================================================
 
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               12,
               10,
               12,
@@ -747,8 +748,8 @@ class _NotificationSettingsScreenState
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Remind Me',
-                style: TextStyle(
+                AppLocalizations.of(context).remindMe,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: secondaryText,
@@ -763,25 +764,22 @@ class _NotificationSettingsScreenState
 
           _buildReminderOption(
             value: 'dueDate',
-            title: 'On the due date',
-            subtitle:
-                'Notify me on the same day the payment is due.',
+            title: AppLocalizations.of(context).onDueDate,
+            subtitle: AppLocalizations.of(context).onDueDateDescription,
             screenWidth: screenWidth,
           ),
 
           _buildReminderOption(
             value: 'oneDayBefore',
-            title: '1 day before',
-            subtitle:
-                'Notify me 1 day before the due date.',
+            title: AppLocalizations.of(context).oneDayBefore,
+            subtitle: AppLocalizations.of(context).oneDayBeforeDescription,
             screenWidth: screenWidth,
           ),
 
           _buildReminderOption(
             value: 'threeDaysBefore',
-            title: '3 days before',
-            subtitle:
-                'Notify me 3 days before the due date.',
+            title: AppLocalizations.of(context).threeDaysBefore,
+            subtitle: AppLocalizations.of(context).threeDaysBeforeDescription,
             screenWidth: screenWidth,
           ),
 
@@ -832,14 +830,14 @@ class _NotificationSettingsScreenState
           value: value,
           onChanged: onChanged,
           materialTapTargetSize:
-              MaterialTapTargetSize.shrinkWrap,
+          MaterialTapTargetSize.shrinkWrap,
           activeThumbColor: Colors.white,
           activeTrackColor: darkBlue,
           inactiveThumbColor: Colors.white,
           inactiveTrackColor:
-              const Color(0xFFAABBD1),
+          const Color(0xFFAABBD1),
           trackOutlineColor:
-              WidgetStateProperty.all(
+          WidgetStateProperty.all(
             Colors.transparent,
           ),
         ),
@@ -906,16 +904,16 @@ class _NotificationSettingsScreenState
                 ),
                 child: selected
                     ? Center(
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration:
-                              const BoxDecoration(
-                            color: darkBlue,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      )
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration:
+                    const BoxDecoration(
+                      color: darkBlue,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                )
                     : null,
               ),
 
@@ -929,14 +927,14 @@ class _NotificationSettingsScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
                       softWrap: true,
                       style: GoogleFonts.manrope(
                         fontSize:
-                            _optionTitleFontSize(
+                        _optionTitleFontSize(
                           screenWidth,
                         ),
                         fontWeight: FontWeight.w700,
@@ -953,7 +951,7 @@ class _NotificationSettingsScreenState
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.manrope(
                         fontSize:
-                            _optionSubtitleFontSize(
+                        _optionSubtitleFontSize(
                           screenWidth,
                         ),
                         height: 1.2,
@@ -996,7 +994,7 @@ class _NotificationSettingsScreenState
         ),
         child: Row(
           crossAxisAlignment:
-              CrossAxisAlignment.start,
+          CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 1),
@@ -1013,15 +1011,15 @@ class _NotificationSettingsScreenState
             Expanded(
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'How it works?',
+                    AppLocalizations.of(context).howItWorks,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color:
-                          const Color.fromRGBO(
+                      const Color.fromRGBO(
                         199,
                         76,
                         76,
@@ -1033,7 +1031,7 @@ class _NotificationSettingsScreenState
                   const SizedBox(height: 2),
 
                   Text(
-                    'You will receive a notification once a day for all upcoming due payments.',
+                    AppLocalizations.of(context).dailyUpcomingPayments,
                     softWrap: true,
                     style: GoogleFonts.manrope(
                       fontSize: 10,
@@ -1085,14 +1083,14 @@ class _NotificationSettingsScreenState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Daily Reminder',
+                    AppLocalizations.of(context).dailyReminder,
                     softWrap: true,
                     style: GoogleFonts.manrope(
                       fontSize:
-                          _sectionTitleFontSize(
+                      _sectionTitleFontSize(
                         screenWidth,
                       ),
                       fontWeight: FontWeight.w700,
@@ -1103,11 +1101,11 @@ class _NotificationSettingsScreenState
                   const SizedBox(height: 3),
 
                   Text(
-                    'Get a daily reminder to review today’s pending collections.',
+                    AppLocalizations.of(context).dailyReminderDescription,
                     softWrap: true,
                     style: GoogleFonts.manrope(
                       fontSize:
-                          _descriptionFontSize(
+                      _descriptionFontSize(
                         screenWidth,
                       ),
                       height: 1.2,
@@ -1161,7 +1159,7 @@ class _NotificationSettingsScreenState
       ),
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+        CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 1),
@@ -1180,10 +1178,10 @@ class _NotificationSettingsScreenState
           Expanded(
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your data is safe with us.',
+                  AppLocalizations.of(context).dataSafeWithUs,
                   softWrap: true,
                   style: GoogleFonts.manrope(
                     fontSize: 10,
@@ -1195,7 +1193,7 @@ class _NotificationSettingsScreenState
                 const SizedBox(height: 1),
 
                 Text(
-                  'We never share your information with anyone.',
+                  AppLocalizations.of(context).neverShareInfo,
                   softWrap: true,
                   style: GoogleFonts.manrope(
                     fontSize: 10,
@@ -1224,11 +1222,11 @@ class _NotificationSettingsScreenState
       height: buttonHeight,
       child: ElevatedButton(
         onPressed:
-            _saving ? null : _saveNotificationSettings,
+        _saving ? null : _saveNotificationSettings,
         style: ElevatedButton.styleFrom(
           backgroundColor: darkBlue,
           disabledBackgroundColor:
-              darkBlue.withValues(alpha: 0.6),
+          darkBlue.withValues(alpha: 0.6),
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
@@ -1240,22 +1238,22 @@ class _NotificationSettingsScreenState
         ),
         child: _saving
             ? const SizedBox(
-                width: 17,
-                height: 17,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: ChopdiColors.cream,
-                ),
-              )
+          width: 17,
+          height: 17,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: ChopdiColors.cream,
+          ),
+        )
             : Text(
-                'Save Changes',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.manrope(
-                  fontSize: screenWidth < 360 ? 18 : 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+          AppLocalizations.of(context).saveChanges,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.manrope(
+            fontSize: screenWidth < 360 ? 18 : 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

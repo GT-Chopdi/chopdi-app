@@ -10,7 +10,7 @@ import '../widgets/add_new_customer_card.dart';
 import '../widgets/alphabet_index.dart';
 import '../widgets/contact_tile.dart';
 import '../widgets/search_box.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class AddCustomerScreen extends StatefulWidget {
   final int chopdiId;
   const AddCustomerScreen({super.key,required this.chopdiId});
@@ -38,6 +38,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   // LOAD REAL DEVICE CONTACTS
 
   Future<void> loadContacts() async {
+    final l10n = AppLocalizations.of(context);
     try {
       setState(() {
         isLoading = true;
@@ -116,7 +117,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Unable to load contacts: $e",
+            "${l10n.unableToLoadContacts}: $e"
+            ,
           ),
         ),
       );
@@ -322,6 +324,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final size = MediaQuery.of(context).size;
 
     final width = size.width;
@@ -366,9 +369,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                       const SizedBox(width: 12),
 
-                      const Text(
-                        "Add Customer",
-                        style: TextStyle(
+                      Text(
+                        l10n.addCustomer,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: Color(0xff223A5E),
@@ -464,6 +467,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   // ------------------------------------------------------------
 
   Widget buildContactsList() {
+    final l10n = AppLocalizations.of(context);
+
     // Loading
     if (isLoading) {
       return const Center(
@@ -487,8 +492,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
             const SizedBox(height: 12),
 
-            const Text(
-              "Contacts permission is required",
+             Text(
+              l10n.contactsPermissionRequired,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -501,8 +506,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ElevatedButton(
               onPressed: loadContacts,
 
-              child: const Text(
-                "Allow Contacts",
+              child:  Text(
+                l10n.allowContacts,
               ),
             ),
           ],
@@ -512,9 +517,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
     // No contacts
     if (filteredContacts.isEmpty) {
-      return const Center(
+      return  Center(
         child: Text(
-          "No contacts found",
+          l10n.noContactsFound,
           style: TextStyle(
             color: Color(0xff223A5E),
             fontSize: 16,
@@ -531,10 +536,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
         final phone = contact.phones.isNotEmpty
             ? contact.phones.first.number
-            : "No phone number";
+            : l10n.noPhoneNumber;
 
         return ContactTile(
-          name: contact.displayName ?? 'Unknown',
+          name: contact.displayName ?? l10n.unknownContact,
           phone: phone,
           onTap: () {
             selectContact(contact);

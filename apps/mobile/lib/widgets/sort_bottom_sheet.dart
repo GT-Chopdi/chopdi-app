@@ -1,21 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class SortBottomSheet extends StatefulWidget {
   const SortBottomSheet({super.key});
 
   @override
-  State<SortBottomSheet> createState() => _SortBottomSheetState();
+  State<SortBottomSheet> createState() =>
+      _SortBottomSheetState();
 }
 
-class _SortBottomSheetState extends State<SortBottomSheet> {
+class _SortBottomSheetState
+    extends State<SortBottomSheet> {
+  // IMPORTANT:
+  // These values are internal values.
+  // Do NOT translate them.
   String selectedSort = "Name (A-Z)";
+
+  // ================================================================
+  // LOCALIZED SORT NAME
+  // ================================================================
+
+  String _localizedSortName(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    switch (value) {
+      case "Name (A-Z)":
+        return l10n.sortNameAZ;
+
+      case "Name (Z-A)":
+        return l10n.sortNameZA;
+
+      case "Loan Amount (High to Low)":
+        return l10n.sortLoanAmountHighToLow;
+
+      case "Loan Amount (Low to High)":
+        return l10n.sortLoanAmountLowToHigh;
+
+      case "Recently Added":
+        return l10n.sortRecentlyAdded;
+
+      default:
+        return value;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return FractionallySizedBox(
       heightFactor: .72,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          14,
+          20,
+          20,
+        ),
         decoration: const BoxDecoration(
           color: Color(0xffFFF8F0),
           borderRadius: BorderRadius.vertical(
@@ -24,48 +68,58 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
         ),
         child: Column(
           children: [
+            // ==========================================================
+            // DRAG HANDLE
+            // ==========================================================
 
-            /// Drag Handle
             Container(
               width: 56,
               height: 5,
               decoration: BoxDecoration(
                 color: const Color(0xff8B857E),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius:
+                BorderRadius.circular(20),
               ),
             ),
 
             const SizedBox(height: 22),
 
-            Row(
-              children: const [
+            // ==========================================================
+            // SORT BY
+            // ==========================================================
 
-                Icon(
+            Row(
+              children: [
+                const Icon(
                   Icons.swap_vert,
                   color: Color(0xff64748B),
                   size: 18,
                 ),
 
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
 
                 Text(
-                  "Sort By",
-                  style: TextStyle(
+                  l10n.sortBy,
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Color(0xff64748B),
                     fontWeight: FontWeight.w500,
                   ),
-                )
+                ),
               ],
             ),
 
             const SizedBox(height: 14),
 
+            // ==========================================================
+            // SORT OPTIONS
+            // ==========================================================
+
             Expanded(
               child: ListView(
                 children: [
-
                   _sortTile(
+                    context: context,
                     title: "Name (A-Z)",
                     icon: Icons.sort_by_alpha,
                   ),
@@ -73,6 +127,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                   const SizedBox(height: 10),
 
                   _sortTile(
+                    context: context,
                     title: "Name (Z-A)",
                     icon: Icons.sort_by_alpha,
                   ),
@@ -80,7 +135,9 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                   const SizedBox(height: 10),
 
                   _sortTile(
-                    title: "Loan Amount (High to Low)",
+                    context: context,
+                    title:
+                    "Loan Amount (High to Low)",
                     icon: Icons.currency_rupee,
                     arrowDown: true,
                   ),
@@ -88,7 +145,9 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                   const SizedBox(height: 10),
 
                   _sortTile(
-                    title: "Loan Amount (Low to High)",
+                    context: context,
+                    title:
+                    "Loan Amount (Low to High)",
                     icon: Icons.currency_rupee,
                     arrowDown: false,
                   ),
@@ -96,46 +155,70 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                   const SizedBox(height: 10),
 
                   _sortTile(
+                    context: context,
                     title: "Recently Added",
-                    icon: Icons.access_time_outlined,
+                    icon:
+                    Icons.access_time_outlined,
                   ),
                 ],
               ),
             ),
 
+            // ==========================================================
+            // CANCEL
+            // ==========================================================
+
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text(
-                "Cancel",
-                style: TextStyle(
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(
                   color: Color(0xff223A5E),
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
+  // ================================================================
+  // SORT TILE
+  // ================================================================
+
   Widget _sortTile({
+    required BuildContext context,
     required String title,
     required IconData icon,
     bool arrowDown = true,
   }) {
-    bool selected = selectedSort == title;
+    final selected = selectedSort == title;
+
+    final localizedTitle =
+    _localizedSortName(
+      context,
+      title,
+    );
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius:
+      BorderRadius.circular(12),
       onTap: () {
         setState(() {
           selectedSort = title;
         });
 
-        Navigator.pop(context, title);
+        // IMPORTANT:
+        // Return the ORIGINAL internal value,
+        // not the translated value.
+        Navigator.pop(
+          context,
+          title,
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -144,15 +227,18 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius:
+          BorderRadius.circular(12),
           border: Border.all(
             color: const Color(0xffCBD5E1),
           ),
         ),
         child: Row(
           children: [
+            // ==========================================================
+            // RADIO BUTTON
+            // ==========================================================
 
-            /// Radio Button
             Container(
               width: 22,
               height: 22,
@@ -170,18 +256,22 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               ),
               child: selected
                   ? const Icon(
-                      Icons.check,
-                      size: 14,
-                      color: Colors.white,
-                    )
+                Icons.check,
+                size: 14,
+                color: Colors.white,
+              )
                   : null,
             ),
 
             const SizedBox(width: 16),
 
+            // ==========================================================
+            // TITLE
+            // ==========================================================
+
             Expanded(
               child: Text(
-                title,
+                localizedTitle,
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xff223A5E),
@@ -190,7 +280,12 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               ),
             ),
 
-            if (title.contains("Name"))
+            // ==========================================================
+            // NAME SORT ICON
+            // ==========================================================
+
+            if (title == "Name (A-Z)" ||
+                title == "Name (Z-A)")
               const Text(
                 "↓A\nZ",
                 textAlign: TextAlign.center,
@@ -202,27 +297,49 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                 ),
               ),
 
-            if (title.contains("High"))
+            // ==========================================================
+            // HIGH TO LOW
+            // ==========================================================
+
+            if (title ==
+                "Loan Amount (High to Low)")
               const Row(
                 children: [
-                  Icon(Icons.currency_rupee,
-                      color: Color(0xff223A5E)),
-                  Icon(Icons.arrow_downward,
-                      size: 18,
-                      color: Color(0xff223A5E)),
+                  Icon(
+                    Icons.currency_rupee,
+                    color: Color(0xff223A5E),
+                  ),
+                  Icon(
+                    Icons.arrow_downward,
+                    size: 18,
+                    color: Color(0xff223A5E),
+                  ),
                 ],
               ),
 
-            if (title.contains("Low"))
+            // ==========================================================
+            // LOW TO HIGH
+            // ==========================================================
+
+            if (title ==
+                "Loan Amount (Low to High)")
               const Row(
                 children: [
-                  Icon(Icons.currency_rupee,
-                      color: Color(0xff223A5E)),
-                  Icon(Icons.arrow_upward,
-                      size: 18,
-                      color: Color(0xff223A5E)),
+                  Icon(
+                    Icons.currency_rupee,
+                    color: Color(0xff223A5E),
+                  ),
+                  Icon(
+                    Icons.arrow_upward,
+                    size: 18,
+                    color: Color(0xff223A5E),
+                  ),
                 ],
               ),
+
+            // ==========================================================
+            // RECENTLY ADDED
+            // ==========================================================
 
             if (title == "Recently Added")
               const Icon(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 
 class AddNoteBottomSheet extends StatefulWidget {
@@ -10,15 +12,48 @@ class AddNoteBottomSheet extends StatefulWidget {
 }
 
 class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
+  final TextEditingController noteController =
+  TextEditingController();
 
-  final TextEditingController noteController = TextEditingController();
-  final TextEditingController dateController =
-      TextEditingController(text: "24 July 2026");
+  late final TextEditingController dateController;
 
   bool isImportant = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    dateController = TextEditingController(
+      text: DateFormat(
+        'd MMMM yyyy',
+        'en',
+      ).format(DateTime.now()),
+    );
+  }
+
+  @override
+  void dispose() {
+    noteController.dispose();
+    dateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    // Update date according to current app locale.
+    final locale = Localizations.localeOf(context).toLanguageTag();
+
+    final currentDate = DateFormat(
+      'd MMMM yyyy',
+      locale,
+    ).format(DateTime.now());
+
+    if (dateController.text != currentDate) {
+      dateController.text = currentDate;
+    }
+
     return SingleChildScrollView(
       child: Container(
         width: double.infinity,
@@ -37,6 +72,9 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // ============================================================
+            // HANDLE
+            // ============================================================
 
             Container(
               width: 45,
@@ -48,6 +86,10 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
             ),
 
             const SizedBox(height: 18),
+
+            // ============================================================
+            // ICON
+            // ============================================================
 
             const CircleAvatar(
               radius: 30,
@@ -61,8 +103,12 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
             const SizedBox(height: 10),
 
+            // ============================================================
+            // TITLE
+            // ============================================================
+
             Text(
-              "Add Note",
+              l10n.addNote,
               style: GoogleFonts.roboto(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -70,8 +116,12 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               ),
             ),
 
+            // ============================================================
+            // SUBTITLE
+            // ============================================================
+
             Text(
-              "Add a note or reminder",
+              l10n.addNoteOrReminder,
               style: GoogleFonts.roboto(
                 fontSize: 13,
                 color: Colors.grey,
@@ -80,10 +130,14 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
             const SizedBox(height: 25),
 
+            // ============================================================
+            // NOTE LABEL
+            // ============================================================
+
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Note",
+                l10n.note,
                 style: GoogleFonts.roboto(
                   fontWeight: FontWeight.w500,
                   color: Colors.grey,
@@ -92,13 +146,17 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
             ),
 
             const SizedBox(height: 6),
+
+            // ============================================================
+            // NOTE FIELD
+            // ============================================================
 
             TextField(
               controller: noteController,
               maxLength: 100,
               maxLines: 5,
               decoration: InputDecoration(
-                hintText: "Write your note here...",
+                hintText: l10n.writeYourNoteHere,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -107,10 +165,14 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
             const SizedBox(height: 12),
 
+            // ============================================================
+            // DATE LABEL
+            // ============================================================
+
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Date",
+                l10n.date,
                 style: GoogleFonts.roboto(
                   fontWeight: FontWeight.w500,
                   color: Colors.grey,
@@ -120,11 +182,17 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
             const SizedBox(height: 6),
 
+            // ============================================================
+            // DATE FIELD
+            // ============================================================
+
             TextField(
               controller: dateController,
               readOnly: true,
               decoration: InputDecoration(
-                suffixIcon: const Icon(Icons.calendar_today_outlined),
+                suffixIcon: const Icon(
+                  Icons.calendar_today_outlined,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -132,6 +200,10 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
             ),
 
             const SizedBox(height: 12),
+
+            // ============================================================
+            // IMPORTANT SWITCH
+            // ============================================================
 
             Container(
               padding: const EdgeInsets.symmetric(
@@ -139,19 +211,20 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                 vertical: 14,
               ),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
                       children: [
-
                         Text(
-                          "Mark as Important",
+                          l10n.markAsImportant,
                           style: GoogleFonts.roboto(
                             fontWeight: FontWeight.w600,
                             color: ChopdiColors.navy,
@@ -161,7 +234,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                         const SizedBox(height: 2),
 
                         Text(
-                          "Show this note on the customer page.",
+                          l10n.showNoteOnCustomerPage,
                           style: GoogleFonts.roboto(
                             fontSize: 12,
                             color: Colors.grey,
@@ -179,22 +252,27 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                         isImportant = value;
                       });
                     },
-                  )
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 28),
 
+            // ============================================================
+            // BUTTONS
+            // ============================================================
+
             Row(
               children: [
-
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text("Cancel"),
+                    child: Text(
+                      l10n.cancel,
+                    ),
                   ),
                 ),
 
@@ -210,9 +288,11 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
                       // Save Note
                     },
-                    child: const Text(
-                      "Save Entry",
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      l10n.saveEntry,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

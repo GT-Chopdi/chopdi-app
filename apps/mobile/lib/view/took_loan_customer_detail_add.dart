@@ -5,6 +5,7 @@ import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
+import '../l10n/app_localizations.dart';
 import '../model/customer.dart';
 
 class TookLoanCustomerDetailAdd extends StatefulWidget {
@@ -20,16 +21,20 @@ class TookLoanCustomerDetailAdd extends StatefulWidget {
   });
 
   @override
-  State<TookLoanCustomerDetailAdd> createState() => _CustomerDetailsAddState();
+  State<TookLoanCustomerDetailAdd> createState() =>
+      _CustomerDetailsAddState();
 }
 
-class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
+class _CustomerDetailsAddState
+    extends State<TookLoanCustomerDetailAdd> {
   static const Color primaryColor = Color(0xFF233B63);
   static const Color backgroundColor = Color(0xFFFDF0DE);
 
   bool isSaving = false;
 
   Future<void> addCustomer() async {
+    final l10n = AppLocalizations.of(context);
+
     // ============================================================
     // PHONE NUMBER
     // ============================================================
@@ -49,10 +54,6 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
     // ============================================================
     // PHONE IS OPTIONAL
     // ============================================================
-    //
-    // Empty phone is completely valid.
-    // Do NOT show an error and do NOT block the user.
-    //
 
     if (finalPhone.isNotEmpty) {
       // If phone exists, it MUST be exactly 10 digits.
@@ -60,9 +61,9 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "Please enter a valid 10-digit phone number",
+              l10n.pleaseEnterValidPhoneNumber,
             ),
           ),
         );
@@ -85,10 +86,9 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
       // ==========================================================
       // DUPLICATE CHECK
       // ==========================================================
-      //
+
       // Only check when a phone number exists.
       // Empty phone numbers are allowed.
-      //
 
       if (finalPhone.isNotEmpty) {
         final existingCustomer =
@@ -109,9 +109,9 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                "This lender already exists",
+                l10n.lenderAlreadyExists,
               ),
             ),
           );
@@ -158,14 +158,17 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Failed to add lender: $e",
+            '${l10n.failedToAddLenderWithError}: $e',
           ),
         ),
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
@@ -177,8 +180,10 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ==================================================
+              // BACK BUTTON
+              // ==================================================
 
-              // Back button
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(
@@ -191,10 +196,12 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
 
               const SizedBox(height: 18),
 
-              // Profile
+              // ==================================================
+              // PROFILE
+              // ==================================================
+
               Row(
                 children: [
-
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.grey.shade300,
@@ -215,9 +222,8 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      CrossAxisAlignment.start,
                       children: [
-
                         Text(
                           widget.contactName,
                           style: const TextStyle(
@@ -253,12 +259,15 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
 
               const SizedBox(height: 28),
 
-              // Add Customer
+              // ==================================================
+              // ADD LENDER
+              // ==================================================
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed:  isSaving ? null : addCustomer,
+                  onPressed: isSaving ? null : addCustomer,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     elevation: 0,
@@ -268,27 +277,30 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
                   ),
                   child: isSaving
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          "Add Lender",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : Text(
+                    l10n.addLender,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              // Cancel
+              // ==================================================
+              // CANCEL
+              // ==================================================
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -304,9 +316,9 @@ class _CustomerDetailsAddState extends State<TookLoanCustomerDetailAdd> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(
+                  child: Text(
+                    l10n.cancel,
+                    style: const TextStyle(
                       color: primaryColor,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,

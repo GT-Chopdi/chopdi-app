@@ -6,7 +6,7 @@ import 'package:mychopdi/data/remote/error_code.dart';
 import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class ChopdiOnboardingScreen extends StatefulWidget {
   const ChopdiOnboardingScreen({super.key});
 
@@ -121,131 +121,26 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   //   }
   // }
 
-  Future<void> _requestOtp() async {
-    final phone = _phoneController.text.trim();
+Future<void> _requestOtp() async {
+  final phone = _phoneController.text.trim();
+  final l10n = AppLocalizations.of(context);
 
-    if (phone.isEmpty) {
-      setState(() {
-        errorText = "Please enter your mobile number";
-      });
-      return;
-    }
-
-    if (phone.length < 10) {
-      setState(() {
-        errorText = "Please enter a valid 10-digit mobile number";
-      });
-      return;
-    }
-
-    // ================================================================
-    // REUSE EXISTING OTP CHALLENGE
-    // ================================================================
-    //
-    // If the user came back from the OTP screen using
-    // "Change Mobile Number" but did not actually change
-    // the number, don't request another OTP.
-    //
-    // Instead, open the existing OTP screen using the same
-    // challengeId.
-    // ================================================================
-
-    if (_lastChallengeId != null &&
-        _lastChallengePhone == phone) {
-      FocusScope.of(context).unfocus();
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OTPScreen(
-            phoneNumber: phone,
-            challengeId: _lastChallengeId!,
-          ),
-        ),
-      );
-
-      return;
-    }
-
+  if (phone.isEmpty) {
     setState(() {
-      errorText = null;
-      _requesting = true;
+      errorText = l10n.loginMobileNumberRequired;
     });
-
-    try {
-      final challenge = await AuthService.instance.requestOtp(phone);
-
-      if (!mounted) return;
-
-      // ================================================================
-      // SAVE THE CHALLENGE
-      // ================================================================
-
-      _lastChallengeId = challenge.challengeId;
-      _lastChallengePhone = phone;
-
-      setState(() {
-        _requesting = false;
-      });
-
-      FocusScope.of(context).unfocus();
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OTPScreen(
-            phoneNumber: phone,
-            challengeId: challenge.challengeId,
-          ),
-        ),
-      );
-    } on ApiException catch (error) {
-      if (!mounted) return;
-
-      setState(() {
-        _requesting = false;
-
-        errorText = switch (error.code) {
-          ApiErrorCode.rateLimited =>
-            "A code was already sent. Please wait a moment.",
-
-          'NETWORK_UNAVAILABLE' =>
-            "Can't reach the server. Check your connection.",
-
-          ApiErrorCode.devKeyRequired
-              when ApiConfig.devKey.isEmpty =>
-            "This build has no DEV_KEY compiled in.\n\n"
-                "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
-                "--dart-define-from-file=env/staging.env",
-
-          ApiErrorCode.devKeyRequired =>
-            "The DEV_KEY in this build was rejected. Check it matches "
-                "AUTH_DEV_KEY on the server.",
-
-          _ => error.message,
-        };
-      });
-    } on ApiConfigException catch (error) {
-      if (!mounted) return;
-
-      setState(() {
-        _requesting = false;
-        errorText = error.message;
-      });
-    } catch (error, stack) {
-      debugPrint(
-        '[chopdi] OTP request failed: $error\n$stack',
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _requesting = false;
-        errorText = "Something went wrong. Please try again.";
-      });
-    }
+    return;
   }
 
+  if (phone.length < 10) {
+    setState(() {
+      errorText = l10n.loginInvalidMobileNumber;
+    });
+    return;
+  }
+}
+
+// ...
   @override
   void initState() {
     super.initState();
@@ -435,11 +330,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                         color: ChopdiColors.cream,
                                       ),
                                       children: [
-                                        const TextSpan(
-                                          text: 'Your lending records,\n',
+                                        TextSpan(
+                                          text: AppLocalizations.of(context)!.loginYourLendingRecords,
                                         ),
                                         TextSpan(
-                                          text: 'digitally organized.',
+                                          text: AppLocalizations.of(context)!.loginDigitallyOrganized,
                                           style: GoogleFonts.manrope(
                                             color: const Color(0xFF83A2CE),
                                             fontSize: headingFontSize,
@@ -452,9 +347,8 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                   const SizedBox(height: 12),
 
                                   // Subtitle
-                                  Text(
-                                    'Track loans, interest and payments\n'
-                                    'with clarity and confidence.',
+                              Text(
+                              AppLocalizations.of(context)!.loginTrackLoans,
                                     style: GoogleFonts.manrope(
                                       fontSize: subtitleFontSize,
                                       height: 1.35,
@@ -534,7 +428,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            "Let's get started",
+                                            AppLocalizations.of(context)!.loginLetsGetStarted,
                                             style: GoogleFonts.manrope(
                                               fontSize:
                                                   width < 360 ? 16 : 18,
@@ -544,8 +438,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            "Enter your mobile number to\n"
-                                            "continue to Chopdi",
+                                            AppLocalizations.of(context)!.loginEnterMobileNumber,
                                             style: GoogleFonts.manrope(
                                               fontSize:
                                                   width < 360 ? 13 : 14,
@@ -581,6 +474,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                 _ContinueButton(
                                   onPressed: _requestOtp,
                                   loading: _requesting,
+                                  text: AppLocalizations.of(context)!.loginContinue,
                                 ),
 
                                 const SizedBox(height: 24),
@@ -612,8 +506,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                     const SizedBox(width: 5),
 
                                     Flexible(
-                                      child: Text(
-                                        "Your data is secure with us",
+                                      child:
+                                      Text(
+                                        AppLocalizations.of(context)!.loginSecureData,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.manrope(
                                           color: ChopdiColors.navy
@@ -651,25 +546,20 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
                                 ),
                                 children: [
                                   TextSpan(
-                                    text:
-                                        "By continuing, you agree to our\n",
-                                    style: GoogleFonts.manrope(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: width < 360 ? 10 : 12,
-                                    ),
+                                    text: AppLocalizations.of(context)!.loginByContinuing,
                                   ),
                                   TextSpan(
-                                    text: "Terms of Service",
+                                    text: AppLocalizations.of(context)!.loginTermsOfService,
                                     style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.w600,
                                       fontSize: width < 360 ? 10 : 12,
                                     ),
                                   ),
-                                  const TextSpan(
-                                    text: " and ",
+                                  TextSpan(
+                                    text: AppLocalizations.of(context)!.loginAnd,
                                   ),
                                   TextSpan(
-                                    text: "Privacy Policy",
+                                    text: AppLocalizations.of(context)!.loginPrivacyPolicy,
                                     style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.w600,
                                       fontSize: width < 360 ? 10 : 12,
@@ -867,16 +757,13 @@ class _PhoneInputField extends StatelessWidget {
 
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
-
-  /// Disables the button and shows a spinner while the code is being sent.
-  /// Requesting an OTP is a network round trip, and without this the user can
-  /// tap repeatedly — each tap another SMS, and the later ones rejected by the
-  /// server's resend cooldown anyway.
   final bool loading;
+  final String text;
 
   const _ContinueButton({
     required this.onPressed,
-    this.loading = false,
+    required this.loading,
+    required this.text,
   });
 
   @override
@@ -884,7 +771,6 @@ class _ContinueButton extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     final buttonHeight = width < 360 ? 46.0 : 48.0;
-
     final fontSize = width < 360 ? 18.0 : 20.0;
 
     return SizedBox(
@@ -895,7 +781,7 @@ class _ContinueButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: ChopdiColors.navy,
           disabledBackgroundColor:
-              ChopdiColors.navy.withValues(alpha: 0.6),
+          ChopdiColors.navy.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -903,32 +789,32 @@ class _ContinueButton extends StatelessWidget {
         ),
         child: loading
             ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        )
             : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Continue',
-                    style: GoogleFonts.manrope(
-                      color: Colors.white,
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ],
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              text,
+              style: GoogleFonts.manrope(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
               ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.arrow_forward_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }

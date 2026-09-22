@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/view/add_customer_screen.dart';
 
 class SelectCustomerScreen extends StatefulWidget {
   final int chopdiId;
-  const SelectCustomerScreen({super.key, required this.chopdiId,});
+
+  const SelectCustomerScreen({
+    super.key,
+    required this.chopdiId,
+  });
 
   @override
   State<SelectCustomerScreen> createState() => _SelectCustomerScreenState();
 }
 
 class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
-
   static const Color primary = Color(0xFF223A5E);
   static const Color secondary = Color(0xFFAAB9CF);
   static const Color accent = Color(0xFFC74C4C);
@@ -18,27 +22,40 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
 
   final TextEditingController searchController = TextEditingController();
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _openAddCustomer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddCustomerScreen(
+          chopdiId: widget.chopdiId,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-
       backgroundColor: background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: primary,
-
-        title: const Text(
-          "Customers",
-          style: TextStyle(
+        title: Text(
+          l10n.customersTitle,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-
         actions: const [
-
           Padding(
             padding: EdgeInsets.only(right: 18),
             child: Icon(
@@ -46,33 +63,28 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
               color: Colors.white,
             ),
           ),
-
         ],
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               const SizedBox(height: 25),
 
               TextField(
                 controller: searchController,
                 decoration: InputDecoration(
-                  hintText: "Search customer",
+                  hintText: l10n.searchCustomer,
                   prefixIcon: const Icon(
                     Icons.search,
                     color: primary,
                   ),
-
                   suffixIcon: const Icon(
                     Icons.mic_none,
                     color: primary,
                   ),
-
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -84,9 +96,9 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
 
               const SizedBox(height: 30),
 
-              const Text(
-                "Quick Actions",
-                style: TextStyle(
+              Text(
+                l10n.quickActions,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: primary,
@@ -97,19 +109,7 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
 
               InkWell(
                 borderRadius: BorderRadius.circular(20),
-                onTap: () {
-
-                  //Open Add Customer
-                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AddCustomerScreen(
-                        chopdiId: widget.chopdiId,
-                      ),
-                    ),
-                  );
-
-                },
+                onTap: _openAddCustomer,
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -122,13 +122,12 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
                       ),
                     ],
                   ),
-
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 28,
                         backgroundColor: secondary,
-                        child: const Icon(
+                        child: Icon(
                           Icons.person_add,
                           color: primary,
                         ),
@@ -136,66 +135,39 @@ class _SelectCustomerScreenState extends State<SelectCustomerScreen> {
 
                       const SizedBox(width: 18),
 
-                      const Expanded(
+                      Expanded(
                         child: Column(
-
                           crossAxisAlignment:
-                              CrossAxisAlignment.start,
-
+                          CrossAxisAlignment.start,
                           children: [
-
                             Text(
-
-                              "Add New Customer",
-
-                              style: TextStyle(
-
+                              l10n.addNewCustomer,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-
                                 fontSize: 18,
-
                                 color: primary,
-
                               ),
-
                             ),
 
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
 
                             Text(
-
-                              "Create a customer and start tracking transactions.",
-
-                              style: TextStyle(
-
+                              l10n.createCustomerAndTrackTransactions,
+                              style: const TextStyle(
                                 color: Colors.grey,
-
                               ),
-
                             ),
-
                           ],
-
                         ),
                       ),
 
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AddCustomerScreen(
-                                chopdiId: widget.chopdiId,
-                              ),
-                            ),
-                          );
-                        },
+                        onTap: _openAddCustomer,
                         child: const Icon(
                           Icons.arrow_forward_ios,
                           color: primary,
                         ),
                       ),
-
                     ],
                   ),
                 ),

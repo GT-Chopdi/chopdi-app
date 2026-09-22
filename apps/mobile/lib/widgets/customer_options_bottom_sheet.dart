@@ -13,6 +13,7 @@
   import 'package:flutter/services.dart'
       show rootBundle, SystemUiOverlayStyle, FilteringTextInputFormatter;
   import 'package:printing/printing.dart';
+  import 'package:mychopdi/l10n/app_localizations.dart';
   
   class CustomerOptionsBottomSheet extends StatelessWidget {
     const CustomerOptionsBottomSheet({
@@ -29,14 +30,16 @@
     final VoidCallback onDelete;
   
     @override
+    @override
     Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
+
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-  
               Container(
                 width: 55,
                 height: 5,
@@ -45,69 +48,69 @@
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-  
+
               const SizedBox(height: 20),
-  
+
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Customer Options",
+                  l10n.customerOptions,
                   style: GoogleFonts.manrope(
                     fontSize: 13,
-                    color: Color.fromRGBO(34, 58, 94, 0.62),
+                    color: const Color.fromRGBO(34, 58, 94, 0.62),
                   ),
                 ),
               ),
-  
+
               const SizedBox(height: 12),
-  
+
               _OptionTile(
                 image: 'assets/edit_customer_logo.png',
-                title: "Edit Customer",
-                subtitle: "Edit name, phone or loan details",
+                title: l10n.editCustomer,
+                subtitle: l10n.editNamePhoneOrLoanDetails,
                 onTap: onEdit,
               ),
-  
+
               const SizedBox(height: 10),
-  
+
               _OptionTile(
                 image: 'assets/summary.png',
-                title: "Account Summary",
-                subtitle: "Overview and summary",
+                title: l10n.accountSummary,
+                subtitle: l10n.overviewAndSummary,
                 onTap: onSummary,
               ),
-  
+
               const SizedBox(height: 10),
-  
+
               _OptionTile(
                 image: 'assets/export_pdf.png',
-                title: "Export PDF",
-                subtitle: "Download ledger as PDF",
+                title: l10n.exportPdf,
+                subtitle: l10n.downloadLedgerAsPdf,
                 onTap: onExport,
               ),
-  
+
               const SizedBox(height: 10),
-  
+
               _OptionTile(
                 image: 'assets/delete_logo.png',
-                title: "Delete Customer",
-                subtitle: "Delete this customer permanently",
+                title: l10n.deleteCustomer,
+                subtitle: l10n.deleteCustomerPermanently,
                 titleColor: Colors.red,
                 onTap: onDelete,
               ),
-  
+
               const SizedBox(height: 18),
-  
+
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  "Cancel",
+                  l10n.cancel,
                   style: GoogleFonts.manrope(
                     color: ChopdiColors.navy,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -334,25 +337,25 @@
         ),
       );
     }
-  
+
     String? _phoneValidator(String? value) {
+      final l10n = AppLocalizations.of(context);
       final phone = value?.trim() ?? '';
-  
+
       if (phone.isEmpty) {
-        return "Phone number is required";
+        return l10n.phoneNumberRequired;
       }
-  
+
       if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
-        return "Only numbers are allowed";
+        return l10n.onlyNumbersAllowed;
       }
-  
+
       if (phone.length != 10) {
-        return "Enter a valid 10-digit phone number";
+        return l10n.enterValid10DigitPhone;
       }
-  
+
       return null;
     }
-  
     bool get _isPhoneValid {
       final phone = phoneController.text.trim();
   
@@ -398,15 +401,15 @@
         setState(() {
           _isSaving = false;
         });
-  
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Unable to save changes. Please try again.",
-              style: GoogleFonts.manrope(),
-            ),
-          ),
-        );
+
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       l10n.unableToSaveChangesPleaseTryAgain,
+        //       style: GoogleFonts.manrope(),
+        //     ),
+        //   ),
+        // );
       }
     }
   
@@ -682,6 +685,7 @@
   
     @override
     Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
       return SafeArea(
         child: Container(
           decoration: const BoxDecoration(
@@ -724,7 +728,7 @@
               const SizedBox(height: 14),
   
               Text(
-                "Account Summary",
+                l10n.accountSummary,
                 style: GoogleFonts.manrope(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -735,7 +739,7 @@
               const SizedBox(height: 4),
   
               Text(
-                "Overview of this customer's account",
+                l10n.overviewOfCustomerAccount,
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   color: const Color(0xff6E7A8A),
@@ -747,28 +751,28 @@
   
               SummaryTile(
                 icon: Icons.account_balance_wallet_outlined,
-                title: "Total Amount Given",
+                title: l10n.totalAmountGiven,
                 value: "₹${totalGiven.toStringAsFixed(0)}",
                 valueColor: const Color(0xff223A5E),
               ),
   
               SummaryTile(
                 icon: Icons.location_on_outlined,
-                title: "Current Outstanding",
+                title: l10n.currentOutstanding,
                 value: "₹${totalOutstanding.toStringAsFixed(0)}",
                 valueColor: Colors.red,
               ),
   
               SummaryTile(
                 icon: Icons.percent,
-                title: "Total Interest",
+                title: l10n.totalInterest,
                 value: "₹${totalInterest.toStringAsFixed(0)}",
                 valueColor: Colors.green,
               ),
   
               SummaryTile(
                 icon: Icons.calendar_month_outlined,
-                title: "Last Payment",
+                title: l10n.lastPayment,
                 value: lastPayment == null
                   ? "-"
                   : DateFormat("dd MMM yyyy").format(lastPayment!.date),

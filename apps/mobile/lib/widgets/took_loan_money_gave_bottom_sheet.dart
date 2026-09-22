@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
@@ -12,47 +13,61 @@ import 'package:mychopdi/utils/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
-
   final Customer customer;
   final VoidCallback onSaved;
   final bool isEdit;
   final Transaction? transaction;
 
-  
-  const TookLoanMoneyGaveBottomSheet({super.key, required this.customer, required this.onSaved, required this.isEdit, this.transaction});
+  const TookLoanMoneyGaveBottomSheet({
+    super.key,
+    required this.customer,
+    required this.onSaved,
+    required this.isEdit,
+    this.transaction,
+  });
 
   @override
-  State<TookLoanMoneyGaveBottomSheet> createState() => _MoneyGaveBottomSheetState();
+  State<TookLoanMoneyGaveBottomSheet> createState() =>
+      _MoneyGaveBottomSheetState();
 }
 
-class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController interestController = TextEditingController();
+class _MoneyGaveBottomSheetState
+    extends State<TookLoanMoneyGaveBottomSheet> {
+  final TextEditingController amountController =
+  TextEditingController();
+
+  final TextEditingController interestController =
+  TextEditingController();
+
   final TextEditingController descriptionController =
-      TextEditingController();
+  TextEditingController();
 
-  // Scroll controller for only the form area
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController =
+  ScrollController();
 
-  // Focus nodes
   final FocusNode _amountFocusNode = FocusNode();
   final FocusNode _interestFocusNode = FocusNode();
   final FocusNode _descriptionFocusNode = FocusNode();
 
-  // Keys used to automatically scroll fields into view
   final GlobalKey _amountKey = GlobalKey();
   final GlobalKey _interestKey = GlobalKey();
   final GlobalKey _descriptionKey = GlobalKey();
+
   bool _interestRateError = false;
+
   DateTime selectedDate = DateTime.now();
 
+  // Internal values — DO NOT LOCALIZE.
   String interestType = "Simple Interest";
   String interestFrequency = "Monthly";
   String paymentMode = "";
 
   double get interestAmount {
-    final amount = double.tryParse(amountController.text) ?? 0;
-    final percent = double.tryParse(interestController.text) ?? 0;
+    final amount =
+        double.tryParse(amountController.text) ?? 0;
+
+    final percent =
+        double.tryParse(interestController.text) ?? 0;
 
     return amount * percent / 100;
   }
@@ -62,7 +77,8 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
     super.initState();
 
     if (widget.transaction != null) {
-      amountController.text = widget.transaction!.amount.toString();
+      amountController.text =
+          widget.transaction!.amount.toString();
 
       interestController.text =
           widget.transaction!.interestRate.toString();
@@ -83,7 +99,6 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
           widget.transaction!.interestFrequency;
     }
 
-    // Automatically scroll when keyboard/focus opens
     _amountFocusNode.addListener(() {
       if (_amountFocusNode.hasFocus) {
         _scrollToField(_amountKey);
@@ -111,7 +126,8 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
 
       Scrollable.ensureVisible(
         context,
-        duration: const Duration(milliseconds: 350),
+        duration:
+        const Duration(milliseconds: 350),
         curve: Curves.easeOut,
         alignment: 0.25,
       );
@@ -139,7 +155,9 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
     final picked = await showDatePicker(
       context: context,
       initialDate:
-          selectedDate.isAfter(today) ? today : selectedDate,
+      selectedDate.isAfter(today)
+          ? today
+          : selectedDate,
       firstDate: DateTime(2000),
       lastDate: today,
     );
@@ -166,18 +184,21 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(
+      contentPadding:
+      const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 16,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius:
+        BorderRadius.circular(12),
         borderSide: const BorderSide(
           color: Color(0xffC9D2E3),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius:
+        BorderRadius.circular(12),
         borderSide: const BorderSide(
           color: Color(0xff29406B),
           width: 1.3,
@@ -188,7 +209,8 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
 
   Widget title(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding:
+      const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
         style: const TextStyle(
@@ -200,52 +222,122 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
     );
   }
 
+  String _localizedInterestType(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n =
+    AppLocalizations.of(context);
+
+    switch (value) {
+      case 'Simple Interest':
+        return l10n.simpleInterest;
+      case 'Compound Interest':
+        return l10n.compoundInterest;
+      default:
+        return value;
+    }
+  }
+
+  String _localizedFrequency(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n =
+    AppLocalizations.of(context);
+
+    switch (value) {
+      case 'Daily':
+        return l10n.daily;
+      case 'Weekly':
+        return l10n.weekly;
+      case 'Monthly':
+        return l10n.monthly;
+      case 'Yearly':
+        return l10n.yearly;
+      default:
+        return value;
+    }
+  }
+
+  String _localizedPaymentMode(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n =
+    AppLocalizations.of(context);
+
+    switch (value) {
+      case 'Cash':
+        return l10n.cash;
+      case 'UPI':
+        return l10n.upi;
+      case 'Bank':
+        return l10n.bankTransfer;
+      default:
+        return value;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final l10n =
+    AppLocalizations.of(context);
+
+    final keyboardHeight =
+        MediaQuery.of(context)
+            .viewInsets
+            .bottom;
+
+    final locale =
+    Localizations.localeOf(context)
+        .toLanguageTag();
 
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 250),
+      duration:
+      const Duration(milliseconds: 250),
       curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: keyboardHeight),
+      padding:
+      EdgeInsets.only(bottom: keyboardHeight),
       child: SafeArea(
         top: false,
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.90,
-          decoration: const BoxDecoration(
+          height:
+          MediaQuery.of(context).size.height *
+              0.90,
+          decoration:
+          const BoxDecoration(
             color: Color(0xffFFF8F0),
-            borderRadius: BorderRadius.vertical(
+            borderRadius:
+            BorderRadius.vertical(
               top: Radius.circular(34),
             ),
           ),
           child: Column(
             children: [
-              // =========================
-              // TOP HANDLE
-              // =========================
-
               Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding:
+                const EdgeInsets.only(top: 10),
                 child: Container(
                   width: 55,
                   height: 5,
                   decoration: BoxDecoration(
                     color: Colors.grey,
-                    borderRadius: BorderRadius.circular(50),
+                    borderRadius:
+                    BorderRadius.circular(50),
                   ),
                 ),
               ),
 
-              // =========================
-              // SCROLLABLE CONTENT
-              // =========================
-
               Expanded(
                 child: SingleChildScrollView(
-                  controller: _scrollController,
+                  controller:
+                  _scrollController,
                   keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(
+                  ScrollViewKeyboardDismissBehavior
+                      .onDrag,
+                  padding:
+                  const EdgeInsets.fromLTRB(
                     22,
                     10,
                     22,
@@ -255,15 +347,13 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                     children: [
                       const SizedBox(height: 12),
 
-                      // =========================
-                      // ICON
-                      // =========================
-
                       Container(
                         height: 72,
                         width: 72,
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(
+                        decoration:
+                        const BoxDecoration(
+                          color:
+                          Color.fromRGBO(
                             199,
                             76,
                             76,
@@ -274,7 +364,8 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                         child: Center(
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: Colors.transparent,
+                            backgroundColor:
+                            Colors.transparent,
                             child: Image.asset(
                               'assets/you_gave.png',
                             ),
@@ -285,43 +376,53 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                       const SizedBox(height: 10),
 
                       Text(
-                        "You Took",
-                        style: GoogleFonts.manrope(
-                          color: const Color.fromRGBO(
+                        l10n.youTook,
+                        style:
+                        GoogleFonts.manrope(
+                          color:
+                          const Color.fromRGBO(
                             199,
                             76,
                             76,
                             1,
                           ),
-                          fontWeight: FontWeight.w700,
+                          fontWeight:
+                          FontWeight.w700,
                           fontSize: 22,
                         ),
                       ),
 
                       const SizedBox(height: 28),
 
-                      // =========================
-                      // AMOUNT
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Amount"),
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(l10n.amount),
                       ),
 
                       Container(
                         key: _amountKey,
                         child: TextField(
-                          controller: amountController,
-                          focusNode: _amountFocusNode,
-                          onChanged: (_) => setState(() {}),
-                          keyboardType: TextInputType.number,
-                          decoration: decoration(
-                            hint: "Enter Amount",
-                            prefix: const Icon(
+                          controller:
+                          amountController,
+                          focusNode:
+                          _amountFocusNode,
+                          onChanged: (_) =>
+                              setState(() {}),
+                          keyboardType:
+                          TextInputType.number,
+                          decoration:
+                          decoration(
+                            hint:
+                            l10n.enterAmount,
+                            prefix:
+                            const Icon(
                               Icons.currency_rupee,
                               size: 20,
-                              color: Color(0xff6D7B94),
+                              color:
+                              Color(
+                                0xff6D7B94,
+                              ),
                             ),
                           ),
                         ),
@@ -329,263 +430,353 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
 
                       const SizedBox(height: 18),
 
-                      // =========================
-                      // DATE
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Date"),
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(l10n.date),
                       ),
 
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
-                        // decoration: decoration(
-                        //   hint: DateFormat("dd MMM yyyy")
-                        //       .format(selectedDate),
-                        //   suffix: const Icon(
-                        //     Icons.calendar_today_outlined,
-                        //   ),
-                        // ),
-                        decoration: decoration(
-                          suffix: const Icon(
-                            Icons.calendar_today_outlined,
+                        decoration:
+                        decoration().copyWith(
+                          suffix:
+                          const Icon(
+                            Icons
+                                .calendar_today_outlined,
                             color: Colors.black,
                           ),
-                        ).copyWith(
-                          hintText: DateFormat("dd MMM yyyy").format(selectedDate),
-                          hintStyle: const TextStyle(
+                          hintText:
+                          DateFormat(
+                            "dd MMM yyyy",
+                            locale,
+                          ).format(
+                            selectedDate,
+                          ),
+                          hintStyle:
+                          const TextStyle(
                             color: Colors.black,
-                            fontWeight: FontWeight.w500,
+                            fontWeight:
+                            FontWeight.w500,
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 18),
 
-                      // =========================
-                      // INTEREST RATE
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Interest Rate (%)"),
-                      ),
-
-
-                Container(
-                key: _interestKey,
-                child: TextField(
-                controller: interestController,
-                focusNode: _interestFocusNode,
-                    onChanged: (value) {
-              setState(() {
-              _interestRateError = value.trim().isEmpty;
-              });
-              },
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: decoration(
-                  hint: "Enter Interest rate",
-                ).copyWith(
-                  errorText: _interestRateError
-                      ? "Interest rate is required"
-                      : null,
-                  errorStyle: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _interestRateError
-                          ? Colors.red
-                          : const Color(0xffC9D2E3),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _interestRateError
-                          ? Colors.red
-                          : const Color(0xff29406B),
-                      width: 1.3,
-                    ),
-                  ),
-                ),
-              ),
-      ),
-
-
-
-        const SizedBox(height: 18),
-
-                      // =========================
-                      // DESCRIPTION
-                      // =========================
-
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Description"),
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(
+                          l10n.interestRatePercent,
+                        ),
                       ),
 
                       Container(
-                        key: _descriptionKey,
+                        key: _interestKey,
                         child: TextField(
-                          controller: descriptionController,
-                          focusNode: _descriptionFocusNode,
+                          controller:
+                          interestController,
+                          focusNode:
+                          _interestFocusNode,
+                          onChanged: (value) {
+                            setState(() {
+                              _interestRateError =
+                                  value
+                                      .trim()
+                                      .isEmpty;
+                            });
+                          },
+                          keyboardType:
+                          const TextInputType
+                              .numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration:
+                          decoration(
+                            hint:
+                            l10n.enterInterestRate,
+                          ).copyWith(
+                            errorText:
+                            _interestRateError
+                                ? l10n
+                                .interestRateRequired
+                                : null,
+                            errorStyle:
+                            const TextStyle(
+                              color: Colors.red,
+                              fontWeight:
+                              FontWeight.w500,
+                            ),
+                            enabledBorder:
+                            OutlineInputBorder(
+                              borderRadius:
+                              BorderRadius
+                                  .circular(
+                                12,
+                              ),
+                              borderSide:
+                              BorderSide(
+                                color:
+                                _interestRateError
+                                    ? Colors.red
+                                    : const Color(
+                                  0xffC9D2E3,
+                                ),
+                              ),
+                            ),
+                            focusedBorder:
+                            OutlineInputBorder(
+                              borderRadius:
+                              BorderRadius
+                                  .circular(
+                                12,
+                              ),
+                              borderSide:
+                              BorderSide(
+                                color:
+                                _interestRateError
+                                    ? Colors.red
+                                    : const Color(
+                                  0xff29406B,
+                                ),
+                                width: 1.3,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Align(
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(
+                          l10n.description,
+                        ),
+                      ),
+
+                      Container(
+                        key:
+                        _descriptionKey,
+                        child: TextField(
+                          controller:
+                          descriptionController,
+                          focusNode:
+                          _descriptionFocusNode,
                           maxLength: 100,
                           maxLines: 4,
-                          decoration: decoration(
-                            hint: "Enter Description here...",
+                          decoration:
+                          decoration(
+                            hint: l10n
+                                .enterDescriptionHere,
                           ).copyWith(
                             counterText: "",
                           ),
-                          onChanged: (_) => setState(() {}),
+                          onChanged: (_) =>
+                              setState(() {}),
                         ),
                       ),
 
                       const SizedBox(height: 18),
 
-                      // =========================
-                      // INTEREST TYPE
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Interest Type"),
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(
+                          l10n.interestType,
+                        ),
                       ),
 
-                      DropdownButtonFormField<String>(
-                        initialValue: interestType,
-                        decoration: decoration(),
+                      DropdownButtonFormField<
+                          String>(
+                        initialValue:
+                        interestType,
+                        decoration:
+                        decoration(),
                         icon: const Icon(
-                          Icons.keyboard_arrow_down,
+                          Icons
+                              .keyboard_arrow_down,
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
-                            value: "Simple Interest",
-                            child: Text("Simple Interest"),
+                            value:
+                            "Simple Interest",
+                            child: Text(
+                              _localizedInterestType(
+                                context,
+                                "Simple Interest",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
-                            value: "Compound Interest",
-                            child: Text("Compound Interest"),
+                            value:
+                            "Compound Interest",
+                            child: Text(
+                              _localizedInterestType(
+                                context,
+                                "Compound Interest",
+                              ),
+                            ),
                           ),
                         ],
                         onChanged: (v) {
+                          if (v == null) return;
+
                           setState(() {
-                            interestType = v!;
+                            interestType = v;
                           });
                         },
                       ),
 
                       const SizedBox(height: 18),
 
-                      // =========================
-                      // INTEREST FREQUENCY
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
-                        child: title("Interest Frequency"),
+                        alignment:
+                        Alignment.centerLeft,
+                        child: title(
+                          l10n.interestFrequency,
+                        ),
                       ),
 
-                      DropdownButtonFormField<String>(
-                        initialValue: interestFrequency,
-                        decoration: decoration(),
+                      DropdownButtonFormField<
+                          String>(
+                        initialValue:
+                        interestFrequency,
+                        decoration:
+                        decoration(),
                         icon: const Icon(
-                          Icons.keyboard_arrow_down,
+                          Icons
+                              .keyboard_arrow_down,
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: "Daily",
-                            child: Text("Daily"),
+                            child: Text(
+                              _localizedFrequency(
+                                context,
+                                "Daily",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: "Weekly",
-                            child: Text("Weekly"),
+                            child: Text(
+                              _localizedFrequency(
+                                context,
+                                "Weekly",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: "Monthly",
-                            child: Text("Monthly"),
+                            child: Text(
+                              _localizedFrequency(
+                                context,
+                                "Monthly",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: "Yearly",
-                            child: Text("Yearly"),
+                            child: Text(
+                              _localizedFrequency(
+                                context,
+                                "Yearly",
+                              ),
+                            ),
                           ),
                         ],
                         onChanged: (v) {
+                          if (v == null) return;
+
                           setState(() {
-                            interestFrequency = v!;
+                            interestFrequency = v;
                           });
                         },
                       ),
 
                       const SizedBox(height: 18),
 
-                      // =========================
-                      // PAYMENT MODE
-                      // =========================
-
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment:
+                        Alignment.centerLeft,
                         child: title(
-                          "Payment Mode (Optional)",
+                          l10n.paymentModeOptional,
                         ),
                       ),
 
-                      DropdownButtonFormField<String>(
+                      DropdownButtonFormField<
+                          String>(
                         initialValue:
-                            paymentMode.isEmpty
-                                ? null
-                                : paymentMode,
-                        decoration: decoration(
-                          hint: "Select Payment Mode",
+                        paymentMode.isEmpty
+                            ? null
+                            : paymentMode,
+                        decoration:
+                        decoration(
+                          hint:
+                          l10n.selectPaymentMode,
                         ),
                         icon: const Icon(
-                          Icons.keyboard_arrow_down,
+                          Icons
+                              .keyboard_arrow_down,
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: "Cash",
-                            child: Text("Cash"),
+                            child: Text(
+                              _localizedPaymentMode(
+                                context,
+                                "Cash",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: "UPI",
-                            child: Text("UPI"),
+                            child: Text(
+                              _localizedPaymentMode(
+                                context,
+                                "UPI",
+                              ),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: "Bank",
-                            child: Text("Bank Transfer"),
+                            child: Text(
+                              _localizedPaymentMode(
+                                context,
+                                "Bank",
+                              ),
+                            ),
                           ),
                         ],
                         onChanged: (v) {
+                          if (v == null) return;
+
                           setState(() {
-                            paymentMode = v!;
+                            paymentMode = v;
                           });
                         },
                       ),
 
-                      // Extra bottom space so the last field
-                      // can scroll above the keyboard.
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
               ),
 
-              // =========================
-              // FIXED BUTTONS
-              // =========================
-
               Container(
-                padding: const EdgeInsets.fromLTRB(
+                padding:
+                const EdgeInsets.fromLTRB(
                   22,
                   12,
                   22,
                   20,
                 ),
-                decoration: const BoxDecoration(
+                decoration:
+                const BoxDecoration(
                   color: Color(0xffFFF8F0),
                 ),
                 child: Row(
@@ -595,23 +786,43 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                         height: 52,
                         child: OutlinedButton(
                           onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            Navigator.pop(context);
+                            FocusScope.of(
+                              context,
+                            ).unfocus();
+
+                            Navigator.pop(
+                              context,
+                            );
                           },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xffC7D0DF),
+                          style:
+                          OutlinedButton
+                              .styleFrom(
+                            side:
+                            const BorderSide(
+                              color:
+                              Color(
+                                0xffC7D0DF,
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
+                            shape:
+                            RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(12),
+                              BorderRadius
+                                  .circular(
+                                12,
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(
-                              color: Color(0xff29406B),
-                              fontWeight: FontWeight.w700,
+                          child: Text(
+                            l10n.cancel,
+                            style:
+                            const TextStyle(
+                              color:
+                              Color(
+                                0xff29406B,
+                              ),
+                              fontWeight:
+                              FontWeight.w700,
                             ),
                           ),
                         ),
@@ -625,156 +836,180 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () async {
-                            if (amountController.text.trim().isEmpty ||
-                                interestController.text.trim().isEmpty) {
+                            if (amountController
+                                .text
+                                .trim()
+                                .isEmpty ||
+                                interestController
+                                    .text
+                                    .trim()
+                                    .isEmpty) {
                               setState(() {
-                                _interestRateError = interestController.text.trim().isEmpty;
+                                _interestRateError =
+                                    interestController
+                                        .text
+                                        .trim()
+                                        .isEmpty;
                               });
 
                               if (_interestRateError) {
-                                _interestFocusNode.requestFocus();
-                                _scrollToField(_interestKey);
+                                _interestFocusNode
+                                    .requestFocus();
+
+                                _scrollToField(
+                                  _interestKey,
+                                );
                               }
 
                               return;
                             }
 
-                            final amount = double.parse(
-                              amountController.text,
+                            final amount =
+                            double.parse(
+                              amountController
+                                  .text,
                             );
 
-                            final rate = double.parse(
-                              interestController.text,
+                            final rate =
+                            double.parse(
+                              interestController
+                                  .text,
                             );
 
                             final interestAmount =
-                                InterestCalculator.calculate(
-                              principal: amount,
+                            InterestCalculator
+                                .calculate(
+                              principal:
+                              amount,
                               rate: rate,
-                              startDate: selectedDate,
-                              interestType: interestType,
-                              frequency: interestFrequency,
+                              startDate:
+                              selectedDate,
+                              interestType:
+                              interestType,
+                              frequency:
+                              interestFrequency,
                             );
 
-                            // final tx = Transaction()
-                            //   ..customerId = widget.customer.id
-                            //   ..chopdiId = widget.customer.chopdiId
-                            //   // Money is stored as integer paise; `amount` is
-                            //   // now a read-only rupee view of it.
-                            //   ..amountPaise = Money.toPaise(amount)
-                            //   ..interestRateBp = Money.rateToBasisPoints(
-                            //     double.tryParse(
-                            //           interestController.text.trim(),
-                            //         ) ??
-                            //         0,
-                            //   )
-                            //   ..date = selectedDate
-                            //   ..type = TransactionType.took
-                            //   ..description =
-                            //       descriptionController.text.trim()
-                            //   ..paymentMode = paymentMode
-                            //   ..interestType = interestType
-                            //   ..interestFrequency =
-                            //       interestFrequency;
-
-                            // await TransactionService.addTransaction(tx);
-                            final tx = Transaction()
-                              ..customerId = widget.customer.id
-                              ..chopdiId = widget.customer.chopdiId
-                              ..amountPaise = Money.toPaise(amount)
-                              ..interestRateBp = Money.rateToBasisPoints(
+                            final tx =
+                            Transaction()
+                              ..customerId =
+                                  widget.customer.id
+                              ..chopdiId =
+                                  widget.customer
+                                      .chopdiId
+                              ..amountPaise =
+                              Money.toPaise(
+                                amount,
+                              )
+                              ..interestRateBp =
+                              Money
+                                  .rateToBasisPoints(
                                 double.tryParse(
-                                      interestController.text.trim(),
-                                    ) ??
+                                  interestController
+                                      .text
+                                      .trim(),
+                                ) ??
                                     0,
                               )
-                              ..date = selectedDate
-                              ..type = TransactionType.took
-                              ..description = descriptionController.text.trim()
-                              ..paymentMode = paymentMode
-                              ..interestType = interestType
-                              ..interestFrequency = interestFrequency;
+                              ..date =
+                                  selectedDate
+                              ..type =
+                                  TransactionType
+                                      .took
+                              ..description =
+                              descriptionController
+                                  .text
+                                  .trim()
+                              ..paymentMode =
+                                  paymentMode
+                              ..interestType =
+                                  interestType
+                              ..interestFrequency =
+                                  interestFrequency;
 
-                            await Repositories.ledger.adoptDraft(tx);
+                            await Repositories
+                                .ledger
+                                .adoptDraft(tx);
 
-                            await LocalNotificationService.instance
+                            await LocalNotificationService
+                                .instance
                                 .syncNotifications(
-                              database: IsarService.isar,
+                              database:
+                              IsarService.isar,
                             );
 
                             final localNotificationService =
-                                LocalNotificationService.instance;
+                                LocalNotificationService
+                                    .instance;
 
                             final prefs =
-                                await SharedPreferences.getInstance();
+                            await SharedPreferences
+                                .getInstance();
 
                             final paymentReminderEnabled =
                                 prefs.getBool(
-                                      'notification_payment_reminder_enabled',
-                                    ) ??
+                                  'notification_payment_reminder_enabled',
+                                ) ??
                                     true;
 
                             if (paymentReminderEnabled) {
                               final reminderType =
                                   prefs.getString(
-                                        'notification_selected_reminder',
-                                      ) ??
+                                    'notification_selected_reminder',
+                                  ) ??
                                       'dueDate';
 
                               await localNotificationService
                                   .scheduleCustomerPaymentReminder(
-                                customer: widget.customer,
-                                loanDate: selectedDate,
-                                interestFrequency: interestFrequency,
-                                reminderType: reminderType,
-                                transactionType: TransactionType.took,
-                                amount: amount,
+                                customer:
+                                widget.customer,
+                                loanDate:
+                                selectedDate,
+                                interestFrequency:
+                                interestFrequency,
+                                reminderType:
+                                reminderType,
+                                transactionType:
+                                TransactionType
+                                    .took,
+                                amount:
+                                amount,
                               );
                             }
 
-                            // ==================================================
-                            // INTEREST NOTIFICATION
-                            // ==================================================
-
                             if (interestAmount > 0) {
-                              // final notificationService =
-                              //     NotificationService(
-                              //   IsarService.isar,
-                              // );
-
-                              // await notificationService
-                              //     .createInterestNotification(
-                              //   chopdiId: widget.customer.chopdiId,
-                              //   customerName: widget.customer.name,
-                              //   interestAmount: interestAmount,
-                              //   customerId: widget.customer.id,
-                              // );
-                              // ==================================================
-                              // TOOK LOAN NOTIFICATION
-                              // ==================================================
-
                               final notificationService =
-                                  NotificationService(
+                              NotificationService(
                                 IsarService.isar,
                               );
 
-                              await notificationService.createTookLoanNotification(
-                                chopdiId: widget.customer.chopdiId,
-                                customerName: widget.customer.name,
+                              await notificationService
+                                  .createTookLoanNotification(
+                                chopdiId:
+                                widget.customer
+                                    .chopdiId,
+                                customerName:
+                                widget.customer
+                                    .name,
                                 amount: amount,
-                                customerId: widget.customer.id,
+                                customerId:
+                                widget.customer.id,
                               );
 
-                              // ==================================================
-                              // INTEREST NOTIFICATION
-                              // ==================================================
-
-                              if (interestAmount > 0) {
-                                await notificationService.createInterestNotification(
-                                  chopdiId: widget.customer.chopdiId,
-                                  customerName: widget.customer.name,
-                                  interestAmount: interestAmount,
-                                  customerId: widget.customer.id,
+                              if (interestAmount >
+                                  0) {
+                                await notificationService
+                                    .createInterestNotification(
+                                  chopdiId:
+                                  widget.customer
+                                      .chopdiId,
+                                  customerName:
+                                  widget.customer
+                                      .name,
+                                  interestAmount:
+                                  interestAmount,
+                                  customerId:
+                                  widget.customer.id,
                                 );
                               }
                             }
@@ -782,23 +1017,36 @@ class _MoneyGaveBottomSheetState extends State<TookLoanMoneyGaveBottomSheet> {
                             widget.onSaved();
 
                             if (mounted) {
-                              Navigator.pop(context);
+                              Navigator.pop(
+                                context,
+                              );
                             }
                           },
-                          style: ElevatedButton.styleFrom(
+                          style:
+                          ElevatedButton
+                              .styleFrom(
                             backgroundColor:
-                                const Color(0xff29406B),
+                            const Color(
+                              0xff29406B,
+                            ),
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
+                            shape:
+                            RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(12),
+                              BorderRadius
+                                  .circular(
+                                12,
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            "Save Entry",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                          child: Text(
+                            l10n.saveEntry,
+                            style:
+                            const TextStyle(
+                              color:
+                              Colors.white,
+                              fontWeight:
+                              FontWeight.w700,
                             ),
                           ),
                         ),

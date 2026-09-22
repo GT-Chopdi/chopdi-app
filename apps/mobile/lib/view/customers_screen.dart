@@ -8,7 +8,7 @@ import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
 import 'package:isar_community/isar.dart';
 import '../model/transaction.dart';
 import '../service/isar_service.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class CustomerListSection extends StatefulWidget {
   final List<Customer> customers;
 
@@ -312,6 +312,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -325,7 +326,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Customers",
+    l10n.customersTitle,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -333,7 +334,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                   ),
                 ),
                 Text(
-                  "Manage all your customers",
+                  l10n.manageAllCustomers,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     color: const Color.fromRGBO(
@@ -393,7 +394,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                       maxHeight: 44,
                     ),
                     hintText:
-                    "Search by name and phone number",
+                    l10n.searchByNameAndPhone,
                     hintStyle: const TextStyle(
                       fontSize: 12,
                     ),
@@ -433,8 +434,8 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                       width: 24,
                     ),
                     const SizedBox(width: 5),
-                    const Text(
-                      "Filter",
+                     Text(
+                      l10n.filter,
                       style: TextStyle(
                         fontSize: 13,
                       ),
@@ -455,7 +456,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
         Row(
           children: [
             Text(
-              "${filteredCustomers.length} Customers",
+              "${filteredCustomers.length} ${l10n.customersCount}",
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -494,14 +495,15 @@ class _CustomerListSectionState extends State<CustomerListSection> {
         // ========================================================
 
         if (filteredCustomers.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(
+          Padding(
+            padding: const EdgeInsets.symmetric(
               vertical: 30,
             ),
             child: Center(
-              child: Text(
-                "No customers found",
-                style: TextStyle(
+              child:
+              Text(
+                l10n.noCustomersFound,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
