@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/edit_transaction_bottom_sheet.dart';
@@ -31,47 +32,36 @@ class TransactionDetailsScreen extends StatelessWidget {
   // TRANSACTION TITLE
   // ================================================================
 
-  String _getTransactionTitle() {
+  String _getTransactionTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (isInterestRow) {
-      return "Interest Details";
+      return l10n.interestDetails;
     }
 
-    switch (transaction.type) {
-      case TransactionType.gave:
-        return "Transaction Details";
-
-      case TransactionType.received:
-        return "Transaction Details";
-
-      case TransactionType.took:
-        return "Transaction Details";
-
-      case TransactionType.paid:
-        return "Transaction Details";
-    }
+    return l10n.transactionDetails;
   }
 
   // ================================================================
   // BADGE TEXT
   // ================================================================
 
-  String _getBadgeText() {
+  String _getBadgeText(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (isInterestRow) {
-      return "Interest";
+      return l10n.interest;
     }
 
     switch (transaction.type) {
       case TransactionType.gave:
-        return "Loan Given";
-
+        return l10n.loanGiven;
       case TransactionType.received:
-        return "Payment Received";
-
+        return l10n.paymentReceived;
       case TransactionType.took:
-        return "Loan Took";
-
+        return l10n.loanTook;
       case TransactionType.paid:
-        return "Amount Paid";
+        return l10n.amountPaid;
     }
   }
 
@@ -166,59 +156,97 @@ class TransactionDetailsScreen extends StatelessWidget {
   // FULL INTEREST DESCRIPTION
   // ================================================================
 
-  String _getFullDescription() {
-    final startDate =
-        DateFormat("dd MMM yyyy").format(transaction.date);
+  String _localizedFrequency(BuildContext context, String value) {
+    final l10n = AppLocalizations.of(context);
 
-    final endDate =
-        DateFormat("dd MMM yyyy").format(DateTime.now());
-
-    final rate =
-        transaction.interestRate.toStringAsFixed(0);
-
-    final frequency =
-        transaction.interestFrequency.isEmpty
-            ? "Monthly"
-            : transaction.interestFrequency;
-
-    final interestType =
-        transaction.interestType.isEmpty
-            ? "Simple Interest"
-            : transaction.interestType;
-
-    return "$startDate → $endDate "
-        "$rate% $frequency $interestType";
+    switch (value) {
+      case 'Daily':
+        return l10n.daily;
+      case 'Weekly':
+        return l10n.weekly;
+      case 'Monthly':
+        return l10n.monthly;
+      case 'Yearly':
+        return l10n.yearly;
+      default:
+        return value;
+    }
   }
 
-  // ================================================================
-  // INTEREST DESCRIPTION
-  // ================================================================
+  String _localizedInterestType(BuildContext context, String value) {
+    final l10n = AppLocalizations.of(context);
 
-  String _getInterestDescription() {
-    final startDate = transaction.date;
-    final endDate = DateTime.now();
+    switch (value) {
+      case 'Simple Interest':
+        return l10n.simpleInterest;
+      case 'Compound Interest':
+        return l10n.compoundInterest;
+      default:
+        return value;
+    }
+  }
 
-    final start =
-        DateFormat("dd MMM yyyy").format(startDate);
+  String _localizedPaymentMode(BuildContext context, String value) {
+    final l10n = AppLocalizations.of(context);
 
-    final end =
-        DateFormat("dd MMM yyyy").format(endDate);
+    switch (value) {
+      case 'Cash':
+        return l10n.cash;
+      case 'UPI':
+        return l10n.upi;
+      case 'Bank':
+      case 'Bank Transfer':
+        return l10n.bankTransfer;
+      case 'Other':
+        return l10n.other;
+      default:
+        return value;
+    }
+  }
 
-    final rate =
-        transaction.interestRate.toStringAsFixed(0);
+  String _formatDate(BuildContext context, DateTime date) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return DateFormat('dd MMM yyyy', locale).format(date);
+  }
 
-    final frequency =
-        transaction.interestFrequency.isEmpty
-            ? "Monthly"
-            : transaction.interestFrequency;
+  String _getFullDescription(BuildContext context) {
+    final startDate = _formatDate(context, transaction.date);
+    final endDate = _formatDate(context, DateTime.now());
 
-    final interestType =
-        transaction.interestType.isEmpty
-            ? "Simple Interest"
-            : transaction.interestType;
+    final rate = transaction.interestRate.toStringAsFixed(0);
 
-    return "$start → $end\n"
-        "$rate% $frequency $interestType";
+    final rawFrequency = transaction.interestFrequency.isEmpty
+        ? 'Monthly'
+        : transaction.interestFrequency;
+
+    final rawInterestType = transaction.interestType.isEmpty
+        ? 'Simple Interest'
+        : transaction.interestType;
+
+    final frequency = _localizedFrequency(context, rawFrequency);
+    final interestType = _localizedInterestType(context, rawInterestType);
+
+    return '$startDate → $endDate $rate% $frequency $interestType';
+  }
+
+  String _getInterestDescription(BuildContext context) {
+    final start = _formatDate(context, transaction.date);
+    final end = _formatDate(context, DateTime.now());
+
+    final rate = transaction.interestRate.toStringAsFixed(0);
+
+    final rawFrequency = transaction.interestFrequency.isEmpty
+        ? 'Monthly'
+        : transaction.interestFrequency;
+
+    final rawInterestType = transaction.interestType.isEmpty
+        ? 'Simple Interest'
+        : transaction.interestType;
+
+    final frequency = _localizedFrequency(context, rawFrequency);
+    final interestType = _localizedInterestType(context, rawInterestType);
+
+    return '$start → $end\n$rate% $frequency $interestType';
   }
 
   // ================================================================
@@ -234,31 +262,29 @@ class TransactionDetailsScreen extends StatelessWidget {
   // TRANSACTION DESCRIPTION
   // ================================================================
 
-  String _getTransactionDescription() {
+  String _getTransactionDescription(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     // Interest row
     if (isInterestRow) {
-      final startDate = DateFormat("dd MMM yyyy")
-          .format(transaction.date);
+      final startDate = _formatDate(context, transaction.date);
+      final endDate = _formatDate(context, DateTime.now());
 
-      final endDate = DateFormat("dd MMM yyyy")
-          .format(DateTime.now());
+      final rate = transaction.interestRate.toStringAsFixed(0);
 
-      final rate =
-          transaction.interestRate.toStringAsFixed(0);
+      final rawFrequency = transaction.interestFrequency.isEmpty
+          ? 'Monthly'
+          : transaction.interestFrequency;
 
-      final frequency =
-          transaction.interestFrequency.isEmpty
-              ? "Monthly"
-              : transaction.interestFrequency;
+      final rawInterestType = transaction.interestType.isEmpty
+          ? 'Simple Interest'
+          : transaction.interestType;
 
-      final interestType =
-          transaction.interestType.isEmpty
-              ? "Simple Interest"
-              : transaction.interestType;
+      final frequency = _localizedFrequency(context, rawFrequency);
+      final interestType = _localizedInterestType(context, rawInterestType);
 
-      return "₹${displayAmount?.toStringAsFixed(0) ?? '0'} interest "
-          "from $startDate to $endDate at $rate% "
-          "$frequency $interestType interest.";
+      return '₹${displayAmount?.toStringAsFixed(0) ?? '0'} ${l10n.interest} '
+          '$startDate → $endDate $rate% $frequency $interestType';
     }
 
     // Normal transaction row
@@ -268,16 +294,13 @@ class TransactionDetailsScreen extends StatelessWidget {
 
     switch (transaction.type) {
       case TransactionType.gave:
-        return "Loan given.";
-
+        return '${l10n.loanGiven}.';
       case TransactionType.received:
-        return "Payment received.";
-
+        return '${l10n.paymentReceived}.';
       case TransactionType.took:
-        return "Loan taken.";
-
+        return '${l10n.loanTook}.';
       case TransactionType.paid:
-        return "Amount paid.";
+        return '${l10n.amountPaid}.';
     }
   }
 
@@ -356,16 +379,16 @@ class TransactionDetailsScreen extends StatelessWidget {
                       ),
 
                       child:
-                          (transaction.type ==
-                                      TransactionType.received ||
-                                  transaction.type ==
-                                      TransactionType.paid)
-                              ? _buildPaymentReceivedDetails(
-                                  context,
-                                )
-                              : _buildLoanGivenDetails(
-                                  context,
-                                ),
+                      (transaction.type ==
+                          TransactionType.received ||
+                          transaction.type ==
+                              TransactionType.paid)
+                          ? _buildPaymentReceivedDetails(
+                        context,
+                      )
+                          : _buildLoanGivenDetails(
+                        context,
+                      ),
                     ),
                   ),
                 ),
@@ -433,7 +456,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         Expanded(
           child: Column(
             crossAxisAlignment:
-                CrossAxisAlignment.start,
+            CrossAxisAlignment.start,
             children: [
               Text(
                 title,
@@ -478,6 +501,8 @@ class TransactionDetailsScreen extends StatelessWidget {
   // ================================================================
 
   Widget _buildLoanGivenDetails(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -520,7 +545,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         const SizedBox(height: 7),
 
         Text(
-          _getTransactionTitle(),
+          _getTransactionTitle(context),
           textAlign: TextAlign.center,
           style: GoogleFonts.manrope(
             color: const Color(0xFF233E67),
@@ -541,22 +566,22 @@ class TransactionDetailsScreen extends StatelessWidget {
             color: isInterestRow
                 ? _getInterestBackgroundColor()
                 : const Color.fromRGBO(
-                    199,
-                    76,
-                    76,
-                    0.19,
-                  ),
+              199,
+              76,
+              76,
+              0.19,
+            ),
             borderRadius:
-                BorderRadius.circular(12),
+            BorderRadius.circular(12),
             border: Border.all(
               color: isInterestRow
                   ? _getInterestColor()
                   : const Color.fromRGBO(
-                      199,
-                      76,
-                      76,
-                      1,
-                    ),
+                199,
+                76,
+                76,
+                1,
+              ),
               width: 0.8,
             ),
           ),
@@ -565,8 +590,8 @@ class TransactionDetailsScreen extends StatelessWidget {
             children: [
               Image.asset(
                 isInterestRow &&
-                        transaction.type ==
-                            TransactionType.gave
+                    transaction.type ==
+                        TransactionType.gave
                     ? 'assets/arrow_down.png'
                     : 'assets/arrow_up.png',
                 height: 14,
@@ -576,16 +601,16 @@ class TransactionDetailsScreen extends StatelessWidget {
               const SizedBox(width: 4),
 
               Text(
-                _getBadgeText(),
+                _getBadgeText(context),
                 style: GoogleFonts.manrope(
                   color: isInterestRow
                       ? _getInterestColor()
                       : const Color.fromRGBO(
-                          199,
-                          76,
-                          76,
-                          1,
-                        ),
+                    199,
+                    76,
+                    76,
+                    1,
+                  ),
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -599,7 +624,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         // Date + Amount
         Row(
           crossAxisAlignment:
-              CrossAxisAlignment.center,
+          CrossAxisAlignment.center,
           children: [
             _smallIcon(
               'assets/calender_check.png',
@@ -609,9 +634,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
             Expanded(
               child: Text(
-                DateFormat(
-                  'dd MMM yyyy',
-                ).format(transaction.date),
+                _formatDate(context, transaction.date),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
@@ -634,11 +657,11 @@ class TransactionDetailsScreen extends StatelessWidget {
                   color: isInterestRow
                       ? _getInterestColor()
                       : const Color.fromRGBO(
-                          199,
-                          76,
-                          76,
-                          1,
-                        ),
+                    199,
+                    76,
+                    76,
+                    1,
+                  ),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -653,7 +676,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            _getTransactionDescription(),
+            _getTransactionDescription(context),
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.manrope(
@@ -670,15 +693,15 @@ class TransactionDetailsScreen extends StatelessWidget {
         // Interest details row 1
         Row(
           crossAxisAlignment:
-              CrossAxisAlignment.start,
+          CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _detailItem(
                 path:
-                    'assets/calender_check.png',
-                title: "Interest Rate",
+                'assets/calender_check.png',
+                title: l10n.enterInterestRate,
                 value:
-                    "${transaction.interestRate}%",
+                "${transaction.interestRate}%",
               ),
             ),
 
@@ -687,13 +710,13 @@ class TransactionDetailsScreen extends StatelessWidget {
             Expanded(
               child: _detailItem(
                 path:
-                    'assets/calender_check.png',
-                title: "Interest Type",
+                'assets/calender_check.png',
+                title: l10n.interestType,
                 value: transaction
-                        .interestType
-                        .isEmpty
-                    ? "Not specified"
-                    : transaction.interestType,
+                    .interestType
+                    .isEmpty
+                    ? l10n.notSpecified
+                    : _localizedInterestType(context, transaction.interestType),
               ),
             ),
           ],
@@ -704,18 +727,18 @@ class TransactionDetailsScreen extends StatelessWidget {
         // Interest details row 2
         Row(
           crossAxisAlignment:
-              CrossAxisAlignment.start,
+          CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _detailItem(
                 path:
-                    'assets/calender_check.png',
-                title: "Interest Frequency",
+                'assets/calender_check.png',
+                title: l10n.interestFrequency,
                 value: transaction
-                        .interestFrequency
-                        .isEmpty
-                    ? "Not specified"
-                    : transaction.interestFrequency,
+                    .interestFrequency
+                    .isEmpty
+                    ? l10n.notSpecified
+                    : _localizedFrequency(context, transaction.interestFrequency),
               ),
             ),
 
@@ -724,13 +747,13 @@ class TransactionDetailsScreen extends StatelessWidget {
             Expanded(
               child: _detailItem(
                 path:
-                    'assets/calender_check.png',
-                title: "Payment Method",
+                'assets/calender_check.png',
+                title: l10n.paymentMethod,
                 value: transaction
-                        .paymentMode
-                        .isEmpty
-                    ? "Not specified"
-                    : transaction.paymentMode,
+                    .paymentMode
+                    .isEmpty
+                    ? l10n.notSpecified
+                    : _localizedPaymentMode(context, transaction.paymentMode),
               ),
             ),
           ],
@@ -745,11 +768,11 @@ class TransactionDetailsScreen extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () async {
               final result =
-                  await showModalBottomSheet<bool>(
+              await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor:
-                    Colors.transparent,
+                Colors.transparent,
                 builder: (context) {
                   return EditTransactionBottomSheet(
                     transaction: transaction,
@@ -765,17 +788,17 @@ class TransactionDetailsScreen extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
-                  const Color(0xFF213F68),
+              const Color(0xFF213F68),
               foregroundColor:
-                  ChopdiColors.cream,
+              ChopdiColors.cream,
               elevation: 0,
               minimumSize:
-                  const Size(double.infinity, 40),
+              const Size(double.infinity, 40),
               padding: EdgeInsets.zero,
               shape:
-                  RoundedRectangleBorder(
+              RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
               ),
             ),
             icon: Image.asset(
@@ -784,7 +807,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               width: 24,
             ),
             label: Text(
-              "Edit Transaction",
+              l10n.editTransaction,
               style: GoogleFonts.manrope(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -802,11 +825,11 @@ class TransactionDetailsScreen extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () async {
               final result =
-                  await showDeleteTransactionBottomSheet(
+              await showDeleteTransactionBottomSheet(
                 context,
-                title: "Delete Transaction?",
+                title: l10n.deleteTransactionQuestion,
                 subtitle:
-                    "This action cannot be undone",
+                l10n.thisActionCannotBeUndone,
                 onDelete: () async {
                   await Repositories.ledger
                       .voidEntry(
@@ -824,16 +847,16 @@ class TransactionDetailsScreen extends StatelessWidget {
               }
             },
             style:
-                OutlinedButton.styleFrom(
+            OutlinedButton.styleFrom(
               foregroundColor:
-                  const Color.fromRGBO(
+              const Color.fromRGBO(
                 199,
                 76,
                 76,
                 1,
               ),
               minimumSize:
-                  const Size(double.infinity, 40),
+              const Size(double.infinity, 40),
               padding: EdgeInsets.zero,
               side: const BorderSide(
                 color: Color.fromRGBO(
@@ -845,9 +868,9 @@ class TransactionDetailsScreen extends StatelessWidget {
                 width: 0.8,
               ),
               shape:
-                  RoundedRectangleBorder(
+              RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
               ),
             ),
             icon: Image.asset(
@@ -856,7 +879,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               width: 24,
             ),
             label: Text(
-              "Delete Transaction",
+              l10n.deleteTransaction,
               style: GoogleFonts.manrope(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -873,8 +896,10 @@ class TransactionDetailsScreen extends StatelessWidget {
   // ================================================================
 
   Widget _buildPaymentReceivedDetails(
-    BuildContext context,
-  ) {
+      BuildContext context,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -885,7 +910,7 @@ class TransactionDetailsScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF85817D),
             borderRadius:
-                BorderRadius.circular(10),
+            BorderRadius.circular(10),
           ),
         ),
 
@@ -918,7 +943,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         const SizedBox(height: 7),
 
         Text(
-          "Transaction Details",
+          l10n.transactionDetails,
           textAlign: TextAlign.center,
           style: GoogleFonts.manrope(
             color: const Color(0xFF233E67),
@@ -937,12 +962,12 @@ class TransactionDetailsScreen extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color:
-                _getBadgeBackgroundColor(),
+            _getBadgeBackgroundColor(),
             borderRadius:
-                BorderRadius.circular(12),
+            BorderRadius.circular(12),
             border: Border.all(
               color:
-                  _getBadgeBorderColor(),
+              _getBadgeBorderColor(),
               width: 0.8,
             ),
           ),
@@ -951,10 +976,10 @@ class TransactionDetailsScreen extends StatelessWidget {
             children: [
               Image.asset(
                 (transaction.type ==
-                            TransactionType.received ||
-                        transaction.type ==
-                            TransactionType.paid ||
-                        isInterestRow)
+                    TransactionType.received ||
+                    transaction.type ==
+                        TransactionType.paid ||
+                    isInterestRow)
                     ? 'assets/arrow_down.png'
                     : 'assets/arrow_up.png',
                 height: 14,
@@ -964,13 +989,13 @@ class TransactionDetailsScreen extends StatelessWidget {
               const SizedBox(width: 4),
 
               Text(
-                _getBadgeText(),
+                _getBadgeText(context),
                 style: GoogleFonts.manrope(
                   color:
-                      _getBadgeTextColor(),
+                  _getBadgeTextColor(),
                   fontSize: 14,
                   fontWeight:
-                      FontWeight.w700,
+                  FontWeight.w700,
                 ),
               ),
             ],
@@ -982,7 +1007,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         // Date + Amount
         Row(
           crossAxisAlignment:
-              CrossAxisAlignment.center,
+          CrossAxisAlignment.center,
           children: [
             _smallIcon(
               'assets/calender_check.png',
@@ -992,17 +1017,15 @@ class TransactionDetailsScreen extends StatelessWidget {
 
             Expanded(
               child: Text(
-                DateFormat(
-                  'dd MMM yyyy',
-                ).format(transaction.date),
+                _formatDate(context, transaction.date),
                 maxLines: 1,
                 overflow:
-                    TextOverflow.ellipsis,
+                TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
                   color: ChopdiColors.navy,
                   fontSize: 12,
                   fontWeight:
-                      FontWeight.w700,
+                  FontWeight.w700,
                 ),
               ),
             ),
@@ -1014,15 +1037,15 @@ class TransactionDetailsScreen extends StatelessWidget {
                 _getDisplayAmount(),
                 maxLines: 1,
                 overflow:
-                    TextOverflow.ellipsis,
+                TextOverflow.ellipsis,
                 textAlign:
-                    TextAlign.right,
+                TextAlign.right,
                 style: GoogleFonts.manrope(
                   color:
-                      const Color(0xFF159B2D),
+                  const Color(0xFF159B2D),
                   fontSize: 16,
                   fontWeight:
-                      FontWeight.w700,
+                  FontWeight.w700,
                 ),
               ),
             ),
@@ -1035,16 +1058,16 @@ class TransactionDetailsScreen extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            _getTransactionDescription(),
+            _getTransactionDescription(context),
             maxLines: 4,
             overflow:
-                TextOverflow.ellipsis,
+            TextOverflow.ellipsis,
             style: GoogleFonts.manrope(
               color: Colors.grey.shade500,
               fontSize: 12,
               height: 1.3,
               fontWeight:
-                  FontWeight.w500,
+              FontWeight.w500,
             ),
           ),
         ),
@@ -1058,11 +1081,11 @@ class TransactionDetailsScreen extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: () async {
               final result =
-                  await showModalBottomSheet<bool>(
+              await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor:
-                    Colors.transparent,
+                Colors.transparent,
                 builder: (context) {
                   return EditTransactionReceivedBottomSheet(
                     transaction: transaction,
@@ -1078,17 +1101,17 @@ class TransactionDetailsScreen extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
-                  const Color(0xFF213F68),
+              const Color(0xFF213F68),
               foregroundColor:
-                  ChopdiColors.cream,
+              ChopdiColors.cream,
               elevation: 0,
               minimumSize:
-                  const Size(double.infinity, 40),
+              const Size(double.infinity, 40),
               padding: EdgeInsets.zero,
               shape:
-                  RoundedRectangleBorder(
+              RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
               ),
             ),
             icon: Image.asset(
@@ -1097,11 +1120,11 @@ class TransactionDetailsScreen extends StatelessWidget {
               width: 24,
             ),
             label: Text(
-              "Edit Transaction",
+              l10n.editTransaction,
               style: GoogleFonts.manrope(
                 fontSize: 14,
                 fontWeight:
-                    FontWeight.w700,
+                FontWeight.w700,
               ),
             ),
           ),
@@ -1116,18 +1139,18 @@ class TransactionDetailsScreen extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () async {
               final result =
-                  await showDeleteTransactionBottomSheet(
+              await showDeleteTransactionBottomSheet(
                 context,
                 title:
-                    "Delete Transaction?",
+                "Delete Transaction?",
                 subtitle:
-                    "This action cannot be undone",
+                l10n.thisActionCannotBeUndone,
                 onDelete: () async {
                   await Repositories.ledger
                       .voidEntry(
                     transaction,
                     reason:
-                        'Deleted by user',
+                    'Deleted by user',
                   );
 
                   onChanged?.call();
@@ -1140,16 +1163,16 @@ class TransactionDetailsScreen extends StatelessWidget {
               }
             },
             style:
-                OutlinedButton.styleFrom(
+            OutlinedButton.styleFrom(
               foregroundColor:
-                  const Color.fromRGBO(
+              const Color.fromRGBO(
                 199,
                 76,
                 76,
                 1,
               ),
               minimumSize:
-                  const Size(double.infinity, 40),
+              const Size(double.infinity, 40),
               padding: EdgeInsets.zero,
               side: const BorderSide(
                 color: Color.fromRGBO(
@@ -1161,9 +1184,9 @@ class TransactionDetailsScreen extends StatelessWidget {
                 width: 0.8,
               ),
               shape:
-                  RoundedRectangleBorder(
+              RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(6),
+                BorderRadius.circular(6),
               ),
             ),
             icon: Image.asset(
@@ -1172,11 +1195,11 @@ class TransactionDetailsScreen extends StatelessWidget {
               width: 24,
             ),
             label: Text(
-              "Delete Transaction",
+              l10n.deleteTransaction,
               style: GoogleFonts.manrope(
                 fontSize: 14,
                 fontWeight:
-                    FontWeight.w700,
+                FontWeight.w700,
               ),
             ),
           ),

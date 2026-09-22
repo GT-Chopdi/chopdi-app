@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:isar_community/isar.dart';
 
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
@@ -26,6 +27,8 @@ class TookLoanSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
           .filter()
@@ -35,34 +38,38 @@ class TookLoanSummaryCard extends StatelessWidget {
         fireImmediately: true,
       ),
       builder: (context, snapshot) {
-        // ------------------------------------------------------------
-        // Handle stream state
-        // ------------------------------------------------------------
         if (snapshot.hasError) {
           debugPrint(
             '[TookLoanSummaryCard] Isar error: ${snapshot.error}',
           );
+
           return _buildCard(
+            context,
             outstanding: 0,
             totalLoanTaken: 0,
             totalInterestDue: 0,
           );
         }
 
-        final transactions = snapshot.data ?? <Transaction>[];
+        final transactions =
+            snapshot.data ?? <Transaction>[];
 
-        // ------------------------------------------------------------
-        // Debug
-        // ------------------------------------------------------------
         debugPrint(
-          '[TookLoanSummaryCard] chopdiId=$chopdiId transactions=${transactions.length}',
+          '[TookLoanSummaryCard] '
+              'chopdiId=$chopdiId '
+              'transactions=${transactions.length}',
         );
 
         for (final tx in transactions) {
           debugPrint(
-            '[TookLoanSummaryCard] id=${tx.id}, uuid=${tx.uuid}, '
-                'customerUuid=${tx.customerUuid}, chopdiId=${tx.chopdiId}, '
-                'type=${tx.type}, amount=${tx.amount}, amountPaise=${tx.amountPaise}',
+            '[TookLoanSummaryCard] '
+                'id=${tx.id}, '
+                'uuid=${tx.uuid}, '
+                'customerUuid=${tx.customerUuid}, '
+                'chopdiId=${tx.chopdiId}, '
+                'type=${tx.type}, '
+                'amount=${tx.amount}, '
+                'amountPaise=${tx.amountPaise}',
           );
         }
 
@@ -70,7 +77,9 @@ class TookLoanSummaryCard extends StatelessWidget {
         // TOTAL LOAN TAKEN
         // ------------------------------------------------------------
         final totalLoanTaken = transactions
-            .where((tx) => tx.type == TransactionType.took)
+            .where(
+              (tx) => tx.type == TransactionType.took,
+        )
             .fold<double>(
           0,
               (sum, tx) => sum + tx.amount,
@@ -80,7 +89,9 @@ class TookLoanSummaryCard extends StatelessWidget {
         // TOTAL PAID
         // ------------------------------------------------------------
         final totalPaid = transactions
-            .where((tx) => tx.type == TransactionType.paid)
+            .where(
+              (tx) => tx.type == TransactionType.paid,
+        )
             .fold<double>(
           0,
               (sum, tx) => sum + tx.amount,
@@ -90,7 +101,9 @@ class TookLoanSummaryCard extends StatelessWidget {
         // TOTAL INTEREST DUE
         // ------------------------------------------------------------
         final totalInterestDue = transactions
-            .where((tx) => tx.type == TransactionType.took)
+            .where(
+              (tx) => tx.type == TransactionType.took,
+        )
             .fold<double>(
           0,
               (sum, tx) {
@@ -105,9 +118,11 @@ class TookLoanSummaryCard extends StatelessWidget {
                   );
             } catch (e) {
               debugPrint(
-                '[TookLoanSummaryCard] Interest calculation failed for '
+                '[TookLoanSummaryCard] '
+                    'Interest calculation failed for '
                     'transaction ${tx.id}: $e',
               );
+
               return sum;
             }
           },
@@ -116,12 +131,17 @@ class TookLoanSummaryCard extends StatelessWidget {
         // ------------------------------------------------------------
         // OUTSTANDING
         // ------------------------------------------------------------
-        final outstanding = (totalLoanTaken + totalInterestDue - totalPaid).clamp(
+        final outstanding =
+        (totalLoanTaken +
+            totalInterestDue -
+            totalPaid)
+            .clamp(
           0.0,
           double.infinity,
         );
 
         return _buildCard(
+          context,
           outstanding: outstanding,
           totalLoanTaken: totalLoanTaken,
           totalInterestDue: totalInterestDue,
@@ -130,11 +150,14 @@ class TookLoanSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCard({
-    required double outstanding,
-    required double totalLoanTaken,
-    required double totalInterestDue,
-  }) {
+  Widget _buildCard(
+      BuildContext context, {
+        required double outstanding,
+        required double totalLoanTaken,
+        required double totalInterestDue,
+      }) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       height: 165,
       width: double.infinity,
@@ -164,19 +187,21 @@ class TookLoanSummaryCard extends StatelessWidget {
               vertical: 14,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
                 // ----------------------------------------------------
                 // TITLE
                 // ----------------------------------------------------
                 Text(
-                  "Total Outstanding Amount",
+                  l10n.homeTotalOutstandingAmount,
                   style: GoogleFonts.manrope(
                     color: Colors.white70,
                     fontSize: 12,
                     height: 1.0,
                   ),
                 ),
+
                 const SizedBox(height: 6),
 
                 // ----------------------------------------------------
@@ -185,12 +210,18 @@ class TookLoanSummaryCard extends StatelessWidget {
                 Text(
                   formatAmount(outstanding),
                   style: GoogleFonts.manrope(
-                    color: const Color.fromRGBO(199, 76, 76, 1),
+                    color: const Color.fromRGBO(
+                      199,
+                      76,
+                      76,
+                      1,
+                    ),
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     height: 1.0,
                   ),
                 ),
+
                 const SizedBox(height: 8),
 
                 Container(
@@ -198,6 +229,7 @@ class TookLoanSummaryCard extends StatelessWidget {
                   height: 1,
                   color: Colors.white24,
                 ),
+
                 const Spacer(),
 
                 // ----------------------------------------------------
@@ -205,21 +237,32 @@ class TookLoanSummaryCard extends StatelessWidget {
                 // ----------------------------------------------------
                 IntrinsicHeight(
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch, // CRITICAL FIX
+                    crossAxisAlignment:
+                    CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
                         child: _SummaryItem(
-                          title: "Total Loan Taken",
-                          value: formatAmount(totalLoanTaken),
+                          title: l10n.totalTaken,
+                          value:
+                          formatAmount(totalLoanTaken),
                           valueColor: Colors.white,
                         ),
                       ),
+
                       const SizedBox(width: 20),
+
                       Expanded(
                         child: _SummaryItem(
-                          title: "Total Interest Due",
-                          value: formatAmount(totalInterestDue),
-                          valueColor: const Color.fromRGBO(199, 76, 76, 1),
+                          title: l10n.interestDue,
+                          value:
+                          formatAmount(totalInterestDue),
+                          valueColor:
+                          const Color.fromRGBO(
+                            199,
+                            76,
+                            76,
+                            1,
+                          ),
                         ),
                       ),
                     ],
@@ -248,13 +291,15 @@ class _SummaryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max, // CRITICAL FIX
-      mainAxisAlignment: MainAxisAlignment.spaceBetween, // CRITICAL FIX
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment:
+      MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          maxLines: 2, // CRITICAL FIX
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.manrope(
             color: Colors.white70,
@@ -262,9 +307,11 @@ class _SummaryItem extends StatelessWidget {
             height: 1.2,
           ),
         ),
+
         const SizedBox(height: 6),
+
         FittedBox(
-          fit: BoxFit.scaleDown, // CRITICAL FIX
+          fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Text(
             value,

@@ -8,7 +8,7 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/took_loan_customers_screen.dart';
 import 'package:mychopdi/widgets/took_loan_summary_card.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class TookLoanHomeContent extends StatelessWidget {
   final int chopdiId;
   final bool isGaveLoanSelected;
@@ -71,7 +71,6 @@ class TookLoanHomeContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    // Safely get screen width without LayoutBuilder
     final width = MediaQuery.of(context).size.width;
     final scale = (width / 390).clamp(0.82, 1.10);
 
@@ -79,10 +78,12 @@ class TookLoanHomeContent extends StatelessWidget {
     final descriptionFontSize = (16 * scale).clamp(13.0, 17.0);
     final horizontalPadding = (width * 0.05).clamp(12.0, 28.0);
 
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Prevents infinite height issues
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
             width: 120,
@@ -92,9 +93,11 @@ class TookLoanHomeContent extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
+
           const SizedBox(height: 6),
+
           Text(
-            'No customers yet!',
+            l10n.homeNoCustomersYet,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
@@ -102,10 +105,11 @@ class TookLoanHomeContent extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+
           const SizedBox(height: 3),
+
           Text(
-            'Start by adding a customer and\n'
-                'keep track of your loans easily',
+            l10n.homeStartAddingCustomer,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
@@ -114,7 +118,9 @@ class TookLoanHomeContent extends StatelessWidget {
               height: 1.25,
             ),
           ),
+
           const SizedBox(height: 12),
+
           ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: width * 0.65,

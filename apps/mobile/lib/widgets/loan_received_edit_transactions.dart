@@ -1,30 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/transaction_service.dart';
 import 'package:mychopdi/utils/money.dart';
 
 class LoanReceivedEditTransactions extends StatefulWidget {
-
   final Customer customer;
   final VoidCallback onSaved;
-  const LoanReceivedEditTransactions({super.key, required this.customer, required this.onSaved});
+
+  const LoanReceivedEditTransactions({
+    super.key,
+    required this.customer,
+    required this.onSaved,
+  });
 
   @override
-  State<LoanReceivedEditTransactions> createState() => _MoneyReceiveBottomSheetState();
+  State<LoanReceivedEditTransactions> createState() =>
+      _MoneyReceiveBottomSheetState();
 }
 
-class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> {
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController interestController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+class _MoneyReceiveBottomSheetState
+    extends State<LoanReceivedEditTransactions> {
+  final TextEditingController amountController =
+  TextEditingController();
+
+  final TextEditingController interestController =
+  TextEditingController();
+
+  final TextEditingController descriptionController =
+  TextEditingController();
 
   DateTime selectedDate = DateTime.now();
 
-  // String interestType = "Simple Interest";
-  // String interestFrequency = "Monthly";
+  // Internal values remain unchanged.
   String paymentMode = "";
 
   Future<void> _pickDate() async {
@@ -32,9 +43,10 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
 
     final picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate.isAfter(today) ? today : selectedDate,
+      initialDate:
+      selectedDate.isAfter(today) ? today : selectedDate,
       firstDate: DateTime(2000),
-      lastDate: today, // Future dates disabled
+      lastDate: today,
     );
 
     if (picked != null) {
@@ -93,8 +105,48 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
     );
   }
 
+  String _localizedPaymentMode(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    switch (value) {
+      case "Cash":
+        return l10n.cash;
+
+      case "UPI":
+        return l10n.upi;
+
+      case "Bank":
+        return l10n.bankTransfer;
+
+      case "Bank Transfer":
+        return l10n.bankTransfer;
+
+      case "Other":
+        return l10n.other;
+
+      default:
+        return value;
+    }
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    interestController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
     return SafeArea(
       child: Container(
         decoration: const BoxDecoration(
@@ -103,7 +155,12 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
             top: Radius.circular(34),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+        padding: const EdgeInsets.fromLTRB(
+          22,
+          10,
+          22,
+          24,
+        ),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -122,14 +179,21 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
                 height: 72,
                 width: 72,
                 decoration: const BoxDecoration(
-                  color: Color.fromRGBO(141, 208, 113, 0.34),
+                  color: Color.fromRGBO(
+                    141,
+                    208,
+                    113,
+                    0.34,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: CircleAvatar(
                     radius: 18,
                     backgroundColor: Colors.transparent,
-                    child: Image.asset('assets/you_got.png'),
+                    child: Image.asset(
+                      'assets/you_got.png',
+                    ),
                   ),
                 ),
               ),
@@ -137,9 +201,9 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
               const SizedBox(height: 10),
 
               Text(
-                "You Got",
+                l10n.youGot,
                 style: GoogleFonts.manrope(
-                  color: Color(0xFF00901B),
+                  color: const Color(0xFF00901B),
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
                 ),
@@ -148,46 +212,60 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
               const SizedBox(height: 28),
 
               Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Amount")),
+                alignment: Alignment.centerLeft,
+                child: title(l10n.amount),
+              ),
 
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
                 decoration: decoration(
-                  hint: "Enter Amount",
-                  prefix: const Icon(Icons.currency_rupee,
-                      size: 20, color: Color(0xff6D7B94)),
+                  hint: l10n.enterAmount,
+                  prefix: const Icon(
+                    Icons.currency_rupee,
+                    size: 20,
+                    color: Color(0xff6D7B94),
+                  ),
                 ),
               ),
 
               const SizedBox(height: 18),
 
               Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Date")),
+                alignment: Alignment.centerLeft,
+                child: title(l10n.date),
+              ),
 
               TextField(
                 readOnly: true,
                 onTap: _pickDate,
                 decoration: decoration(
-                  hint: DateFormat("dd MMM yyyy").format(selectedDate),
-                  suffix: const Icon(Icons.calendar_today_outlined),
+                  hint: DateFormat(
+                    "dd MMM yyyy",
+                    locale,
+                  ).format(selectedDate),
+                  suffix: const Icon(
+                    Icons.calendar_today_outlined,
+                  ),
                 ),
               ),
 
               const SizedBox(height: 18),
 
               Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Payment Mode (Optional)")),
+                alignment: Alignment.centerLeft,
+                child: title(l10n.paymentModeOptional),
+              ),
 
               DropdownButtonFormField<String>(
-                initialValue: paymentMode.isEmpty ? null : paymentMode,
+                initialValue:
+                paymentMode.isEmpty ? null : paymentMode,
                 decoration: decoration(
-                  hint: "Select Payment Mode",
+                  hint: l10n.selectPaymentMode,
                 ),
-                icon: const Icon(Icons.keyboard_arrow_down),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                ),
                 items: const [
                   DropdownMenuItem(
                     value: "Cash",
@@ -202,9 +280,33 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
                     child: Text("Bank Transfer"),
                   ),
                 ],
+                selectedItemBuilder: (context) {
+                  return [
+                    Text(
+                      _localizedPaymentMode(
+                        context,
+                        "Cash",
+                      ),
+                    ),
+                    Text(
+                      _localizedPaymentMode(
+                        context,
+                        "UPI",
+                      ),
+                    ),
+                    Text(
+                      _localizedPaymentMode(
+                        context,
+                        "Bank",
+                      ),
+                    ),
+                  ];
+                },
                 onChanged: (v) {
+                  if (v == null) return;
+
                   setState(() {
-                    paymentMode = v!;
+                    paymentMode = v;
                   });
                 },
               ),
@@ -212,16 +314,19 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
               const SizedBox(height: 18),
 
               Align(
-                  alignment: Alignment.centerLeft,
-                  child: title("Description")),
+                alignment: Alignment.centerLeft,
+                child: title(l10n.description),
+              ),
 
               TextField(
                 controller: descriptionController,
                 maxLength: 100,
                 maxLines: 4,
                 decoration: decoration(
-                  hint: "Enter Description here...",
-                ).copyWith(counterText: ""),
+                  hint: l10n.enterDescriptionHere,
+                ).copyWith(
+                  counterText: "",
+                ),
                 onChanged: (_) => setState(() {}),
               ),
 
@@ -244,18 +349,20 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
                     child: SizedBox(
                       height: 52,
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () =>
+                            Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: Color(0xffC7D0DF),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                            BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
+                        child: Text(
+                          l10n.cancel,
+                          style: const TextStyle(
                             color: Color(0xff29406B),
                             fontWeight: FontWeight.w700,
                           ),
@@ -263,53 +370,55 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 18),
+
                   Expanded(
                     child: SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () async{
-                          if(amountController.text.isEmpty){
+                        onPressed: () async {
+                          if (amountController.text.isEmpty) {
                             return;
                           }
 
-                          // final tx = Transaction()
-                          //   ..customerId = widget.customer.id
-                          //   ..amount = double.parse(amountController.text)
-                          //   ..interest = 0
-                          //   ..date = selectedDate
-                          //   ..type = TransactionType.received;
-
-                          // await TransactionService.addTransaction(tx);
-
                           final tx = Transaction()
-                            ..customerId = widget.customer.id
-                            ..amountPaise =
-                                Money.toPaise(double.parse(amountController.text))
+                            ..customerId =
+                                widget.customer.id
+                            ..amountPaise = Money.toPaise(
+                              double.parse(
+                                amountController.text,
+                              ),
+                            )
                             ..interestRateBp = 0
                             ..date = selectedDate
-                            ..type = TransactionType.received
-                            ..description = descriptionController.text
+                            ..type =
+                                TransactionType.received
+                            ..description =
+                                descriptionController.text
                             ..paymentMode = paymentMode
                             ..interestType = ""
                             ..interestFrequency = "";
 
-                          await TransactionService.addTransaction(tx);
+                          await TransactionService
+                              .addTransaction(tx);
 
                           widget.onSaved();
 
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff29406B),
+                          backgroundColor:
+                          const Color(0xff29406B),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                            BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          "Save Entry",
-                          style: TextStyle(
+                        child: Text(
+                          l10n.saveEntry,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                           ),
@@ -318,7 +427,7 @@ class _MoneyReceiveBottomSheetState extends State<LoanReceivedEditTransactions> 
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

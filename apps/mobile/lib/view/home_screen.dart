@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/service/isar_service.dart';
@@ -22,6 +23,7 @@ import 'customer_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool initialGaveLoanSelected;
+
   const HomeScreen({
     super.key,
     this.initialGaveLoanSelected = true,
@@ -37,13 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Chopdi? currentChopdi;
 
   bool isGaveLoan = true;
-  // bool isGaveLoanSelected = true;
+
   late bool isGaveLoanSelected;
 
   @override
   void initState() {
     super.initState();
+
     isGaveLoanSelected = widget.initialGaveLoanSelected;
+
     _loadCurrentChopdi();
   }
 
@@ -128,6 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
 
@@ -162,8 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Flexible(
                   child: Text(
                     isGaveLoanSelected
-                        ? "Add Customer"
-                        : "Add Loan",
+                        ? l10n.homeAddCustomer
+                        : l10n.homeAddLoan,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -264,7 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return false;
       },
-
       child: currentChopdi == null
           ? const Center(
         child: CircularProgressIndicator(),
@@ -356,7 +361,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return false;
       },
-
       child: currentChopdi == null
           ? const Center(
         child: CircularProgressIndicator(),
@@ -395,6 +399,8 @@ class _HomeScreenState extends State<HomeScreen> {
       28.0,
     );
 
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
@@ -414,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 6),
 
           Text(
-            'No customers yet!',
+            l10n.homeNoCustomersYet,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
@@ -426,8 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 3),
 
           Text(
-            'Start by adding a customer and\n'
-                'keep track of your loans easily',
+            l10n.homeStartAddingCustomer,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,

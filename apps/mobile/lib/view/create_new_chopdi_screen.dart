@@ -1,33 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class CreateChopdiScreen extends StatefulWidget {
   const CreateChopdiScreen({super.key});
 
   @override
-  State<CreateChopdiScreen> createState() => _CreateChopdiScreenState();
+  State<CreateChopdiScreen> createState() =>
+      _CreateChopdiScreenState();
 }
 
-class _CreateChopdiScreenState extends State<CreateChopdiScreen> {
+class _CreateChopdiScreenState
+    extends State<CreateChopdiScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController businessController = TextEditingController();
+  final TextEditingController businessController =
+  TextEditingController();
 
-  static const Color primary = Color(0xFF223A5E);
-  static const Color secondary = Color(0xFFAAB9CF);
-  static const Color accent = Color(0xFFC74C4C);
-  static const Color background = Color(0xFFFAF8F5);
+  static const Color primary =
+  Color(0xFF223A5E);
+
+  static const Color secondary =
+  Color(0xFFAAB9CF);
+
+  static const Color accent =
+  Color(0xFFC74C4C);
+
+  static const Color background =
+  Color(0xFFFAF8F5);
+
+  @override
+  void dispose() {
+    businessController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n =
+    AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: background,
 
       appBar: AppBar(
         backgroundColor: primary,
         elevation: 0,
-        title: const Text(
-          "Create Chopdi",
-          style: TextStyle(
+        title: Text(
+          l10n.createChopdi,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -43,24 +63,27 @@ class _CreateChopdiScreenState extends State<CreateChopdiScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                shape:
+                RoundedRectangleBorder(
+                  borderRadius:
+                  BorderRadius.circular(15),
                 ),
               ),
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
-
+                if (_formKey.currentState!
+                    .validate()) {
                   /// Save Chopdi Name to Database
 
                   Navigator.pop(
                     context,
-                    businessController.text.trim(),
+                    businessController.text
+                        .trim(),
                   );
                 }
               },
-              child: const Text(
-                "CREATE",
-                style: TextStyle(
+              child: Text(
+                l10n.create,
+                style: const TextStyle(
                   fontSize: 18,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -78,22 +101,26 @@ class _CreateChopdiScreenState extends State<CreateChopdiScreen> {
           key: _formKey,
           child: Column(
             children: [
-
               const SizedBox(height: 15),
 
               TextFormField(
-                controller: businessController,
+                controller:
+                businessController,
 
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Please enter business name";
+                  if (value == null ||
+                      value.trim().isEmpty) {
+                    return l10n
+                        .enterBusinessName;
                   }
+
                   return null;
                 },
 
-                decoration: InputDecoration(
-
-                  hintText: "Enter shop/business name",
+                decoration:
+                InputDecoration(
+                  hintText:
+                  l10n.enterShopBusinessName,
 
                   prefixIcon: const Icon(
                     Icons.store_outlined,
@@ -103,21 +130,35 @@ class _CreateChopdiScreenState extends State<CreateChopdiScreen> {
                   filled: true,
                   fillColor: Colors.white,
 
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
+                  border:
+                  OutlineInputBorder(
+                    borderRadius:
+                    BorderRadius.circular(
+                      15,
+                    ),
                   ),
 
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: const BorderSide(
+                  enabledBorder:
+                  OutlineInputBorder(
+                    borderRadius:
+                    BorderRadius.circular(
+                      15,
+                    ),
+                    borderSide:
+                    const BorderSide(
                       color: primary,
                       width: 1.5,
                     ),
                   ),
 
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: const BorderSide(
+                  focusedBorder:
+                  OutlineInputBorder(
+                    borderRadius:
+                    BorderRadius.circular(
+                      15,
+                    ),
+                    borderSide:
+                    const BorderSide(
                       color: primary,
                       width: 2,
                     ),

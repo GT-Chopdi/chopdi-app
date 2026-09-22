@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/service/chopdi_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
@@ -8,8 +9,7 @@ class ChopdiBottomSheet extends StatefulWidget {
   const ChopdiBottomSheet({super.key, Chopdi? currentChopdi});
 
   @override
-  State<ChopdiBottomSheet> createState() =>
-      _ChopdiBottomSheetState();
+  State<ChopdiBottomSheet> createState() => _ChopdiBottomSheetState();
 }
 
 class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
@@ -24,8 +24,7 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
 
   Future<void> loadChopdis() async {
     final allChopdis = await ChopdiService.getAllChopdis();
-    final activeChopdi =
-        await ChopdiService.getCurrentChopdi();
+    final activeChopdi = await ChopdiService.getCurrentChopdi();
 
     if (!mounted) return;
 
@@ -37,6 +36,8 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (currentChopdi == null) {
       return const SafeArea(
         child: Padding(
@@ -73,17 +74,16 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey,
-                    borderRadius:
-                        BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
               ),
 
               const SizedBox(height: 18),
 
-              const Text(
-                "Current Chopdi",
-                style: TextStyle(
+              Text(
+                l10n.currentChopdi,
+                style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xff7A7A7A),
                   fontWeight: FontWeight.w500,
@@ -98,12 +98,10 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                       chopdi.id == currentChopdi?.id;
 
                   return Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: GestureDetector(
                       onTap: () async {
-                        await ChopdiService
-                            .setActiveChopdi(chopdi);
+                        await ChopdiService.setActiveChopdi(chopdi);
 
                         if (!mounted) return;
 
@@ -113,18 +111,15 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                         );
                       },
                       child: Container(
-                        padding:
-                            const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isActive
                                 ? const Color(0xffC7D6F5)
                                 : const Color(0xffE0E0E0),
-                            width:
-                                isActive ? 1.5 : 1,
+                            width: isActive ? 1.5 : 1,
                           ),
                         ),
                         child: Row(
@@ -132,14 +127,10 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                             Container(
                               width: 44,
                               height: 44,
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                        0xffE7F0FF),
+                              decoration: BoxDecoration(
+                                color: const Color(0xffE7F0FF),
                                 borderRadius:
-                                    BorderRadius
-                                        .circular(12),
+                                BorderRadius.circular(12),
                               ),
                               child: Image.asset(
                                 "assets/menu_logo.png",
@@ -151,87 +142,45 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                             Expanded(
                               child: Text(
                                 chopdi.name,
-                                style:
-                                    const TextStyle(
+                                style: const TextStyle(
                                   fontSize: 18,
-                                  fontWeight:
-                                      FontWeight.w600,
-                                  color:
-                                      Color(0xff233B66),
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff233B66),
                                 ),
                               ),
                             ),
+
                             if (isActive)
-                            Container(
-                              padding:
-                                  const EdgeInsets
-                                      .symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                        0xffE4ECFF),
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(25),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Text(
-                                    "Active",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color:
-                                          Color(
-                                              0xff233B66),
-                                      fontWeight:
-                                          FontWeight
-                                              .w600,
+                              Container(
+                                padding:
+                                const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffE4ECFF),
+                                  borderRadius:
+                                  BorderRadius.circular(25),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      l10n.active,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xff233B66),
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(
-                                    Icons.check,
-                                    color:
-                                        Color(
-                                            0xff233B66),
-                                    size: 15,
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.check,
+                                      color: Color(0xff233B66),
+                                      size: 15,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                              //                           if (isActive)
-                              // Container(
-                              //   padding: const EdgeInsets.symmetric(
-                              //     horizontal: 12,
-                              //     vertical: 6,
-                              //   ),
-                              //   decoration: BoxDecoration(
-                              //     color: const Color(0xffE4ECFF),
-                              //     borderRadius: BorderRadius.circular(25),
-                              //   ),
-                              //   child: const Row(
-                              //     children: [
-                              //       Text(
-                              //         "Active",
-                              //         style: TextStyle(
-                              //           fontSize: 12,
-                              //           color: Color(0xff233B66),
-                              //           fontWeight: FontWeight.w600,
-                              //         ),
-                              //       ),
-                              //       SizedBox(width: 4),
-                              //       Icon(
-                              //         Icons.check,
-                              //         color: Color(0xff233B66),
-                              //         size: 15,
-                              //       ),
-                              //     ],
-                              //   ),
-                              // ),
                           ],
                         ),
                       ),
@@ -246,25 +195,18 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xff243B67),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff243B67),
                     elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: () async {
-                    // IMPORTANT:
-                    // await the second bottom sheet.
                     final Chopdi? newChopdi =
-                        await showModalBottomSheet<Chopdi>(
+                    await showModalBottomSheet<Chopdi>(
                       context: context,
-                      backgroundColor:
-                          Colors.transparent,
+                      backgroundColor: Colors.transparent,
                       isScrollControlled: true,
                       useSafeArea: false,
                       builder: (sheetContext) {
@@ -277,39 +219,35 @@ class _ChopdiBottomSheetState extends State<ChopdiBottomSheet> {
                     if (!mounted) return;
 
                     if (newChopdi != null) {
-                      // Return new Chopdi to HomeScreen
                       Navigator.pop(
                         context,
                         newChopdi,
                       );
                     }
                   },
-                  child: const Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.add,
                         color: Colors.white,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Add New Chopdi",
-                            style: TextStyle(
+                            l10n.addNewChopdi,
+                            style: const TextStyle(
                               fontSize: 17,
                               color: Colors.white,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            "Create a new chopdi book",
-                            style: TextStyle(
+                            l10n.createNewChopdiBook,
+                            style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white70,
                             ),

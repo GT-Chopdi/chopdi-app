@@ -94,15 +94,15 @@ class SearchBox extends StatelessWidget {
         ),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Color(0xff6D7B94),
-                ),
-                onPressed: () {
-                  controller.clear();
-                  onChanged('');
-                },
-              )
+          icon: const Icon(
+            Icons.close,
+            color: Color(0xff6D7B94),
+          ),
+          onPressed: () {
+            controller.clear();
+            onChanged('');
+          },
+        )
             : null,
         filled: true,
         fillColor: Colors.white,

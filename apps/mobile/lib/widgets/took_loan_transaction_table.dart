@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
@@ -45,10 +47,6 @@ class TookLoanTransactionTable extends StatelessWidget {
       return rows;
     }
 
-    // ==========================================================
-    // CURRENT DAY INTEREST
-    // ==========================================================
-
     final interest = InterestCalculator.calculate(
       principal: tx.amount,
       rate: tx.interestRate,
@@ -57,10 +55,6 @@ class TookLoanTransactionTable extends StatelessWidget {
       frequency: tx.interestFrequency,
       endDate: today,
     );
-
-    // ==========================================================
-    // ONLY ONE DAILY INTEREST ROW
-    // ==========================================================
 
     rows.add(
       _InterestRow(
@@ -79,7 +73,6 @@ class TookLoanTransactionTable extends StatelessWidget {
 
     return rows;
   }
-
 
   DateTime _addOneMonth(DateTime date) {
     final nextMonth = DateTime(
@@ -109,19 +102,14 @@ class TookLoanTransactionTable extends StatelessWidget {
   // TRANSACTION ROWS
   // ============================================================
 
-
   List<Widget> _buildTransactionRows(
-    List<Transaction> sortedTransactions,
-  ) {
+      List<Transaction> sortedTransactions,
+      ) {
     final List<Widget> rows = [];
-
-    // --------------------------------------------------
-    // Calculate balance OLD → NEW
-    // --------------------------------------------------
 
     final balanceTransactions = [...sortedTransactions]
       ..sort(
-        (a, b) => a.date.compareTo(b.date),
+            (a, b) => a.date.compareTo(b.date),
       );
 
     final Map<int, double> balanceMap = {};
@@ -130,6 +118,7 @@ class TookLoanTransactionTable extends StatelessWidget {
 
     for (final tx in balanceTransactions) {
       if (tx.voidedAt != null) continue;
+
       if (tx.type == TransactionType.took) {
         runningBalance += tx.amount;
       } else if (tx.type == TransactionType.paid) {
@@ -139,26 +128,13 @@ class TookLoanTransactionTable extends StatelessWidget {
       balanceMap[tx.id] = runningBalance;
     }
 
-    // --------------------------------------------------
-    // Display NEW → OLD
-    // --------------------------------------------------
-
     for (final tx in sortedTransactions) {
-
-      // -----------------------------------------------
-      // Interest row
-      // -----------------------------------------------
-
       if (tx.type == TransactionType.took &&
           tx.interestRate > 0) {
         rows.addAll(
           _buildInterestRows(tx),
         );
       }
-
-      // -----------------------------------------------
-      // Actual transaction row
-      // -----------------------------------------------
 
       rows.add(
         TookLoanTransactionRow(
@@ -185,12 +161,12 @@ class TookLoanTransactionTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final sortedTransactions = [...transactions]
       ..sort(
-        (a, b) => b.date.compareTo(a.date),
+            (a, b) => b.date.compareTo(a.date),
       );
 
     return Column(
       children: [
-        _tableHeader(),
+        _tableHeader(context),
 
         const SizedBox(height: 8),
 
@@ -205,7 +181,9 @@ class TookLoanTransactionTable extends StatelessWidget {
   // TABLE HEADER
   // ============================================================
 
-  Widget _tableHeader() {
+  Widget _tableHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8F0),
@@ -226,13 +204,13 @@ class TookLoanTransactionTable extends StatelessWidget {
           2: FlexColumnWidth(1.2),
           3: FlexColumnWidth(1.2),
         },
-        children: const [
+        children: [
           TableRow(
             children: [
-              _Header("Date"),
-              _Header("Took"),
-              _Header("Paid"),
-              _Header("Balance"),
+              _Header(l10n.date),
+              _Header(l10n.took),
+              _Header(l10n.paid),
+              _Header(l10n.balance),
             ],
           ),
         ],
@@ -291,28 +269,102 @@ class _InterestRow extends StatelessWidget {
     required this.onChanged,
   });
 
-  String _getInterestDescription() {
-    final start = DateFormat("dd MMM yyyy").format(startDate);
-    final end = DateFormat("dd MMM yyyy").format(endDate);
+  String _localizedFrequency(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n = AppLocalizations.of(context);
 
-    final rate = transaction.interestRate.toStringAsFixed(0);
+    switch (value) {
+      case 'Daily':
+        return l10n.daily;
 
-    final frequency = transaction.interestFrequency.isEmpty
-        ? "Monthly"
-        : transaction.interestFrequency;
+      case 'Weekly':
+        return l10n.weekly;
 
-    final interestType = transaction.interestType.isEmpty
-        ? "Simple Interest"
-        : transaction.interestType;
+      case 'Monthly':
+        return l10n.monthly;
 
-    return "₹${interest.toStringAsFixed(0)} interest "
-        "from $start to $end at $rate% "
-        "$frequency $interestType interest.";
+      case 'Yearly':
+        return l10n.yearly;
+
+      default:
+        return value;
+    }
+  }
+
+  String _localizedInterestType(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    switch (value) {
+      case 'Simple Interest':
+        return l10n.simpleInterest;
+
+      case 'Compound Interest':
+        return l10n.compoundInterest;
+
+      default:
+        return value;
+    }
+  }
+
+  String _getInterestDescription(
+      BuildContext context,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
+    final start = DateFormat(
+      "dd MMM yyyy",
+      locale,
+    ).format(startDate);
+
+    final end = DateFormat(
+      "dd MMM yyyy",
+      locale,
+    ).format(endDate);
+
+    final rate =
+    transaction.interestRate.toStringAsFixed(0);
+
+    final frequency =
+    transaction.interestFrequency.isEmpty
+        ? l10n.monthly
+        : _localizedFrequency(
+      context,
+      transaction.interestFrequency,
+    );
+
+    final interestType =
+    transaction.interestType.isEmpty
+        ? l10n.simpleInterest
+        : _localizedInterestType(
+      context,
+      transaction.interestType,
+    );
+
+    return "₹${interest.toStringAsFixed(0)} "
+        "${l10n.interest} "
+        "${l10n.from} $start ${l10n.to} $end "
+        "${l10n.ok} $rate% "
+        "$frequency $interestType "
+        "${l10n.interest}.";
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat("dd MMM yyyy");
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
+    final dateFormat = DateFormat(
+      "dd MMM yyyy",
+      locale,
+    );
 
     void openTransactionDetails() {
       showModalBottomSheet(
@@ -350,7 +402,8 @@ class _InterestRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment:
+          CrossAxisAlignment.center,
           children: [
             // ==================================
             // DATE + DESCRIPTION
@@ -359,12 +412,13 @@ class _InterestRow extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     "${dateFormat.format(startDate)} - "
-                    "${dateFormat.format(endDate)}",
+                        "${dateFormat.format(endDate)}",
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -375,13 +429,14 @@ class _InterestRow extends StatelessWidget {
                   const SizedBox(height: 3),
 
                   Text(
-                    _getInterestDescription(),
+                    _getInterestDescription(context),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 10,
                       color: Color(0xff8A93A6),
-                      decoration: TextDecoration.underline,
+                      decoration:
+                      TextDecoration.underline,
                     ),
                   ),
                 ],

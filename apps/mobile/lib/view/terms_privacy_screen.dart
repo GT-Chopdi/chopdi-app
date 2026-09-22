@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class TermsPrivacyScreen extends StatelessWidget {
   const TermsPrivacyScreen({
@@ -10,21 +11,19 @@ class TermsPrivacyScreen extends StatelessWidget {
 
   final VoidCallback? onContactSupport;
 
-  // ===========================================================================
-  // COLORS
-  // ===========================================================================
-
   static const Color backgroundColor = Color(0xFFFDEDD9);
   static const Color darkBlue = Color(0xFF223A5E);
   static const Color textColor = Color(0xFF223A5E);
-  static const Color secondaryText = Color.fromRGBO(34, 58, 94, 0.62);
+  static const Color secondaryText =
+  Color.fromRGBO(34, 58, 94, 0.62);
   static const Color borderColor = Color(0xFFAAB9CF);
 
   static const Color iconCircleColor = Color(0xFFFFDCC7);
   static const Color orange = Color(0xFFC74C4C);
 
   static const Color infoBackground = Color(0xFFFEE0C9);
-  static const Color infoBorder = Color.fromRGBO(177, 95, 39, 0.23);
+  static const Color infoBorder =
+  Color.fromRGBO(177, 95, 39, 0.23);
 
   @override
   Widget build(BuildContext context) {
@@ -33,78 +32,60 @@ class TermsPrivacyScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-
       resizeToAvoidBottomInset: true,
-
       body: SafeArea(
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
             children: [
-              // ==============================
-              // SCROLLABLE CONTENT
-              // ==============================
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-
                   keyboardDismissBehavior:
                   ScrollViewKeyboardDismissBehavior.onDrag,
-
                   padding: EdgeInsets.only(
                     bottom: keyboardVisible ? 30 : 14,
                   ),
-
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
                     children: [
-                      // HEADER
                       _buildHeader(context),
 
                       const SizedBox(height: 18),
 
-                      // DOCUMENT ILLUSTRATION
                       _buildDocumentIllustration(),
 
                       const SizedBox(height: 18),
 
-                      // TRUST TEXT
-                      _buildTrustText(),
+                      _buildTrustText(context),
 
                       const SizedBox(height: 18),
 
-                      // DIVIDER
                       _buildDivider(),
 
-                      // TERMS
-                      _buildTermsSection(),
+                      _buildTermsSection(context),
 
                       const SizedBox(height: 8),
 
                       _buildDivider(),
 
-                      // PRIVACY
-                      _buildPrivacySection(),
+                      _buildPrivacySection(context),
 
                       const SizedBox(height: 11),
 
                       _buildDivider(),
 
                       const SizedBox(height: 38),
-
-                      // LAST UPDATED
-
                     ],
                   ),
                 ),
               ),
 
-              // ==============================
-              // FIXED BOTTOM CONTACT BOX
-              // ==============================
-              _buildContactBox(),
-              _buildLastUpdated(),
+              _buildContactBox(context),
+
+              _buildLastUpdated(context),
 
               const SizedBox(height: 14),
             ],
@@ -114,11 +95,9 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // HEADER
-  // ===========================================================================
-
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -126,13 +105,11 @@ class TermsPrivacyScreen extends StatelessWidget {
           onTap: () {
             Navigator.of(context).pop();
           },
-
           child: const Padding(
             padding: EdgeInsets.only(
               top: 1,
               right: 8,
             ),
-
             child: Icon(
               Icons.arrow_back_ios_new,
               size: 19,
@@ -140,23 +117,21 @@ class TermsPrivacyScreen extends StatelessWidget {
             ),
           ),
         ),
-
         Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
             Text(
-              'Terms & Privacy',
+              l10n.termsPrivacy,
               style: GoogleFonts.manrope(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: darkBlue,
               ),
             ),
-
-            SizedBox(height: 2),
-
+            const SizedBox(height: 2),
             Text(
-              'Read our policies',
+              l10n.readOurPolicies,
               style: GoogleFonts.manrope(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -169,22 +144,13 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // DOCUMENT ILLUSTRATION
-  // ===========================================================================
-
   Widget _buildDocumentIllustration() {
     return SizedBox(
       width: double.infinity,
       height: 88,
-
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // ---------------------------------------------------------------
-          // CIRCLE
-          // ---------------------------------------------------------------
-
           Container(
             width: 107.43,
             height: 107.43,
@@ -193,17 +159,14 @@ class TermsPrivacyScreen extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-
-          // ---------------------------------------------------------------
-          // DOCUMENT
-          // ---------------------------------------------------------------
-
           Padding(
             padding: const EdgeInsets.all(18),
             child: SizedBox(
               height: 64,
               width: 90,
-              child: Image.asset('assets/terms_and_privacy.png')
+              child: Image.asset(
+                'assets/terms_and_privacy.png',
+              ),
             ),
           ),
         ],
@@ -211,50 +174,26 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  Widget _documentLine({double? width}) {
-    return Align(
-      alignment: Alignment.centerLeft,
+  Widget _buildTrustText(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
-      child: Container(
-        width: width ?? 25,
-        height: 2,
-
-        decoration: BoxDecoration(
-          color: const Color(0xFFD6C9B9),
-          borderRadius:
-              BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // TRUST TEXT
-  // ===========================================================================
-
-  Widget _buildTrustText() {
     return SizedBox(
       width: double.infinity,
-
       child: Column(
         children: [
           Text(
-            'Your trust is important to us.',
+            l10n.yourTrustIsImportant,
             textAlign: TextAlign.center,
-
             style: GoogleFonts.manrope(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: darkBlue,
             ),
           ),
-
-          SizedBox(height: 2),
-
+          const SizedBox(height: 2),
           Text(
-            'Please read our Terms & Conditions and Privacy Policy.',
+            l10n.pleaseReadTermsAndPrivacy,
             textAlign: TextAlign.center,
-
             style: GoogleFonts.manrope(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -266,10 +205,6 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // DIVIDER
-  // ===========================================================================
-
   Widget _buildDivider() {
     return Container(
       width: double.infinity,
@@ -278,77 +213,59 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // TERMS SECTION
-  // ===========================================================================
+  Widget _buildTermsSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
-  Widget _buildTermsSection() {
     return Padding(
       padding: const EdgeInsets.only(
         top: 10,
         bottom: 5,
       ),
-
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        CrossAxisAlignment.start,
         children: [
           _buildSectionIcon(
             Icons.description_outlined,
           ),
-
           const SizedBox(width: 8),
-
           Expanded(
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+              CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Terms & Conditions',
+                  l10n.loginTermsOfService,
                   style: GoogleFonts.manrope(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: darkBlue,
                   ),
                 ),
-
                 const SizedBox(height: 3),
-
                 Text(
-                  'By using Chopdi, you agree to the following terms:',
+                  l10n.termsAgreementIntro,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: textColor,
                   ),
                 ),
-
                 const SizedBox(height: 3),
-
                 _buildBullet(
-                  'Chopdi is a digital ledger app to help you record and '
-                  'manage loans, payments, interest and related notes.',
+                  l10n.termsBulletLedger,
                 ),
-
                 _buildBullet(
-                  'You are responsible for the accuracy of the information '
-                  'you enter.',
+                  l10n.termsBulletAccuracy,
                 ),
-
                 _buildBullet(
-                  'Chopdi is provided “as is” without any warranties.',
+                  l10n.termsBulletAsIs,
                 ),
-
                 _buildBullet(
-                  'We are not liable for any loss or damage.',
+                  l10n.termsBulletLiability,
                 ),
-
                 _buildBullet(
-                  'We may update these terms from time to time. '
-                  'Continued use means you accept the updated terms.',
+                  l10n.termsBulletUpdates,
                 ),
               ],
             ),
@@ -358,73 +275,56 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // PRIVACY SECTION
-  // ===========================================================================
+  Widget _buildPrivacySection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
-  Widget _buildPrivacySection() {
     return Padding(
       padding: const EdgeInsets.only(
         top: 10,
         bottom: 5,
       ),
-
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        CrossAxisAlignment.start,
         children: [
           _buildSectionIcon(
             Icons.privacy_tip_outlined,
           ),
-
           const SizedBox(width: 8),
-
           Expanded(
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+              CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Privacy Policy',
+                  l10n.loginPrivacyPolicy,
                   style: GoogleFonts.manrope(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: darkBlue,
                   ),
                 ),
-
                 const SizedBox(height: 3),
-
                 Text(
-                  'We are committed to protecting your privacy:',
+                  l10n.privacyIntro,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: textColor,
                   ),
                 ),
-
                 const SizedBox(height: 3),
-
                 _buildBullet(
-                  'We collect only the data needed to provide and improve '
-                  'our services.',
+                  l10n.privacyBulletDataCollection,
                 ),
-
                 _buildBullet(
-                  'Your data is securely stored and encrypted.',
+                  l10n.privacyBulletSecureData,
                 ),
-
                 _buildBullet(
-                  'We never sell or share your personal information with '
-                  'third parties.',
+                  l10n.privacyBulletNoSelling,
                 ),
-
                 _buildBullet(
-                  'You are in control of your data and can export or delete '
-                  'it anytime.',
+                  l10n.privacyBulletDataControl,
                 ),
               ],
             ),
@@ -433,21 +333,15 @@ class TermsPrivacyScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ===========================================================================
-  // SECTION ICON
-  // ===========================================================================
 
   Widget _buildSectionIcon(IconData icon) {
     return Container(
       width: 29,
       height: 29,
-
       decoration: const BoxDecoration(
         color: iconCircleColor,
         shape: BoxShape.circle,
       ),
-
       child: Icon(
         icon,
         size: 15,
@@ -456,27 +350,18 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // BULLET
-  // ===========================================================================
-
   Widget _buildBullet(String text) {
     return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 1,
-      ),
-
+      padding: const EdgeInsets.only(bottom: 1),
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               top: 2,
               right: 4,
             ),
-
             child: Text(
               '•',
               style: GoogleFonts.manrope(
@@ -485,7 +370,6 @@ class TermsPrivacyScreen extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: Text(
               text,
@@ -502,11 +386,9 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
-  // ===========================================================================
-  // CONTACT BOX
-  // ===========================================================================
+  Widget _buildContactBox(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
-  Widget _buildContactBox() {
     return GestureDetector(
       onTap: () {
         onContactSupport?.call();
@@ -529,25 +411,26 @@ class TermsPrivacyScreen extends StatelessWidget {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment:
+          CrossAxisAlignment.center,
           children: [
             const Icon(
               Icons.info_outline,
               size: 14,
               color: orange,
             ),
-
             const SizedBox(width: 7),
-
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'If you have any questions, feel free to contact us at',
+                    l10n.questionsContactUs,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow:
+                    TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -555,14 +438,13 @@ class TermsPrivacyScreen extends StatelessWidget {
                       height: 1.15,
                     ),
                   ),
-
                   const SizedBox(height: 2),
-
-                  Text(
+                  const Text(
                     'chopdi@geloratech.com',
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.manrope(
+                    overflow:
+                    TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontSize: 12,
                       color: orange,
                       fontWeight: FontWeight.w700,
@@ -577,18 +459,22 @@ class TermsPrivacyScreen extends StatelessWidget {
       ),
     );
   }
-  // ===========================================================================
-  // LAST UPDATED
-  // ===========================================================================
 
-  Widget _buildLastUpdated() {
-    final String formattedDate =
-        DateFormat('dd MMMM yyyy').format(DateTime.now());
+  Widget _buildLastUpdated(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
+    final formattedDate = DateFormat(
+      'dd MMMM yyyy',
+      locale,
+    ).format(DateTime.now());
 
     return SizedBox(
       width: double.infinity,
       child: Text(
-        'Last Updated on $formattedDate',
+        '${l10n.lastUpdatedOn} $formattedDate',
         textAlign: TextAlign.center,
         style: GoogleFonts.manrope(
           fontSize: 10,

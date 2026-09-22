@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 
 class RecordPaymentBottomSheet extends StatefulWidget {
@@ -12,12 +14,9 @@ class RecordPaymentBottomSheet extends StatefulWidget {
 
 class _RecordPaymentBottomSheetState
     extends State<RecordPaymentBottomSheet> {
-
   bool isReceived = true;
 
   final amountController = TextEditingController();
-  final dateController =
-      TextEditingController(text: "24 July 2026");
 
   String? paymentMode;
 
@@ -28,8 +27,45 @@ class _RecordPaymentBottomSheetState
     "Cheque",
   ];
 
+  String _localizedPaymentMode(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    switch (value) {
+      case "Cash":
+        return l10n.cash;
+
+      case "UPI":
+        return l10n.upi;
+
+      case "Bank Transfer":
+        return l10n.bankTransfer;
+
+      case "Cheque":
+        return l10n.cheque;
+
+      default:
+        return value;
+    }
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
+    final currentDate = DateTime.now();
+
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.only(
@@ -47,7 +83,6 @@ class _RecordPaymentBottomSheetState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             Container(
               width: 45,
               height: 5,
@@ -72,7 +107,7 @@ class _RecordPaymentBottomSheetState
             const SizedBox(height: 10),
 
             Text(
-              "Record Payment",
+              l10n.recordPayment,
               style: GoogleFonts.roboto(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -81,7 +116,7 @@ class _RecordPaymentBottomSheetState
             ),
 
             Text(
-              "Add money given or received",
+              l10n.addMoneyGivenOrReceived,
               style: GoogleFonts.roboto(
                 color: Colors.grey,
                 fontSize: 13,
@@ -93,7 +128,7 @@ class _RecordPaymentBottomSheetState
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Type",
+                l10n.type,
                 style: GoogleFonts.roboto(
                   color: Colors.grey,
                   fontWeight: FontWeight.w500,
@@ -106,12 +141,13 @@ class _RecordPaymentBottomSheetState
             Container(
               height: 42,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-
                   Expanded(
                     child: InkWell(
                       onTap: () {
@@ -124,11 +160,12 @@ class _RecordPaymentBottomSheetState
                           color: isReceived
                               ? ChopdiColors.navy
                               : Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius:
+                          BorderRadius.circular(8),
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          "Money Received",
+                          l10n.moneyReceived,
                           style: TextStyle(
                             fontSize: 12,
                             color: isReceived
@@ -149,9 +186,16 @@ class _RecordPaymentBottomSheetState
                         });
                       },
                       child: Container(
+                        decoration: BoxDecoration(
+                          color: !isReceived
+                              ? ChopdiColors.navy
+                              : Colors.white,
+                          borderRadius:
+                          BorderRadius.circular(8),
+                        ),
                         alignment: Alignment.center,
                         child: Text(
-                          "Money Given",
+                          l10n.moneyGiven,
                           style: TextStyle(
                             fontSize: 12,
                             color: !isReceived
@@ -159,7 +203,7 @@ class _RecordPaymentBottomSheetState
                                 : ChopdiColors.navy,
                             fontWeight: FontWeight.w600,
                           ),
-                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -171,7 +215,7 @@ class _RecordPaymentBottomSheetState
 
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Amount"),
+              child: Text(l10n.amount),
             ),
 
             const SizedBox(height: 8),
@@ -180,8 +224,9 @@ class _RecordPaymentBottomSheetState
               controller: amountController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                hintText: "Enter Amount",
-                prefixIcon: const Icon(Icons.currency_rupee),
+                hintText: l10n.enterAmount,
+                prefixIcon:
+                const Icon(Icons.currency_rupee),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -192,16 +237,21 @@ class _RecordPaymentBottomSheetState
 
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Date"),
+              child: Text(l10n.date),
             ),
 
             const SizedBox(height: 8),
 
             TextField(
-              controller: dateController,
               readOnly: true,
               decoration: InputDecoration(
-                suffixIcon: const Icon(Icons.calendar_today_outlined),
+                hintText: DateFormat(
+                  "dd MMM yyyy",
+                  locale,
+                ).format(currentDate),
+                suffixIcon: const Icon(
+                  Icons.calendar_today_outlined,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -212,7 +262,9 @@ class _RecordPaymentBottomSheetState
 
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("Payment Mode (Optional)"),
+              child: Text(
+                l10n.paymentModeOptional,
+              ),
             ),
 
             const SizedBox(height: 8),
@@ -224,15 +276,22 @@ class _RecordPaymentBottomSheetState
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              hint: const Text("Select Payment Mode"),
-              items: paymentModes
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e),
+              hint: Text(
+                l10n.selectPaymentMode,
+              ),
+              items: paymentModes.map(
+                    (e) {
+                  return DropdownMenuItem<String>(
+                    value: e,
+                    child: Text(
+                      _localizedPaymentMode(
+                        context,
+                        e,
+                      ),
                     ),
-                  )
-                  .toList(),
+                  );
+                },
+              ).toList(),
               onChanged: (value) {
                 setState(() {
                   paymentMode = value;
@@ -244,13 +303,12 @@ class _RecordPaymentBottomSheetState
 
             Row(
               children: [
-
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text("Cancel"),
+                    child: Text(l10n.cancel),
                   ),
                 ),
 
@@ -259,12 +317,15 @@ class _RecordPaymentBottomSheetState
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: ChopdiColors.navy,
+                      backgroundColor:
+                      ChopdiColors.navy,
                     ),
                     onPressed: () {},
-                    child: const Text(
-                      "Save Entry",
-                      style: TextStyle(color: Colors.white),
+                    child: Text(
+                      l10n.saveEntry,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

@@ -7,7 +7,7 @@ import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/notifications_screen.dart';
 import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 class HomeHeader extends StatelessWidget {
   final Chopdi? currentChopdi;
   final ValueChanged<Chopdi>? onChopdiChanged;
@@ -28,7 +28,7 @@ class HomeHeader extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  currentChopdi?.name ?? "My Chopdi",
+    currentChopdi?.name ?? AppLocalizations.of(context).homeMyChopdi,
                   style: GoogleFonts.manrope(
                     color: ChopdiColors.navy,
                     fontWeight: FontWeight.bold,
@@ -63,7 +63,7 @@ class HomeHeader extends StatelessWidget {
             ),
 
             Text(
-              "Tap to change chopdi",
+    AppLocalizations.of(context).homeTapToChangeChopdi,
               style: GoogleFonts.manrope(
                 color: ChopdiColors.navy,
                 fontSize: 12,

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class RedIntroContent extends StatelessWidget {
   const RedIntroContent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -13,6 +16,7 @@ class RedIntroContent extends StatelessWidget {
           'assets/frame_overlay.png',
           fit: BoxFit.cover,
         ),
+
         Center(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 70),
@@ -20,13 +24,14 @@ class RedIntroContent extends StatelessWidget {
               'Chopdi',
               style: GoogleFonts.styleScript(
                 fontSize: 96,
-                color: Color(0XFF223A5E),
+                color: const Color(0xFF223A5E),
                 height: 1,
                 fontWeight: FontWeight.w400,
               ),
             ),
           ),
         ),
+
         Positioned(
           left: 0,
           right: 0,
@@ -39,19 +44,23 @@ class RedIntroContent extends StatelessWidget {
                 width: 108,
                 height: 114,
               ),
+
               const SizedBox(height: 10),
+
               Text(
-                'SECURE . SIMPLE',
+                l10n.secureSimple,
                 style: GoogleFonts.manrope(
-                  color: Color(0xFFFDEDD9),
+                  color: const Color(0xFFFDEDD9),
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.0,
                 ),
               ),
+
               const SizedBox(height: 4),
+
               Text(
-                'YOUR LEDGER, ALWAYS SAFE',
+                l10n.yourLedgerAlwaysSafe,
                 style: GoogleFonts.manrope(
                   color: const Color(0xFFFDEDD9),
                   fontSize: 14,
@@ -66,4 +75,3 @@ class RedIntroContent extends StatelessWidget {
     );
   }
 }
-

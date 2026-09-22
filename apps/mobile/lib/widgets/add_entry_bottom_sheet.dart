@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/add_note_bottom_sheet.dart';
 import 'package:mychopdi/widgets/record_payment_sheet.dart';
@@ -9,6 +10,8 @@ class AddEntryBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 22),
       decoration: const BoxDecoration(
@@ -20,7 +23,6 @@ class AddEntryBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
           /// Handle
           Container(
             width: 45,
@@ -36,7 +38,7 @@ class AddEntryBottomSheet extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              "Add Entry",
+              l10n.addEntry,
               style: GoogleFonts.roboto(
                 fontSize: 13,
                 color: Colors.grey,
@@ -50,15 +52,14 @@ class AddEntryBottomSheet extends StatelessWidget {
           _buildTile(
             context,
             icon: Icons.account_balance_wallet_outlined,
-            title: "Record Payment",
-            subtitle: "Add money given or received",
+            title: l10n.recordPayment,
+            subtitle: l10n.addMoneyGivenOrReceived,
             onTap: () {
               Navigator.pop(context);
 
-              // Open Record Payment Bottom Sheet
               Future.delayed(
                 const Duration(milliseconds: 200),
-                () {
+                    () {
                   showRecordPaymentBottomSheet(context);
                 },
               );
@@ -70,14 +71,14 @@ class AddEntryBottomSheet extends StatelessWidget {
           _buildTile(
             context,
             icon: Icons.edit_calendar_outlined,
-            title: "Add Note",
-            subtitle: "Add a note or reminder",
+            title: l10n.addNote,
+            subtitle: l10n.addNoteOrReminder,
             onTap: () {
               Navigator.pop(context);
 
               Future.delayed(
                 const Duration(milliseconds: 200),
-                () {
+                    () {
                   showAddNoteBottomSheet(context);
                 },
               );
@@ -89,7 +90,7 @@ class AddEntryBottomSheet extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              "Cancel",
+              l10n.cancel,
               style: GoogleFonts.roboto(
                 color: ChopdiColors.navy,
                 fontWeight: FontWeight.w600,
@@ -102,12 +103,12 @@ class AddEntryBottomSheet extends StatelessWidget {
   }
 
   Widget _buildTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String subtitle,
+        required VoidCallback onTap,
+      }) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
@@ -117,7 +118,7 @@ class AddEntryBottomSheet extends StatelessWidget {
           vertical: 12,
         ),
         decoration: BoxDecoration(
-          color: Color.fromRGBO(255, 248, 240, 1),
+          color: const Color.fromRGBO(255, 248, 240, 1),
           border: Border.all(
             color: const Color(0xffC9D2E3),
           ),
@@ -125,7 +126,6 @@ class AddEntryBottomSheet extends StatelessWidget {
         ),
         child: Row(
           children: [
-
             CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xffDCE5F8),
@@ -142,7 +142,6 @@ class AddEntryBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     title,
                     style: GoogleFonts.roboto(

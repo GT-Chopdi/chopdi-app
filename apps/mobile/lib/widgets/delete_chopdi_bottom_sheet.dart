@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class DeleteChopdiBottomSheet extends StatefulWidget {
   const DeleteChopdiBottomSheet({
@@ -19,16 +20,29 @@ class _DeleteChopdiBottomSheetState
   // COLORS
   // ===========================================================================
 
-  static const Color sheetColor = Color(0xFFFFFAF4);
-  static const Color darkBlue = Color(0xFF213F68);
-  static const Color textColor = Color(0xFF344B68);
-  static const Color secondaryText = Color(0xFF65758A);
+  static const Color sheetColor =
+  Color(0xFFFFFAF4);
 
-  static const Color redColor = Color(0xFFD34E4E);
-  static const Color lightRed = Color(0xFFF9DAD5);
+  static const Color darkBlue =
+  Color(0xFF213F68);
 
-  static const Color borderColor = Color(0xFFE2B0A9);
-  static const Color checkboxBorder = Color(0xFFAFC0D3);
+  static const Color textColor =
+  Color(0xFF344B68);
+
+  static const Color secondaryText =
+  Color(0xFF65758A);
+
+  static const Color redColor =
+  Color(0xFFD34E4E);
+
+  static const Color lightRed =
+  Color(0xFFF9DAD5);
+
+  static const Color borderColor =
+  Color(0xFFE2B0A9);
+
+  static const Color checkboxBorder =
+  Color(0xFFAFC0D3);
 
   // ===========================================================================
   // STATE
@@ -47,16 +61,13 @@ class _DeleteChopdiBottomSheetState
       top: false,
       child: Container(
         width: double.infinity,
-
         decoration: const BoxDecoration(
           color: sheetColor,
-
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
           ),
         ),
-
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             16,
@@ -64,7 +75,6 @@ class _DeleteChopdiBottomSheetState
             16,
             17,
           ),
-
           child: Column(
             children: [
               // =================================================================
@@ -87,9 +97,10 @@ class _DeleteChopdiBottomSheetState
               // TITLE
               // =================================================================
 
-              const Text(
-                'Delete Chopdi?',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)
+                    .areYouSureDeleteChopdi,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: darkBlue,
@@ -102,11 +113,11 @@ class _DeleteChopdiBottomSheetState
               // DESCRIPTION
               // =================================================================
 
-              const Text(
-                'This will permanently delete "My Chopdi"\n'
-                'and all its data.',
+              Text(
+                '${AppLocalizations.of(context).deleteChopdiDescription}\n'
+                    '${AppLocalizations.of(context).deleteChopdiDescriptionData}',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 8,
                   height: 1.25,
                   color: textColor,
@@ -119,7 +130,7 @@ class _DeleteChopdiBottomSheetState
               // WARNING BOX
               // =================================================================
 
-              _buildWarningBox(),
+              _buildWarningBox(context),
 
               const SizedBox(height: 21),
 
@@ -127,7 +138,7 @@ class _DeleteChopdiBottomSheetState
               // CONFIRMATION CHECKBOX
               // =================================================================
 
-              _buildConfirmationCheckbox(),
+              _buildConfirmationCheckbox(context),
 
               const SizedBox(height: 21),
 
@@ -135,7 +146,7 @@ class _DeleteChopdiBottomSheetState
               // BUTTONS
               // =================================================================
 
-              _buildButtons(),
+              _buildButtons(context),
             ],
           ),
         ),
@@ -182,17 +193,19 @@ class _DeleteChopdiBottomSheetState
   // WARNING BOX
   // ===========================================================================
 
-  Widget _buildWarningBox() {
+  Widget _buildWarningBox(
+      BuildContext context,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.fromLTRB(
         15,
         9,
         12,
         9,
       ),
-
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8F5),
         borderRadius: BorderRadius.circular(13),
@@ -201,21 +214,21 @@ class _DeleteChopdiBottomSheetState
           width: 0.8,
         ),
       ),
-
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           _WarningLine(
-            text: 'All customers, transactions and records will be deleted.',
+            text: l10n.deleteChopdiWarningCustomers,
           ),
           _WarningLine(
-            text: 'All loans, payments and interest data will be removed.',
+            text: l10n.deleteChopdiWarningLoans,
           ),
           _WarningLine(
-            text: 'Notes and settings will be lost forever.',
+            text: l10n.deleteChopdiWarningNotes,
           ),
           _WarningLine(
-            text: 'This action cannot be undone.',
+            text: l10n.thisActionCannotBeUndone,
           ),
         ],
       ),
@@ -226,22 +239,23 @@ class _DeleteChopdiBottomSheetState
   // CHECKBOX
   // ===========================================================================
 
-  Widget _buildConfirmationCheckbox() {
+  Widget _buildConfirmationCheckbox(
+      BuildContext context,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
     return GestureDetector(
       onTap: () {
         setState(() {
           _understood = !_understood;
         });
       },
-
       child: Container(
         width: double.infinity,
         height: 39,
-
         padding: const EdgeInsets.symmetric(
           horizontal: 7,
         ),
-
         decoration: BoxDecoration(
           color: const Color(0xFFFFFAF5),
           borderRadius: BorderRadius.circular(7),
@@ -250,7 +264,6 @@ class _DeleteChopdiBottomSheetState
             width: 0.8,
           ),
         ),
-
         child: Row(
           children: [
             // ---------------------------------------------------------------
@@ -260,15 +273,12 @@ class _DeleteChopdiBottomSheetState
             Container(
               width: 17,
               height: 17,
-
               decoration: BoxDecoration(
                 color: _understood
                     ? darkBlue
                     : Colors.transparent,
-
                 borderRadius:
-                    BorderRadius.circular(3),
-
+                BorderRadius.circular(3),
                 border: Border.all(
                   color: _understood
                       ? darkBlue
@@ -276,22 +286,21 @@ class _DeleteChopdiBottomSheetState
                   width: 1,
                 ),
               ),
-
               child: _understood
                   ? const Icon(
-                      Icons.check,
-                      size: 13,
-                      color: Colors.white,
-                    )
+                Icons.check,
+                size: 13,
+                color: Colors.white,
+              )
                   : null,
             ),
 
             const SizedBox(width: 8),
 
-            const Expanded(
+            Expanded(
               child: Text(
-                'I understand this action cannot be undone.',
-                style: TextStyle(
+                l10n.deleteChopdiConfirmation,
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
                   color: textColor,
@@ -308,7 +317,11 @@ class _DeleteChopdiBottomSheetState
   // BUTTONS
   // ===========================================================================
 
-  Widget _buildButtons() {
+  Widget _buildButtons(
+      BuildContext context,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       children: [
         // =====================================================================
@@ -318,36 +331,29 @@ class _DeleteChopdiBottomSheetState
         Expanded(
           child: SizedBox(
             height: 34,
-
             child: OutlinedButton(
               onPressed: _deleting
                   ? null
                   : () {
-                      Navigator.of(context).pop();
-                    },
-
+                Navigator.of(context).pop();
+              },
               style: OutlinedButton.styleFrom(
                 backgroundColor:
-                    const Color(0xFFFFFAF5),
-
+                const Color(0xFFFFFAF5),
                 foregroundColor: darkBlue,
-
                 side: const BorderSide(
                   color: redColor,
                   width: 0.8,
                 ),
-
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.circular(6),
+                  BorderRadius.circular(6),
                 ),
-
                 padding: EdgeInsets.zero,
               ),
-
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
                   color: darkBlue,
@@ -366,49 +372,42 @@ class _DeleteChopdiBottomSheetState
         Expanded(
           child: SizedBox(
             height: 34,
-
             child: ElevatedButton(
-              onPressed: (!_understood || _deleting)
+              onPressed:
+              (!_understood || _deleting)
                   ? null
                   : _handleDelete,
-
               style: ElevatedButton.styleFrom(
                 backgroundColor: redColor,
-
                 disabledBackgroundColor:
-                    const Color(0xFFE5A4A1),
-
+                const Color(0xFFE5A4A1),
                 foregroundColor: Colors.white,
-
                 elevation: 0,
-
                 padding: EdgeInsets.zero,
-
                 shape: RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.circular(6),
+                  BorderRadius.circular(6),
                 ),
               ),
-
               child: _deleting
                   ? const SizedBox(
-                      width: 15,
-                      height: 15,
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text(
-                      'Delete Chopdi',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight:
-                            FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
+                width: 15,
+                height: 15,
+                child:
+                CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+                  : Text(
+                l10n.deleteChopdi,
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight:
+                  FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ),
@@ -458,11 +457,9 @@ class _WarningLine extends StatelessWidget {
       padding: const EdgeInsets.only(
         bottom: 2,
       ),
-
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        CrossAxisAlignment.start,
         children: [
           const Text(
             '•',

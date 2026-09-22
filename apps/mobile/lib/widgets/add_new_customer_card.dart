@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 
 class AddNewCustomerCard extends StatelessWidget {
-
   final VoidCallback? onTap;
-  const AddNewCustomerCard({super.key,this.onTap});
+
+  const AddNewCustomerCard({
+    super.key,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
@@ -16,7 +22,7 @@ class AddNewCustomerCard extends StatelessWidget {
         height: 74,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: Color(0xFFFFF8F0),
+          color: const Color(0xFFFFF8F0),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: const Color(0xffB7C2D5),
@@ -50,16 +56,18 @@ class AddNewCustomerCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Add New Customer",
+                    l10n.addNewCustomer,
                     style: GoogleFonts.manrope(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: ChopdiColors.navy,
                     ),
                   ),
-                  SizedBox(height: 2),
+
+                  const SizedBox(height: 2),
+
                   Text(
-                    "Enter details manually",
+                    l10n.enterDetailsManually,
                     style: GoogleFonts.manrope(
                       fontSize: 13,
                       color: ChopdiColors.navy,
@@ -97,17 +105,24 @@ class DashedCirclePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final radius = size.width / 2 - 1;
-    final center = Offset(size.width / 2, size.height / 2);
+    final center = Offset(
+      size.width / 2,
+      size.height / 2,
+    );
 
     for (int i = 0; i < dashCount; i++) {
       final start =
           (2 * 3.141592653589793 / dashCount) * i;
+
       final sweep =
           (2 * 3.141592653589793 / dashCount) *
               dashLength;
 
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
         start,
         sweep,
         false,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:mychopdi/l10n/app_localizations.dart';
 import '../utils/app_colors.dart';
 
 class LoanToggle extends StatelessWidget {
@@ -15,6 +15,7 @@ class LoanToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         // ================= I GAVE LOAN =================
@@ -54,7 +55,7 @@ class LoanToggle extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          "I Gave Loan",
+                          l10n.homeIGaveLoan,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.manrope(
@@ -66,7 +67,7 @@ class LoanToggle extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "(Receive Interest)",
+                          l10n.homeIGaveLoan,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.manrope(
@@ -124,7 +125,7 @@ class LoanToggle extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          "I Took Loan",
+                          l10n.homeITookLoan,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.manrope(
@@ -136,7 +137,7 @@ class LoanToggle extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "(Pay Interest)",
+                          l10n.homePayInterest,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.manrope(

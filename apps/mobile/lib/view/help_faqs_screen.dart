@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/utils/app_constants.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpFaqsScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // ===========================================================================
 
   final TextEditingController _searchController =
-      TextEditingController();
+  TextEditingController();
 
   String _searchText = '';
 
@@ -53,53 +54,48 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // FAQ DATA
   // ===========================================================================
 
-  final List<Map<String, String>> _faqs = [
-    {
-      'question': 'What is Chopdi?',
-      'answer':
-          'Chopdi is a digital ledger that helps you keep track of customers, loans, payments and interest in one place. It replaces traditional paper ledgers with an easy-to-manage digital record.',
-    },
-    {
-      'question': 'How do I add a new customer?',
-      'answer':
-          'Tap Add Customer from the Home screen. You can either select a customer from your phone contacts or add a new customer manually. After adding the customer, you can start recording loan and payment entries.',
-    },
-    {
-      'question': 'Can I edit customer details?',
-      'answer':
-          "Yes. Open the customer's profile, tap the three-dot menu (⋮) in the top-right corner and select Edit Customer to update the customer's name or phone number.",
-    },
-    {
-      'question': 'How do I record a payment?',
-      'answer':
-          "Open the customer's ledger and tap You Gave ₹ to record a loan or You Got ₹ to record a payment. Enter the required details and save the entry.",
-    },
-    {
-      'question': 'Can I edit or delete a transaction?',
-      'answer':
-          "Yes. Tap any transaction in the customer's ledger to open its details. From there, you can Edit Transaction or Delete Transaction.",
-    },
-    {
-      'question': 'How is interest calculated?',
-      'answer':
-          "Interest is calculated using the interest rate you enter while creating or editing a customer's loan. Each customer can have a different interest rate and calculation method (Simple Interest / Compound Interest).",
-    },
-    {
-      'question': 'Can I export my ledger?',
-      'answer':
-          "Yes. Open any customer's ledger, tap the three dots on the top-right corner, and and tap Export PDF. You can share, print or save the ledger as a PDF file.",
-    },
-    {
-      'question': 'Can I change my Chopdi details?',
-      'answer':
-          "Yes. Go to My Chopdi > Edit (pencil icon) to update your Chopdi name, description or ledger type.",
-    },
-    {
-      'question': 'Will my data be lost if I change my phone?',
-      'answer':
-          "No. Your data is safe. As long as you are signed in with your account , you can restore it on your new phone.",
-    },
-  ];
+  List<Map<String, String>> _faqs(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return [
+      {
+        'question': l10n.faqWhatIsChopdiQuestion,
+        'answer': l10n.faqWhatIsChopdiAnswer,
+      },
+      {
+        'question': l10n.faqHowAddCustomerQuestion,
+        'answer': l10n.faqHowAddCustomerAnswer,
+      },
+      {
+        'question': l10n.faqEditCustomerDetailsQuestion,
+        'answer': l10n.faqEditCustomerDetailsAnswer,
+      },
+      {
+        'question': l10n.faqRecordPaymentQuestion,
+        'answer': l10n.faqRecordPaymentAnswer,
+      },
+      {
+        'question': l10n.faqEditDeleteTransactionQuestion,
+        'answer': l10n.faqEditDeleteTransactionAnswer,
+      },
+      {
+        'question': l10n.faqInterestCalculatedQuestion,
+        'answer': l10n.faqInterestCalculatedAnswer,
+      },
+      {
+        'question': l10n.faqExportLedgerQuestion,
+        'answer': l10n.faqExportLedgerAnswer,
+      },
+      {
+        'question': l10n.faqChangeChopdiDetailsQuestion,
+        'answer': l10n.faqChangeChopdiDetailsAnswer,
+      },
+      {
+        'question': l10n.faqChangePhoneQuestion,
+        'answer': l10n.faqChangePhoneAnswer,
+      },
+    ];
+  }
 
   // ===========================================================================
   // DISPOSE
@@ -115,19 +111,21 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // FILTERED FAQS
   // ===========================================================================
 
-  List<Map<String, String>> get _filteredFaqs {
+  List<Map<String, String>> _filteredFaqs(BuildContext context) {
+    final faqs = _faqs(context);
+
     if (_searchText.trim().isEmpty) {
-      return _faqs;
+      return faqs;
     }
 
     final query = _searchText.toLowerCase().trim();
 
-    return _faqs.where((faq) {
+    return faqs.where((faq) {
       final question =
-          faq['question']!.toLowerCase();
+      faq['question']!.toLowerCase();
 
       final answer =
-          faq['answer']!.toLowerCase();
+      faq['answer']!.toLowerCase();
 
       return question.contains(query) ||
           answer.contains(query);
@@ -146,7 +144,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
     try {
       final bool launched =
-          await launchUrl(
+      await launchUrl(
         emailUri,
         mode: LaunchMode.externalApplication,
       );
@@ -154,9 +152,9 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
       if (!launched && mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'No email app is available on this device.',
+              AppLocalizations.of(context).noEmailAppAvailable,
             ),
           ),
         );
@@ -170,9 +168,9 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Unable to open email app.',
+            AppLocalizations.of(context).unableToOpenEmailApp,
           ),
         ),
       );
@@ -213,21 +211,21 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    ScrollViewKeyboardDismissBehavior.onDrag,
 
                     physics:
-                        const BouncingScrollPhysics(),
+                    const BouncingScrollPhysics(),
 
                     // IMPORTANT:
                     // No additional horizontal padding here.
                     padding: EdgeInsets.only(
                       bottom:
-                          keyboardVisible ? 30 : 14,
+                      keyboardVisible ? 30 : 14,
                     ),
 
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      CrossAxisAlignment.start,
 
                       children: [
                         // =====================================================
@@ -255,13 +253,13 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                         // =====================================================
 
                         Text(
-                          'Frequently asked questions',
+                          AppLocalizations.of(context).frequentlyAskedQuestions,
 
                           style: GoogleFonts.manrope(
                             fontSize: 14,
                             color: secondaryText,
                             fontWeight:
-                                FontWeight.w700,
+                            FontWeight.w700,
                           ),
                         ),
 
@@ -301,9 +299,11 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // ===========================================================================
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       crossAxisAlignment:
-          CrossAxisAlignment.center,
+      CrossAxisAlignment.center,
       children: [
         GestureDetector(
           onTap: () {
@@ -326,7 +326,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
         Column(
           crossAxisAlignment:
-              CrossAxisAlignment.start,
+          CrossAxisAlignment.start,
 
           children: [
             Text(
@@ -341,7 +341,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
             SizedBox(height: 2),
 
             Text(
-              'Find answers to common questions',
+              l10n.getAnswersCommonQuestions,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -367,7 +367,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
         color: cardColor,
 
         borderRadius:
-            BorderRadius.circular(7),
+        BorderRadius.circular(7),
 
         border: Border.all(
           color: borderColor,
@@ -399,7 +399,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               },
 
               textInputAction:
-                  TextInputAction.search,
+              TextInputAction.search,
 
               style: GoogleFonts.manrope(
                 fontSize: 16,
@@ -408,9 +408,9 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               ),
 
               decoration:
-                  InputDecoration(
+              InputDecoration(
                 hintText:
-                    'Search for help...',
+                AppLocalizations.of(context).searchForHelp,
 
                 hintStyle: GoogleFonts.manrope(
                   fontSize: 14,
@@ -423,7 +423,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                 isDense: true,
 
                 contentPadding:
-                    EdgeInsets.only(
+                EdgeInsets.only(
                   bottom: 1,
                 ),
               ),
@@ -442,7 +442,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
               child: const Padding(
                 padding:
-                    EdgeInsets.only(
+                EdgeInsets.only(
                   right: 7,
                 ),
 
@@ -463,20 +463,21 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // ===========================================================================
 
   Widget _buildFaqList() {
-    final faqs = _filteredFaqs;
+    final l10n = AppLocalizations.of(context);
+    final faqs = _filteredFaqs(context);
 
     if (faqs.isEmpty) {
       return Container(
         width: double.infinity,
         height: 40,
         padding:
-            const EdgeInsets.symmetric(
+        const EdgeInsets.symmetric(
           vertical: 30,
         ),
 
         child: Center(
           child: Text(
-            'No questions found.',
+            l10n.noQuestionsFound,
             style: GoogleFonts.manrope(
               fontSize: 12,
               color: secondaryText,
@@ -489,12 +490,12 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
     return Column(
       children: List.generate(
         faqs.length,
-        (index) {
+            (index) {
           final faq = faqs[index];
 
           return Padding(
             padding:
-                const EdgeInsets.only(
+            const EdgeInsets.only(
               bottom: 9,
             ),
 
@@ -523,7 +524,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
     return AnimatedContainer(
       duration:
-          const Duration(milliseconds: 180),
+      const Duration(milliseconds: 180),
 
       width: double.infinity,
 
@@ -531,7 +532,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
         color: cardColor,
 
         borderRadius:
-            BorderRadius.circular(10),
+        BorderRadius.circular(10),
 
         border: Border.all(
           color: borderColor,
@@ -547,7 +548,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
           InkWell(
             borderRadius:
-                BorderRadius.circular(10),
+            BorderRadius.circular(10),
 
             onTap: () {
               setState(() {
@@ -564,7 +565,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               height: 40,
 
               padding:
-                  const EdgeInsets.only(
+              const EdgeInsets.only(
                 left: 8,
                 right: 7,
               ),
@@ -576,13 +577,13 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                       question,
                       maxLines: 1,
                       overflow:
-                          TextOverflow.ellipsis,
+                      TextOverflow.ellipsis,
 
                       style:
-                          GoogleFonts.manrope(
+                      GoogleFonts.manrope(
                         fontSize: 16,
                         fontWeight:
-                            FontWeight.w700,
+                        FontWeight.w700,
                         color: darkBlue,
                       ),
                     ),
@@ -590,10 +591,10 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
                   AnimatedRotation(
                     turns:
-                        expanded ? 0.5 : 0,
+                    expanded ? 0.5 : 0,
 
                     duration:
-                        const Duration(
+                    const Duration(
                       milliseconds: 180,
                     ),
 
@@ -618,7 +619,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               width: double.infinity,
 
               padding:
-                  const EdgeInsets.fromLTRB(
+              const EdgeInsets.fromLTRB(
                 9,
                 0,
                 9,
@@ -645,6 +646,8 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
   // ===========================================================================
 
   Widget _buildSupportCard() {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       width: double.infinity,
       height: 58,
@@ -708,14 +711,14 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
               mainAxisSize: MainAxisSize.min,
 
               mainAxisAlignment:
-                  MainAxisAlignment.center,
+              MainAxisAlignment.center,
 
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              CrossAxisAlignment.start,
 
               children: [
                 Text(
-                  'Still need help?',
+                  l10n.stillNeedHelp,
 
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -733,7 +736,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                 ),
 
                 Text(
-                  'Our Support team is here.',
+                  l10n.supportTeamIsHere,
 
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -773,7 +776,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
                 ),
 
                 borderRadius:
-                    BorderRadius.circular(10),
+                BorderRadius.circular(10),
 
                 border: Border.all(
                   color: supportRed,
@@ -783,7 +786,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
               child: Row(
                 mainAxisAlignment:
-                    MainAxisAlignment.center,
+                MainAxisAlignment.center,
 
                 children: [
                   SizedBox(width: 5),
@@ -799,16 +802,16 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
                   Flexible(
                     child: Text(
-                      'Contact Support',
+                      l10n.contactSupport,
 
                       maxLines: 1,
                       overflow:
-                          TextOverflow.ellipsis,
+                      TextOverflow.ellipsis,
 
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         fontWeight:
-                            FontWeight.w700,
+                        FontWeight.w700,
                         color: supportRed,
                       ),
                     ),

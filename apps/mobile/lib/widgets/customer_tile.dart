@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 
@@ -14,6 +15,8 @@ class CustomerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(
@@ -26,12 +29,13 @@ class CustomerTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-
           CircleAvatar(
             radius: 20,
             backgroundColor: const Color(0xffD8E2F2),
             child: Text(
-              customer.name[0],
+              customer.name.isNotEmpty
+                  ? customer.name[0].toUpperCase()
+                  : '?',
               style: const TextStyle(
                 color: Color(0xff243B67),
                 fontWeight: FontWeight.bold,
@@ -43,9 +47,9 @@ class CustomerTile extends StatelessWidget {
 
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
-
                 Text(
                   customer.name,
                   style: const TextStyle(
@@ -57,7 +61,10 @@ class CustomerTile extends StatelessWidget {
                 const SizedBox(height: 3),
 
                 Text(
-                  "Loan: ₹${transaction.amount.toStringAsFixed(0)} • Rate: ${transaction.interestRate}%",
+                  '${l10n.loan}: '
+                      '₹${transaction.amount.toStringAsFixed(0)} • '
+                      '${l10n.interestRatePercent}: '
+                      '${transaction.interestRate}%',
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 12,
@@ -68,9 +75,9 @@ class CustomerTile extends StatelessWidget {
           ),
 
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment:
+            CrossAxisAlignment.end,
             children: [
-
               Text(
                 "₹${transaction.amount.toStringAsFixed(2)}",
                 style: TextStyle(
@@ -83,8 +90,8 @@ class CustomerTile extends StatelessWidget {
 
               Text(
                 customer.received
-                    ? "Received"
-                    : "Pending",
+                    ? l10n.received
+                    : l10n.pending,
                 style: TextStyle(
                   color: customer.received
                       ? Colors.green
@@ -100,7 +107,7 @@ class CustomerTile extends StatelessWidget {
           const Icon(
             Icons.chevron_right,
             color: Color(0xff243B67),
-          )
+          ),
         ],
       ),
     );

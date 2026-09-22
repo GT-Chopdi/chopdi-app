@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class BottomActionButtons extends StatefulWidget {
   final VoidCallback? onYouGave;
@@ -15,10 +16,11 @@ class BottomActionButtons extends StatefulWidget {
       _BottomActionButtonsState();
 }
 
-class _BottomActionButtonsState
-    extends State<BottomActionButtons> {
+class _BottomActionButtonsState extends State<BottomActionButtons> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       top: false,
       child: Container(
@@ -51,9 +53,9 @@ class _BottomActionButtonsState
                     Icons.arrow_upward,
                     size: 20,
                   ),
-                  label: const Text(
-                    "You Gave",
-                    style: TextStyle(
+                  label: Text(
+                    l10n.youGave,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -81,9 +83,9 @@ class _BottomActionButtonsState
                     Icons.arrow_downward,
                     size: 20,
                   ),
-                  label: const Text(
-                    "You Got",
-                    style: TextStyle(
+                  label: Text(
+                    l10n.youGot,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
