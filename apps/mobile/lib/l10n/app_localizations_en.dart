@@ -860,10 +860,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadPdf => "Download PDF";
 
   @override
-  String customersCount(int count) {
-    // TODO: implement customersCount
-    throw UnimplementedError();
-  }
+  String customersCount(int count) => "Customers ($count)";
   @override
   String get allNotes => 'All Notes';
 
@@ -1147,6 +1144,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentReceived => 'Payment received';
   String get transactionDetails => 'Transaction Details';
   String get interestDetails => 'Interest Details';
+  @override
+
+
+  @override
+  String get iTookLoan => 'I Took';
+
+  @override
+  String get moneyToReceive => 'Money to receive';
+
+  @override
+  String get moneyToPay => 'Money to pay';
 
 
 

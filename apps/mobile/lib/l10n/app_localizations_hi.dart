@@ -1244,9 +1244,16 @@ class AppLocalizationsHi extends AppLocalizations {
   // String get lastPayment => 'अंतिम भुगतान';
   // String get received => 'प्राप्त';
 
+
   @override
-  String customersCount(int count) {
-    // TODO: implement customersCount
-    throw UnimplementedError();
-  }
+  String get iTookLoan => 'मैंने लिया';
+
+  @override
+  String get moneyToReceive => 'प्राप्त होने वाला पैसा';
+
+  @override
+  String get moneyToPay => 'देने वाला पैसा';
+
+  @override
+  String customersCount(int count) => "ग्राहक ($count)";
 }
