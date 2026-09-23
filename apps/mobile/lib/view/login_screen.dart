@@ -7,6 +7,7 @@ import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/otp_screen.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
+
 class ChopdiOnboardingScreen extends StatefulWidget {
   const ChopdiOnboardingScreen({super.key});
 
@@ -15,7 +16,7 @@ class ChopdiOnboardingScreen extends StatefulWidget {
       _ChopdiOnboardingScreenState();
 }
 
-class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
+class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with WidgetsBindingObserver {
   // Controller for phone number
   final TextEditingController _phoneController = TextEditingController();
   String? errorText;
@@ -28,6 +29,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
 
   // Focus node for phone field
   final FocusNode _phoneFocusNode = FocusNode();
+  final GlobalKey _continueButtonKey = GlobalKey();
 
   /// Asks the server to send a verification code, then moves to the OTP screen
   /// carrying the challenge it issued.
@@ -35,112 +37,131 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> {
   /// The code itself never reaches this app — only an identifier for the
   /// attempt. That is what makes the OTP meaningful: a modified build cannot
   /// learn or bypass it.
-  // Future<void> _requestOtp() async {
-  //   final phone = _phoneController.text.trim();
+  Future<void> _requestOtp() async {
+    final phone = _phoneController.text.trim();
 
-  //   if (phone.isEmpty) {
-  //     setState(() => errorText = "Please enter your mobile number");
-  //     return;
-  //   }
+    if (phone.isEmpty) {
+      setState(() {
+        errorText = AppLocalizations.of(context)!.loginMobileNumberRequired;
+      });
+      return;
+    }
 
-  //   if (phone.length < 10) {
-  //     setState(
-  //       () => errorText = "Please enter a valid 10-digit mobile number",
-  //     );
-  //     return;
-  //   }
+    if (phone.length < 10) {
+      setState(() {
+        errorText = AppLocalizations.of(context)!.loginInvalidMobileNumber;
+      });
+      return;
+    }
 
-  //   setState(() {
-  //     errorText = null;
-  //     _requesting = true;
-  //   });
+    // ================================================================
+    // REUSE EXISTING OTP CHALLENGE
+    // ================================================================
+    //
+    // If the user came back from the OTP screen using
+    // "Change Mobile Number" but did not actually change
+    // the number, don't request another OTP.
+    //
+    // Instead, open the existing OTP screen using the same
+    // challengeId.
+    // ================================================================
 
-  //   try {
-  //     final challenge = await AuthService.instance.requestOtp(phone);
+    if (_lastChallengeId != null &&
+        _lastChallengePhone == phone) {
+      FocusScope.of(context).unfocus();
 
-  //     if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            phoneNumber: phone,
+            challengeId: _lastChallengeId!,
+          ),
+        ),
+      );
 
-  //     setState(() => _requesting = false);
+      return;
+    }
 
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (_) => OTPScreen(
-  //           phoneNumber: phone,
-  //           challengeId: challenge.challengeId,
-  //         ),
-  //       ),
-  //     );
-  //   } on ApiException catch (error) {
-  //     if (!mounted) return;
-
-  //     setState(() {
-  //       _requesting = false;
-
-  //       errorText = switch (error.code) {
-  //         ApiErrorCode.rateLimited =>
-  //           "A code was already sent. Please wait a moment.",
-
-  //         'NETWORK_UNAVAILABLE' =>
-  //           "Can't reach the server. Check your connection.",
-
-  //         ApiErrorCode.devKeyRequired when ApiConfig.devKey.isEmpty =>
-  //           "This build has no DEV_KEY compiled in.\n\n"
-  //               "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
-  //               "--dart-define-from-file=env/staging.env",
-
-  //         ApiErrorCode.devKeyRequired =>
-  //           "The DEV_KEY in this build was rejected. Check it matches "
-  //               "AUTH_DEV_KEY on the server.",
-
-  //         _ => error.message,
-  //       };
-  //     });
-  //   } on ApiConfigException catch (error) {
-  //     // A build-time mistake, not a runtime failure. Saying "try again" here
-  //     // sends someone retyping their number against a build that can never
-  //     // work, so the real reason is shown instead.
-  //     if (!mounted) return;
-
-  //     setState(() {
-  //       _requesting = false;
-  //       errorText = error.message;
-  //     });
-  //   } catch (error, stack) {
-  //     // Anything else is genuinely unexpected. The user gets a plain message,
-  //     // but the real error goes to the log — without it, every distinct
-  //     // failure looks identical in a bug report.
-  //     debugPrint('[chopdi] OTP request failed: $error\n$stack');
-
-  //     if (!mounted) return;
-
-  //     setState(() {
-  //       _requesting = false;
-  //       errorText = "Something went wrong. Please try again.";
-  //     });
-  //   }
-  // }
-
-Future<void> _requestOtp() async {
-  final phone = _phoneController.text.trim();
-  final l10n = AppLocalizations.of(context);
-
-  if (phone.isEmpty) {
     setState(() {
-      errorText = l10n.loginMobileNumberRequired;
+      errorText = null;
+      _requesting = true;
     });
-    return;
+
+    try {
+      final challenge = await AuthService.instance.requestOtp(phone);
+
+      if (!mounted) return;
+
+      // ================================================================
+      // SAVE THE CHALLENGE
+      // ================================================================
+
+      _lastChallengeId = challenge.challengeId;
+      _lastChallengePhone = phone;
+
+      setState(() {
+        _requesting = false;
+      });
+
+      FocusScope.of(context).unfocus();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            phoneNumber: phone,
+            challengeId: challenge.challengeId,
+          ),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _requesting = false;
+
+        errorText = switch (error.code) {
+          ApiErrorCode.rateLimited =>
+            "A code was already sent. Please wait a moment.",
+
+          'NETWORK_UNAVAILABLE' =>
+            "Can't reach the server. Check your connection.",
+
+          ApiErrorCode.devKeyRequired
+              when ApiConfig.devKey.isEmpty =>
+            "This build has no DEV_KEY compiled in.\n\n"
+                "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
+                "--dart-define-from-file=env/staging.env",
+
+          ApiErrorCode.devKeyRequired =>
+            "The DEV_KEY in this build was rejected. Check it matches "
+                "AUTH_DEV_KEY on the server.",
+
+          _ => error.message,
+        };
+      });
+    } on ApiConfigException catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _requesting = false;
+        errorText = error.message;
+      });
+    } catch (error, stack) {
+      debugPrint(
+        '[chopdi] OTP request failed: $error\n$stack',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _requesting = false;
+        errorText = "Something went wrong. Please try again.";
+      });
+    }
   }
 
-  if (phone.length < 10) {
-    setState(() {
-      errorText = l10n.loginInvalidMobileNumber;
-    });
-    return;
-  }
-}
-
-// ...
   @override
   void initState() {
     super.initState();
@@ -159,20 +180,23 @@ Future<void> _requestOtp() async {
     //
     // When the phone field receives focus, wait for the keyboard to
     // finish opening and then scroll the field into the visible area.
-    //
+    // ================================================================
+    // KEYBOARD / PHONE FIELD + CONTINUE BUTTON SCROLL FIX
+    // ================================================================
+
     _phoneFocusNode.addListener(() {
       if (_phoneFocusNode.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(const Duration(milliseconds: 400), () {
           if (!mounted) return;
 
-          final fieldContext = _phoneFocusNode.context;
+          final buttonContext = _continueButtonKey.currentContext;
 
-          if (fieldContext != null) {
+          if (buttonContext != null) {
             Scrollable.ensureVisible(
-              fieldContext,
-              duration: const Duration(milliseconds: 300),
+              buttonContext,
+              duration: const Duration(milliseconds: 350),
               curve: Curves.easeOut,
-              alignment: 0.25,
+              alignment: 0.55,
             );
           }
         });
@@ -347,8 +371,9 @@ Future<void> _requestOtp() async {
                                   const SizedBox(height: 12),
 
                                   // Subtitle
-                              Text(
-                              AppLocalizations.of(context)!.loginTrackLoans,
+                                  Text(
+                                    'Track loans, interest and payments\n'
+                                    'with clarity and confidence.',
                                     style: GoogleFonts.manrope(
                                       fontSize: subtitleFontSize,
                                       height: 1.35,
@@ -438,7 +463,8 @@ Future<void> _requestOtp() async {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            AppLocalizations.of(context)!.loginEnterMobileNumber,
+                                            "Enter your mobile number to\n"
+                                            "continue to Chopdi",
                                             style: GoogleFonts.manrope(
                                               fontSize:
                                                   width < 360 ? 13 : 14,
@@ -459,22 +485,26 @@ Future<void> _requestOtp() async {
                                 // PHONE INPUT
                                 // -----------------------------------------
 
-                                _PhoneInputField(
-                                  controller: _phoneController,
-                                  errorText: errorText,
-                                  focusNode: _phoneFocusNode,
-                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    _PhoneInputField(
+                                      controller: _phoneController,
+                                      errorText: errorText,
+                                      focusNode: _phoneFocusNode,
+                                    ),
 
-                                const SizedBox(height: 22),
+                                    const SizedBox(height: 22),
 
-                                // -----------------------------------------
-                                // CONTINUE BUTTON
-                                // -----------------------------------------
-
-                                _ContinueButton(
-                                  onPressed: _requestOtp,
-                                  loading: _requesting,
-                                  text: AppLocalizations.of(context)!.loginContinue,
+                                    Container(
+                                      key: _continueButtonKey,
+                                      child: _ContinueButton(
+                                        onPressed: _requestOtp,
+                                        loading: _requesting,
+                                        text: AppLocalizations.of(context)!.loginContinue,
+                                      ),
+                                    ),
+                                  ],
                                 ),
 
                                 const SizedBox(height: 24),
@@ -506,8 +536,7 @@ Future<void> _requestOtp() async {
                                     const SizedBox(width: 5),
 
                                     Flexible(
-                                      child:
-                                      Text(
+                                      child: Text(
                                         AppLocalizations.of(context)!.loginSecureData,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.manrope(
@@ -546,7 +575,12 @@ Future<void> _requestOtp() async {
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: AppLocalizations.of(context)!.loginByContinuing,
+                                    text:
+                                        AppLocalizations.of(context)!.loginByContinuing,
+                                    style: GoogleFonts.manrope(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: width < 360 ? 10 : 12,
+                                    ),
                                   ),
                                   TextSpan(
                                     text: AppLocalizations.of(context)!.loginTermsOfService,
@@ -757,12 +791,17 @@ class _PhoneInputField extends StatelessWidget {
 
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
+
+  /// Disables the button and shows a spinner while the code is being sent.
+  /// Requesting an OTP is a network round trip, and without this the user can
+  /// tap repeatedly — each tap another SMS, and the later ones rejected by the
+  /// server's resend cooldown anyway.
   final bool loading;
   final String text;
 
   const _ContinueButton({
     required this.onPressed,
-    required this.loading,
+    this.loading = false,
     required this.text,
   });
 
@@ -771,6 +810,7 @@ class _ContinueButton extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     final buttonHeight = width < 360 ? 46.0 : 48.0;
+
     final fontSize = width < 360 ? 18.0 : 20.0;
 
     return SizedBox(
@@ -781,7 +821,7 @@ class _ContinueButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: ChopdiColors.navy,
           disabledBackgroundColor:
-          ChopdiColors.navy.withValues(alpha: 0.6),
+              ChopdiColors.navy.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -789,32 +829,32 @@ class _ContinueButton extends StatelessWidget {
         ),
         child: loading
             ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.white,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style: GoogleFonts.manrope(
-                color: Colors.white,
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    text,
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.arrow_forward_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ],
-        ),
       ),
     );
   }
