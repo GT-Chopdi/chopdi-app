@@ -83,6 +83,10 @@ abstract class AppLocalizations {
   String get homeMyChopdi;
 
   String get homeTapToChangeChopdi;
+  String get iGaveLoan;
+  String get iTookLoan;
+  String get moneyToReceive;
+  String get moneyToPay;
 
 // ------------------------------------------------------------
 // HOME SUMMARY
@@ -453,7 +457,7 @@ abstract class AppLocalizations {
   String get loanSummary;
   // String get loanGivenOn;
   String get loanType;
-  String get iGaveLoan;
+  // String get iGaveLoan;
   String get loanDuration;
   // String get lastPayment;
   // String get received;

@@ -111,15 +111,11 @@ class _EditTransactionBottomSheetState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    /*
-     * You Got does not support interest functionality.
-     *
-     * Therefore:
-     * - Interest Rate is hidden
-     * - Interest Type is hidden
-     * - Interest Frequency is hidden
-     * - Interest validation/calculation is skipped
-     */
+
+    // ============================================================
+    // TRANSACTION TYPE
+    // ============================================================
+
     final bool isYouGot =
         widget.transaction.type == TransactionType.received;
 
@@ -264,8 +260,8 @@ class _EditTransactionBottomSheetState
                       // ====================================================
                       // INTEREST FIELDS
                       //
-                      // You Got does NOT support interest.
-                      // Therefore these fields are shown only for You Gave.
+                      // Interest is supported only for "You Gave".
+                      // "You Got" does not show interest fields.
                       // ====================================================
 
                       if (!isYouGot) ...[
@@ -273,7 +269,9 @@ class _EditTransactionBottomSheetState
                         // INTEREST RATE
                         // --------------------------------------------------
 
-                        _buildLabel(l10n.interestRatePercent),
+                        _buildLabel(
+                          l10n.interestRatePercent,
+                        ),
 
                         const SizedBox(height: 5),
 
@@ -285,7 +283,9 @@ class _EditTransactionBottomSheetState
                         // INTEREST TYPE
                         // --------------------------------------------------
 
-                        _buildLabel(l10n.interestType),
+                        _buildLabel(
+                          l10n.interestType,
+                        ),
 
                         const SizedBox(height: 5),
 
@@ -306,7 +306,9 @@ class _EditTransactionBottomSheetState
                         // INTEREST FREQUENCY
                         // --------------------------------------------------
 
-                        _buildLabel(l10n.interestFrequency),
+                        _buildLabel(
+                          l10n.interestFrequency,
+                        ),
 
                         const SizedBox(height: 5),
 
@@ -328,7 +330,9 @@ class _EditTransactionBottomSheetState
                       // DESCRIPTION
                       // ====================================================
 
-                      _buildLabel(l10n.description),
+                      _buildLabel(
+                        l10n.description,
+                      ),
 
                       const SizedBox(height: 5),
 
@@ -340,7 +344,9 @@ class _EditTransactionBottomSheetState
                       // PAYMENT MODE
                       // ====================================================
 
-                      _buildLabel(l10n.paymentModeOptional),
+                      _buildLabel(
+                        l10n.paymentModeOptional,
+                      ),
 
                       const SizedBox(height: 5),
 
@@ -355,7 +361,6 @@ class _EditTransactionBottomSheetState
                         },
                       ),
 
-                      // Extra space so keyboard does not hide last field.
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -460,6 +465,7 @@ class _EditTransactionBottomSheetState
 
   Widget _buildInterestRateField() {
     final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -492,7 +498,8 @@ class _EditTransactionBottomSheetState
                   width: 0.8,
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
+              enabledBorder:
+              OutlineInputBorder(
                 borderRadius:
                 BorderRadius.circular(6),
                 borderSide: BorderSide(
@@ -502,7 +509,8 @@ class _EditTransactionBottomSheetState
                   width: 0.8,
                 ),
               ),
-              focusedBorder: OutlineInputBorder(
+              focusedBorder:
+              OutlineInputBorder(
                 borderRadius:
                 BorderRadius.circular(6),
                 borderSide: BorderSide(
@@ -512,18 +520,17 @@ class _EditTransactionBottomSheetState
                   width: 1,
                 ),
               ),
-              hintText: l10n.enterInterestRate,
-              hintStyle: GoogleFonts.manrope(
-                color: const Color(0xFF8B929B),
+              hintText:
+              l10n.enterInterestRate,
+              hintStyle:
+              GoogleFonts.manrope(
+                color:
+                const Color(0xFF8B929B),
                 fontSize: 10,
               ),
             ),
           ),
         ),
-
-        // ================================================================
-        // ERROR MESSAGE
-        // ================================================================
 
         if (_interestRateError)
           Padding(
@@ -593,10 +600,12 @@ class _EditTransactionBottomSheetState
             horizontal: 8,
             vertical: 7,
           ),
-          enabledBorder: OutlineInputBorder(
+          enabledBorder:
+          OutlineInputBorder(
             borderRadius:
             BorderRadius.circular(6),
-            borderSide: const BorderSide(
+            borderSide:
+            const BorderSide(
               color: Color.fromRGBO(
                 170,
                 185,
@@ -606,10 +615,12 @@ class _EditTransactionBottomSheetState
               width: 0.8,
             ),
           ),
-          focusedBorder: OutlineInputBorder(
+          focusedBorder:
+          OutlineInputBorder(
             borderRadius:
             BorderRadius.circular(6),
-            borderSide: const BorderSide(
+            borderSide:
+            const BorderSide(
               color: Color.fromRGBO(
                 170,
                 185,
@@ -641,25 +652,34 @@ class _EditTransactionBottomSheetState
           borderRadius:
           BorderRadius.circular(6),
           border: Border.all(
-            color: const Color(0xFFBFC7D2),
+            color:
+            const Color(0xFFBFC7D2),
             width: 0.8,
           ),
         ),
         child: Row(
           children: [
             Text(
-              DateFormat('dd MMM yyyy', Localizations.localeOf(context).toLanguageTag())
-                  .format(selectedDate),
-              style: GoogleFonts.manrope(
-                color: const Color(0xFF233E67),
+              DateFormat(
+                'dd MMM yyyy',
+                Localizations.localeOf(
+                  context,
+                ).toLanguageTag(),
+              ).format(selectedDate),
+              style:
+              GoogleFonts.manrope(
+                color:
+                const Color(0xFF233E67),
                 fontSize: 10,
-                fontWeight: FontWeight.w600,
+                fontWeight:
+                FontWeight.w600,
               ),
             ),
             const Spacer(),
             const Icon(
               Icons.calendar_month_outlined,
-              color: Color(0xFF233E67),
+              color:
+              Color(0xFF233E67),
               size: 16,
             ),
           ],
@@ -691,27 +711,41 @@ class _EditTransactionBottomSheetState
   // DROPDOWN
   // ==========================================================================
 
-  String _localizedDropdownValue(BuildContext context, String value) {
-    final l10n = AppLocalizations.of(context);
+  String _localizedDropdownValue(
+      BuildContext context,
+      String value,
+      ) {
+    final l10n =
+    AppLocalizations.of(context);
+
     switch (value) {
       case 'Simple Interest':
         return l10n.simpleInterest;
+
       case 'Compound Interest':
         return l10n.compoundInterest;
+
       case 'Monthly':
         return l10n.monthly;
+
       case 'Yearly':
         return l10n.yearly;
+
       case 'Daily':
         return l10n.daily;
+
       case 'Cash':
         return l10n.cash;
+
       case 'UPI':
         return l10n.upi;
+
       case 'Bank Transfer':
         return l10n.bankTransfer;
+
       case 'Other':
         return l10n.other;
+
       default:
         return value;
     }
@@ -733,17 +767,21 @@ class _EditTransactionBottomSheetState
         borderRadius:
         BorderRadius.circular(6),
         border: Border.all(
-          color: const Color(0xFFBFC7D2),
+          color:
+          const Color(0xFFBFC7D2),
           width: 0.8,
         ),
       ),
-      child: DropdownButtonHideUnderline(
+      child:
+      DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           hint: Text(
             hint,
-            style: GoogleFonts.manrope(
-              color: const Color(0xFF7D8794),
+            style:
+            GoogleFonts.manrope(
+              color:
+              const Color(0xFF7D8794),
               fontSize: 10,
             ),
           ),
@@ -751,17 +789,26 @@ class _EditTransactionBottomSheetState
           icon: const Icon(
             Icons.keyboard_arrow_down,
             size: 18,
-            color: Color(0xFF233E67),
+            color:
+            Color(0xFF233E67),
           ),
-          style: GoogleFonts.manrope(
-            color: const Color(0xFF233E67),
+          style:
+          GoogleFonts.manrope(
+            color:
+            const Color(0xFF233E67),
             fontSize: 10,
-            fontWeight: FontWeight.w600,
+            fontWeight:
+            FontWeight.w600,
           ),
           items: items.map((item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(_localizedDropdownValue(context, item)),
+              child: Text(
+                _localizedDropdownValue(
+                  context,
+                  item,
+                ),
+              ),
             );
           }).toList(),
           onChanged: onChanged,
@@ -775,7 +822,9 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   Widget _buildDescriptionField() {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+    AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment:
       CrossAxisAlignment.end,
@@ -783,43 +832,57 @@ class _EditTransactionBottomSheetState
         SizedBox(
           height: 55,
           child: TextField(
-            controller: descriptionController,
+            controller:
+            descriptionController,
             maxLines: 3,
             maxLength: 100,
             onChanged: (_) {
               setState(() {});
             },
-            style: GoogleFonts.manrope(
-              color: const Color(0xFF233E67),
+            style:
+            GoogleFonts.manrope(
+              color:
+              const Color(0xFF233E67),
               fontSize: 9,
-              fontWeight: FontWeight.w500,
+              fontWeight:
+              FontWeight.w500,
             ),
-            decoration: InputDecoration(
+            decoration:
+            InputDecoration(
               counterText: '',
-              hintText: l10n.description,
+              hintText:
+              l10n.description,
               contentPadding:
               const EdgeInsets.all(8),
-              hintStyle: GoogleFonts.manrope(
-                color: const Color(0xFF8B929B),
+              hintStyle:
+              GoogleFonts.manrope(
+                color:
+                const Color(0xFF8B929B),
                 fontSize: 9,
               ),
               enabledBorder:
               OutlineInputBorder(
                 borderRadius:
-                BorderRadius.circular(6),
+                BorderRadius.circular(
+                  6,
+                ),
                 borderSide:
                 const BorderSide(
-                  color: Color(0xFFBFC7D2),
+                  color:
+                  Color(0xFFBFC7D2),
                   width: 0.8,
                 ),
               ),
               focusedBorder:
               OutlineInputBorder(
                 borderRadius:
-                BorderRadius.circular(6),
+                BorderRadius.circular(
+                  6,
+                ),
                 borderSide:
                 const BorderSide(
-                  color: Color(0xFF213F68),
+                  color:
+                  Color(0xFF213F68),
                   width: 1,
                 ),
               ),
@@ -835,7 +898,9 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   Future<void> _saveChanges() async {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+    AppLocalizations.of(context);
+
     final amount = double.tryParse(
       amountController.text.trim(),
     );
@@ -845,7 +910,8 @@ class _EditTransactionBottomSheetState
     // ============================================================
 
     final bool isYouGot =
-        widget.transaction.type == TransactionType.received;
+        widget.transaction.type ==
+            TransactionType.received;
 
     // ============================================================
     // AMOUNT VALIDATION
@@ -861,8 +927,7 @@ class _EditTransactionBottomSheetState
     // ============================================================
     // INTEREST RATE
     //
-    // You Got does not have interest functionality.
-    // Therefore interest rate is only validated for You Gave.
+    // Only "You Gave" requires interest.
     // ============================================================
 
     double? interestRate;
@@ -876,7 +941,9 @@ class _EditTransactionBottomSheetState
       // INTEREST RATE REQUIRED
       // ----------------------------------------------------------
 
-      if (interestRateController.text.trim().isEmpty) {
+      if (interestRateController.text
+          .trim()
+          .isEmpty) {
         setState(() {
           _interestRateError = true;
         });
@@ -888,7 +955,8 @@ class _EditTransactionBottomSheetState
       // INTEREST RATE VALIDATION
       // ----------------------------------------------------------
 
-      if (interestRate == null || interestRate < 0) {
+      if (interestRate == null ||
+          interestRate < 0) {
         setState(() {
           _interestRateError = true;
         });
@@ -901,12 +969,14 @@ class _EditTransactionBottomSheetState
     // EXISTING TRANSACTION
     // ============================================================
 
-    final transaction = widget.transaction;
+    final transaction =
+        widget.transaction;
 
     transaction.amountPaise =
         Money.toPaise(amount);
 
-    transaction.date = selectedDate;
+    transaction.date =
+        selectedDate;
 
     transaction.paymentMode =
         selectedPaymentMode ?? '';
@@ -919,12 +989,9 @@ class _EditTransactionBottomSheetState
     // ============================================================
 
     if (isYouGot) {
-      /*
-       * You Got does not support interest.
-       *
-       * Clear any old interest values so an old transaction
-       * cannot continue carrying interest data.
-       */
+      // ----------------------------------------------------------
+      // YOU GOT DOES NOT SUPPORT INTEREST
+      // ----------------------------------------------------------
 
       transaction.interestRateBp = 0;
 
@@ -934,9 +1001,9 @@ class _EditTransactionBottomSheetState
 
       transaction.interest = 0;
     } else {
-      /*
-       * You Gave keeps the existing interest functionality.
-       */
+      // ----------------------------------------------------------
+      // YOU GAVE SUPPORTS INTEREST
+      // ----------------------------------------------------------
 
       transaction.interestRateBp =
           Money.rateToBasisPoints(
@@ -983,7 +1050,8 @@ class _EditTransactionBottomSheetState
 
     await Repositories.ledger.update(
       transaction,
-      amountPaise: transaction.amountPaise,
+      amountPaise:
+      transaction.amountPaise,
       interestRateBp:
       transaction.interestRateBp,
       date: transaction.date,
@@ -1006,9 +1074,10 @@ class _EditTransactionBottomSheetState
 
     await IsarService.isar.writeTxn(
           () async {
-        await IsarService.isar.transactions.put(
-          transaction,
-        );
+        await IsarService
+            .isar
+            .transactions
+            .put(transaction);
       },
     );
 
@@ -1026,9 +1095,6 @@ class _EditTransactionBottomSheetState
 
     // ============================================================
     // CREATE INTEREST UPDATED NOTIFICATION
-    //
-    // Only You Gave can reach this because calculatedInterest
-    // remains 0 for You Got.
     // ============================================================
 
     if (!isYouGot &&
@@ -1047,8 +1113,10 @@ class _EditTransactionBottomSheetState
 
       await notificationService
           .createInterestUpdatedNotification(
-        chopdiId: transaction.chopdiId,
-        customerName: customerName,
+        chopdiId:
+        transaction.chopdiId,
+        customerName:
+        customerName,
         interestAmount:
         calculatedInterest,
         interestPeriod:
@@ -1079,7 +1147,8 @@ class _EditTransactionBottomSheetState
   // ==========================================================================
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
       SnackBar(
         content: Text(message),
       ),

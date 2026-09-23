@@ -5,8 +5,11 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
 import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_customer_card.dart';
+import 'package:isar_community/isar.dart';
 
 import '../l10n/app_localizations.dart';
+import '../model/transaction.dart';
+import '../service/isar_service.dart';
 
 class TookLoanCustomerListSection extends StatefulWidget {
   final List<Customer> customers;
@@ -42,17 +45,38 @@ class _TookLoanCustomerListSectionState
   // SORT
   // ============================================================
 
-  // Internal value.
-  // Keep this in English because it is used by the sorting logic.
+  // Keep internal value in English because sorting logic
+  // depends on these exact values.
   String selectedSort = "Recently Added";
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
 
     filteredCustomers = List.from(widget.customers);
-    _applySortWithoutSetState();
+
+    _initializeFilters();
   }
+
+  Future<void> _initializeFilters() async {
+    final result = await _getFilteredCustomers();
+
+    _applySortToList(result);
+
+    if (!mounted) return;
+
+    setState(() {
+      filteredCustomers = result;
+    });
+  }
+
+  // ============================================================
+  // UPDATE WIDGET
+  // ============================================================
 
   @override
   void didUpdateWidget(
@@ -60,13 +84,12 @@ class _TookLoanCustomerListSectionState
       ) {
     super.didUpdateWidget(oldWidget);
 
-    filteredCustomers = _getFilteredCustomers();
-    _applySortWithoutSetState();
-
-    if (mounted) {
-      setState(() {});
-    }
+    applyFilters();
   }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
@@ -75,14 +98,40 @@ class _TookLoanCustomerListSectionState
   }
 
   // ============================================================
+  // GET CUSTOMER BALANCE
+  // ============================================================
+
+  Future<double> getCustomerBalance(int customerId) async {
+    final transactions = await IsarService.isar.transactions
+        .filter()
+        .customerIdEqualTo(customerId)
+        .voidedAtIsNull()
+        .findAll();
+
+    double balance = 0;
+
+    for (final tx in transactions) {
+      if (tx.type == TransactionType.gave) {
+        balance += tx.amount;
+      } else {
+        balance -= tx.amount;
+      }
+    }
+
+    return balance;
+  }
+
+  // ============================================================
   // FILTERED CUSTOMERS
   // ============================================================
 
-  List<Customer> _getFilteredCustomers() {
+  Future<List<Customer>> _getFilteredCustomers() async {
     final search =
     searchController.text.toLowerCase().trim();
 
-    return widget.customers.where((customer) {
+    final List<Customer> result = [];
+
+    for (final customer in widget.customers) {
       // ========================================================
       // SEARCH
       // ========================================================
@@ -92,16 +141,37 @@ class _TookLoanCustomerListSectionState
               customer.name.toLowerCase().contains(search) ||
               customer.phone.contains(search);
 
+      if (!matchesSearch) {
+        continue;
+      }
+
       // ========================================================
       // STATUS
       // ========================================================
 
       bool matchesStatus = true;
 
-      if (selectedStatus != "All") {
+      if (selectedStatus == "Pending") {
+        // Pending continues to use the customer's stored status.
         matchesStatus =
-            customer.status.toLowerCase() ==
-                selectedStatus.toLowerCase();
+            customer.status.toLowerCase() == "pending";
+      } else if (selectedStatus == "Settled") {
+        // IMPORTANT:
+        // Settled is calculated from the actual ledger balance.
+        //
+        // A customer is settled when:
+        // Gave amount - Got amount = 0
+        //
+        // This avoids depending on customer.status being exactly
+        // "Settled".
+        final balance =
+        await getCustomerBalance(customer.id);
+
+        matchesStatus = balance == 0;
+      }
+
+      if (!matchesStatus) {
+        continue;
       }
 
       // ========================================================
@@ -159,20 +229,26 @@ class _TookLoanCustomerListSectionState
         }
       }
 
-      return matchesSearch &&
-          matchesStatus &&
-          matchesDate;
-    }).toList();
+      if (!matchesDate) {
+        continue;
+      }
+
+      result.add(customer);
+    }
+
+    return result;
   }
 
   // ============================================================
   // APPLY SEARCH + FILTER
   // ============================================================
 
-  void applyFilters() {
-    final result = _getFilteredCustomers();
+  Future<void> applyFilters() async {
+    final result = await _getFilteredCustomers();
 
     _applySortToList(result);
+
+    if (!mounted) return;
 
     setState(() {
       filteredCustomers = result;
@@ -202,13 +278,11 @@ class _TookLoanCustomerListSectionState
       );
     } else if (selectedSort == "Recently Added") {
       customers.sort(
-            (a, b) => b.updatedAt.compareTo(a.updatedAt),
+            (a, b) => b.updatedAt.compareTo(
+          a.updatedAt,
+        ),
       );
     }
-  }
-
-  void _applySortWithoutSetState() {
-    _applySortToList(filteredCustomers);
   }
 
   // ============================================================
@@ -270,14 +344,17 @@ class _TookLoanCustomerListSectionState
     }
 
     setState(() {
-      selectedStatus = result["status"] ?? "All";
-      selectedDate = result["date"] ?? "This Month";
+      selectedStatus =
+          result["status"] ?? "All";
+
+      selectedDate =
+          result["date"] ?? "This Month";
 
       fromDate = result["from"];
       toDate = result["to"];
     });
 
-    applyFilters();
+    await applyFilters();
   }
 
   // ============================================================
@@ -302,7 +379,7 @@ class _TookLoanCustomerListSectionState
       selectedSort = result;
     });
 
-    applyFilters();
+    await applyFilters();
   }
 
   // ============================================================
@@ -391,7 +468,8 @@ class _TookLoanCustomerListSectionState
                   TextAlignVertical.center,
                   decoration: InputDecoration(
                     prefixIcon: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding:
+                      const EdgeInsets.all(12),
                       child: Image.asset(
                         'assets/search_option.png',
                         width: 24,
@@ -401,11 +479,13 @@ class _TookLoanCustomerListSectionState
                     ),
                     hintText:
                     l10n.searchByNameAndPhone,
-                    hintStyle: const TextStyle(
+                    hintStyle:
+                    const TextStyle(
                       fontSize: 12,
                     ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding:
+                    EdgeInsets.zero,
                   ),
                 ),
               ),
@@ -468,7 +548,9 @@ class _TookLoanCustomerListSectionState
         Row(
           children: [
             Text(
-              l10n.customersCount as String,
+              l10n.customersCount(
+                filteredCustomers.length,
+              ),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -511,7 +593,8 @@ class _TookLoanCustomerListSectionState
 
         if (filteredCustomers.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(
+            padding:
+            const EdgeInsets.symmetric(
               vertical: 30,
             ),
             child: Center(
