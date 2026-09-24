@@ -243,6 +243,8 @@ abstract class AppLocalizations {
   String get description;
   String get paymentModeOptional;
   String get selectPaymentMode;
+  String get settings;
+  String get manageAppSettings;
 
   String get enterInterestRate;
   String get interestRateRequired;

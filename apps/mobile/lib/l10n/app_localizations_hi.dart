@@ -14,6 +14,8 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get accountStatement =>
       "खाता विवरण";
+  String get settings => 'सेटिंग्स';
+  String get manageAppSettings => 'ऐप की सेटिंग्स प्रबंधित करें';
 
   @override
   String get generatedByChopdi =>
@@ -713,7 +715,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get failedToAddLenderWithError =>
       'लेंडर जोड़ने में समस्या हुई';
   @override
-  String get language => 'Language';
+  String get language => 'भाषा';
 
   @override
   String get currentLanguage => 'English';
