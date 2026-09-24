@@ -410,7 +410,8 @@ class _TookLoanCustomerListSectionState
               CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.customersTitle,
+                  // "Lender",
+                  l10n.lender,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -419,7 +420,7 @@ class _TookLoanCustomerListSectionState
                 ),
 
                 Text(
-                  l10n.manageAllCustomers,
+                  l10n.manageAllLender,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     color: const Color.fromRGBO(

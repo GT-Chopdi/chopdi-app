@@ -22,14 +22,10 @@ class AddNewLenderScreen extends StatefulWidget {
 
 class _AddNewCustomerScreenState
     extends State<AddNewLenderScreen> {
-  final _formKey =
-  GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
-  final nameController =
-  TextEditingController();
-
-  final phoneController =
-  TextEditingController();
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
 
   bool _isSaving = false;
 
@@ -41,7 +37,7 @@ class _AddNewCustomerScreenState
   }
 
   // ============================================================
-  // SAVE CUSTOMER
+  // SAVE LENDER
   // ============================================================
 
   Future<void> saveCustomer() async {
@@ -51,11 +47,8 @@ class _AddNewCustomerScreenState
       return;
     }
 
-    final name =
-    nameController.text.trim();
-
-    final phone =
-    phoneController.text.trim();
+    final name = nameController.text.trim();
+    final phone = phoneController.text.trim();
 
     setState(() {
       _isSaving = true;
@@ -67,6 +60,16 @@ class _AddNewCustomerScreenState
       // --------------------------------------------------------
       // CHECK DUPLICATE
       // --------------------------------------------------------
+      //
+      // If phone exists:
+      //   Check name + phone.
+      //
+      // If phone is empty:
+      //   Check name only.
+      //
+      // This prevents creating multiple lenders with the same
+      // name when they don't have a phone number.
+      // --------------------------------------------------------
 
       if (phone.isNotEmpty) {
         existingCustomer =
@@ -74,6 +77,12 @@ class _AddNewCustomerScreenState
             .filter()
             .nameEqualTo(name)
             .phoneEqualTo(phone)
+            .findFirst();
+      } else {
+        existingCustomer =
+        await IsarService.isar.customers
+            .filter()
+            .nameEqualTo(name)
             .findFirst();
       }
 
@@ -93,8 +102,7 @@ class _AddNewCustomerScreenState
             return AlertDialog(
               backgroundColor:
               const Color(0xFFFFF8F0),
-              shape:
-              RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius:
                 BorderRadius.circular(16),
               ),
@@ -104,32 +112,24 @@ class _AddNewCustomerScreenState
                   Container(
                     padding:
                     const EdgeInsets.all(8),
-                    decoration:
-                    BoxDecoration(
-                      color: Colors.orange
-                          .withValues(
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(
                         alpha: 0.12,
                       ),
-                      shape:
-                      BoxShape.circle,
+                      shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons
-                          .person_off_outlined,
-                      color:
-                      Colors.orange,
+                      Icons.person_off_outlined,
+                      color: Colors.orange,
                       size: 22,
                     ),
                   ),
 
-                  const SizedBox(
-                    width: 12,
-                  ),
+                  const SizedBox(width: 12),
 
                   Expanded(
                     child: Text(
-                      l10n
-                          .lenderAlreadyExists,
+                      l10n.lenderAlreadyExists,
                       maxLines: 2,
                       overflow:
                       TextOverflow.ellipsis,
@@ -147,15 +147,12 @@ class _AddNewCustomerScreenState
               ),
 
               content: Text(
-                l10n
-                    .duplicateLenderMessage,
+                l10n.duplicateLenderMessage,
                 style:
                 GoogleFonts.manrope(
                   fontSize: 13,
                   color:
-                  const Color(
-                    0xff6E7D93,
-                  ),
+                  const Color(0xff6E7D93),
                   height: 1.4,
                 ),
               ),
@@ -171,29 +168,25 @@ class _AddNewCustomerScreenState
               actions: [
                 SizedBox(
                   width: double.infinity,
-                  child:
-                  ElevatedButton(
+                  child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(
                         dialogContext,
                       );
                     },
                     style:
-                    ElevatedButton
-                        .styleFrom(
+                    ElevatedButton.styleFrom(
                       backgroundColor:
                       ChopdiColors.navy,
                       elevation: 0,
                       padding:
-                      const EdgeInsets
-                          .symmetric(
+                      const EdgeInsets.symmetric(
                         vertical: 12,
                       ),
                       shape:
                       RoundedRectangleBorder(
                         borderRadius:
-                        BorderRadius
-                            .circular(
+                        BorderRadius.circular(
                           8,
                         ),
                       ),
@@ -202,8 +195,7 @@ class _AddNewCustomerScreenState
                       l10n.ok,
                       style:
                       GoogleFonts.manrope(
-                        color:
-                        Colors.white,
+                        color: Colors.white,
                         fontSize: 14,
                         fontWeight:
                         FontWeight.w700,
@@ -230,20 +222,17 @@ class _AddNewCustomerScreenState
       // --------------------------------------------------------
 
       final currentChopdi =
-      await ChopdiService
-          .getCurrentChopdi();
+      await ChopdiService.getCurrentChopdi();
 
       // --------------------------------------------------------
       // CREATE CUSTOMER
       // --------------------------------------------------------
 
       final customer =
-      await Repositories.customers
-          .create(
+      await Repositories.customers.create(
         name: name,
         phone: phone,
-        chopdiId:
-        currentChopdi.id,
+        chopdiId: currentChopdi.id,
         loanType: "took",
         status: "Pending",
       );
@@ -292,9 +281,7 @@ class _AddNewCustomerScreenState
     return Scaffold(
       backgroundColor:
       ChopdiColors.cream,
-
-      resizeToAvoidBottomInset:
-      true,
+      resizeToAvoidBottomInset: true,
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -339,8 +326,7 @@ class _AddNewCustomerScreenState
 
                     child: Column(
                       crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                      CrossAxisAlignment.start,
 
                       children: [
                         // ==================================================
@@ -405,9 +391,9 @@ class _AddNewCustomerScreenState
               Navigator.pop(context),
           borderRadius:
           BorderRadius.circular(20),
+
           child: const Padding(
-            padding:
-            EdgeInsets.all(6),
+            padding: EdgeInsets.all(6),
             child: Icon(
               Icons.arrow_back_ios_new,
               size: 18,
@@ -417,9 +403,7 @@ class _AddNewCustomerScreenState
           ),
         ),
 
-        const SizedBox(
-          width: 8,
-        ),
+        const SizedBox(width: 8),
 
         Expanded(
           child: Text(
@@ -482,9 +466,7 @@ class _AddNewCustomerScreenState
               fontWeight:
               FontWeight.w700,
               color:
-              const Color(
-                0xff4F5F78,
-              ),
+              const Color(0xff4F5F78),
             ),
           ),
 
@@ -694,9 +676,7 @@ class _AddNewCustomerScreenState
         fontWeight:
         FontWeight.w600,
         color:
-        const Color(
-          0xff6E7D93,
-        ),
+        const Color(0xff6E7D93),
       ),
     );
   }
@@ -739,8 +719,10 @@ class _AddNewCustomerScreenState
 
     return TextFormField(
       controller: controller,
+
       keyboardType:
       keyboardType,
+
       validator: validator,
 
       style:
@@ -774,8 +756,7 @@ class _AddNewCustomerScreenState
         const Color(0xFFFFF8F0),
 
         contentPadding:
-        const EdgeInsets
-            .symmetric(
+        const EdgeInsets.symmetric(
           vertical: 12,
           horizontal: 12,
         ),

@@ -1184,9 +1184,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanGiven => 'लोन दिया';
   String get paymentReceived => 'भुगतान प्राप्त';
   String get loanTook => 'लोन लिया';
+  String get itookloan => 'लोन लिया';
   String get amountPaid => 'भुगतान किया';
+  @override
+  String get manageAllLender => 'अपने सभी उधारदाताओं को प्रबंधित करें';
 
   String get paymentMethod => 'भुगतान का माध्यम';
+  @override
+  String get lender => 'उधारदाता';
   String get notSpecified => 'उल्लेख नहीं किया गया';
 
   String get loanGivenDescription => 'लोन दिया गया।';

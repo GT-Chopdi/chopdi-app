@@ -350,24 +350,20 @@ class _MoneyGaveBottomSheetState
                       Container(
                         height: 72,
                         width: 72,
-                        decoration:
-                        const BoxDecoration(
-                          color:
-                          Color.fromRGBO(
-                            199,
-                            76,
-                            76,
-                            0.19,
-                          ),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00901B),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor:
-                            Colors.transparent,
+                            backgroundColor: Colors.transparent,
                             child: Image.asset(
                               'assets/you_gave.png',
+                              width: 32,
+                              height: 32,
+                              color: Colors.white,
+                              colorBlendMode: BlendMode.srcIn,
                             ),
                           ),
                         ),
@@ -377,17 +373,9 @@ class _MoneyGaveBottomSheetState
 
                       Text(
                         l10n.youTook,
-                        style:
-                        GoogleFonts.manrope(
-                          color:
-                          const Color.fromRGBO(
-                            199,
-                            76,
-                            76,
-                            1,
-                          ),
-                          fontWeight:
-                          FontWeight.w700,
+                        style: GoogleFonts.manrope(
+                          color: const Color(0xFF00901B),
+                          fontWeight: FontWeight.w700,
                           fontSize: 22,
                         ),
                       ),
