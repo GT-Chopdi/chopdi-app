@@ -27,7 +27,8 @@ const ChopdiSchema = CollectionSchema(
       name: r'description',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(id: 2, name: r'name', type: IsarType.string),
+    r'isActive': PropertySchema(id: 2, name: r'isActive', type: IsarType.bool),
+    r'name': PropertySchema(id: 3, name: r'name', type: IsarType.string),
   },
 
   estimateSize: _chopdiEstimateSize,
@@ -64,7 +65,8 @@ void _chopdiSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
   writer.writeString(offsets[1], object.description);
-  writer.writeString(offsets[2], object.name);
+  writer.writeBool(offsets[2], object.isActive);
+  writer.writeString(offsets[3], object.name);
 }
 
 Chopdi _chopdiDeserialize(
@@ -77,7 +79,8 @@ Chopdi _chopdiDeserialize(
   object.createdAt = reader.readDateTime(offsets[0]);
   object.description = reader.readString(offsets[1]);
   object.id = id;
-  object.name = reader.readString(offsets[2]);
+  object.isActive = reader.readBool(offsets[2]);
+  object.name = reader.readString(offsets[3]);
   return object;
 }
 
@@ -93,6 +96,8 @@ P _chopdiDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
+      return (reader.readBool(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -452,6 +457,16 @@ extension ChopdiQueryFilter on QueryBuilder<Chopdi, Chopdi, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Chopdi, Chopdi, QAfterFilterCondition> isActiveEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isActive', value: value),
+      );
+    });
+  }
+
   QueryBuilder<Chopdi, Chopdi, QAfterFilterCondition> nameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -628,6 +643,18 @@ extension ChopdiQuerySortBy on QueryBuilder<Chopdi, Chopdi, QSortBy> {
     });
   }
 
+  QueryBuilder<Chopdi, Chopdi, QAfterSortBy> sortByIsActive() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActive', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chopdi, Chopdi, QAfterSortBy> sortByIsActiveDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActive', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chopdi, Chopdi, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -678,6 +705,18 @@ extension ChopdiQuerySortThenBy on QueryBuilder<Chopdi, Chopdi, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Chopdi, Chopdi, QAfterSortBy> thenByIsActive() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActive', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chopdi, Chopdi, QAfterSortBy> thenByIsActiveDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isActive', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chopdi, Chopdi, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -706,6 +745,12 @@ extension ChopdiQueryWhereDistinct on QueryBuilder<Chopdi, Chopdi, QDistinct> {
     });
   }
 
+  QueryBuilder<Chopdi, Chopdi, QDistinct> distinctByIsActive() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isActive');
+    });
+  }
+
   QueryBuilder<Chopdi, Chopdi, QDistinct> distinctByName({
     bool caseSensitive = true,
   }) {
@@ -731,6 +776,12 @@ extension ChopdiQueryProperty on QueryBuilder<Chopdi, Chopdi, QQueryProperty> {
   QueryBuilder<Chopdi, String, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
+    });
+  }
+
+  QueryBuilder<Chopdi, bool, QQueryOperations> isActiveProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isActive');
     });
   }
 
