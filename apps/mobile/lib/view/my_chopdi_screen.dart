@@ -15,6 +15,7 @@ import 'package:mychopdi/view/help_faqs_screen.dart';
 import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/view/notifications_setting_screen.dart';
+import 'package:mychopdi/view/settings_screen.dart';
 import 'package:mychopdi/view/terms_privacy_screen.dart';
 import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
@@ -330,31 +331,44 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
                       const SizedBox(height: 8),
 
+                      // _buildMenuCard(
+                      //   icon:
+                      //   Icons.notifications_none_rounded,
+                      //   title: l10n.notificationsSettings,
+                      //   subtitle:
+                      //   l10n.manageAppNotifications,
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) =>
+                      //         const NotificationSettingsScreen(),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       _buildMenuCard(
-                        icon:
-                        Icons.notifications_none_rounded,
-                        title: l10n.notificationsSettings,
-                        subtitle:
-                        l10n.manageAppNotifications,
+                        icon: Icons.settings_rounded,
+                        title: l10n.settings,
+                        subtitle: l10n.manageAppSettings,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                              const NotificationSettingsScreen(),
+                              builder: (_) => const SettingsScreen(),
                             ),
                           );
                         },
                       ),
 
-                      const SizedBox(height: 10),
-
-                      _buildMenuCard(
-                        icon: Icons.language_rounded,
-                        title: l10n.language,
-                        subtitle: _getCurrentLanguageName(),
-                        onTap: _showLanguageSheet,
-                      ),
+                      // const SizedBox(height: 10),
+                      //
+                      // _buildMenuCard(
+                      //   icon: Icons.language_rounded,
+                      //   title: l10n.language,
+                      //   subtitle: _getCurrentLanguageName(),
+                      //   onTap: _showLanguageSheet,
+                      // ),
 
                       const SizedBox(height: 18),
 
@@ -1276,6 +1290,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
       ),
     );
   }
+
 
   // ===========================================================================
   // DATE FORMAT

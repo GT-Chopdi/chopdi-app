@@ -654,6 +654,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allCustomers => 'All Customers';
+  String get settings => 'Settings';
+  String get manageAppSettings => 'Manage app settings';
 
   @override
   String get showAllYourCustomers => 'Show All your customers';
