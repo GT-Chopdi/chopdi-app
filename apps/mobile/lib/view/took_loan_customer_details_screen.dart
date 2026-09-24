@@ -334,7 +334,8 @@ class _CustomerDetailsScreenState
                     ),
                   ),
                   child: Text(
-                    l10n.youGave,
+                    // l10n.youGave,
+                    l10n.youGot,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -380,7 +381,7 @@ class _CustomerDetailsScreenState
                       ),
                     ),
                     child: Text(
-                      l10n.youGot,
+                      l10n.youGave,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,

@@ -141,6 +141,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageAllCustomers => "Manage all your customers";
+  @override
+  String get lender => 'Lender';
+
+
+  String get manageAllLender =>  "Manage all your Lenders";
 
   @override
   String get searchByNameAndPhone =>
@@ -217,7 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outstanding => "Outstanding";
 
   @override
-  String get addLender => "Add Lender";
+  String get addLender => "Add Lenders";
   @override
   String get addNewCustomer => "Add New Customer";
 
@@ -803,13 +808,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountOverview => "Account Overview";
 
   @override
-  String get youTook => "YOU TOOK";
+  String get youTook => "YOU GOT";
 
   @override
   String get totalLoanTaken => "Total loan taken";
 
   @override
-  String get youPaid => "YOU PAID";
+  String get youPaid => "YOU GAVE";
 
   @override
   String get youReceived => "YOU RECEIVED";
@@ -1146,6 +1151,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentReceived => 'Payment received';
   String get transactionDetails => 'Transaction Details';
   String get interestDetails => 'Interest Details';
+  String get itookloan => 'I Took Loan';
   @override
 
 

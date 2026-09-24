@@ -9,10 +9,15 @@ import 'package:mychopdi/l10n/app_localizations.dart';
 
 class AddNewCustomerScreen extends StatefulWidget {
   final int chopdiId;
+  final String? initialName;
+  final String? initialPhone;
 
   const AddNewCustomerScreen({
     super.key,
     required this.chopdiId,
+    this.initialName,
+    this.initialPhone,
+
   });
 
   @override
@@ -28,6 +33,13 @@ class _AddNewCustomerScreenState
   final phoneController = TextEditingController();
 
   bool _isSaving = false;
+  @override
+  void initState() {
+    super.initState();
+
+    nameController.text = widget.initialName ?? '';
+    phoneController.text = widget.initialPhone ?? '';
+  }
 
   @override
   void dispose() {
@@ -203,7 +215,7 @@ class _AddNewCustomerScreenState
       if (!mounted) return;
 
       // Return directly to the previous screen.
-      Navigator.pop(context, customer);
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
 

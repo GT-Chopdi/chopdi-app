@@ -112,6 +112,8 @@ abstract class AppLocalizations {
   // CUSTOMER LIST
   String get customersTitle;
   String get manageAllCustomers;
+  String get manageAllLender;
+  String get lender;
   String get searchByNameAndPhone;
   String get filter;
   String customersCount(int count);
@@ -299,6 +301,7 @@ abstract class AppLocalizations {
   String get addNewChopdi;
   String get createNewChopdiBook;
   String get failedToCreateChopdi;
+  String get itookloan;
 
   String get loan;
   String get pending;

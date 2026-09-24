@@ -32,13 +32,17 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   @override
   void initState() {
     super.initState();
-    loadContacts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      loadContacts();
+    });
+    // loadContacts();
   }
 
   // LOAD REAL DEVICE CONTACTS
 
   Future<void> loadContacts() async {
-    final l10n = AppLocalizations.of(context);
+    // final l10n = AppLocalizations.of(context);
     try {
       setState(() {
         isLoading = true;
@@ -113,6 +117,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       setState(() {
         isLoading = false;
       });
+
+      final l10n = AppLocalizations.of(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -222,14 +228,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   // }
 
   Future<void> selectContact(Contact contact) async {
-    // Phone number is optional.
     final phoneNumber = contact.phones.isNotEmpty
         ? normalizePhoneNumber(contact.phones.first.number)
         : '';
 
     final contactName = contact.displayName ?? 'Unknown';
 
-    // Only check duplicate when a phone number exists.
+    // Check existing customer only when phone exists.
     if (phoneNumber.isNotEmpty) {
       final existingCustomer =
       await IsarService.getCustomerByPhoneAndChopdi(
@@ -239,6 +244,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
       if (!mounted) return;
 
+      // Existing customer → open existing customer details
       if (existingCustomer != null) {
         Navigator.push(
           context,
@@ -255,13 +261,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
     if (!mounted) return;
 
+    // New contact → OPEN MANUAL ADD CUSTOMER FORM
+    // with contact information pre-filled.
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CustomerDetailsAdd(
-          contactName: contactName,
-          contactPhone: phoneNumber,
+        builder: (_) => AddNewCustomerScreen(
           chopdiId: widget.chopdiId,
+          initialName: contactName,
+          initialPhone: phoneNumber,
         ),
       ),
     );

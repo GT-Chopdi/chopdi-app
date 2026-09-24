@@ -295,8 +295,7 @@ class _MoneyReceiveBottomSheetState
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior
-                      .onDrag,
+                  ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(
                     22,
                     10,
@@ -307,26 +306,24 @@ class _MoneyReceiveBottomSheetState
                     children: [
                       const SizedBox(height: 12),
 
+                      // RED ICON
                       Container(
                         height: 72,
                         width: 72,
-                        decoration:
-                        const BoxDecoration(
-                          color: Color.fromRGBO(
-                            141,
-                            208,
-                            113,
-                            0.34,
-                          ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFDEAEA),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor:
-                            Colors.transparent,
+                            backgroundColor: Colors.transparent,
                             child: Image.asset(
                               'assets/you_got.png',
+                              width: 32,
+                              height: 32,
+                              color: const Color(0xFFC74C4C),
+                              colorBlendMode: BlendMode.srcIn,
                             ),
                           ),
                         ),
@@ -334,11 +331,11 @@ class _MoneyReceiveBottomSheetState
 
                       const SizedBox(height: 10),
 
+                      // RED TEXT
                       Text(
                         l10n.youPaid,
                         style: GoogleFonts.manrope(
-                          color:
-                          const Color(0xFF00901B),
+                          color: const Color(0xFFC74C4C),
                           fontWeight: FontWeight.w700,
                           fontSize: 22,
                         ),
@@ -354,8 +351,7 @@ class _MoneyReceiveBottomSheetState
                       TextField(
                         controller: amountController,
                         focusNode: _amountFocusNode,
-                        keyboardType:
-                        TextInputType.number,
+                        keyboardType: TextInputType.number,
                         decoration: decoration(
                           hint: l10n.enterAmount,
                           prefix: const Icon(
@@ -401,20 +397,16 @@ class _MoneyReceiveBottomSheetState
                       ),
 
                       TextField(
-                        controller:
-                        descriptionController,
-                        focusNode:
-                        _descriptionFocusNode,
+                        controller: descriptionController,
+                        focusNode: _descriptionFocusNode,
                         maxLength: 100,
                         maxLines: 4,
                         decoration: decoration(
-                          hint:
-                          l10n.enterDescriptionHere,
+                          hint: l10n.enterDescriptionHere,
                         ).copyWith(
                           counterText: "",
                         ),
-                        onChanged: (_) =>
-                            setState(() {}),
+                        onChanged: (_) => setState(() {}),
                       ),
 
                       const SizedBox(height: 18),
@@ -438,8 +430,7 @@ class _MoneyReceiveBottomSheetState
                           Text(l10n.bankTransfer),
                         ],
                         decoration: decoration(
-                          hint:
-                          l10n.selectPaymentMode,
+                          hint: l10n.selectPaymentMode,
                         ),
                         icon: const Icon(
                           Icons.keyboard_arrow_down,
@@ -455,8 +446,7 @@ class _MoneyReceiveBottomSheetState
                           ),
                           DropdownMenuItem(
                             value: "Bank",
-                            child:
-                            Text(l10n.bankTransfer),
+                            child: Text(l10n.bankTransfer),
                           ),
                         ],
                         onChanged: (v) {
@@ -467,7 +457,6 @@ class _MoneyReceiveBottomSheetState
                       ),
 
                       const SizedBox(height: 18),
-
                       const SizedBox(height: 30),
                     ],
                   ),
