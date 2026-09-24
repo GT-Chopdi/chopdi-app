@@ -50,6 +50,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
   double _totalInterestEarned = 0;
   double _totalOutstanding = 0;
   bool _isLoading = true;
+  bool _isLoggingOut = false;
 
   // ===========================================================================
   // INIT
@@ -201,7 +202,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                 style: GoogleFonts.manrope(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: orangeColor,
+                  color: Colors.red,
                 ),
               ),
             ),
@@ -212,24 +213,36 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
     if (shouldLogout != true || !mounted) return;
 
+    // Start logout loader
+    setState(() {
+      _isLoggingOut = true;
+    });
+
     try {
+      // Wait until logout is completely successful
       await AuthService.instance.logout();
 
       if (!mounted) return;
 
+      // Navigate only after logout succeeds
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (_) => const ChopdiOnboardingScreen(),
         ),
-            (route) => false,
+        (route) => false,
       );
     } catch (error, stackTrace) {
       debugPrint(
         '[MyChopdiScreen] Logout failed: '
-            '$error\n$stackTrace',
+        '$error\n$stackTrace',
       );
 
       if (!mounted) return;
+
+      // Stop loader if logout fails
+      setState(() {
+        _isLoggingOut = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -254,196 +267,261 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      // =======================================================
-                      // HEADER
-                      // =======================================================
-
-                      Text(
-                        _currentChopdi?.name.trim().isNotEmpty == true
-                            ? _currentChopdi!.name
-                            : l10n.myChopdi,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.manrope(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: darkBlue,
-                        ),
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      Text(
-                        l10n.manageCurrentChopdi,
-                        style: GoogleFonts.manrope(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color.fromRGBO(
-                            34,
-                            58,
-                            94,
-                            0.62,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        // =======================================================
+                        // HEADER
+                        // =======================================================
+        
+                        Text(
+                          _currentChopdi?.name.trim().isNotEmpty == true
+                              ? _currentChopdi!.name
+                              : l10n.myChopdi,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlue,
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // =======================================================
-                      // CHOPDI CARD
-                      // =======================================================
-
-                      _buildChopdiCard(context),
-
-                      const SizedBox(height: 18),
-
-                      // =======================================================
-                      // PREFERENCES
-                      // =======================================================
-
-                      Text(
-                        l10n.preferences,
-                        style: GoogleFonts.manrope(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: const Color.fromRGBO(
-                            34,
-                            58,
-                            94,
-                            1,
+        
+                        const SizedBox(height: 2),
+        
+                        Text(
+                          l10n.manageCurrentChopdi,
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: const Color.fromRGBO(
+                              34,
+                              58,
+                              94,
+                              0.62,
+                            ),
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // _buildMenuCard(
-                      //   icon:
-                      //   Icons.notifications_none_rounded,
-                      //   title: l10n.notificationsSettings,
-                      //   subtitle:
-                      //   l10n.manageAppNotifications,
-                      //   onTap: () {
-                      //     Navigator.push(
-                      //       context,
-                      //       MaterialPageRoute(
-                      //         builder: (context) =>
-                      //         const NotificationSettingsScreen(),
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
-                      _buildMenuCard(
-                        icon: Icons.settings_rounded,
-                        title: l10n.settings,
-                        subtitle: l10n.manageAppSettings,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsScreen(),
+        
+                        const SizedBox(height: 18),
+        
+                        // =======================================================
+                        // CHOPDI CARD
+                        // =======================================================
+        
+                        _buildChopdiCard(context),
+        
+                        const SizedBox(height: 18),
+        
+                        // =======================================================
+                        // PREFERENCES
+                        // =======================================================
+        
+                        Text(
+                          l10n.preferences,
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color.fromRGBO(
+                              34,
+                              58,
+                              94,
+                              1,
                             ),
-                          );
-                        },
-                      ),
-
-                      // const SizedBox(height: 10),
-                      //
-                      // _buildMenuCard(
-                      //   icon: Icons.language_rounded,
-                      //   title: l10n.language,
-                      //   subtitle: _getCurrentLanguageName(),
-                      //   onTap: _showLanguageSheet,
-                      // ),
-
-                      const SizedBox(height: 18),
-
-                      // =======================================================
-                      // SUPPORT
-                      // =======================================================
-
-                      Text(
-                        l10n.support,
-                        style: GoogleFonts.manrope(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: const Color.fromRGBO(
-                            34,
-                            58,
-                            94,
-                            1,
                           ),
                         ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      _buildMenuCard(
-                        icon: Icons.support_agent_rounded,
-                        title: l10n.helpFaqs,
-                        subtitle:
-                        l10n.getAnswersCommonQuestions,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                              const HelpFaqsScreen(),
+        
+                        const SizedBox(height: 8),
+        
+                        // _buildMenuCard(
+                        //   icon:
+                        //   Icons.notifications_none_rounded,
+                        //   title: l10n.notificationsSettings,
+                        //   subtitle:
+                        //   l10n.manageAppNotifications,
+                        //   onTap: () {
+                        //     Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //         builder: (context) =>
+                        //         const NotificationSettingsScreen(),
+                        //       ),
+                        //     );
+                        //   },
+                        // ),
+                        _buildMenuCard(
+                          icon: Icons.settings_rounded,
+                          title: l10n.settings,
+                          subtitle: l10n.manageAppSettings,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+        
+                        // const SizedBox(height: 10),
+                        //
+                        // _buildMenuCard(
+                        //   icon: Icons.language_rounded,
+                        //   title: l10n.language,
+                        //   subtitle: _getCurrentLanguageName(),
+                        //   onTap: _showLanguageSheet,
+                        // ),
+        
+                        const SizedBox(height: 18),
+        
+                        // =======================================================
+                        // SUPPORT
+                        // =======================================================
+        
+                        Text(
+                          l10n.support,
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color.fromRGBO(
+                              34,
+                              58,
+                              94,
+                              1,
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+        
+                        const SizedBox(height: 8),
+        
+                        _buildMenuCard(
+                          icon: Icons.support_agent_rounded,
+                          title: l10n.helpFaqs,
+                          subtitle:
+                          l10n.getAnswersCommonQuestions,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                const HelpFaqsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+        
+                        const SizedBox(height: 10),
+        
+                        _buildMenuCard(
+                          icon:
+                          Icons.verified_user_outlined,
+                          title: l10n.termsPrivacy,
+                          subtitle: l10n.readOurPolicies,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                const TermsPrivacyScreen(),
+                              ),
+                            );
+                          },
+                        ),
+        
+        
+                        const SizedBox(height: 10),
+        
+                        _buildMenuCard(
+                          icon: Icons.logout_rounded,
+                          title: l10n.logout,
+                          subtitle: l10n.signOutOfAccount,
+                          onTap: _handleLogout,
+                          isLogout: true,
+                        ),
+        
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
 
-                      const SizedBox(height: 10),
+          // =============================================================
+          // LOGOUT LOADING OVERLAY
+          // =============================================================
+          if (_isLoggingOut)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.45),
+                child: Center(
+                  child: Container(
+                    width: 170,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 22,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8F0),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Colors.red,
+                          ),
+                        ),
 
-                      _buildMenuCard(
-                        icon:
-                        Icons.verified_user_outlined,
-                        title: l10n.termsPrivacy,
-                        subtitle: l10n.readOurPolicies,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                              const TermsPrivacyScreen(),
-                            ),
-                          );
-                        },
-                      ),
+                        const SizedBox(height: 14),
 
+                        Text(
+                          'Logging out...',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: darkBlue,
+                          ),
+                        ),
 
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 4),
 
-                      _buildMenuCard(
-                        icon: Icons.logout_rounded,
-                        title: l10n.logout,
-                        subtitle: l10n.signOutOfAccount,
-                        onTap: _handleLogout,
-                      ),
-
-                      const SizedBox(height: 10),
-                    ],
+                        Text(
+                          'Please wait',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.manrope(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF58687A),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -1187,9 +1265,26 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool isLogout = false,
   }) {
+    final Color menuColor =
+        isLogout ? Colors.red : darkBlue;
+
+    final Color iconColor =
+        isLogout ? Colors.red : const Color(0xFF3D5F8B);
+
+    final Color iconBackground =
+        isLogout
+            ? const Color(0xFFFFE1E1)
+            : const Color.fromRGBO(
+                170,
+                185,
+                207,
+                0.6,
+              );
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: _isLoggingOut ? null : onTap,
       child: Container(
         width: double.infinity,
         height: 60,
@@ -1202,37 +1297,33 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
           ),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: const Color.fromRGBO(
-              170,
-              185,
-              207,
-              1,
-            ),
+            color: isLogout
+                ? const Color(0xFFFFB5B5)
+                : const Color.fromRGBO(
+                    170,
+                    185,
+                    207,
+                    1,
+                  ),
             width: 0.9,
           ),
         ),
         child: Row(
-          crossAxisAlignment:
-          CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(width: 9),
 
             Container(
               width: 28,
               height: 28,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(
-                  170,
-                  185,
-                  207,
-                  0.6,
-                ),
+              decoration: BoxDecoration(
+                color: iconBackground,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 16,
-                color: const Color(0xFF3D5F8B),
+                color: iconColor,
               ),
             ),
 
@@ -1240,23 +1331,18 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
             Expanded(
               child: Column(
-                mainAxisSize:
-                MainAxisSize.min,
-                mainAxisAlignment:
-                MainAxisAlignment.center,
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.manrope(
                       fontSize: 16,
-                      fontWeight:
-                      FontWeight.w700,
-                      color: darkBlue,
+                      fontWeight: FontWeight.w700,
+                      color: menuColor,
                     ),
                   ),
 
@@ -1265,12 +1351,10 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                   Text(
                     subtitle,
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 12,
-                      fontWeight:
-                      FontWeight.w600,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF58687A),
                     ),
                   ),
@@ -1278,10 +1362,10 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
               ),
             ),
 
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 21,
-              color: darkBlue,
+              color: isLogout ? Colors.red : darkBlue,
             ),
 
             const SizedBox(width: 7),
