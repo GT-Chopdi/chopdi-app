@@ -1,140 +1,13 @@
-// import 'package:isar_community/isar.dart';
-// import 'package:mychopdi/model/chopdi.dart';
-// import 'package:mychopdi/service/isar_service.dart';
-
-// class ChopdiService {
-//   static const String _activeChopdiKey = 'active_chopdi_id';
-
-//   static int? _activeChopdiId;
-
-//   /// Initialize Chopdi system.
-//   /// Creates "My Chopdi" the first time if no Chopdi exists.
-//   static Future<Chopdi> initialize() async {
-//     final allChopdis = await getAllChopdis();
-
-//     if (allChopdis.isEmpty) {
-//       // final defaultChopdi = Chopdi()
-//       //   ..name = "My Chopdi"
-//       //   ..createdAt = DateTime.now();
-//       final defaultChopdi = Chopdi()
-//         ..name = "My Chopdi"
-//         ..description =
-//             'My personal lending ledger\n'
-//             'to track loans and interest.'
-//         ..createdAt = DateTime.now();
-
-//       await IsarService.isar.writeTxn(() async {
-//         await IsarService.isar.chopdis.put(defaultChopdi);
-//       });
-
-//       _activeChopdiId = defaultChopdi.id;
-
-//       return defaultChopdi;
-//     }
-
-//     // If an active Chopdi is already selected and still exists.
-//     if (_activeChopdiId != null) {
-//       final active = await getChopdi(_activeChopdiId!);
-
-//       if (active != null) {
-//         return active;
-//       }
-//     }
-
-//     // First Chopdi becomes active.
-//     _activeChopdiId = allChopdis.first.id;
-
-//     return allChopdis.first;
-//   }
-
-//   /// Get all Chopdis created by the user.
-//   static Future<List<Chopdi>> getAllChopdis() async {
-//     return await IsarService.isar.chopdis
-//         .where()
-//         .sortByCreatedAt()
-//         .findAll();
-//   }
-
-//   /// Get current Chopdi.
-//   static Future<Chopdi> getCurrentChopdi() async {
-//     final allChopdis = await getAllChopdis();
-
-//     if (allChopdis.isEmpty) {
-//       final defaultChopdi = Chopdi()
-//         ..name = "My Chopdi"
-//         ..description =
-//             'My personal lending ledger\n'
-//             'to track loans and interest.'
-//         ..createdAt = DateTime.now();
-
-//       await IsarService.isar.writeTxn(() async {
-//         await IsarService.isar.chopdis.put(defaultChopdi);
-//       });
-
-//       _activeChopdiId = defaultChopdi.id;
-
-//       return defaultChopdi;
-//     }
-
-//     if (_activeChopdiId != null) {
-//       final active =
-//           await getChopdi(_activeChopdiId!);
-
-//       if (active != null) {
-//         return active;
-//       }
-//     }
-
-//     _activeChopdiId = allChopdis.first.id;
-
-//     return allChopdis.first;
-//   }
-
-//   /// Create new Chopdi.
-//   /// The newly created Chopdi becomes active.
-//   static Future<Chopdi> createChopdi(String name) async {
-//     final chopdi = Chopdi()
-//       ..name = name.trim()
-//       ..description =
-//           'My personal lending ledger\n'
-//           'to track loans and interest.'
-//       ..createdAt = DateTime.now();
-
-//     await IsarService.isar.writeTxn(() async {
-//       await IsarService.isar.chopdis.put(chopdi);
-//     });
-
-//     // New Chopdi becomes active
-//     _activeChopdiId = chopdi.id;
-
-//     return chopdi;
-//   }
-
-//   /// Switch to an existing Chopdi.
-//   static Future<void> setActiveChopdi(Chopdi chopdi) async {
-//     _activeChopdiId = chopdi.id;
-//   }
-
-//   static int? get activeChopdiId => _activeChopdiId;
-
-//   static Future<Chopdi?> getChopdi(int id) async {
-//     return await IsarService.isar.chopdis.get(id);
-//   }
-// }
-
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/service/isar_service.dart';
 
 class ChopdiService {
-  static int? _activeChopdiId;
-
   // ===========================================================================
   // DEFAULT VALUES
   // ===========================================================================
 
-  static const String defaultChopdiName =
-      'My Chopdi';
+  static const String defaultChopdiName = 'My Chopdi';
 
   static const String defaultDescription =
       'My personal lending ledger\n'
@@ -147,35 +20,30 @@ class ChopdiService {
   static Future<Chopdi> initialize() async {
     final allChopdis = await getAllChopdis();
 
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // NO CHOPDI EXISTS
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     if (allChopdis.isEmpty) {
       return await _createDefaultChopdi();
     }
 
-    // ---------------------------------------------------------------
-    // CURRENT ACTIVE CHOPDI STILL EXISTS
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // FIND PERSISTED ACTIVE CHOPDI
+    // -------------------------------------------------------------------------
 
-    if (_activeChopdiId != null) {
-      final active =
-          await getChopdi(_activeChopdiId!);
+    final activeChopdis =
+        allChopdis.where((chopdi) => chopdi.isActive).toList();
 
-      if (active != null) {
-        return active;
-      }
+    if (activeChopdis.isNotEmpty) {
+      return activeChopdis.first;
     }
 
-    // ---------------------------------------------------------------
-    // FALLBACK TO FIRST CHOPDI
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // FALLBACK
+    // -------------------------------------------------------------------------
 
-    _activeChopdiId =
-        allChopdis.first.id;
-
-    return allChopdis.first;
+    return await setActiveChopdi(allChopdis.first);
   }
 
   // ===========================================================================
@@ -186,16 +54,12 @@ class ChopdiService {
     final defaultChopdi = Chopdi()
       ..name = defaultChopdiName
       ..description = defaultDescription
-      ..createdAt = DateTime.now();
+      ..createdAt = DateTime.now()
+      ..isActive = true;
 
     await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.chopdis.put(
-        defaultChopdi,
-      );
+      await IsarService.isar.chopdis.put(defaultChopdi);
     });
-
-    _activeChopdiId =
-        defaultChopdi.id;
 
     return defaultChopdi;
   }
@@ -216,40 +80,32 @@ class ChopdiService {
   // ===========================================================================
 
   static Future<Chopdi> getCurrentChopdi() async {
-    final allChopdis =
-        await getAllChopdis();
+    final allChopdis = await getAllChopdis();
 
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // NO CHOPDI
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     if (allChopdis.isEmpty) {
       return await _createDefaultChopdi();
     }
 
-    // ---------------------------------------------------------------
-    // ACTIVE CHOPDI
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // FIND SAVED ACTIVE CHOPDI
+    // -------------------------------------------------------------------------
 
-    if (_activeChopdiId != null) {
-      final active =
-          await getChopdi(
-        _activeChopdiId!,
-      );
+    final activeChopdis =
+        allChopdis.where((chopdi) => chopdi.isActive).toList();
 
-      if (active != null) {
-        return active;
-      }
+    if (activeChopdis.isNotEmpty) {
+      return activeChopdis.first;
     }
 
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // FALLBACK
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-    _activeChopdiId =
-        allChopdis.first.id;
-
-    return allChopdis.first;
+    return await setActiveChopdi(allChopdis.first);
   }
 
   // ===========================================================================
@@ -266,17 +122,15 @@ class ChopdiService {
           description?.trim().isNotEmpty == true
               ? description!.trim()
               : defaultDescription
-      ..createdAt = DateTime.now();
+      ..createdAt = DateTime.now()
+      ..isActive = false;
 
     await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.chopdis.put(
-        chopdi,
-      );
+      await IsarService.isar.chopdis.put(chopdi);
     });
 
     // Newly created Chopdi becomes active.
-    _activeChopdiId =
-        chopdi.id;
+    await setActiveChopdi(chopdi);
 
     return chopdi;
   }
@@ -290,13 +144,10 @@ class ChopdiService {
     required String name,
     required String description,
   }) async {
-    final chopdi =
-        await getChopdi(id);
+    final chopdi = await getChopdi(id);
 
     if (chopdi == null) {
-      throw Exception(
-        'Chopdi not found.',
-      );
+      throw Exception('Chopdi not found.');
     }
 
     chopdi
@@ -307,9 +158,7 @@ class ChopdiService {
               : description.trim();
 
     await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.chopdis.put(
-        chopdi,
-      );
+      await IsarService.isar.chopdis.put(chopdi);
     });
 
     return chopdi;
@@ -319,19 +168,53 @@ class ChopdiService {
   // SET ACTIVE CHOPDI
   // ===========================================================================
 
-  static Future<void> setActiveChopdi(
-    Chopdi chopdi,
+  static Future<Chopdi> setActiveChopdi(
+    Chopdi selectedChopdi,
   ) async {
-    _activeChopdiId =
-        chopdi.id;
+    await IsarService.isar.writeTxn(() async {
+      // First deactivate all Chopdis.
+      final allChopdis = await IsarService.isar.chopdis
+          .where()
+          .findAll();
+
+      for (final chopdi in allChopdis) {
+        chopdi.isActive = chopdi.id == selectedChopdi.id;
+
+        await IsarService.isar.chopdis.put(chopdi);
+      }
+    });
+
+    return selectedChopdi;
   }
 
   // ===========================================================================
-  // ACTIVE CHOPDI ID
+  // GET ACTIVE CHOPDI
   // ===========================================================================
 
-  static int? get activeChopdiId =>
-      _activeChopdiId;
+  static Future<Chopdi?> getActiveChopdi() async {
+    final activeChopdis = await IsarService.isar.chopdis
+        .filter()
+        .isActiveEqualTo(true)
+        .findAll();
+
+    if (activeChopdis.isEmpty) {
+      return null;
+    }
+
+    return activeChopdis.first;
+  }
+
+  // ===========================================================================
+  // GET CHOPDI
+  // ===========================================================================
+
+  static Future<Chopdi?> getChopdi(int id) async {
+    return await IsarService.isar.chopdis.get(id);
+  }
+
+  // ===========================================================================
+  // UPDATE CHOPDI
+  // ===========================================================================
 
   static Future<void> updatedChopdi(Chopdi chopdi) async {
     await IsarService.isar.writeTxn(() async {
@@ -340,191 +223,57 @@ class ChopdiService {
   }
 
   // ===========================================================================
-  // GET CHOPDI
-  // ===========================================================================
-
-  static Future<Chopdi?> getChopdi(
-    int id,
-  ) async {
-    return await IsarService.isar.chopdis.get(
-      id,
-    );
-  }
-
-  // ===========================================================================
   // DELETE CHOPDI
   // ===========================================================================
 
-  /// Deletes the requested Chopdi.
-  ///
-  /// Returns:
-  ///
-  /// - [remainingChopdis] if other Chopdis exist.
-  /// - A newly created default Chopdi if the deleted Chopdi was the only one.
-  ///
-  /// This method also updates the active Chopdi.
-  // static Future<Chopdi> deleteChopdi(
-  //   int chopdiId,
-  // ) async {
-  //   final allChopdis =
-  //       await getAllChopdis();
-
-  //   // ---------------------------------------------------------------
-  //   // FIND CHOPDI
-  //   // ---------------------------------------------------------------
-
-  //   final chopdiToDelete =
-  //       await getChopdi(chopdiId);
-
-  //   if (chopdiToDelete == null) {
-  //     throw Exception(
-  //       'Chopdi not found.',
-  //     );
-  //   }
-
-  //   // ---------------------------------------------------------------
-  //   // CASE 1:
-  //   // ONLY ONE CHOPDI EXISTS
-  //   // ---------------------------------------------------------------
-
-  //   if (allChopdis.length == 1) {
-  //     await IsarService.isar.writeTxn(() async {
-  //       await IsarService.isar.chopdis.delete(
-  //         chopdiId,
-  //       );
-  //     });
-
-  //     // -------------------------------------------------------------
-  //     // IMPORTANT:
-  //     // Always keep one default Chopdi available.
-  //     // -------------------------------------------------------------
-
-  //     return await _createDefaultChopdi();
-  //   }
-
-  //   // ---------------------------------------------------------------
-  //   // CASE 2:
-  //   // MULTIPLE CHOPDIS EXIST
-  //   // ---------------------------------------------------------------
-
-  //   // Find another Chopdi before deleting.
-  //   final remainingChopdis =
-  //       allChopdis
-  //           .where(
-  //             (chopdi) =>
-  //                 chopdi.id != chopdiId,
-  //           )
-  //           .toList();
-
-  //   // Prefer the next Chopdi after the deleted one.
-  //   Chopdi nextActiveChopdi;
-
-  //   final deletedIndex =
-  //       allChopdis.indexWhere(
-  //     (chopdi) =>
-  //         chopdi.id == chopdiId,
-  //   );
-
-  //   if (deletedIndex >= 0 &&
-  //       deletedIndex + 1 <
-  //           allChopdis.length) {
-  //     nextActiveChopdi =
-  //         allChopdis[
-  //             deletedIndex + 1];
-  //   } else {
-  //     nextActiveChopdi =
-  //         remainingChopdis.first;
-  //   }
-
-  //   // ---------------------------------------------------------------
-  //   // DELETE ONLY SELECTED CHOPDI
-  //   // ---------------------------------------------------------------
-
-  //   await IsarService.isar.writeTxn(() async {
-  //     await IsarService.isar.chopdis.delete(
-  //       chopdiId,
-  //     );
-  //   });
-
-  //   // ---------------------------------------------------------------
-  //   // MAKE ANOTHER CHOPDI ACTIVE
-  //   // ---------------------------------------------------------------
-
-  //   _activeChopdiId =
-  //       nextActiveChopdi.id;
-
-  //   return nextActiveChopdi;
-  // }
   static Future<Chopdi> deleteChopdi(
-  int chopdiId,
-) async {
-  final allChopdis =
-      await getAllChopdis();
+    int chopdiId,
+  ) async {
+    final allChopdis = await getAllChopdis();
 
-  final chopdiToDelete =
-      await getChopdi(chopdiId);
+    final chopdiToDelete = await getChopdi(chopdiId);
 
-  if (chopdiToDelete == null) {
-    throw Exception(
-      'Chopdi not found.',
+    if (chopdiToDelete == null) {
+      throw Exception('Chopdi not found.');
+    }
+
+    // -------------------------------------------------------------------------
+    // ONLY ONE CHOPDI
+    // -------------------------------------------------------------------------
+
+    if (allChopdis.length == 1) {
+      await IsarService.isar.writeTxn(() async {
+        await IsarService.isar.chopdis.delete(chopdiId);
+      });
+
+      return await _createDefaultChopdi();
+    }
+
+    // -------------------------------------------------------------------------
+    // MULTIPLE CHOPDIS
+    // -------------------------------------------------------------------------
+
+    final remainingChopdis = allChopdis
+        .where((chopdi) => chopdi.id != chopdiId)
+        .toList();
+
+    final deletedIndex = allChopdis.indexWhere(
+      (chopdi) => chopdi.id == chopdiId,
     );
-  }
 
-  // ============================================================
-  // ONLY ONE CHOPDI
-  // ============================================================
+    Chopdi nextActiveChopdi;
 
-  if (allChopdis.length == 1) {
+    if (deletedIndex >= 0 &&
+        deletedIndex + 1 < allChopdis.length) {
+      nextActiveChopdi = allChopdis[deletedIndex + 1];
+    } else {
+      nextActiveChopdi = remainingChopdis.first;
+    }
+
     await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.chopdis.delete(
-        chopdiId,
-      );
+      await IsarService.isar.chopdis.delete(chopdiId);
     });
 
-    // Create default Chopdi again.
-    return await _createDefaultChopdi();
+    return await setActiveChopdi(nextActiveChopdi);
   }
-
-  // ============================================================
-  // MULTIPLE CHOPDIS
-  // ============================================================
-
-  final remainingChopdis =
-      allChopdis
-          .where(
-            (chopdi) =>
-                chopdi.id != chopdiId,
-          )
-          .toList();
-
-  final deletedIndex =
-      allChopdis.indexWhere(
-    (chopdi) =>
-        chopdi.id == chopdiId,
-  );
-
-  Chopdi nextActiveChopdi;
-
-  if (deletedIndex >= 0 &&
-      deletedIndex + 1 <
-          allChopdis.length) {
-    nextActiveChopdi =
-        allChopdis[
-            deletedIndex + 1];
-  } else {
-    nextActiveChopdi =
-        remainingChopdis.first;
-  }
-
-  await IsarService.isar.writeTxn(() async {
-    await IsarService.isar.chopdis.delete(
-      chopdiId,
-    );
-  });
-
-  _activeChopdiId =
-      nextActiveChopdi.id;
-
-  return nextActiveChopdi;
-}
 }
