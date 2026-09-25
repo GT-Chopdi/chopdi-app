@@ -145,6 +145,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lender => 'Lender';
 
 
+  @override
   String get manageAllLender =>  "Manage all your Lenders";
 
   @override
@@ -561,33 +562,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
+  @override
   String get notifications => 'Notifications';
+  @override
   String get markAllAsRead => 'Mark all as read';
+  @override
   String get noNotifications => 'No Notifications';
+  @override
   String get allCaughtUp => 'You\'re all caught up!';
+  @override
   String get markAsUnread => 'Mark as unread';
+  @override
   String get markAsRead => 'Mark as read';
+  @override
   String get deleteNotification => 'Delete notification';
+  @override
   String get deleteNotificationTitle => 'Delete Notification?';
+  @override
   String get confirmDeleteNotification =>
       'Are you sure you want to delete this notification?';
+  @override
   String get delete => 'Delete';
 
+  @override
   String get notificationsEnabled => 'Notifications Enabled';
+  @override
   String get notificationsDisabled => 'Notifications Disabled';
 
+  @override
   String get notificationsEnabledDescription =>
       'You will receive notifications for payment reminders, interest updates and other important alerts.';
 
+  @override
   String get notificationsDisabledDescription =>
       'You will no longer receive notifications from Chopdi until you enable them again.';
 
+  @override
   String get justNow => 'Just now';
+  @override
   String get minuteAgo => '1 min ago';
+  @override
   String minutesAgo(int minutes) => '$minutes mins ago';
+  @override
   String get hourAgo => '1 hour ago';
+  @override
   String hoursAgo(int hours) => '$hours hours ago';
+  @override
   String get yesterday => 'Yesterday';
+  @override
   String daysAgo(int days) => '$days days ago';
   @override
   String get language => 'Language';
@@ -659,7 +681,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allCustomers => 'All Customers';
+  @override
   String get settings => 'Settings';
+  @override
   String get manageAppSettings => 'Manage app settings';
 
   @override
@@ -1140,17 +1164,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterDescriptionHere => 'Enter Description here...';
+  @override
   String get loanSummary => 'Loan Summary';
   // String get loanGivenOn => 'Loan Given On';
+  @override
   String get loanType => 'Loan Type';
+  @override
   String get iGaveLoan => 'I Gave Loan';
+  @override
   String get loanDuration => 'Loan Duration';
+  @override
   String get loanTook => 'Loan Took';
+  @override
   String get amountPaid => 'Amount Paid';
+  @override
   String get loanGiven => 'Loan Given';
+  @override
   String get paymentReceived => 'Payment received';
+  @override
   String get transactionDetails => 'Transaction Details';
+  @override
   String get interestDetails => 'Interest Details';
+  @override
   String get itookloan => 'I Took Loan';
   @override
 
@@ -1166,39 +1201,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
 
 
+  @override
   String get paymentMethod => 'Payment Method';
+  @override
   String get notSpecified => 'Not specified';
 
+  @override
   String get loanGivenDescription => 'Loan given.';
+  @override
   String get paymentReceivedDescription => 'Payment received.';
+  @override
   String get loanTakenDescription => 'Loan taken.';
+  @override
   String get amountPaidDescription => 'Amount paid.';
 
+  @override
   String get deleteTransaction => 'Delete Transaction';
+  @override
   String get deleteTransactionQuestion => 'Delete Transaction?';
+  @override
   String get deleteChopdiDescription =>
       'This will permanently delete "My Chopdi"';
 
+  @override
   String get deleteChopdiDescriptionData =>
       'and all its data.';
 
+  @override
   String get deleteChopdiWarningCustomers =>
       'All customers, transactions and records will be deleted.';
 
+  @override
   String get deleteChopdiWarningLoans =>
       'All loans, payments and interest data will be removed.';
 
+  @override
   String get deleteChopdiWarningNotes =>
       'Notes and settings will be lost forever.';
 
+  @override
   String get deleteChopdiConfirmation =>
       'I understand this action cannot be undone.';
+  @override
   String get deleteConfirmation =>
       'I understand this action cannot be undone.';
 
+  @override
   String get failedToDeleteTransaction =>
       'Failed to delete transaction';
+  @override
   String get saveNote => 'Save Note';
+  @override
   String get editTransactionDetails =>
       'Edit Transaction Details';
 

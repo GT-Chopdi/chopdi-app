@@ -14,7 +14,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get accountStatement =>
       "खाता विवरण";
+  @override
   String get settings => 'सेटिंग्स';
+  @override
   String get manageAppSettings => 'ऐप की सेटिंग्स प्रबंधित करें';
 
   @override
@@ -679,33 +681,54 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get other => 'अन्य';
+  @override
   String get notifications => 'सूचनाएं';
+  @override
   String get markAllAsRead => 'सभी को पढ़ा हुआ चिह्नित करें';
+  @override
   String get noNotifications => 'कोई सूचना नहीं';
+  @override
   String get allCaughtUp => 'आप सभी सूचनाएं देख चुके हैं!';
+  @override
   String get markAsUnread => 'अपठित चिह्नित करें';
+  @override
   String get markAsRead => 'पढ़ा हुआ चिह्नित करें';
+  @override
   String get deleteNotification => 'सूचना हटाएं';
+  @override
   String get deleteNotificationTitle => 'सूचना हटाएं?';
+  @override
   String get confirmDeleteNotification =>
       'क्या आप वाकई इस सूचना को हटाना चाहते हैं?';
+  @override
   String get delete => 'हटाएं';
 
+  @override
   String get notificationsEnabled => 'सूचनाएं चालू हैं';
+  @override
   String get notificationsDisabled => 'सूचनाएं बंद हैं';
 
+  @override
   String get notificationsEnabledDescription =>
       'आपको भुगतान रिमाइंडर, ब्याज अपडेट और अन्य महत्वपूर्ण अलर्ट की सूचनाएं मिलेंगी।';
 
+  @override
   String get notificationsDisabledDescription =>
       'जब तक आप इन्हें दोबारा चालू नहीं करते, तब तक आपको Chopdi की सूचनाएं नहीं मिलेंगी।';
 
+  @override
   String get justNow => 'अभी';
+  @override
   String get minuteAgo => '1 मिनट पहले';
+  @override
   String minutesAgo(int minutes) => '$minutes मिनट पहले';
+  @override
   String get hourAgo => '1 घंटे पहले';
+  @override
   String hoursAgo(int hours) => '$hours घंटे पहले';
+  @override
   String get yesterday => 'कल';
+  @override
   String daysAgo(int days) => '$days दिन पहले';
   @override
   String get pleaseEnterValidPhoneNumber =>
@@ -1178,60 +1201,89 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get enterDescriptionHere => 'यहां विवरण दर्ज करें...';
+  @override
   String get transactionDetails => 'लेन-देन का विवरण';
+  @override
   String get interestDetails => 'ब्याज का विवरण';
 
+  @override
   String get loanGiven => 'लोन दिया';
+  @override
   String get paymentReceived => 'भुगतान प्राप्त';
+  @override
   String get loanTook => 'लोन लिया';
+  @override
   String get itookloan => 'लोन लिया';
+  @override
   String get amountPaid => 'भुगतान किया';
   @override
   String get manageAllLender => 'अपने सभी उधारदाताओं को प्रबंधित करें';
 
+  @override
   String get paymentMethod => 'भुगतान का माध्यम';
   @override
   String get lender => 'उधारदाता';
+  @override
   String get notSpecified => 'उल्लेख नहीं किया गया';
 
+  @override
   String get loanGivenDescription => 'लोन दिया गया।';
+  @override
   String get paymentReceivedDescription => 'भुगतान प्राप्त हुआ।';
+  @override
   String get loanTakenDescription => 'लोन लिया गया।';
+  @override
   String get amountPaidDescription => 'भुगतान किया गया।';
 
+  @override
   String get deleteTransaction => 'लेन-देन हटाएं';
+  @override
   String get deleteTransactionQuestion => 'लेन-देन हटाएं?';
   //
   // @override
   // String get youTook => 'आपने लिया';
+  @override
   String get loanSummary => 'लोन सारांश';
   // String get loanGivenOn => 'लोन दिया गया';
+  @override
   String get loanType => 'लोन का प्रकार';
+  @override
   String get iGaveLoan => 'मैंने लोन दिया';
+  @override
   String get loanDuration => 'लोन की अवधि';
+  @override
   String get deleteChopdiDescription =>
       'यह "My Chopdi" को स्थायी रूप से हटा देगा';
 
+  @override
   String get deleteChopdiDescriptionData =>
       'और इसका सारा डेटा भी हटा दिया जाएगा।';
 
+  @override
   String get deleteChopdiWarningCustomers =>
       'सभी ग्राहक, लेन-देन और रिकॉर्ड हटा दिए जाएंगे।';
 
+  @override
   String get deleteChopdiWarningLoans =>
       'सभी लोन, भुगतान और ब्याज का डेटा हटा दिया जाएगा।';
 
+  @override
   String get deleteChopdiWarningNotes =>
       'नोट्स और सेटिंग्स हमेशा के लिए खो जाएंगी।';
 
+  @override
   String get deleteChopdiConfirmation =>
       'मैं समझता हूं कि यह कार्रवाई पूर्ववत नहीं की जा सकती।';
+  @override
   String get deleteConfirmation =>
       'मैं समझता हूं कि यह कार्रवाई पूर्ववत नहीं की जा सकती।';
 
+  @override
   String get failedToDeleteTransaction =>
       'लेन-देन हटाने में समस्या हुई';
+  @override
   String get saveNote => 'नोट सेव करें';
+  @override
   String get editTransactionDetails =>
       'लेन-देन का विवरण संपादित करें';
 

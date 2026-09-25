@@ -502,7 +502,7 @@ abstract class AppLocalizations {
   String get cheque;
 
 
-  get at => null;
+  Null get at => null;
 
   // String get interestRate => null;
 

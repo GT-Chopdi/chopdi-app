@@ -42,14 +42,14 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
     if (phone.isEmpty) {
       setState(() {
-        errorText = AppLocalizations.of(context)!.loginMobileNumberRequired;
+        errorText = AppLocalizations.of(context).loginMobileNumberRequired;
       });
       return;
     }
 
     if (phone.length < 10) {
       setState(() {
-        errorText = AppLocalizations.of(context)!.loginInvalidMobileNumber;
+        errorText = AppLocalizations.of(context).loginInvalidMobileNumber;
       });
       return;
     }
@@ -434,10 +434,10 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                                       ),
                                       children: [
                                         TextSpan(
-                                          text: AppLocalizations.of(context)!.loginYourLendingRecords,
+                                          text: AppLocalizations.of(context).loginYourLendingRecords,
                                         ),
                                         TextSpan(
-                                          text: AppLocalizations.of(context)!.loginDigitallyOrganized,
+                                          text: AppLocalizations.of(context).loginDigitallyOrganized,
                                           style: GoogleFonts.manrope(
                                             color: const Color(0xFF83A2CE),
                                             fontSize: headingFontSize,
@@ -532,7 +532,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            AppLocalizations.of(context)!.loginLetsGetStarted,
+                                            AppLocalizations.of(context).loginLetsGetStarted,
                                             style: GoogleFonts.manrope(
                                               fontSize:
                                                   width < 360 ? 16 : 18,
@@ -580,7 +580,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                                       child: _ContinueButton(
                                         onPressed: _requestOtp,
                                         loading: _requesting,
-                                        text: AppLocalizations.of(context)!.loginContinue,
+                                        text: AppLocalizations.of(context).loginContinue,
                                       ),
                                     ),
                                   ],
@@ -616,7 +616,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
                                     Flexible(
                                       child: Text(
-                                        AppLocalizations.of(context)!.loginSecureData,
+                                        AppLocalizations.of(context).loginSecureData,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.manrope(
                                           color: ChopdiColors.navy
@@ -655,24 +655,24 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                                 children: [
                                   TextSpan(
                                     text:
-                                        AppLocalizations.of(context)!.loginByContinuing,
+                                        AppLocalizations.of(context).loginByContinuing,
                                     style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.w400,
                                       fontSize: width < 360 ? 10 : 12,
                                     ),
                                   ),
                                   TextSpan(
-                                    text: AppLocalizations.of(context)!.loginTermsOfService,
+                                    text: AppLocalizations.of(context).loginTermsOfService,
                                     style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.w600,
                                       fontSize: width < 360 ? 10 : 12,
                                     ),
                                   ),
                                   TextSpan(
-                                    text: AppLocalizations.of(context)!.loginAnd,
+                                    text: AppLocalizations.of(context).loginAnd,
                                   ),
                                   TextSpan(
-                                    text: AppLocalizations.of(context)!.loginPrivacyPolicy,
+                                    text: AppLocalizations.of(context).loginPrivacyPolicy,
                                     style: GoogleFonts.manrope(
                                       fontWeight: FontWeight.w600,
                                       fontSize: width < 360 ? 10 : 12,

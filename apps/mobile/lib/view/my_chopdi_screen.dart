@@ -14,7 +14,6 @@ import 'package:mychopdi/view/edit_chopdi_screen.dart';
 import 'package:mychopdi/view/help_faqs_screen.dart';
 import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
-import 'package:mychopdi/view/notifications_setting_screen.dart';
 import 'package:mychopdi/view/settings_screen.dart';
 import 'package:mychopdi/view/terms_privacy_screen.dart';
 import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
