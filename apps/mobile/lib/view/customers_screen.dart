@@ -742,10 +742,10 @@ class _CustomerListSectionState
               ),
             ),
 
-            const SizedBox(width: 8),
+            const Spacer(),
 
             Expanded(
-              flex: 2,
+              flex: 1,
               child: GestureDetector(
                 onTap: showSortSheet,
                 behavior:

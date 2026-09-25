@@ -411,7 +411,7 @@ class _TookLoanCustomerListSectionState
               children: [
                 Text(
                   // "Lender",
-                  l10n.lender,
+                  l10n.lender1,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -549,7 +549,7 @@ class _TookLoanCustomerListSectionState
         Row(
           children: [
             Text(
-              l10n.customersCount(
+              l10n.lendersCount(
                 filteredCustomers.length,
               ),
               style: const TextStyle(
