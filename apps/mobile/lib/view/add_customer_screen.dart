@@ -3,7 +3,6 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:mychopdi/service/isar_service.dart';
 
 import 'package:mychopdi/view/add_new_customer_screen.dart';
-import 'package:mychopdi/view/customer_detail_add.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 
 import '../widgets/add_new_customer_card.dart';
@@ -274,54 +273,54 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       ),
     );
   }
+
   void _scrollToLetter(String letter) {
-    if (filteredContacts.isEmpty) {
-      return;
-    }
+  if (filteredContacts.isEmpty) {
+    return;
+  }
 
-    // '#' means contacts that don't start with A-Z
-    if (letter == '#') {
-      _contactsScrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-      return;
-    }
-
-    final index = filteredContacts.indexWhere(
-      (contact) {
-        final name =
-            (contact.displayName ?? '').trim();
-
-        if (name.isEmpty) {
-          return false;
-        }
-
-        return name.toUpperCase().startsWith(letter);
-      },
-    );
-
-    if (index == -1) {
-      return;
-    }
-
-    // Approximate height of each ContactTile.
-    const double itemHeight = 65;
-
-    final offset = index * itemHeight;
-
+  if (letter == '#') {
     _contactsScrollController.animateTo(
-      offset.clamp(
-        0.0,
-        _contactsScrollController
-            .position
-            .maxScrollExtent,
-      ),
-      duration: const Duration(milliseconds: 300),
+      0,
+      duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
+    return;
   }
+
+  final index = filteredContacts.indexWhere(
+    (contact) {
+      final name =
+          (contact.displayName ?? '').trim();
+
+      if (name.isEmpty) {
+        return false;
+      }
+
+      return name.substring(0, 1).toUpperCase() ==
+          letter;
+    },
+  );
+
+  if (index == -1) {
+    return;
+  }
+
+  const double itemHeight = 65.0;
+
+  final double offset = index * itemHeight;
+
+  final double maxScroll =
+      _contactsScrollController
+          .position
+          .maxScrollExtent;
+
+  _contactsScrollController.animateTo(
+    offset.clamp(0.0, maxScroll),
+    duration: const Duration(milliseconds: 250),
+    curve: Curves.easeOut,
+  );
+}
 
   @override
   void dispose() {
@@ -536,9 +535,35 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       );
     }
 
+    // return ListView.builder(
+    //   controller: _contactsScrollController,
+    //   // This must match the height used in _scrollToLetter().
+    //   itemExtent: 65.0,
+    //   itemCount: filteredContacts.length,
+    //   itemBuilder: (_, index) {
+    //     final contact = filteredContacts[index];
+
+    //     final phone = contact.phones.isNotEmpty
+    //         ? contact.phones.first.number
+    //         : l10n.noPhoneNumber;
+
+    //     return ContactTile(
+    //       name: contact.displayName ?? l10n.unknownContact,
+    //       phone: phone,
+    //       onTap: () {
+    //         selectContact(contact);
+    //       },
+    //     );
+    //   },
+    // );
     return ListView.builder(
       controller: _contactsScrollController,
+
+      // Must match ContactTile height.
+      itemExtent: 65.0,
+
       itemCount: filteredContacts.length,
+
       itemBuilder: (_, index) {
         final contact = filteredContacts[index];
 
@@ -547,7 +572,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             : l10n.noPhoneNumber;
 
         return ContactTile(
-          name: contact.displayName ?? l10n.unknownContact,
+          name: contact.displayName ??
+              l10n.unknownContact,
           phone: phone,
           onTap: () {
             selectContact(contact);
