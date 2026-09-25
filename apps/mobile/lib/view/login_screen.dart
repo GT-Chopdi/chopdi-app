@@ -162,9 +162,72 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
     }
   }
 
+  // @override
+  // void initState() {
+  //   super.initState();
+
+  //   _phoneController.addListener(() {
+  //     if (errorText != null) {
+  //       setState(() {
+  //         errorText = null;
+  //       });
+  //     }
+  //   });
+
+  //   // ================================================================
+  //   // KEYBOARD / PHONE FIELD SCROLL FIX
+  //   // ================================================================
+  //   //
+  //   // When the phone field receives focus, wait for the keyboard to
+  //   // finish opening and then scroll the field into the visible area.
+  //   // ================================================================
+  //   // KEYBOARD / PHONE FIELD + CONTINUE BUTTON SCROLL FIX
+  //   // ================================================================
+
+  //   _phoneFocusNode.addListener(() {
+  //     if (_phoneFocusNode.hasFocus) {
+  //       Future.delayed(const Duration(milliseconds: 400), () {
+  //         if (!mounted) return;
+
+  //         final buttonContext = _continueButtonKey.currentContext;
+
+  //         if (buttonContext != null) {
+  //           Scrollable.ensureVisible(
+  //             buttonContext,
+  //             duration: const Duration(milliseconds: 350),
+  //             curve: Curves.easeOut,
+  //             alignment: 0.55,
+  //           );
+  //         }
+  //       });
+  //     }
+  //   });
+  // }
+
+  void _scrollToContinueButton() {
+    if (!mounted || !_phoneFocusNode.hasFocus) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_phoneFocusNode.hasFocus) return;
+
+      final buttonContext = _continueButtonKey.currentContext;
+
+      if (buttonContext == null) return;
+
+      Scrollable.ensureVisible(
+        buttonContext,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+        alignment: 0.35,
+      );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
 
     _phoneController.addListener(() {
       if (errorText != null) {
@@ -186,28 +249,41 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
     _phoneFocusNode.addListener(() {
       if (_phoneFocusNode.hasFocus) {
-        Future.delayed(const Duration(milliseconds: 400), () {
-          if (!mounted) return;
-
-          final buttonContext = _continueButtonKey.currentContext;
-
-          if (buttonContext != null) {
-            Scrollable.ensureVisible(
-              buttonContext,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeOut,
-              alignment: 0.55,
-            );
-          }
+        // Try after the first frame.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToContinueButton();
         });
       }
     });
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+
+    if (!mounted || !_phoneFocusNode.hasFocus) return;
+
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+
+    final keyboardHeight = view.viewInsets.bottom / view.devicePixelRatio;
+
+    if (keyboardHeight > 0) {
+      // Keyboard has actually opened.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_phoneFocusNode.hasFocus) return;
+
+        _scrollToContinueButton();
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
     _phoneController.dispose();
     _phoneFocusNode.dispose();
+
     super.dispose();
   }
 
@@ -225,6 +301,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
+            final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
             // Responsive values
             final horizontalPadding = width < 360
@@ -279,9 +356,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                   ScrollViewKeyboardDismissBehavior.onDrag,
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: 18,
+                padding: EdgeInsets.only(
+                  left: horizontalPadding,
+                  right: horizontalPadding,
+                  top: 18,
+                  bottom: keyboardHeight + 30,
                 ),
                 child: Column(
                   children: [
