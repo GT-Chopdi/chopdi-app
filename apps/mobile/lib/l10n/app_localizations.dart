@@ -162,6 +162,7 @@ abstract class AppLocalizations {
   String get enterValid10DigitPhone;
 
   String get cancel;
+  String lendersCount(int count);
 
 // DUPLICATE CUSTOMER
   String get customerAlreadyExists;

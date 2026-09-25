@@ -1224,6 +1224,8 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get lender1 => 'उधारदाता';
   @override
+  String lendersCount(int count) => '$count ऋणदाता';
+  @override
   String get notSpecified => 'उल्लेख नहीं किया गया';
 
   @override
