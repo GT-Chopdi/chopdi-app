@@ -721,69 +721,120 @@ class _CustomerListSectionState
         // COUNT + SORT
         // ========================================================
 
+        // Row(
+        //   crossAxisAlignment:
+        //   CrossAxisAlignment.center,
+        //   children: [
+        //     Expanded(
+        //       child: Text(
+        //         l10n.customersCount(
+        //           filteredCustomers.length,
+        //         ),
+        //         maxLines: 1,
+        //         overflow:
+        //         TextOverflow.ellipsis,
+        //         style:
+        //         const TextStyle(
+        //           fontWeight:
+        //           FontWeight.bold,
+        //           fontSize: 14,
+        //         ),
+        //       ),
+        //     ),
+
+        //     const SizedBox(width: 8),
+
+        //     Expanded(
+        //       flex: 2,
+        //       child: GestureDetector(
+        //         onTap: showSortSheet,
+        //         behavior:
+        //         HitTestBehavior.opaque,
+        //         child: Row(
+        //           mainAxisAlignment:
+        //           MainAxisAlignment.end,
+        //           children: [
+        //             const Icon(
+        //               Icons.swap_vert,
+        //               size: 16,
+        //             ),
+
+        //             const SizedBox(
+        //               width: 4,
+        //             ),
+
+        //             Expanded(
+        //               child: Text(
+        //                 '${l10n.sortBy} : $localizedSort',
+        //                 maxLines: 1,
+        //                 overflow:
+        //                 TextOverflow.ellipsis,
+        //                 textAlign:
+        //                 TextAlign.end,
+        //                 style:
+        //                 const TextStyle(
+        //                   fontSize: 11,
+        //                 ),
+        //               ),
+        //             ),
+
+        //             const Icon(
+        //               Icons.arrow_drop_down,
+        //               size: 22,
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        // ========================================================
+        // COUNT + SORT
+        // ========================================================
+
         Row(
-          crossAxisAlignment:
-          CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Text(
-                l10n.customersCount(
-                  filteredCustomers.length,
-                ),
+                l10n.customersCount(filteredCustomers.length),
                 maxLines: 1,
-                overflow:
-                TextOverflow.ellipsis,
-                style:
-                const TextStyle(
-                  fontWeight:
-                  FontWeight.bold,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
             ),
 
-            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: showSortSheet,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.swap_vert,
+                    size: 16,
+                  ),
 
-            Expanded(
-              flex: 2,
-              child: GestureDetector(
-                onTap: showSortSheet,
-                behavior:
-                HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.end,
-                  children: [
-                    const Icon(
-                      Icons.swap_vert,
-                      size: 16,
-                    ),
+                  const SizedBox(width: 4),
 
-                    const SizedBox(
-                      width: 4,
+                  Text(
+                    '${l10n.sortBy} : $localizedSort',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 11,
                     ),
+                  ),
 
-                    Expanded(
-                      child: Text(
-                        '${l10n.sortBy} : $localizedSort',
-                        maxLines: 1,
-                        overflow:
-                        TextOverflow.ellipsis,
-                        textAlign:
-                        TextAlign.end,
-                        style:
-                        const TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      size: 22,
-                    ),
-                  ],
-                ),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    size: 22,
+                  ),
+                ],
               ),
             ),
           ],
