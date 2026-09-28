@@ -16,6 +16,7 @@ class AppLocalizationsHi extends AppLocalizations {
       "खाता विवरण";
   @override
   String get settings => 'सेटिंग्स';
+  
   @override
   String get manageAppSettings => 'ऐप की सेटिंग्स प्रबंधित करें';
 
@@ -255,7 +256,7 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get homePayInterest => "(ब्याज चुकाएं)";
   @override
-  String get customersTitle => "Customers";
+  String get customersTitle => "ग्राहक";
 
   @override
   String get manageAllCustomers => "Manage all your customers";
@@ -1315,4 +1316,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String customersCount(int count) => "ग्राहक ($count)";
+
+  @override
+  String lendersCount(int count) => "उधारदाता ($count)";
 }
