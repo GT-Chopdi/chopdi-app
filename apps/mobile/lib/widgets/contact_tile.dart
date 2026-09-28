@@ -90,19 +90,6 @@ class ContactTile extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                    // ------------------------------------------------
-                    // ARROW
-                    // ------------------------------------------------
-
-                    InkWell(
-                      onTap: onTap,
-                      child: const Icon(
-                        Icons.chevron_right,
-                        size: 28,
-                        color: Color(0xff223A5E),
-                      ),
-                    ),
                   ],
                 ),
               ),
