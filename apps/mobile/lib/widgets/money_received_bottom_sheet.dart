@@ -384,7 +384,7 @@ class _MoneyReceiveBottomSheetState
                       const SizedBox(height: 10),
 
                       Text(
-                        l10n.youGot,
+                        l10n.youTook,
                         style: GoogleFonts.manrope(
                           color:
                           const Color(0xFF00901B),
