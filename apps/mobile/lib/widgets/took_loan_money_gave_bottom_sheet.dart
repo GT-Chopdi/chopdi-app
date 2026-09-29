@@ -347,23 +347,52 @@ class _MoneyGaveBottomSheetState
                     children: [
                       const SizedBox(height: 12),
 
-                      Container(
+                      // Container(
+                      //   height: 72,
+                      //   width: 72,
+                      //   decoration: const BoxDecoration(
+                      //     color: Color.fromRGBO(
+                      //       141,
+                      //       208,
+                      //       113,
+                      //       0.34,
+                      //     ),
+                      //     shape: BoxShape.circle,
+                      //   ),
+                      //   child: Center(
+                      //     child: CircleAvatar(
+                      //       radius: 18,
+                      //       backgroundColor: Colors.transparent,
+                      //       child: Image.asset(
+                      //         'assets/you_gave.png',
+                      //         width: 32,
+                      //         height: 32,
+                      //         color: Colors.white,
+                      //         colorBlendMode: BlendMode.srcIn,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                        Container(
                         height: 72,
                         width: 72,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00901B),
+                        decoration:
+                        const BoxDecoration(
+                          color: Color.fromRGBO(
+                            141,
+                            208,
+                            113,
+                            0.34,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: Colors.transparent,
+                            backgroundColor:
+                            Colors.transparent,
                             child: Image.asset(
-                              'assets/you_gave.png',
-                              width: 32,
-                              height: 32,
-                              color: Colors.white,
-                              colorBlendMode: BlendMode.srcIn,
+                              'assets/you_got.png',
                             ),
                           ),
                         ),

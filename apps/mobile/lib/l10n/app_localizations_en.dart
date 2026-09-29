@@ -476,10 +476,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToAddLenderWithError =>
       'Failed to add lender';
   @override
-  String get totalTaken => 'Total Taken';
+  String get totalTaken => 'Total Loan Taken';
 
   @override
-  String get interestDue => 'Interest Due';
+  String get interestDue => 'Total Interest Due';
   @override
   String get failedToAddCustomerWithError =>
       'Failed to add customer';
@@ -892,6 +892,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String customersCount(int count) => "Customers ($count)";
+
+  @override
+  String lendersCount(int count) => "Lenders ($count)";
+
   @override
   String lendersCount(int count) => "Lenders ($count)";
   @override

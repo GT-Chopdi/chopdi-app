@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
@@ -324,6 +325,7 @@ class _MoneyGaveBottomSheetState
         MediaQuery.of(context)
             .viewInsets
             .bottom;
+    final l10n = AppLocalizations.of(context);
 
     return AnimatedPadding(
       duration:
@@ -450,7 +452,7 @@ class _MoneyGaveBottomSheetState
                       ),
 
                       Text(
-                        "You Gave",
+                        l10n.youPaid,
                         style:
                         GoogleFonts
                             .manrope(
