@@ -50,7 +50,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youTook =>
-      "आपने लिया";
+      "आपको मिले";
 
   @override
   String get totalLoanTaken =>
@@ -58,7 +58,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get youPaid =>
-      "आपने भुगतान किया";
+      "आपने दिए";
 
   @override
   String get youReceived =>
@@ -124,46 +124,123 @@ class AppLocalizationsHi extends AppLocalizations {
   String get downloadPdf =>
       "PDF डाउनलोड करें";
 
+  // @override
+  // String get loginLetsGetStarted => "शुरू करते हैं";
+
+  // @override
+  // String get loginEnterMobileNumber =>
+  //     "Chopdi पर जारी रखने के लिए\nअपना मोबाइल नंबर दर्ज करें";
+
+  // @override
+  // String get loginYourLendingRecords => "आपके उधार के रिकॉर्ड,\n";
+
+  // @override
+  // String get loginDigitallyOrganized => "अब डिजिटल रूप से व्यवस्थित।";
+
+  // @override
+  // String get loginTrackLoans =>
+  //     "लोन, ब्याज और भुगतान को\nआसानी और भरोसे के साथ ट्रैक करें।";
+
+  // @override
+  // String get loginSecureData => "आपका डेटा हमारे साथ सुरक्षित है";
+
+  // @override
+  // String get loginContinue => "जारी रखें";
+
+  // @override
+  // String get loginByContinuing =>
+  //     "जारी रखकर, आप हमारी\n";
+
+  // @override
+  // String get loginTermsOfService => "सेवा की शर्तों";
+
+  // @override
+  // String get loginAnd => " और ";
+
+  // @override
+  // String get loginPrivacyPolicy => "गोपनीयता नीति";
+
+  // ------------------------------------------------------------
+  // LOGIN / ONBOARDING
+  // ------------------------------------------------------------
+
   @override
   String get loginLetsGetStarted => "शुरू करते हैं";
 
   @override
   String get loginEnterMobileNumber =>
-      "Chopdi पर जारी रखने के लिए\nअपना मोबाइल नंबर दर्ज करें";
+      "जारी रखने के लिए अपना मोबाइल नंबर दर्ज करें";
 
   @override
-  String get loginYourLendingRecords => "आपके उधार के रिकॉर्ड,\n";
+  String get loginYourLendingRecords =>
+      "आपके उधार के रिकॉर्ड,\n";
 
   @override
-  String get loginDigitallyOrganized => "अब डिजिटल रूप से व्यवस्थित।";
+  String get loginDigitallyOrganized =>
+      "डिजिटल रूप से व्यवस्थित।";
 
   @override
   String get loginTrackLoans =>
-      "लोन, ब्याज और भुगतान को\nआसानी और भरोसे के साथ ट्रैक करें।";
+      "ऋण, ब्याज और भुगतान को\nस्पष्टता और आसानी से ट्रैक करें।";
 
   @override
-  String get loginSecureData => "आपका डेटा हमारे साथ सुरक्षित है";
+  String get loginSecureData =>
+      "आपका डेटा हमारे पास सुरक्षित है";
 
   @override
-  String get loginContinue => "जारी रखें";
+  String get loginContinue =>
+      "जारी रखें";
 
   @override
   String get loginByContinuing =>
       "जारी रखकर, आप हमारी\n";
 
   @override
-  String get loginTermsOfService => "सेवा की शर्तों";
+  String get loginTermsOfService =>
+      "सेवा की शर्तों";
 
   @override
-  String get loginAnd => " और ";
+  String get loginAnd =>
+      " और ";
 
   @override
-  String get loginPrivacyPolicy => "गोपनीयता नीति";
+  String get loginPrivacyPolicy =>
+      "गोपनीयता नीति";
 
   // ------------------------------------------------------------
   // LOGIN VALIDATION / ERRORS
   // ------------------------------------------------------------
 
+  // @override
+  // String get loginMobileNumberRequired =>
+  //     "कृपया अपना मोबाइल नंबर दर्ज करें";
+
+  // @override
+  // String get loginInvalidMobileNumber =>
+  //     "कृपया मान्य 10 अंकों का मोबाइल नंबर दर्ज करें";
+
+  // @override
+  // String get loginOtpAlreadySent =>
+  //     "एक कोड पहले ही भेजा जा चुका है। कृपया कुछ समय प्रतीक्षा करें।";
+
+  // @override
+  // String get loginNetworkUnavailable =>
+  //     "सर्वर से कनेक्ट नहीं हो पा रहा है। अपना इंटरनेट कनेक्शन जांचें।";
+
+  // @override
+  // String get loginDevKeyMissing =>
+  //     "इस बिल्ड में DEV_KEY उपलब्ध नहीं है।\n\n"
+  //         "AUTH_DEV_KEY को env/staging.env में जोड़ें और फिर\n"
+  //         "--dart-define-from-file=env/staging.env के साथ बिल्ड करें।";
+
+  // @override
+  // String get loginDevKeyRejected =>
+  //     "इस बिल्ड की DEV_KEY अस्वीकार कर दी गई है। "
+  //         "जांचें कि यह सर्वर की AUTH_DEV_KEY से मेल खाती है।";
+
+  // @override
+  // String get loginSomethingWentWrong =>
+  //     "कुछ गलत हो गया। कृपया फिर से प्रयास करें।";
   @override
   String get loginMobileNumberRequired =>
       "कृपया अपना मोबाइल नंबर दर्ज करें";
@@ -174,7 +251,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loginOtpAlreadySent =>
-      "एक कोड पहले ही भेजा जा चुका है। कृपया कुछ समय प्रतीक्षा करें।";
+      "कोड पहले ही भेजा जा चुका है। कृपया कुछ समय प्रतीक्षा करें।";
 
   @override
   String get loginNetworkUnavailable =>
@@ -183,17 +260,21 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get loginDevKeyMissing =>
       "इस बिल्ड में DEV_KEY उपलब्ध नहीं है।\n\n"
-          "AUTH_DEV_KEY को env/staging.env में जोड़ें और फिर\n"
-          "--dart-define-from-file=env/staging.env के साथ बिल्ड करें।";
+      "AUTH_DEV_KEY को env/staging.env में जोड़ें, फिर\n"
+      "--dart-define-from-file=env/staging.env के साथ दोबारा बिल्ड करें।";
 
   @override
   String get loginDevKeyRejected =>
-      "इस बिल्ड की DEV_KEY अस्वीकार कर दी गई है। "
-          "जांचें कि यह सर्वर की AUTH_DEV_KEY से मेल खाती है।";
+      "इस बिल्ड में DEV_KEY अस्वीकार कर दी गई है। "
+      "जांचें कि यह सर्वर पर मौजूद AUTH_DEV_KEY से मेल खाती है।";
 
   @override
   String get loginSomethingWentWrong =>
-      "कुछ गलत हो गया। कृपया फिर से प्रयास करें।";
+      "कुछ गलत हो गया। कृपया पुनः प्रयास करें।";
+  
+  @override
+  String get loginEnterMobileToContinue =>
+    "चोपड़ी पर आगे बढ़ने के लिए\nअपना मोबाइल नंबर दर्ज करें";
 
   // ------------------------------------------------------------
 // HOME
@@ -263,63 +344,62 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get searchByNameAndPhone =>
-      "Search by name and phone number";
+      "नाम और फोन नंबर से खोजें";
 
   @override
-  String get filter => "Filter";
+  String get filter => "फ़िल्टर";
 
   // @override
   // String get customersCount => "Customers";
 
   @override
-  String get sortBy => "Sort by";
+  String get sortBy => "क्रमबद्ध करें";
 
   @override
-  String get noCustomersFound => "No customers found";
+  String get noCustomersFound => "कोई ग्राहक नहीं मिला";
 
   @override
-  String get sortNameAZ => "Name (A-Z)";
+  String get sortNameAZ => "नाम (अ-ह)";
 
   @override
-  String get sortNameZA => "Name (Z-A)";
+  String get sortNameZA => "नाम (ह-अ)";
 
   @override
-  String get sortRecentlyAdded => "Recently Added";
+  String get sortRecentlyAdded => "हाल ही में जोड़े गए";
 
   @override
   String get sortLoanAmountHighToLow =>
-      "Loan Amount (High to Low)";
+      "लोन राशि (अधिक से कम)";
 
   @override
   String get sortLoanAmountLowToHigh =>
-      "Loan Amount (Low to High)";
+      "लोन राशि (कम से अधिक)";
 
   @override
-  String get addCustomer => "Add Customer";
+  String get addCustomer => "ग्राहक जोड़ें";
 
   @override
-  String get allContacts => "All Contacts";
+  String get allContacts => "सभी संपर्क";
 
   @override
   String get contactsPermissionRequired =>
-      "Contacts permission is required";
+      "संपर्क अनुमति आवश्यक है";
 
   @override
-  String get allowContacts => "Allow Contacts";
+  String get allowContacts => "संपर्कों की अनुमति दें";
 
   @override
-  String get noContactsFound => "No contacts found";
+  String get noContactsFound => "कोई संपर्क नहीं मिला";
 
   @override
-  String get noPhoneNumber => "No phone number";
+  String get noPhoneNumber => "कोई फोन नंबर नहीं है";
 
   @override
-  String get unknownContact => "Unknown";
+  String get unknownContact => "अज्ञात";
 
   @override
   String get unableToLoadContacts =>
-      "Unable to load contacts";
-
+      "संपर्क लोड नहीं हो सके";
   @override
   String get youGave => "आपने दिए ₹";
 
@@ -327,16 +407,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youGot => "आपको मिले ₹";
 
   @override
-  String get totalGiven => "Total Given";
+  String get totalGiven => "कुल दी गई राशि";
 
   @override
-  String get totalInterest => "Total Interest";
+  String get totalInterest => "कुल ब्याज";
 
   @override
-  String get outstanding => "Outstanding";
+  String get outstanding => "बकाया राशि";
 
   @override
-  String get addLender => "Add Lender";
+  String get addLender => "उधारदाता जोड़ें";
   @override
   String get addNewCustomer => "नया ग्राहक जोड़ें";
 
@@ -435,7 +515,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get myPersonalLendingLedger =>
-      "लोन और ब्याज को ट्रैक करने के लिए\nमेरी व्यक्तिगत लेंडिंग लेजर।";
+      "लोन और ब्याज को ट्रैक करने के लिए\nमेरी व्यक्तिगत उधार बही।";
 
   @override
   String get createdOn => "बनाया गया";
@@ -567,37 +647,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get get => 'लें';
   @override
   String get addNewLender =>
-      'नया लेंडर जोड़ें';
+      'नया उधारदाता जोड़ें';
 
   @override
   String get lenderAlreadyExists =>
-      'लेंडर पहले से मौजूद है';
+      'उधारदाता पहले से मौजूद है';
 
   @override
   String get duplicateLenderMessage =>
-      'समान नाम और फोन नंबर वाला लेंडर पहले से जोड़ा गया है।';
+      'समान नाम और फोन नंबर वाला उधारदाता पहले से जोड़ा गया है।';
 
   @override
   String get failedToAddLender =>
-      'लेंडर जोड़ने में समस्या हुई। कृपया फिर से प्रयास करें।';
+      'उधारदाता जोड़ने में समस्या हुई। कृपया फिर से प्रयास करें।';
 
   @override
   String get lenderDetails =>
-      'लेंडर विवरण';
+      'उधारदाता विवरण';
 
   @override
   String get lenderName =>
-      'लेंडर का नाम';
+      'उधारदाता का नाम';
 
   @override
   String get enterLenderName =>
-      'लेंडर का नाम दर्ज करें';
+      'उधारदाता का नाम दर्ज करें';
 
   @override
-  String get totalTaken => 'Total Taken';
+  String get totalTaken => 'कुल लिया गया';
 
   @override
-  String get interestDue => 'Interest Due';
+  String get interestDue => 'कुल देय ब्याज';
   @override
   String get failedToAddCustomerWithError =>
       'ग्राहक जोड़ने में समस्या हुई';
@@ -681,6 +761,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bankTransfer => 'बैंक ट्रांसफर';
 
   @override
+  String get contactSupportMessage =>
+      "यदि आपके कोई प्रश्न हैं, तो बेझिझक हमसे संपर्क करें";
+
+  @override
+  String get validAmountRequired =>
+      "कृपया मान्य राशि दर्ज करें";
+
+  @override
+  String get customerNoLongerAvailable =>
+      "यह ग्राहक अब उपलब्ध नहीं है। कृपया ग्राहक को दोबारा खोलकर प्रयास करें।";
+
+  @override
+  String get deletedCustomerCannotAddEntry =>
+      "यह ग्राहक हटा दिया गया है। आप नई एंट्री नहीं जोड़ सकते।";
+
+  @override
+  String get unableToSaveTransaction =>
+      "लेन-देन सेव नहीं हो सका। कृपया पुनः प्रयास करें।";
+
+  @override
   String get other => 'अन्य';
   @override
   String get notifications => 'सूचनाएं';
@@ -737,12 +837,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get failedToAddLenderWithError =>
-      'लेंडर जोड़ने में समस्या हुई';
+      'उधारदाता जोड़ने में समस्या हुई';
   @override
   String get language => 'भाषा';
 
   @override
-  String get currentLanguage => 'English';
+  String get currentLanguage => 'हिंदी';
   @override
   String get addEntry => 'एंट्री जोड़ें';
 
@@ -1319,4 +1419,64 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String lendersCount(int count) => "उधारदाता ($count)";
+
+  @override
+  String get bottomHome => "होम";
+
+  @override
+  String get bottomMyChopdi => "मेरी चोपड़ी";
+
+  @override
+  String get loggingOut => "लॉग आउट हो रहा है...";
+
+  @override
+  String get pleaseWait => "कृपया प्रतीक्षा करें";
+
+  @override
+  String get otpVerifyYourNumber => "अपना नंबर सत्यापित करें";
+
+  @override
+  String get otpSentTo => "हमने 6 अंकों का OTP इस नंबर पर भेजा है";
+
+  @override
+  String get otpResend => "OTP दोबारा भेजें";
+
+  @override
+  String get otpResendIn => "OTP दोबारा भेजें ";
+
+  @override
+  String get otpVerify => "OTP सत्यापित करें";
+
+  @override
+  String get otpChangeMobileNumber => "मोबाइल नंबर बदलें";
+
+  @override
+  String get otpRequired => "कृपया OTP दर्ज करें";
+
+  @override
+  String get otpInvalid => "कृपया मान्य 6 अंकों का OTP दर्ज करें";
+
+  @override
+  String get otpIncorrect => "गलत OTP। कृपया पुनः प्रयास करें।";
+
+  @override
+  String get otpExpired =>
+      "इस कोड की समय सीमा समाप्त हो गई है। नया कोड अनुरोध करें।";
+
+  @override
+  String get otpTooManyAttempts =>
+      "बहुत अधिक गलत प्रयास हुए हैं। नया कोड अनुरोध करें।";
+
+  @override
+  String get otpPleaseWait =>
+      "कृपया पुनः प्रयास करने से पहले कुछ समय प्रतीक्षा करें।";
+
+  @override
+  String get otpNetworkUnavailable =>
+      "सर्वर से कनेक्ट नहीं हो पा रहा है। अपना इंटरनेट कनेक्शन जांचें।";
+
+  @override
+  String get otpSomethingWentWrong =>
+      "कुछ गलत हो गया। कृपया पुनः प्रयास करें।";
+
 }

@@ -79,6 +79,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSomethingWentWrong =>
       "Something went wrong. Please try again.";
 
+  @override
+  String get bottomHome => "Home";
+
+  @override
+  String get bottomMyChopdi => "My Chopdi";
+
   // ------------------------------------------------------------
 // HOME
 // ------------------------------------------------------------
@@ -214,10 +220,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youGot => "You Got ₹";
 
   @override
-  String get totalGiven => "Total Given";
+  String get totalGiven => "Total Loan Given";
 
   @override
-  String get totalInterest => "Total Interest";
+  String get totalInterest => "Total Interest Earned";
 
   @override
   String get outstanding => "Outstanding";
@@ -1271,6 +1277,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cheque => 'Cheque';
+
+  @override
+  String get loggingOut => "Logging out...";
+
+  @override
+  String get pleaseWait => "Please wait";
+
+  @override
+  String get loginEnterMobileToContinue =>
+    "Enter your mobile number to\ncontinue to Chopdi";
+
+  @override
+  String get otpVerifyYourNumber => "Verify your number";
+
+  @override
+  String get otpSentTo => "We've sent a 6-digit OTP to";
+
+  @override
+  String get otpResend => "Resend OTP";
+
+  @override
+  String get otpResendIn => "Resend OTP in ";
+
+  @override
+  String get otpVerify => "Verify OTP";
+
+  @override
+  String get otpChangeMobileNumber => "Change Mobile Number";
+
+  @override
+  String get otpRequired => "Please enter OTP";
+
+  @override
+  String get otpInvalid => "Please enter a valid 6-digit OTP";
+
+  @override
+  String get otpIncorrect => "Incorrect OTP. Please try again.";
+
+  @override
+  String get otpExpired => "This code has expired. Request a new one.";
+
+  @override
+  String get otpTooManyAttempts =>
+      "Too many incorrect attempts. Request a new code.";
+
+  @override
+  String get otpPleaseWait =>
+      "Please wait a moment before trying again.";
+
+  @override
+  String get otpNetworkUnavailable =>
+      "Can't reach the server. Check your connection.";
+
+  @override
+  String get otpSomethingWentWrong =>
+      "Something went wrong. Please try again.";
+
+  @override
+  String get contactSupportMessage =>
+      "If you have any questions, feel free to contact us at";
+
+  @override
+  String get validAmountRequired => "Please enter a valid amount";
+
+  @override
+  String get customerNoLongerAvailable =>
+      "This customer is no longer available. Please reopen the customer and try again.";
+
+  @override
+  String get deletedCustomerCannotAddEntry =>
+      "This customer has been deleted. You cannot add a new entry.";
+
+  @override
+  String get unableToSaveTransaction =>
+      "Unable to save the transaction. Please try again.";
 
 
 

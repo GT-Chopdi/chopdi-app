@@ -523,7 +523,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_given.png',
-                      l10n.totalGiven,
+                      l10n.homeTotalLoanGiven,
                       "₹${totalGiven.toStringAsFixed(0)}",
                       ChopdiColors.navy,
                     ),
@@ -538,7 +538,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   Expanded(
                     child: _infoItem(
                       'assets/total_interest.png',
-                      l10n.totalInterest,
+                      l10n.homeTotalInterestEarned,
                       "₹${totalInterest.toStringAsFixed(0)}",
                       const Color(0xFF00901B),
                     ),

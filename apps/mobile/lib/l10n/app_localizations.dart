@@ -76,6 +76,9 @@ abstract class AppLocalizations {
   String get homeAddCustomer;
 
   String get homeAddLoan;
+
+  String get bottomHome;
+  String get bottomMyChopdi;
   // ------------------------------------------------------------
 // HOME HEADER
 // ------------------------------------------------------------
@@ -501,6 +504,32 @@ abstract class AppLocalizations {
   String get moneyReceived;
   String get moneyGiven;
   String get cheque;
+  String get loggingOut;
+  String get pleaseWait;
+  String get loginEnterMobileToContinue;
+
+  String get otpVerifyYourNumber;
+  String get otpSentTo;
+  String get otpResend;
+  String get otpResendIn;
+  String get otpVerify;
+  String get otpChangeMobileNumber;
+
+  String get otpRequired;
+  String get otpInvalid;
+  String get otpIncorrect;
+  String get otpExpired;
+  String get otpTooManyAttempts;
+  String get otpPleaseWait;
+  String get otpNetworkUnavailable;
+  String get otpSomethingWentWrong;
+
+  String get contactSupportMessage;
+
+  String get validAmountRequired;
+  String get customerNoLongerAvailable;
+  String get deletedCustomerCannotAddEntry;
+  String get unableToSaveTransaction;
 
 
   Null get at => null;

@@ -20,6 +20,11 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final chopdiName =
+        currentChopdi?.name ??
+    AppLocalizations.of(context).homeMyChopdi;
     return Row(
       children: [
         Column(
@@ -28,7 +33,7 @@ class HomeHeader extends StatelessWidget {
             Row(
               children: [
                 Text(
-    currentChopdi?.name ?? AppLocalizations.of(context).homeMyChopdi,
+                  chopdiName,
                   style: GoogleFonts.manrope(
                     color: ChopdiColors.navy,
                     fontWeight: FontWeight.bold,
