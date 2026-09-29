@@ -549,9 +549,7 @@ class _TookLoanCustomerListSectionState
         Row(
           children: [
             Text(
-              l10n.customersCount(
-                filteredCustomers.length,
-              ),
+              l10n.lendersCount(filteredCustomers.length),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),

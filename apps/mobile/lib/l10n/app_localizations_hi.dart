@@ -16,6 +16,7 @@ class AppLocalizationsHi extends AppLocalizations {
       "खाता विवरण";
   @override
   String get settings => 'सेटिंग्स';
+  
   @override
   String get manageAppSettings => 'ऐप की सेटिंग्स प्रबंधित करें';
 
@@ -255,10 +256,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get homePayInterest => "(ब्याज चुकाएं)";
   @override
-  String get customersTitle => "Customers";
+  String get customersTitle => "ग्राहक";
 
   @override
-  String get manageAllCustomers => "Manage all your customers";
+  String get manageAllCustomers => "अपने सभी ग्राहकों को प्रबंधित करें";
 
   @override
   String get searchByNameAndPhone =>
@@ -320,10 +321,10 @@ class AppLocalizationsHi extends AppLocalizations {
       "Unable to load contacts";
 
   @override
-  String get youGave => "You Gave ₹";
+  String get youGave => "आपने दिए ₹";
 
   @override
-  String get youGot => "You Got ₹";
+  String get youGot => "आपको मिले ₹";
 
   @override
   String get totalGiven => "Total Given";
@@ -1213,7 +1214,7 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get loanTook => 'लोन लिया';
   @override
-  String get itookloan => 'लोन लिया';
+  String get itookloan => 'मैंने लोन लिया';
   @override
   String get amountPaid => 'भुगतान किया';
   @override
@@ -1315,4 +1316,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String customersCount(int count) => "ग्राहक ($count)";
+
+  @override
+  String lendersCount(int count) => "उधारदाता ($count)";
 }
