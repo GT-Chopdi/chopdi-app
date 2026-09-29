@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/view/took_loan_add_new_lender_screen.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 import '../l10n/app_localizations.dart';
@@ -31,139 +32,155 @@ class _CustomerDetailsAddState
   static const Color backgroundColor = Color(0xFFFDF0DE);
 
   bool isSaving = false;
-
   Future<void> addCustomer() async {
-    final l10n = AppLocalizations.of(context);
+    if (!mounted) return;
 
-    // ============================================================
-    // PHONE NUMBER
-    // ============================================================
-
-    final phone = widget.contactPhone.trim();
-
-    // Remove spaces, +, -, brackets, etc.
-    String finalPhone =
-    phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    // Remove Indian country code +91
-    if (finalPhone.startsWith('91') &&
-        finalPhone.length == 12) {
-      finalPhone = finalPhone.substring(2);
-    }
-
-    // ============================================================
-    // PHONE IS OPTIONAL
-    // ============================================================
-
-    if (finalPhone.isNotEmpty) {
-      // If phone exists, it MUST be exactly 10 digits.
-      if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.pleaseEnterValidPhoneNumber,
-            ),
-          ),
-        );
-
-        return;
-      }
-    }
-
-    // ============================================================
-    // START SAVING
-    // ============================================================
-
-    if (mounted) {
-      setState(() {
-        isSaving = true;
-      });
-    }
-
-    try {
-      // ==========================================================
-      // DUPLICATE CHECK
-      // ==========================================================
-
-      // Only check when a phone number exists.
-      // Empty phone numbers are allowed.
-
-      if (finalPhone.isNotEmpty) {
-        final existingCustomer =
-        await IsarService.isar.customers
-            .filter()
-            .phoneEqualTo(finalPhone)
-            .and()
-            .chopdiIdEqualTo(widget.chopdiId)
-            .and()
-            .deletedAtIsNull()
-            .findFirst();
-
-        if (existingCustomer != null) {
-          if (!mounted) return;
-
-          setState(() {
-            isSaving = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.lenderAlreadyExists,
-              ),
-            ),
-          );
-
-          return;
-        }
-      }
-
-      // ==========================================================
-      // CREATE NEW LENDER
-      // ==========================================================
-
-      final customer =
-      await Repositories.customers.create(
-        name: widget.contactName.trim(),
-        phone: finalPhone,
-        chopdiId: widget.chopdiId,
-        loanType: "took",
-        status: "Pending",
-      );
-
-      if (!mounted) return;
-
-      // ==========================================================
-      // OPEN CUSTOMER DETAILS
-      // ==========================================================
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              TookLoanCustomerDetailsScreen(
-                customer: customer,
-              ),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddNewLenderScreen(
+          chopdiId: widget.chopdiId,
+          initialName: widget.contactName,
+          initialPhone: widget.contactPhone,
         ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        isSaving = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${l10n.failedToAddLenderWithError}: $e',
-          ),
-        ),
-      );
-    }
+      ),
+    );
   }
+
+  // Future<void> addCustomer() async {
+  //   final l10n = AppLocalizations.of(context);
+  //
+  //   // ============================================================
+  //   // PHONE NUMBER
+  //   // ============================================================
+  //
+  //   final phone = widget.contactPhone.trim();
+  //
+  //   // Remove spaces, +, -, brackets, etc.
+  //   String finalPhone =
+  //   phone.replaceAll(RegExp(r'[^0-9]'), '');
+  //
+  //   // Remove Indian country code +91
+  //   if (finalPhone.startsWith('91') &&
+  //       finalPhone.length == 12) {
+  //     finalPhone = finalPhone.substring(2);
+  //   }
+  //
+  //   // ============================================================
+  //   // PHONE IS OPTIONAL
+  //   // ============================================================
+  //
+  //   if (finalPhone.isNotEmpty) {
+  //     // If phone exists, it MUST be exactly 10 digits.
+  //     if (!RegExp(r'^[0-9]{10}$').hasMatch(finalPhone)) {
+  //       if (!mounted) return;
+  //
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text(
+  //             l10n.pleaseEnterValidPhoneNumber,
+  //           ),
+  //         ),
+  //       );
+  //
+  //       return;
+  //     }
+  //   }
+  //
+  //   // ============================================================
+  //   // START SAVING
+  //   // ============================================================
+  //
+  //   if (mounted) {
+  //     setState(() {
+  //       isSaving = true;
+  //     });
+  //   }
+  //
+  //   try {
+  //     // ==========================================================
+  //     // DUPLICATE CHECK
+  //     // ==========================================================
+  //
+  //     // Only check when a phone number exists.
+  //     // Empty phone numbers are allowed.
+  //
+  //     if (finalPhone.isNotEmpty) {
+  //       final existingCustomer =
+  //       await IsarService.isar.customers
+  //           .filter()
+  //           .phoneEqualTo(finalPhone)
+  //           .and()
+  //           .chopdiIdEqualTo(widget.chopdiId)
+  //           .and()
+  //           .deletedAtIsNull()
+  //           .findFirst();
+  //
+  //       if (existingCustomer != null) {
+  //         if (!mounted) return;
+  //
+  //         setState(() {
+  //           isSaving = false;
+  //         });
+  //
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(
+  //             content: Text(
+  //               l10n.lenderAlreadyExists,
+  //             ),
+  //           ),
+  //         );
+  //
+  //         return;
+  //       }
+  //     }
+  //
+  //     // ==========================================================
+  //     // CREATE NEW LENDER
+  //     // ==========================================================
+  //
+  //     final customer =
+  //     await Repositories.customers.create(
+  //       name: widget.contactName.trim(),
+  //       phone: finalPhone,
+  //       chopdiId: widget.chopdiId,
+  //       loanType: "took",
+  //       status: "Pending",
+  //     );
+  //
+  //     if (!mounted) return;
+  //
+  //     // ==========================================================
+  //     // OPEN CUSTOMER DETAILS
+  //     // ==========================================================
+  //
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (_) =>
+  //             AddNewLenderScreen(
+  //               chopdiId: chopdiId,
+  //               initialName: contact.name,
+  //               initialPhone: contact.phone,
+  //             )
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //
+  //     setState(() {
+  //       isSaving = false;
+  //     });
+  //
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           '${l10n.failedToAddLenderWithError}: $e',
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

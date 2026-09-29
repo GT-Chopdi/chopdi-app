@@ -17,6 +17,7 @@ import 'package:mychopdi/widgets/money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_table.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
+
 class CustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
 
@@ -243,122 +244,75 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     final width = size.width;
     final height = size.height;
 
-    return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
+    return  PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
 
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const MainScreen(),
-            ),
-                (route) => false,
-          );
-        },
-        child: Scaffold(
-      backgroundColor: ChopdiColors.cream,
-
-      // ==========================================================
-      // APP BAR
-      // ==========================================================
-
-      appBar: AppBar(
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const MainScreen(),
+          ),
+              (route) => false,
+        );
+      },
+      child: Scaffold(
         backgroundColor: ChopdiColors.cream,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new,
-                color: ChopdiColors.navy,
-              ),
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => const MainScreen(),
-                  ),
-                      (route) => false,
-                );
-              },
-            ),
 
-            const Spacer(),
+        // ==========================================================
+        // APP BAR
+        // ==========================================================
 
-            IconButton(
-              icon: const Icon(
-                Icons.more_vert,
-                color: ChopdiColors.navy,
-              ),
-              onPressed: () {
-                showCustomerOptionsBottomSheet(context);
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // ==========================================================
-      // BOTTOM ACTION BUTTONS
-      // ==========================================================
-
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          color: AppColors.background,
-          child: Row(
+        appBar: AppBar(
+          backgroundColor: ChopdiColors.cream,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          titleSpacing: 0,
+          title: Row(
             children: [
-              // ====================================================
-              // YOU GAVE
-              // ====================================================
-
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return FractionallySizedBox(
-                          heightFactor: 0.82,
-                          child: MoneyGaveBottomSheet(
-                            customer: widget.customer,
-                            onSaved: loadTransactions,
-                            isEdit: false,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC74C4C),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.youGave,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: ChopdiColors.navy,
                 ),
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (_) => const MainScreen(),
+                    ),
+                        (route) => false,
+                  );
+                },
               ),
 
-              // ====================================================
-              // YOU GOT
-              //
-              // Show ONLY after at least one GAVE transaction.
-              // ====================================================
+              const Spacer(),
 
-              if (hasLoanTransaction) ...[
-                const SizedBox(width: 14),
+              IconButton(
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: ChopdiColors.navy,
+                ),
+                onPressed: () {
+                  showCustomerOptionsBottomSheet(context);
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // ==========================================================
+        // BOTTOM ACTION BUTTONS
+        // ==========================================================
+
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            color: AppColors.background,
+            child: Row(
+              children: [
+                // ====================================================
+                // YOU GAVE
+                // ====================================================
 
                 Expanded(
                   child: ElevatedButton(
@@ -370,16 +324,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                         builder: (context) {
                           return FractionallySizedBox(
                             heightFactor: 0.82,
-                            child: MoneyReceiveBottomSheet(
+                            child: MoneyGaveBottomSheet(
                               customer: widget.customer,
                               onSaved: loadTransactions,
+                              isEdit: false,
                             ),
                           );
                         },
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00901B),
+                      backgroundColor: const Color(0xFFC74C4C),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       minimumSize: const Size.fromHeight(54),
@@ -388,7 +343,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       ),
                     ),
                     child: Text(
-                    l10n.youGot,
+                      l10n.youGave,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -396,198 +351,243 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     ),
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
-      ),
 
-      // ==========================================================
-      // BODY
-      // ==========================================================
+                // ====================================================
+                // YOU GOT
+                //
+                // Show ONLY after at least one GAVE transaction.
+                // ====================================================
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ======================================================
-            // CUSTOMER HEADER
-            // ======================================================
+                if (hasLoanTransaction) ...[
+                  const SizedBox(width: 14),
 
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: ChopdiColors.lightGray,
-                  child: Text(
-                    customer.name.isNotEmpty
-                        ? customer.name[0].toUpperCase()
-                        : "?",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: ChopdiColors.navy,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 14),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        customer.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          color: ChopdiColors.navy,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return FractionallySizedBox(
+                              heightFactor: 0.82,
+                              child: MoneyReceiveBottomSheet(
+                                customer: widget.customer,
+                                onSaved: loadTransactions,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00901B),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size.fromHeight(54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-
-                      const SizedBox(height: 1),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              customer.phone,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
+                      child: Text(
+                        l10n.youGot,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 8),
-
-                GestureDetector(
-                  onTap: () {
-                    PhoneCallService.makePhoneCall(
-                      context,
-                      customer.phone,
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor:
-                    const Color.fromRGBO(
-                      141,
-                      208,
-                      113,
-                      0.34,
-                    ),
-                    child: Image.asset(
-                      'assets/call_logo.png',
                     ),
                   ),
-                ),
+                ],
               ],
             ),
+          ),
+        ),
 
-            const SizedBox(height: 22),
+        // ==========================================================
+        // BODY
+        // ==========================================================
 
-            // ======================================================
-            // SUMMARY
-            // ======================================================
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ======================================================
+              // CUSTOMER HEADER
+              // ======================================================
 
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: width * 0.05,
-                vertical: height * 0.02,
-              ),
-              decoration: BoxDecoration(
-                color: const Color.fromRGBO(
-                  255,
-                  248,
-                  240,
-                  1,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFAAB9CF),
-                ),
-              ),
-              child: Row(
+              Row(
                 children: [
-                  Expanded(
-                    child: _infoItem(
-                      'assets/total_given.png',
-                      l10n.totalGiven,
-                      "₹${totalGiven.toStringAsFixed(0)}",
-                      ChopdiColors.navy,
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: ChopdiColors.lightGray,
+                    child: Text(
+                      customer.name.isNotEmpty
+                          ? customer.name[0].toUpperCase()
+                          : "?",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: ChopdiColors.navy,
+                      ),
                     ),
                   ),
 
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
+                  const SizedBox(width: 14),
 
                   Expanded(
-                    child: _infoItem(
-                      'assets/total_interest.png',
-                      l10n.totalInterest,
-                      "₹${totalInterest.toStringAsFixed(0)}",
-                      const Color(0xFF00901B),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          customer.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: ChopdiColors.navy,
+                          ),
+                        ),
+
+                        const SizedBox(height: 1),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                customer.phone,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
+                  const SizedBox(width: 8),
 
-                  Expanded(
-                    child: _infoItem(
-                      'assets/outstanding.png',
-                        l10n.outstanding,
-                      "₹${outstanding.toStringAsFixed(0)}",
-                      const Color(0xFFC74C4C),
+                  GestureDetector(
+                    onTap: () {
+                      PhoneCallService.makePhoneCall(
+                        context,
+                        customer.phone,
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: const Color.fromRGBO(
+                        141,
+                        208,
+                        113,
+                        0.34,
+                      ),
+                      child: Image.asset(
+                        'assets/call_logo.png',
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
-            // ======================================================
-            // TRANSACTION TABLE
-            //
-            // NO I GAVE / I GOT TABS HERE.
-            // Show all transactions.
-            // ======================================================
+              // ======================================================
+              // SUMMARY
+              // ======================================================
 
-            TransactionTable(
-              transactions: transactions,
-              onChanged: loadTransactions,
-              customerId: customer.id,
-            ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.05,
+                  vertical: height * 0.02,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(
+                    255,
+                    248,
+                    240,
+                    1,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFAAB9CF),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_given.png',
+                        l10n.totalGiven,
+                        "₹${totalGiven.toStringAsFixed(0)}",
+                        ChopdiColors.navy,
+                      ),
+                    ),
 
-            const SizedBox(height: 20),
-          ],
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_interest.png',
+                        l10n.totalInterest,
+                        "₹${totalInterest.toStringAsFixed(0)}",
+                        const Color(0xFF00901B),
+                      ),
+                    ),
+
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/outstanding.png',
+                        l10n.outstanding,
+                        "₹${outstanding.toStringAsFixed(0)}",
+                        const Color(0xFFC74C4C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ======================================================
+              // TRANSACTION TABLE
+              //
+              // NO I GAVE / I GOT TABS HERE.
+              // Show all transactions.
+              // ======================================================
+
+              TransactionTable(
+                transactions: transactions,
+                onChanged: loadTransactions,
+                customerId: customer.id,
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
-        ),
     );
   }
 
   // ============================================================
   // INFO ITEM
   // ============================================================
+
   Widget _infoItem(
       String imagePath,
       String title,
@@ -658,8 +658,12 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor:
-      const Color.fromRGBO(253, 237, 217, 1),
+      backgroundColor: const Color.fromRGBO(
+        253,
+        237,
+        217,
+        1,
+      ),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -689,16 +693,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) =>
-                      AccountSummaryBottomSheet(
-                        totalGiven: totalGiven,
-                        totalOutstanding: outstanding,
-                        totalInterest: totalInterest,
-                        lastPayment:
-                        lastReceivedTransaction,
-                        firstLoan:
-                        firstLoanTransaction,
-                      ),
+                  builder: (_) => AccountSummaryBottomSheet(
+                    totalGiven: totalGiven,
+                    totalOutstanding: outstanding,
+                    totalInterest: totalInterest,
+                    lastPayment: lastReceivedTransaction,
+                    firstLoan: firstLoanTransaction,
+                  ),
                 );
               },
             );
@@ -795,8 +796,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         return DeleteCustomerBottomSheet(
           customerName: widget.customer.name,
           onDelete: () async {
-            await Repositories.customers
-                .softDeleteWithEntries(
+            await Repositories.customers.softDeleteWithEntries(
               widget.customer,
             );
 

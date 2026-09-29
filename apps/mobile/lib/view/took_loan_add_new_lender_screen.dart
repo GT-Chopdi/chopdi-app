@@ -10,9 +10,16 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 class AddNewLenderScreen extends StatefulWidget {
+  final int chopdiId;
+  final String? initialName;
+  final String? initialPhone;
   const AddNewLenderScreen({
     super.key,
-    required int chopdiId,
+
+
+    this.initialName,
+    this.initialPhone, required this.chopdiId,
+
   });
 
   @override
@@ -28,6 +35,13 @@ class _AddNewCustomerScreenState
   final phoneController = TextEditingController();
 
   bool _isSaving = false;
+  @override
+  void initState() {
+    super.initState();
+
+    nameController.text = widget.initialName ?? '';
+    phoneController.text = widget.initialPhone ?? '';
+  }
 
   @override
   void dispose() {

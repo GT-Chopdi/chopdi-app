@@ -807,18 +807,22 @@ class _CustomerListSectionState
               ),
             ),
 
-            GestureDetector(
-              onTap: showSortSheet,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.swap_vert,
-                    size: 16,
-                  ),
+            const Spacer(),
 
-                  const SizedBox(width: 4),
+            Expanded(
+              flex: 1,
+              child: GestureDetector(
+                onTap: showSortSheet,
+                behavior:
+                HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisAlignment:
+                  MainAxisAlignment.end,
+                  children: [
+                    const Icon(
+                      Icons.swap_vert,
+                      size: 16,
+                    ),
 
                   Text(
                     '${l10n.sortBy} : $localizedSort',
