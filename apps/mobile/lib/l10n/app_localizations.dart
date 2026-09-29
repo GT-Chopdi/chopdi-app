@@ -117,6 +117,7 @@ abstract class AppLocalizations {
   String get searchByNameAndPhone;
   String get filter;
   String customersCount(int count);
+  String lendersCount(int count);
   String get sortBy;
   String get noCustomersFound;
   String get allNotes;

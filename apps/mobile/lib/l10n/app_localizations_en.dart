@@ -892,6 +892,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String customersCount(int count) => "Customers ($count)";
+
+  @override
+  String lendersCount(int count) => "Lenders ($count)";
+
   @override
   String get allNotes => 'All Notes';
 
