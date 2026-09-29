@@ -439,31 +439,28 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                   const SizedBox(height: 8),
 
-                  // Expanded(
-                  //   child: buildContactsList(),
-                  // ),
                   Expanded(
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            right: 28,
-                          ),
-                          child: buildContactsList(),
-                        ),
-
-                        Positioned(
-                          top: 0,
-                          bottom: 0,
-                          right: 0,
-                          child: AlphabetIndex(
-                            onLetterSelected: _scrollToLetter,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: buildContactsList(),
                   ),
                 ],
+              ),
+            ),
+
+            // ALPHABET INDEX
+
+            Positioned(
+              right: 6,
+              top: 260,
+
+              child: SizedBox(
+                height:
+                    MediaQuery.of(context).size.height *
+                        0.62,
+
+                // child: const AlphabetIndex(),
+                child: AlphabetIndex(
+                  onLetterSelected: _scrollToLetter,
+                ),
               ),
             ),
           ],
