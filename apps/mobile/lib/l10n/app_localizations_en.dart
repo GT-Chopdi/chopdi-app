@@ -148,7 +148,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get manageAllCustomers => "Manage all your customers";
   @override
-  String get lender => 'Lender';
+  String get lender1 => 'Lenders';
 
 
   @override
@@ -902,6 +902,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String lendersCount(int count) => "Lenders ($count)";
 
+  @override
+  String lendersCount(int count) => "Lenders ($count)";
   @override
   String get allNotes => 'All Notes';
 

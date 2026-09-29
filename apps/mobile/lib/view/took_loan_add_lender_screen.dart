@@ -163,25 +163,10 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
   }
 
   Future<void> selectContact(Contact contact) async {
-    // ============================================================
-    // CONTACT NAME
-    // ============================================================
-
     final contactName =
     contact.displayName?.trim().isNotEmpty == true
         ? contact.displayName!.trim()
         : 'Unknown';
-
-    // ============================================================
-    // PHONE NUMBER IS OPTIONAL
-    // ============================================================
-    //
-    // If contact has no phone number:
-    // - Do NOT show error
-    // - Do NOT block
-    // - Open Add Lender form
-    // - Pass empty phone
-    //
 
     final phoneNumber = contact.phones.isNotEmpty
         ? normalizePhoneNumber(
@@ -199,10 +184,10 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => TookLoanCustomerDetailAdd(
-            contactName: contactName,
-            contactPhone: '',
+          builder: (_) => AddNewLenderScreen(
             chopdiId: widget.chopdiId,
+            initialName: contactName,
+            initialPhone: '',
           ),
         ),
       );
@@ -211,7 +196,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
     }
 
     // ============================================================
-    // PHONE NUMBER EXISTS
+    // CHECK EXISTING CUSTOMER
     // ============================================================
 
     final existingCustomer =
@@ -230,10 +215,9 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              TookLoanCustomerDetailsScreen(
-                customer: existingCustomer,
-              ),
+          builder: (_) => TookLoanCustomerDetailsScreen(
+            customer: existingCustomer,
+          ),
         ),
       );
 
@@ -247,10 +231,10 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => TookLoanCustomerDetailAdd(
-          contactName: contactName,
-          contactPhone: phoneNumber,
+        builder: (_) => AddNewLenderScreen(
           chopdiId: widget.chopdiId,
+          initialName: contactName,
+          initialPhone: phoneNumber,
         ),
       ),
     );

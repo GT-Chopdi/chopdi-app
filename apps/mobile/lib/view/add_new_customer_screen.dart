@@ -7,6 +7,8 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
 
+import 'customer_details_screen.dart';
+
 class AddNewCustomerScreen extends StatefulWidget {
   final int chopdiId;
   final String? initialName;
@@ -214,8 +216,15 @@ class _AddNewCustomerScreenState
 
       if (!mounted) return;
 
-      // Return directly to the previous screen.
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Navigate to CustomerDetailsScreen and replace the current screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CustomerDetailsScreen(
+            customer: customer,
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
 
