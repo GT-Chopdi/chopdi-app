@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
+
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
@@ -19,7 +21,6 @@ class AddNewCustomerScreen extends StatefulWidget {
     required this.chopdiId,
     this.initialName,
     this.initialPhone,
-
   });
 
   @override
@@ -35,6 +36,7 @@ class _AddNewCustomerScreenState
   final phoneController = TextEditingController();
 
   bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +87,7 @@ class _AddNewCustomerScreenState
             .deletedAtIsNull()
             .chopdiIdEqualTo(widget.chopdiId)
             .nameEqualTo(name)
+            .loanTypeEqualTo("gave")
             .findAll();
 
         for (final customer in customers) {
@@ -104,6 +107,7 @@ class _AddNewCustomerScreenState
             .chopdiIdEqualTo(widget.chopdiId)
             .nameEqualTo(name)
             .phoneEqualTo(phone)
+            .loanTypeEqualTo("gave")
             .findFirst();
       }
 
@@ -216,7 +220,7 @@ class _AddNewCustomerScreenState
 
       if (!mounted) return;
 
-      // Navigate to CustomerDetailsScreen and replace the current screen
+      // Navigate to CustomerDetailsScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -255,28 +259,22 @@ class _AddNewCustomerScreenState
 
     return Scaffold(
       backgroundColor: ChopdiColors.cream,
-
       resizeToAvoidBottomInset: true,
-
       body: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior:
           ScrollViewKeyboardDismissBehavior.onDrag,
-
           padding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 16,
           ),
-
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 maxWidth: 600,
               ),
-
               child: Form(
                 key: _formKey,
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -298,9 +296,7 @@ class _AddNewCustomerScreenState
                             ),
                           ),
                         ),
-
                         const SizedBox(width: 8),
-
                         Expanded(
                           child: Text(
                             l10n.addNewCustomer,
@@ -324,12 +320,10 @@ class _AddNewCustomerScreenState
 
                     Container(
                       width: double.infinity,
-
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 16,
                       ),
-
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF8F0),
                         borderRadius: BorderRadius.circular(12),
@@ -337,7 +331,6 @@ class _AddNewCustomerScreenState
                           color: const Color(0xFFAAB9CF),
                         ),
                       ),
-
                       child: Column(
                         crossAxisAlignment:
                         CrossAxisAlignment.start,
@@ -369,6 +362,28 @@ class _AddNewCustomerScreenState
                             controller: nameController,
                             hint: l10n.customerName,
                             icon: Icons.person_outline,
+                            textCapitalization:
+                            TextCapitalization.words,
+
+                            // Capitalize first letter automatically
+                            inputFormatters: [
+                              TextInputFormatter.withFunction(
+                                    (oldValue, newValue) {
+                                  if (newValue.text.isEmpty) {
+                                    return newValue;
+                                  }
+
+                                  final text = newValue.text;
+
+                                  return newValue.copyWith(
+                                    text: text[0].toUpperCase() +
+                                        text.substring(1),
+                                    selection: newValue.selection,
+                                  );
+                                },
+                              ),
+                            ],
+
                             validator: (value) {
                               if (value == null ||
                                   value.trim().isEmpty) {
@@ -399,13 +414,13 @@ class _AddNewCustomerScreenState
                               final phone =
                                   value?.trim() ?? '';
 
-                              // Phone is optional.
+                              // Phone is optional
                               if (phone.isEmpty) {
                                 return null;
                               }
 
                               // If entered, it must contain
-                              // exactly 10 digits.
+                              // exactly 10 digits
                               if (!RegExp(r'^[0-9]{10}$')
                                   .hasMatch(phone)) {
                                 return l10n.enterValid10DigitPhone;
@@ -430,23 +445,19 @@ class _AddNewCustomerScreenState
                       child: ElevatedButton(
                         onPressed:
                         _isSaving ? null : saveCustomer,
-
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor:
                           ChopdiColors.navy,
-
                           disabledBackgroundColor:
                           ChopdiColors.navy.withValues(
                             alpha: 0.5,
                           ),
-
                           shape: RoundedRectangleBorder(
                             borderRadius:
                             BorderRadius.circular(6),
                           ),
                         ),
-
                         child: _isSaving
                             ? const SizedBox(
                           width: 20,
@@ -482,18 +493,15 @@ class _AddNewCustomerScreenState
                         onPressed: _isSaving
                             ? null
                             : () => Navigator.pop(context),
-
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: ChopdiColors.navy,
                           ),
-
                           shape: RoundedRectangleBorder(
                             borderRadius:
                             BorderRadius.circular(6),
                           ),
                         ),
-
                         child: Text(
                           l10n.cancel,
                           style: GoogleFonts.manrope(
@@ -540,6 +548,9 @@ class _AddNewCustomerScreenState
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
+    TextCapitalization textCapitalization =
+        TextCapitalization.none,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     int? maxLength,
   }) {
@@ -561,6 +572,8 @@ class _AddNewCustomerScreenState
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
+      inputFormatters: inputFormatters,
       validator: validator,
       maxLength: maxLength,
 
@@ -571,7 +584,7 @@ class _AddNewCustomerScreenState
       decoration: InputDecoration(
         isDense: true,
 
-        // Hide character counter for phone field.
+        // Hide character counter
         counterText: "",
 
         hintText: hint,

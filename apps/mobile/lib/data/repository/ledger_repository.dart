@@ -5,10 +5,13 @@ import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../model/customer.dart';
+import '../../model/lender.dart'; // <-- Imported Lender model
 import '../../model/sync_status.dart';
 import '../../model/transaction.dart';
+import 'lender_repo.dart';
 import 'repository_exception.dart';
 import 'customer_repository.dart';
+// import 'lender_repository.dart'; // <-- Imported Lender repository
 import 'sync_payload.dart';
 import 'sync_queue.dart';
 
@@ -19,18 +22,19 @@ import 'sync_queue.dart';
 /// That is why no balance is stored anywhere — there is no shared number for
 /// two devices to disagree about.
 class LedgerRepository {
-  // LedgerRepository(this._isar, {SyncQueue queue = const SyncQueue()})
-  //     : _queue = queue;
   LedgerRepository(
-    this._isar, {
-    SyncQueue queue = const SyncQueue(),
-    CustomerRepository? customers,
-  }) : _queue = queue,
-       _customers = customers ?? CustomerRepository(_isar, queue: queue);
+      this._isar, {
+        SyncQueue queue = const SyncQueue(),
+        CustomerRepository? customers,
+        LenderRepository? lenders,
+      }) : _queue = queue,
+        _customers = customers ?? CustomerRepository(_isar, queue: queue),
+        _lenders = lenders ?? LenderRepository(_isar, queue: queue);
 
   final Isar _isar;
   final SyncQueue _queue;
   final CustomerRepository _customers;
+  final LenderRepository _lenders; // <-- Added Lender Repo
   static const _uuid = Uuid();
 
   /// ₹100 crore, matching `ledger_entry_amount_sane` on the server.
@@ -64,9 +68,6 @@ class LedgerRepository {
 
     final tx = Transaction()
       ..uuid = _uuid.v7()
-      // Both keys are kept and neither is redundant: `customerId` is the local
-      // foreign key that Isar queries use, `customerUuid` is the one that means
-      // anything on another device.
       ..customerId = customer.id
       ..customerUuid = customer.uuid
       ..chopdiId = customer.chopdiId
@@ -84,7 +85,6 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
-      // Mark the customer as recently active.
       await _touchCustomerInTxn(customer.id, now);
       await _queue.enqueueCreate(
         _isar,
@@ -98,143 +98,128 @@ class LedgerRepository {
   }
 
   /// Adopts a draft row built by a caller, validating and enqueuing it.
-  ///
-  /// The existing screens construct a [Transaction] and hand it over, so this
-  /// takes the finished object rather than a parameter list — which keeps those
-  /// call sites unchanged while still forcing every write through validation
-  /// and the outbox. The owning customer is resolved from [Transaction.customerId]
-  /// so callers do not have to thread it through.
-  ///
-  /// Any sync metadata already on the draft is overwritten: identity and
-  /// versioning are the repository's to assign, never a caller's.
-  // Future<Transaction> adoptDraft(Transaction draft) async {
-  //   final customer = await _isar.customers.get(draft.customerId);
-
-  //   if (customer == null) {
-  //     throw const RepositoryException(
-  //       'That customer no longer exists.',
-  //       field: 'customer',
-  //     );
-  //   }
-
-  //   _validateCustomer(customer);
-  //   _validateAmount(draft.amountPaise);
-  //   _validateRate(draft.interestRateBp);
-  //   _validateDate(draft.date);
-  //   draft.description = _validateDescription(draft.description);
-
-  //   final now = DateTime.now().toUtc();
-
-  //   draft
-  //     ..uuid = _uuid.v7()
-  //     ..customerUuid = customer.uuid
-  //     ..chopdiId = customer.chopdiId
-  //     ..paymentMode = draft.paymentMode.trim()
-  //     ..version = 0
-  //     ..updatedAt = now
-  //     ..voidedAt = null
-  //     ..voidedReason = null
-  //     ..syncStatus = SyncStatus.pending;
-
-  //   await _isar.writeTxn(() async {
-  //     await _isar.transactions.put(draft);
-  //     await _queue.enqueueCreate(
-  //       _isar,
-  //       entity: 'ledger_entry',
-  //       entityId: draft.uuid,
-  //       payload: _payloadFor(draft),
-  //     );
-  //   });
-
-  //   return draft;
-  // }
-
   Future<Transaction> adoptDraft(Transaction draft) async {
-    // Resolve the customer using the local Isar ID.
-    Customer? customer = await _isar.customers.get(draft.customerId);
+    final bool isTookLoan = draft.type == TransactionType.took ||
+        draft.type == TransactionType.paid;
 
-    if (customer == null) {
-      throw const RepositoryException(
-        'That customer no longer exists.',
-        field: 'customer',
-      );
+    // ============================================================
+    // ROUTE TO LENDERS TABLE ("I Took Loan")
+    // ============================================================
+    if (isTookLoan) {
+      Lender? lender = await _isar.lenders.get(draft.customerId);
+
+      if (lender == null) {
+        throw const RepositoryException(
+          'That lender no longer exists.',
+          field: 'lender',
+        );
+      }
+
+      if (lender.deletedAt != null) {
+        throw const RepositoryException(
+          'Cannot add an entry to a deleted lender.',
+          field: 'lender',
+        );
+      }
+
+      _validateAmount(draft.amountPaise);
+      _validateRate(draft.interestRateBp);
+      _validateDate(draft.date);
+      draft.description = _validateDescription(draft.description);
+
+      final now = DateTime.now().toUtc();
+
+      draft
+        ..uuid = _uuid.v7()
+        ..customerId = lender.id
+        ..customerUuid = lender.uuid
+        ..chopdiId = lender.chopdiId
+        ..paymentMode = draft.paymentMode.trim()
+        ..version = 0
+        ..updatedAt = now
+        ..voidedAt = null
+        ..voidedReason = null
+        ..syncStatus = SyncStatus.pending;
+
+      await _isar.writeTxn(() async {
+        await _isar.transactions.put(draft);
+        await _touchLenderInTxn(lender.id, now); // Touch Lender
+
+        await _queue.enqueueCreate(
+          _isar,
+          entity: 'ledger_entry',
+          entityId: draft.uuid,
+          payload: _payloadFor(draft),
+        );
+      });
+
+      return draft;
     }
+    // ============================================================
+    // ROUTE TO CUSTOMERS TABLE ("I Gave Loan")
+    // ============================================================
+    else {
+      Customer? customer = await _isar.customers.get(draft.customerId);
 
-    // ------------------------------------------------------------
-    // IMPORTANT FIX
-    // ------------------------------------------------------------
-    //
-    // Old customers created before UUID migration can have:
-    //
-    //     customer.uuid == ''
-    //
-    // Make sure the customer receives a permanent UUID before creating
-    // the ledger entry.
-    //
-    // This is what fixes:
-    //
-    // RepositoryException [customer]:
-    // This customer has not been migrated yet.
-    //
-    customer = await _customers.ensureMigrated(customer);
+      if (customer == null) {
+        throw const RepositoryException(
+          'That customer no longer exists.',
+          field: 'customer',
+        );
+      }
 
-    if (customer.deletedAt != null) {
-      throw const RepositoryException(
-        'Cannot add an entry to a deleted customer.',
-        field: 'customer',
-      );
+      customer = await _customers.ensureMigrated(customer);
+
+      if (customer.deletedAt != null) {
+        throw const RepositoryException(
+          'Cannot add an entry to a deleted customer.',
+          field: 'customer',
+        );
+      }
+
+      _validateAmount(draft.amountPaise);
+      _validateRate(draft.interestRateBp);
+      _validateDate(draft.date);
+      draft.description = _validateDescription(draft.description);
+
+      final now = DateTime.now().toUtc();
+
+      draft
+        ..uuid = _uuid.v7()
+        ..customerId = customer.id
+        ..customerUuid = customer.uuid
+        ..chopdiId = customer.chopdiId
+        ..paymentMode = draft.paymentMode.trim()
+        ..version = 0
+        ..updatedAt = now
+        ..voidedAt = null
+        ..voidedReason = null
+        ..syncStatus = SyncStatus.pending;
+
+      await _isar.writeTxn(() async {
+        await _isar.transactions.put(draft);
+        await _touchCustomerInTxn(customer!.id, now); // Touch Customer
+
+        await _queue.enqueueCreate(
+          _isar,
+          entity: 'ledger_entry',
+          entityId: draft.uuid,
+          payload: _payloadFor(draft),
+        );
+      });
+
+      return draft;
     }
-
-    _validateAmount(draft.amountPaise);
-    _validateRate(draft.interestRateBp);
-    _validateDate(draft.date);
-
-    draft.description =
-        _validateDescription(draft.description);
-
-    final now = DateTime.now().toUtc();
-
-    draft
-      ..uuid = _uuid.v7()
-      ..customerId = customer.id
-      ..customerUuid = customer.uuid
-      // Taken from the owning customer rather than the caller. Every read path
-      // that aggregates money (SummaryCard, the took-loan home screen) filters
-      // on chopdiId, so a draft that omits it saves correctly and then never
-      // appears in any total. Deriving it here means no call site can forget.
-      ..chopdiId = customer.chopdiId
-      ..paymentMode = draft.paymentMode.trim()
-      ..version = 0
-      ..updatedAt = now
-      ..voidedAt = null
-      ..voidedReason = null
-      ..syncStatus = SyncStatus.pending;
-
-    await _isar.writeTxn(() async {
-      await _isar.transactions.put(draft);
-      // Mark the customer as recently active.
-      await _touchCustomerInTxn(customer!.id, now);
-
-
-      await _queue.enqueueCreate(
-        _isar,
-        entity: 'ledger_entry',
-        entityId: draft.uuid,
-        payload: _payloadFor(draft),
-      );
-    });
-
-    return draft;
   }
 
   Future<Transaction> update(
-    Transaction tx, {
-    int? amountPaise,
-    int? interestRateBp,
-    DateTime? date,
-    String? description,
-    String? paymentMode,
-  }) async {
+      Transaction tx, {
+        int? amountPaise,
+        int? interestRateBp,
+        DateTime? date,
+        String? description,
+        String? paymentMode,
+      }) async {
     if (tx.uuid.isEmpty) {
       throw const RepositoryException(
         'This entry has not been migrated yet and cannot be edited.',
@@ -260,20 +245,6 @@ class LedgerRepository {
     if (description != null) tx.description = _validateDescription(description);
     if (paymentMode != null) tx.paymentMode = paymentMode.trim();
 
-    // tx
-    //   ..updatedAt = DateTime.now().toUtc()
-    //   ..syncStatus = SyncStatus.pending;
-
-    // await _isar.writeTxn(() async {
-    //   await _isar.transactions.put(tx);
-    //   await _queue.enqueueUpdate(
-    //     _isar,
-    //     entity: 'ledger_entry',
-    //     entityId: tx.uuid,
-    //     expectedVersion: tx.version,
-    //     payload: _payloadFor(tx),
-    //   );
-    // });
     final now = DateTime.now().toUtc();
 
     tx
@@ -283,8 +254,14 @@ class LedgerRepository {
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
 
-      // Editing a transaction makes its customer recently active.
-      await _touchCustomerInTxn(tx.customerId, now);
+      // Route the timestamp update to the correct parent table
+      final bool isTookLoan = tx.type == TransactionType.took ||
+          tx.type == TransactionType.paid;
+      if (isTookLoan) {
+        await _touchLenderInTxn(tx.customerId, now);
+      } else {
+        await _touchCustomerInTxn(tx.customerId, now);
+      }
 
       await _queue.enqueueUpdate(
         _isar,
@@ -299,9 +276,6 @@ class LedgerRepository {
   }
 
   /// Voids an entry. Never deletes it.
-  ///
-  /// A reason is required because the server requires one — an audit trail that
-  /// records a deletion without saying why explains nothing.
   Future<void> voidEntry(Transaction tx, {required String reason}) async {
     if (tx.uuid.isEmpty) {
       throw const RepositoryException(
@@ -327,8 +301,16 @@ class LedgerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.transactions.put(tx);
-      // Voiding a transaction is also customer activity.
-      await _touchCustomerInTxn(tx.customerId, now);
+
+      // Route the timestamp update to the correct parent table
+      final bool isTookLoan = tx.type == TransactionType.took ||
+          tx.type == TransactionType.paid;
+      if (isTookLoan) {
+        await _touchLenderInTxn(tx.customerId, now);
+      } else {
+        await _touchCustomerInTxn(tx.customerId, now);
+      }
+
       await _queue.enqueueVoid(
         _isar,
         entity: 'ledger_entry',
@@ -348,33 +330,19 @@ class LedgerRepository {
       .findAll();
 
   /// Balance in paise: what was given, less what came back.
-  ///
-  /// Derived, never stored. A stored balance is a number two devices can
-  /// disagree about, and reconciling two disagreeing balances is impossible
-  /// without re-deriving it from the entries anyway.
   Future<int> balancePaise(Customer customer) async {
     final entries = await forCustomer(customer);
-
-    // Uses the shared direction rule rather than `type == gave`. That shortcut
-    // was correct while only two types existed, but silently mis-signed `paid`
-    // once borrowing was added: repaying a debt reduces what you owe, so it
-    // must add to the net position, not subtract.
     return entries.fold<int>(
       0,
-      (sum, tx) => sum + SyncPayload.signedPaise(tx.type, tx.amountPaise),
+          (sum, tx) => sum + SyncPayload.signedPaise(tx.type, tx.amountPaise),
     );
   }
 
   /// Updates the customer's activity timestamp.
-  ///
-  /// This must be called from an existing Isar write transaction.
-  /// It intentionally does not enqueue a customer sync operation because
-  /// this timestamp represents local "recent activity" for the customer;
-  /// the ledger entry itself is already synced separately.
   Future<void> _touchCustomerInTxn(
-    int customerId,
-    DateTime now,
-  ) async {
+      int customerId,
+      DateTime now,
+      ) async {
     final customer = await _isar.customers.get(customerId);
 
     if (customer == null || customer.deletedAt != null) {
@@ -382,23 +350,37 @@ class LedgerRepository {
     }
 
     customer.updatedAt = now;
-
     await _isar.customers.put(customer);
   }
 
+  /// Updates the lender's activity timestamp.
+  Future<void> _touchLenderInTxn(
+      int lenderId,
+      DateTime now,
+      ) async {
+    final lender = await _isar.lenders.get(lenderId);
+
+    if (lender == null || lender.deletedAt != null) {
+      return;
+    }
+
+    lender.updatedAt = now;
+    await _isar.lenders.put(lender);
+  }
+
   Map<String, dynamic> _payloadFor(Transaction tx) => {
-        'customerId': tx.customerUuid,
-        'amountPaise': tx.amountPaise,
-        'direction': SyncPayload.direction(tx.type),
-        'ledgerSide': SyncPayload.ledgerSide(tx.type),
-        'interestRateBp': tx.interestRateBp,
-        'interestType':
-            SyncPayload.interestType(tx.interestType, rateBp: tx.interestRateBp),
-        'interestFrequency': SyncPayload.interestFrequency(tx.interestFrequency),
-        'entryDate': SyncPayload.entryDate(tx.date),
-        'description': tx.description,
-        'paymentMode': tx.paymentMode,
-      };
+    'customerId': tx.customerUuid,
+    'amountPaise': tx.amountPaise,
+    'direction': SyncPayload.direction(tx.type),
+    'ledgerSide': SyncPayload.ledgerSide(tx.type),
+    'interestRateBp': tx.interestRateBp,
+    'interestType':
+    SyncPayload.interestType(tx.interestType, rateBp: tx.interestRateBp),
+    'interestFrequency': SyncPayload.interestFrequency(tx.interestFrequency),
+    'entryDate': SyncPayload.entryDate(tx.date),
+    'description': tx.description,
+    'paymentMode': tx.paymentMode,
+  };
 
   void _validateCustomer(Customer customer) {
     if (customer.uuid.isEmpty) {
@@ -415,11 +397,6 @@ class LedgerRepository {
     }
   }
 
-  /// Mirrors `ledger_entry_amount_positive` and `_amount_sane`.
-  ///
-  /// Strictly positive: direction carries the sign, so a negative amount is not
-  /// a rejected value but an unrepresentable one. Without this, a phantom
-  /// credit would sync, be refused permanently, and dead-letter.
   void _validateAmount(int amountPaise) {
     if (amountPaise <= 0) {
       throw const RepositoryException(
@@ -444,11 +421,6 @@ class LedgerRepository {
     }
   }
 
-  /// Bounds the business date.
-  ///
-  /// Tomorrow is allowed to absorb timezone skew; beyond that a future-dated
-  /// entry is a typo. The lower bound stops a mis-keyed year creating a loan
-  /// that appears to have been accruing interest for decades.
   void _validateDate(DateTime date) {
     final now = DateTime.now();
     if (date.isAfter(now.add(const Duration(days: 1)))) {

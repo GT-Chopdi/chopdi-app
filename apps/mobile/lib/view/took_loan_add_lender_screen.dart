@@ -163,24 +163,16 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
   }
 
   Future<void> selectContact(Contact contact) async {
-    final contactName =
-    contact.displayName?.trim().isNotEmpty == true
+    final contactName = contact.displayName?.trim().isNotEmpty == true
         ? contact.displayName!.trim()
         : 'Unknown';
 
     final phoneNumber = contact.phones.isNotEmpty
-        ? normalizePhoneNumber(
-      contact.phones.first.number,
-    )
+        ? normalizePhoneNumber(contact.phones.first.number)
         : '';
-
-    // ============================================================
-    // NO PHONE NUMBER
-    // ============================================================
 
     if (phoneNumber.isEmpty) {
       if (!mounted) return;
-
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -191,42 +183,28 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
           ),
         ),
       );
-
       return;
     }
 
-    // ============================================================
-    // CHECK EXISTING CUSTOMER
-    // ============================================================
-
-    final existingCustomer =
-    await IsarService.getCustomerByPhoneAndChopdi(
+    // <-- CHANGED TO FETCH LENDER
+    final existingLender = await IsarService.getLenderByPhoneAndChopdi(
       phoneNumber,
       widget.chopdiId,
     );
 
     if (!mounted) return;
 
-    // ============================================================
-    // EXISTING CUSTOMER
-    // ============================================================
-
-    if (existingCustomer != null) {
+    if (existingLender != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => TookLoanCustomerDetailsScreen(
-            customer: existingCustomer,
+            lender: existingLender, // <-- FIXED: PASS LENDER
           ),
         ),
       );
-
       return;
     }
-
-    // ============================================================
-    // NEW CUSTOMER
-    // ============================================================
 
     Navigator.push(
       context,
@@ -238,8 +216,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
         ),
       ),
     );
-  }
-  void _scrollToLetter(String letter) {
+  }  void _scrollToLetter(String letter) {
     if (filteredContacts.isEmpty) {
       return;
     }

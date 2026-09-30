@@ -90,9 +90,13 @@ class CustomerRepository {
   Future<Customer?> findByUuid(String uuid) {
     return _isar.customers.filter().uuidEqualTo(uuid).findFirst();
   }
+
+
+
   Future<Customer?> findActiveByPhoneAndChopdi(
       String phone,
       int chopdiId,
+      String loanType, // <-- 1. ADD THIS PARAMETER
       ) {
     final cleanPhone = phone.trim();
 
@@ -105,6 +109,8 @@ class CustomerRepository {
         .phoneEqualTo(cleanPhone)
         .and()
         .chopdiIdEqualTo(chopdiId)
+        .and()
+        .loanTypeEqualTo(loanType) // <-- 2. ADD THIS FILTER
         .and()
         .deletedAtIsNull()
         .findFirst();

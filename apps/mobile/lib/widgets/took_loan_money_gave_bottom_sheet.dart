@@ -3,24 +3,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/notification_service.dart';
+import 'package:mychopdi/service/transaction_service.dart'; // <-- Added import
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/utils/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
-  final Customer customer;
+  final Lender lender;
   final VoidCallback onSaved;
   final bool isEdit;
   final Transaction? transaction;
 
   const TookLoanMoneyGaveBottomSheet({
     super.key,
-    required this.customer,
+    required this.lender,
     required this.onSaved,
     required this.isEdit,
     this.transaction,
@@ -33,17 +34,10 @@ class TookLoanMoneyGaveBottomSheet extends StatefulWidget {
 
 class _MoneyGaveBottomSheetState
     extends State<TookLoanMoneyGaveBottomSheet> {
-  final TextEditingController amountController =
-  TextEditingController();
-
-  final TextEditingController interestController =
-  TextEditingController();
-
-  final TextEditingController descriptionController =
-  TextEditingController();
-
-  final ScrollController _scrollController =
-  ScrollController();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController interestController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final FocusNode _amountFocusNode = FocusNode();
   final FocusNode _interestFocusNode = FocusNode();
@@ -63,12 +57,8 @@ class _MoneyGaveBottomSheetState
   String paymentMode = "";
 
   double get interestAmount {
-    final amount =
-        double.tryParse(amountController.text) ?? 0;
-
-    final percent =
-        double.tryParse(interestController.text) ?? 0;
-
+    final amount = double.tryParse(amountController.text) ?? 0;
+    final percent = double.tryParse(interestController.text) ?? 0;
     return amount * percent / 100;
   }
 
@@ -77,26 +67,13 @@ class _MoneyGaveBottomSheetState
     super.initState();
 
     if (widget.transaction != null) {
-      amountController.text =
-          widget.transaction!.amount.toString();
-
-      interestController.text =
-          widget.transaction!.interestRate.toString();
-
-      descriptionController.text =
-          widget.transaction!.description;
-
-      paymentMode =
-          widget.transaction!.paymentMode;
-
-      selectedDate =
-          widget.transaction!.date;
-
-      interestType =
-          widget.transaction!.interestType;
-
-      interestFrequency =
-          widget.transaction!.interestFrequency;
+      amountController.text = widget.transaction!.amount.toString();
+      interestController.text = widget.transaction!.interestRate.toString();
+      descriptionController.text = widget.transaction!.description;
+      paymentMode = widget.transaction!.paymentMode;
+      selectedDate = widget.transaction!.date;
+      interestType = widget.transaction!.interestType;
+      interestFrequency = widget.transaction!.interestFrequency;
     }
 
     _amountFocusNode.addListener(() {
@@ -121,13 +98,11 @@ class _MoneyGaveBottomSheetState
   void _scrollToField(GlobalKey key) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = key.currentContext;
-
       if (context == null) return;
 
       Scrollable.ensureVisible(
         context,
-        duration:
-        const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 350),
         curve: Curves.easeOut,
         alignment: 0.25,
       );
@@ -139,25 +114,18 @@ class _MoneyGaveBottomSheetState
     amountController.dispose();
     interestController.dispose();
     descriptionController.dispose();
-
     _scrollController.dispose();
-
     _amountFocusNode.dispose();
     _interestFocusNode.dispose();
     _descriptionFocusNode.dispose();
-
     super.dispose();
   }
 
   Future<void> _pickDate() async {
     final DateTime today = DateTime.now();
-
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-      selectedDate.isAfter(today)
-          ? today
-          : selectedDate,
+      initialDate: selectedDate.isAfter(today) ? today : selectedDate,
       firstDate: DateTime(2000),
       lastDate: today,
     );
@@ -184,21 +152,18 @@ class _MoneyGaveBottomSheetState
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-      const EdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 14,
         vertical: 16,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius:
-        BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
           color: Color(0xffC9D2E3),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius:
-        BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
           color: Color(0xff29406B),
           width: 1.3,
@@ -209,8 +174,7 @@ class _MoneyGaveBottomSheetState
 
   Widget title(String text) {
     return Padding(
-      padding:
-      const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
         style: const TextStyle(
@@ -226,9 +190,7 @@ class _MoneyGaveBottomSheetState
       BuildContext context,
       String value,
       ) {
-    final l10n =
-    AppLocalizations.of(context);
-
+    final l10n = AppLocalizations.of(context);
     switch (value) {
       case 'Simple Interest':
         return l10n.simpleInterest;
@@ -243,9 +205,7 @@ class _MoneyGaveBottomSheetState
       BuildContext context,
       String value,
       ) {
-    final l10n =
-    AppLocalizations.of(context);
-
+    final l10n = AppLocalizations.of(context);
     switch (value) {
       case 'Daily':
         return l10n.daily;
@@ -264,9 +224,7 @@ class _MoneyGaveBottomSheetState
       BuildContext context,
       String value,
       ) {
-    final l10n =
-    AppLocalizations.of(context);
-
+    final l10n = AppLocalizations.of(context);
     switch (value) {
       case 'Cash':
         return l10n.cash;
@@ -281,72 +239,46 @@ class _MoneyGaveBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-    AppLocalizations.of(context);
-
-    final keyboardHeight =
-        MediaQuery.of(context)
-            .viewInsets
-            .bottom;
-
-    final locale =
-    Localizations.localeOf(context)
-        .toLanguageTag();
+    final l10n = AppLocalizations.of(context);
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final locale = Localizations.localeOf(context).toLanguageTag();
 
     return AnimatedPadding(
-      duration:
-      const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
-      padding:
-      EdgeInsets.only(bottom: keyboardHeight),
+      padding: EdgeInsets.only(bottom: keyboardHeight),
       child: SafeArea(
         top: false,
         child: Container(
-          height:
-          MediaQuery.of(context).size.height *
-              0.90,
-          decoration:
-          const BoxDecoration(
+          height: MediaQuery.of(context).size.height * 0.90,
+          decoration: const BoxDecoration(
             color: Color(0xffFFF8F0),
-            borderRadius:
-            BorderRadius.vertical(
+            borderRadius: BorderRadius.vertical(
               top: Radius.circular(34),
             ),
           ),
           child: Column(
             children: [
               Padding(
-                padding:
-                const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.only(top: 10),
                 child: Container(
                   width: 55,
                   height: 5,
                   decoration: BoxDecoration(
                     color: Colors.grey,
-                    borderRadius:
-                    BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
               ),
-
               Expanded(
                 child: SingleChildScrollView(
-                  controller:
-                  _scrollController,
+                  controller: _scrollController,
                   keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior
-                      .onDrag,
-                  padding:
-                  const EdgeInsets.fromLTRB(
-                    22,
-                    10,
-                    22,
-                    20,
-                  ),
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 20),
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
-
                       Container(
                         height: 72,
                         width: 72,
@@ -368,9 +300,7 @@ class _MoneyGaveBottomSheetState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
                       Text(
                         l10n.youTook,
                         style: GoogleFonts.manrope(
@@ -379,219 +309,129 @@ class _MoneyGaveBottomSheetState
                           fontSize: 22,
                         ),
                       ),
-
                       const SizedBox(height: 28),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
+                        alignment: Alignment.centerLeft,
                         child: title(l10n.amount),
                       ),
-
                       Container(
                         key: _amountKey,
                         child: TextField(
-                          controller:
-                          amountController,
-                          focusNode:
-                          _amountFocusNode,
-                          onChanged: (_) =>
-                              setState(() {}),
-                          keyboardType:
-                          TextInputType.number,
-                          decoration:
-                          decoration(
-                            hint:
-                            l10n.enterAmount,
-                            prefix:
-                            const Icon(
+                          controller: amountController,
+                          focusNode: _amountFocusNode,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: TextInputType.number,
+                          decoration: decoration(
+                            hint: l10n.enterAmount,
+                            prefix: const Icon(
                               Icons.currency_rupee,
                               size: 20,
-                              color:
-                              Color(
-                                0xff6D7B94,
-                              ),
+                              color: Color(0xff6D7B94),
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
+                        alignment: Alignment.centerLeft,
                         child: title(l10n.date),
                       ),
-
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
-                        decoration:
-                        decoration().copyWith(
-                          suffix:
-                          const Icon(
-                            Icons
-                                .calendar_today_outlined,
+                        decoration: decoration().copyWith(
+                          suffix: const Icon(
+                            Icons.calendar_today_outlined,
                             color: Colors.black,
                           ),
-                          hintText:
-                          DateFormat(
-                            "dd MMM yyyy",
-                            locale,
-                          ).format(
-                            selectedDate,
-                          ),
-                          hintStyle:
-                          const TextStyle(
+                          hintText: DateFormat("dd MMM yyyy", locale)
+                              .format(selectedDate),
+                          hintStyle: const TextStyle(
                             color: Colors.black,
-                            fontWeight:
-                            FontWeight.w500,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
-                        child: title(
-                          l10n.interestRatePercent,
-                        ),
+                        alignment: Alignment.centerLeft,
+                        child: title(l10n.interestRatePercent),
                       ),
-
                       Container(
                         key: _interestKey,
                         child: TextField(
-                          controller:
-                          interestController,
-                          focusNode:
-                          _interestFocusNode,
+                          controller: interestController,
+                          focusNode: _interestFocusNode,
                           onChanged: (value) {
                             setState(() {
-                              _interestRateError =
-                                  value
-                                      .trim()
-                                      .isEmpty;
+                              _interestRateError = value.trim().isEmpty;
                             });
                           },
-                          keyboardType:
-                          const TextInputType
-                              .numberWithOptions(
+                          keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          decoration:
-                          decoration(
-                            hint:
-                            l10n.enterInterestRate,
+                          decoration: decoration(
+                            hint: l10n.enterInterestRate,
                           ).copyWith(
-                            errorText:
-                            _interestRateError
-                                ? l10n
-                                .interestRateRequired
+                            errorText: _interestRateError
+                                ? l10n.interestRateRequired
                                 : null,
-                            errorStyle:
-                            const TextStyle(
+                            errorStyle: const TextStyle(
                               color: Colors.red,
-                              fontWeight:
-                              FontWeight.w500,
+                              fontWeight: FontWeight.w500,
                             ),
-                            enabledBorder:
-                            OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
-                              borderSide:
-                              BorderSide(
-                                color:
-                                _interestRateError
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: _interestRateError
                                     ? Colors.red
-                                    : const Color(
-                                  0xffC9D2E3,
-                                ),
+                                    : const Color(0xffC9D2E3),
                               ),
                             ),
-                            focusedBorder:
-                            OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
-                              borderSide:
-                              BorderSide(
-                                color:
-                                _interestRateError
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: _interestRateError
                                     ? Colors.red
-                                    : const Color(
-                                  0xff29406B,
-                                ),
+                                    : const Color(0xff29406B),
                                 width: 1.3,
                               ),
                             ),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
-                        child: title(
-                          l10n.description,
-                        ),
+                        alignment: Alignment.centerLeft,
+                        child: title(l10n.description),
                       ),
-
                       Container(
-                        key:
-                        _descriptionKey,
+                        key: _descriptionKey,
                         child: TextField(
-                          controller:
-                          descriptionController,
-                          focusNode:
-                          _descriptionFocusNode,
+                          controller: descriptionController,
+                          focusNode: _descriptionFocusNode,
                           maxLength: 100,
                           maxLines: 4,
-                          decoration:
-                          decoration(
-                            hint: l10n
-                                .enterDescriptionHere,
+                          decoration: decoration(
+                            hint: l10n.enterDescriptionHere,
                           ).copyWith(
                             counterText: "",
                           ),
-                          onChanged: (_) =>
-                              setState(() {}),
+                          onChanged: (_) => setState(() {}),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
-                        child: title(
-                          l10n.interestType,
-                        ),
+                        alignment: Alignment.centerLeft,
+                        child: title(l10n.interestType),
                       ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        interestType,
-                        decoration:
-                        decoration(),
-                        icon: const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
+                      DropdownButtonFormField<String>(
+                        initialValue: interestType,
+                        decoration: decoration(),
+                        icon: const Icon(Icons.keyboard_arrow_down),
                         items: [
                           DropdownMenuItem(
-                            value:
-                            "Simple Interest",
+                            value: "Simple Interest",
                             child: Text(
                               _localizedInterestType(
                                 context,
@@ -600,8 +440,7 @@ class _MoneyGaveBottomSheetState
                             ),
                           ),
                           DropdownMenuItem(
-                            value:
-                            "Compound Interest",
+                            value: "Compound Interest",
                             child: Text(
                               _localizedInterestType(
                                 context,
@@ -612,159 +451,99 @@ class _MoneyGaveBottomSheetState
                         ],
                         onChanged: (v) {
                           if (v == null) return;
-
                           setState(() {
                             interestType = v;
                           });
                         },
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
-                        child: title(
-                          l10n.interestFrequency,
-                        ),
+                        alignment: Alignment.centerLeft,
+                        child: title(l10n.interestFrequency),
                       ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        interestFrequency,
-                        decoration:
-                        decoration(),
-                        icon: const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
+                      DropdownButtonFormField<String>(
+                        initialValue: interestFrequency,
+                        decoration: decoration(),
+                        icon: const Icon(Icons.keyboard_arrow_down),
                         items: [
                           DropdownMenuItem(
                             value: "Daily",
                             child: Text(
-                              _localizedFrequency(
-                                context,
-                                "Daily",
-                              ),
+                              _localizedFrequency(context, "Daily"),
                             ),
                           ),
                           DropdownMenuItem(
                             value: "Weekly",
                             child: Text(
-                              _localizedFrequency(
-                                context,
-                                "Weekly",
-                              ),
+                              _localizedFrequency(context, "Weekly"),
                             ),
                           ),
                           DropdownMenuItem(
                             value: "Monthly",
                             child: Text(
-                              _localizedFrequency(
-                                context,
-                                "Monthly",
-                              ),
+                              _localizedFrequency(context, "Monthly"),
                             ),
                           ),
                           DropdownMenuItem(
                             value: "Yearly",
                             child: Text(
-                              _localizedFrequency(
-                                context,
-                                "Yearly",
-                              ),
+                              _localizedFrequency(context, "Yearly"),
                             ),
                           ),
                         ],
                         onChanged: (v) {
                           if (v == null) return;
-
                           setState(() {
                             interestFrequency = v;
                           });
                         },
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
-                        alignment:
-                        Alignment.centerLeft,
-                        child: title(
-                          l10n.paymentModeOptional,
-                        ),
+                        alignment: Alignment.centerLeft,
+                        child: title(l10n.paymentModeOptional),
                       ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        paymentMode.isEmpty
-                            ? null
-                            : paymentMode,
-                        decoration:
-                        decoration(
-                          hint:
-                          l10n.selectPaymentMode,
+                      DropdownButtonFormField<String>(
+                        initialValue: paymentMode.isEmpty ? null : paymentMode,
+                        decoration: decoration(
+                          hint: l10n.selectPaymentMode,
                         ),
-                        icon: const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
+                        icon: const Icon(Icons.keyboard_arrow_down),
                         items: [
                           DropdownMenuItem(
                             value: "Cash",
                             child: Text(
-                              _localizedPaymentMode(
-                                context,
-                                "Cash",
-                              ),
+                              _localizedPaymentMode(context, "Cash"),
                             ),
                           ),
                           DropdownMenuItem(
                             value: "UPI",
                             child: Text(
-                              _localizedPaymentMode(
-                                context,
-                                "UPI",
-                              ),
+                              _localizedPaymentMode(context, "UPI"),
                             ),
                           ),
                           DropdownMenuItem(
                             value: "Bank",
                             child: Text(
-                              _localizedPaymentMode(
-                                context,
-                                "Bank",
-                              ),
+                              _localizedPaymentMode(context, "Bank"),
                             ),
                           ),
                         ],
                         onChanged: (v) {
                           if (v == null) return;
-
                           setState(() {
                             paymentMode = v;
                           });
                         },
                       ),
-
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
               ),
-
               Container(
-                padding:
-                const EdgeInsets.fromLTRB(
-                  22,
-                  12,
-                  22,
-                  20,
-                ),
-                decoration:
-                const BoxDecoration(
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
+                decoration: const BoxDecoration(
                   color: Color(0xffFFF8F0),
                 ),
                 child: Row(
@@ -774,267 +553,168 @@ class _MoneyGaveBottomSheetState
                         height: 52,
                         child: OutlinedButton(
                           onPressed: () {
-                            FocusScope.of(
-                              context,
-                            ).unfocus();
-
-                            Navigator.pop(
-                              context,
-                            );
+                            FocusScope.of(context).unfocus();
+                            Navigator.pop(context);
                           },
-                          style:
-                          OutlinedButton
-                              .styleFrom(
-                            side:
-                            const BorderSide(
-                              color:
-                              Color(
-                                0xffC7D0DF,
-                              ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: Color(0xffC7D0DF),
                             ),
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
                             l10n.cancel,
-                            style:
-                            const TextStyle(
-                              color:
-                              Color(
-                                0xff29406B,
-                              ),
-                              fontWeight:
-                              FontWeight.w700,
+                            style: const TextStyle(
+                              color: Color(0xff29406B),
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 18),
-
                     Expanded(
                       child: SizedBox(
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () async {
-                            if (amountController
-                                .text
-                                .trim()
-                                .isEmpty ||
-                                interestController
-                                    .text
-                                    .trim()
-                                    .isEmpty) {
+                            if (amountController.text.trim().isEmpty ||
+                                interestController.text.trim().isEmpty) {
                               setState(() {
                                 _interestRateError =
-                                    interestController
-                                        .text
-                                        .trim()
-                                        .isEmpty;
+                                    interestController.text.trim().isEmpty;
                               });
 
                               if (_interestRateError) {
-                                _interestFocusNode
-                                    .requestFocus();
-
-                                _scrollToField(
-                                  _interestKey,
-                                );
+                                _interestFocusNode.requestFocus();
+                                _scrollToField(_interestKey);
                               }
-
                               return;
                             }
 
-                            final amount =
-                            double.parse(
-                              amountController
-                                  .text,
-                            );
-
-                            final rate =
-                            double.parse(
-                              interestController
-                                  .text,
-                            );
-
-                            final interestAmount =
-                            InterestCalculator
-                                .calculate(
-                              principal:
-                              amount,
-                              rate: rate,
-                              startDate:
-                              selectedDate,
-                              interestType:
-                              interestType,
-                              frequency:
-                              interestFrequency,
-                            );
-
-                            final tx =
-                            Transaction()
-                              ..customerId =
-                                  widget.customer.id
-                              ..chopdiId =
-                                  widget.customer
-                                      .chopdiId
-                              ..amountPaise =
-                              Money.toPaise(
-                                amount,
-                              )
-                              ..interestRateBp =
-                              Money
-                                  .rateToBasisPoints(
-                                double.tryParse(
-                                  interestController
-                                      .text
-                                      .trim(),
-                                ) ??
-                                    0,
-                              )
-                              ..date =
-                                  selectedDate
-                              ..type =
-                                  TransactionType
-                                      .took
-                              ..description =
-                              descriptionController
-                                  .text
-                                  .trim()
-                              ..paymentMode =
-                                  paymentMode
-                              ..interestType =
-                                  interestType
-                              ..interestFrequency =
-                                  interestFrequency;
-
-                            await Repositories
-                                .ledger
-                                .adoptDraft(tx);
-
-                            await LocalNotificationService
-                                .instance
-                                .syncNotifications(
-                              database:
-                              IsarService.isar,
-                            );
-
-                            final localNotificationService =
-                                LocalNotificationService
-                                    .instance;
-
-                            final prefs =
-                            await SharedPreferences
-                                .getInstance();
-
-                            final paymentReminderEnabled =
-                                prefs.getBool(
-                                  'notification_payment_reminder_enabled',
-                                ) ??
-                                    true;
-
-                            if (paymentReminderEnabled) {
-                              final reminderType =
-                                  prefs.getString(
-                                    'notification_selected_reminder',
-                                  ) ??
-                                      'dueDate';
-
-                              await localNotificationService
-                                  .scheduleCustomerPaymentReminder(
-                                customer:
-                                widget.customer,
-                                loanDate:
-                                selectedDate,
-                                interestFrequency:
-                                interestFrequency,
-                                reminderType:
-                                reminderType,
-                                transactionType:
-                                TransactionType
-                                    .took,
-                                amount:
-                                amount,
+                            // ============================================
+                            // ADDED TRY-CATCH BLOCK TO TRACE THE ERROR
+                            // ============================================
+                            try {
+                              final amount = double.parse(
+                                amountController.text,
                               );
-                            }
-
-                            if (interestAmount > 0) {
-                              final notificationService =
-                              NotificationService(
-                                IsarService.isar,
+                              final rate = double.parse(
+                                interestController.text,
                               );
 
-                              await notificationService
-                                  .createTookLoanNotification(
-                                chopdiId:
-                                widget.customer
-                                    .chopdiId,
-                                customerName:
-                                widget.customer
-                                    .name,
-                                amount: amount,
-                                customerId:
-                                widget.customer.id,
+                              final interestAmount = InterestCalculator.calculate(
+                                principal: amount,
+                                rate: rate,
+                                startDate: selectedDate,
+                                interestType: interestType,
+                                frequency: interestFrequency,
                               );
 
-                              if (interestAmount >
-                                  0) {
+                              final tx = Transaction()
+                                ..customerId = widget.lender.id
+                                ..customerUuid = widget.lender.uuid // <-- CRITICAL: ADDED MISSING UUID
+                                ..chopdiId = widget.lender.chopdiId
+                                ..amountPaise = Money.toPaise(amount)
+                                ..interestRateBp = Money.rateToBasisPoints(
+                                  double.tryParse(interestController.text.trim()) ?? 0,
+                                )
+                                ..date = selectedDate
+                                ..type = TransactionType.took
+                                ..description = descriptionController.text.trim()
+                                ..paymentMode = paymentMode
+                                ..interestType = interestType
+                                ..interestFrequency = interestFrequency;
+
+                              // CHANGED TO TransactionService to match the "Paid" sheet
+                              await TransactionService.addTransaction(tx);
+
+                              await LocalNotificationService.instance
+                                  .syncNotifications(
+                                database: IsarService.isar,
+                              );
+
+                              final localNotificationService =
+                                  LocalNotificationService.instance;
+                              final prefs = await SharedPreferences.getInstance();
+
+                              final paymentReminderEnabled = prefs.getBool(
+                                'notification_payment_reminder_enabled',
+                              ) ?? true;
+
+                              // Left commented out in case scheduleLenderPaymentReminder doesn't exist yet
+                              // if (paymentReminderEnabled) {
+                              //   final reminderType = prefs.getString(
+                              //     'notification_selected_reminder',
+                              //   ) ?? 'dueDate';
+                              //
+                              //   await localNotificationService
+                              //       .scheduleLenderPaymentReminder(
+                              //     lender: widget.lender,
+                              //     loanDate: selectedDate,
+                              //     interestFrequency: interestFrequency,
+                              //     reminderType: reminderType,
+                              //     transactionType: TransactionType.took,
+                              //     amount: amount,
+                              //   );
+                              // }
+
+                              if (interestAmount > 0) {
+                                final notificationService = NotificationService(
+                                  IsarService.isar,
+                                );
+
                                 await notificationService
-                                    .createInterestNotification(
-                                  chopdiId:
-                                  widget.customer
-                                      .chopdiId,
-                                  customerName:
-                                  widget.customer
-                                      .name,
-                                  interestAmount:
-                                  interestAmount,
-                                  customerId:
-                                  widget.customer.id,
+                                    .createTookLoanNotification(
+                                  chopdiId: widget.lender.chopdiId,
+                                  customerName: widget.lender.name,
+                                  amount: amount,
+                                  customerId: widget.lender.id,
+                                );
+
+                                if (interestAmount > 0) {
+                                  await notificationService
+                                      .createInterestNotification(
+                                    chopdiId: widget.lender.chopdiId,
+                                    customerName: widget.lender.name,
+                                    interestAmount: interestAmount,
+                                    customerId: widget.lender.id,
+                                  );
+                                }
+                              }
+
+                              widget.onSaved();
+
+                              if (mounted) {
+                                Navigator.pop(context);
+                              }
+                            } catch (e, stacktrace) {
+                              debugPrint("CRASH LOG: $e\n$stacktrace");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Error saving: $e"),
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 4),
+                                  ),
                                 );
                               }
                             }
-
-                            widget.onSaved();
-
-                            if (mounted) {
-                              Navigator.pop(
-                                context,
-                              );
-                            }
                           },
-                          style:
-                          ElevatedButton
-                              .styleFrom(
-                            backgroundColor:
-                            const Color(
-                              0xff29406B,
-                            ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff29406B),
                             elevation: 0,
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
                             l10n.saveEntry,
-                            style:
-                            const TextStyle(
-                              color:
-                              Colors.white,
-                              fontWeight:
-                              FontWeight.w700,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),

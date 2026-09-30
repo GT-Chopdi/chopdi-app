@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- 1. CHANGED TO LENDER
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/view/took_loan_customers_screen.dart';
+import 'package:mychopdi/view/took_loan_customers_screen.dart'; // Ensure this points to the right file for TookLoanCustomerListSection
 import 'package:mychopdi/widgets/took_loan_summary_card.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
+
 class TookLoanHomeContent extends StatelessWidget {
   final int chopdiId;
   final bool isGaveLoanSelected;
@@ -21,6 +22,7 @@ class TookLoanHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Listens to transaction changes to update the summary card
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
           .filter()
@@ -28,17 +30,17 @@ class TookLoanHomeContent extends StatelessWidget {
           .typeEqualTo(TransactionType.took)
           .watch(fireImmediately: true),
       builder: (context, transactionSnapshot) {
-        return StreamBuilder<List<Customer>>(
-          stream: IsarService.isar.customers
+
+        // <-- 2. CHANGED STREAM TO LENDERS TABLE
+        return StreamBuilder<List<Lender>>(
+          stream: IsarService.isar.lenders
               .filter()
               .chopdiIdEqualTo(chopdiId)
               .watch(fireImmediately: true),
-          builder: (context, customerSnapshot) {
-            final allCustomers = customerSnapshot.data ?? <Customer>[];
+          builder: (context, lenderSnapshot) {
 
-            final tookLoanCustomers = allCustomers
-                .where((customer) => customer.loanType == "took")
-                .toList();
+            // <-- 3. USING LENDERS (No need to filter by loanType anymore since tables are split!)
+            final allLenders = lenderSnapshot.data ?? <Lender>[];
 
             return ListView(
               physics: const BouncingScrollPhysics(),
@@ -52,15 +54,15 @@ class TookLoanHomeContent extends StatelessWidget {
                 // ==========================================
                 // CLEAN EMPTY STATE
                 // ==========================================
-                if (tookLoanCustomers.isEmpty)
+                if (allLenders.isEmpty)
                   Container(
-                    margin: const EdgeInsets.only(top: 40), // Gives spacing below the card
+                    margin: const EdgeInsets.only(top: 40),
                     alignment: Alignment.center,
                     child: _buildEmptyState(context),
                   )
                 else
                   TookLoanCustomerListSection(
-                    customers: tookLoanCustomers,
+                    lenders: allLenders, // <-- 4. FIXED: PASSING ACTUAL LENDERS INSTEAD OF []
                   ),
               ],
             );

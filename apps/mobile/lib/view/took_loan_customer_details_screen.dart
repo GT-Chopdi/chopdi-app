@@ -3,27 +3,31 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- USING LENDER
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/all_notes_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
-import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart';
-import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
-import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
-import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
 import 'package:mychopdi/service/phone_call_service.dart';
 
 import '../l10n/app_localizations.dart';
 
+// NOTE: Make sure these import paths match where your files are actually saved!
+import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
+import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
+import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart' hide AccountSummaryBottomSheet;
+
+import '../widgets/LenderOptionsBottomSheet.dart'; // Change this path if you saved your Lender bottom sheets in a different file
+
 class TookLoanCustomerDetailsScreen extends StatefulWidget {
-  final Customer customer;
+  final Lender lender; // <-- USING LENDER
 
   const TookLoanCustomerDetailsScreen({
     super.key,
-    required this.customer,
+    required this.lender, // <-- USING LENDER
   });
 
   @override
@@ -31,35 +35,33 @@ class TookLoanCustomerDetailsScreen extends StatefulWidget {
       _CustomerDetailsScreenState();
 }
 
-class _CustomerDetailsScreenState
-    extends State<TookLoanCustomerDetailsScreen> {
+class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
   List<Transaction> transactions = [];
 
-  late Customer customer;
+  late Lender lender; // <-- USING LENDER
 
   // ============================================================
-  // CUSTOMER
+  // LENDER (Previously Customer)
   // ============================================================
 
-  Future<void> loadCustomer() async {
-    final updatedCustomer =
-    await IsarService.isar.customers.get(widget.customer.id);
+  Future<void> loadLender() async {
+    final updatedLender = await IsarService.isar.lenders.get(widget.lender.id);
 
-    if (updatedCustomer != null && mounted) {
+    if (updatedLender != null && mounted) {
       setState(() {
-        customer = updatedCustomer;
+        lender = updatedLender;
       });
     }
   }
 
   // ============================================================
-  // TRANSACTIONS
+  // TRANSACTIONS (WITH THE UUID BUG FIX!)
   // ============================================================
 
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()
-        .customerIdEqualTo(widget.customer.id)
+        .customerUuidEqualTo(widget.lender.uuid) // <-- BUG FIX: Uses globally unique UUID instead of local ID
         .voidedAtIsNull()
         .sortByDate()
         .findAll();
@@ -83,9 +85,9 @@ class _CustomerDetailsScreenState
   void initState() {
     super.initState();
 
-    customer = widget.customer;
+    lender = widget.lender;
 
-    loadCustomer();
+    loadLender();
     loadTransactions();
   }
 
@@ -231,6 +233,24 @@ class _CustomerDetailsScreenState
   }
 
   // ============================================================
+  // COMMON BACK NAVIGATION
+  // ============================================================
+
+  void _goToHome() {
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const MainScreen(
+          initialIndex: 0,
+          initialGaveLoanSelected: false,
+        ),
+      ),
+          (route) => false,
+    );
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -243,114 +263,63 @@ class _CustomerDetailsScreenState
     final width = size.width;
     final height = size.height;
 
-    return Scaffold(
-      backgroundColor: ChopdiColors.cream,
-
-      // ==========================================================
-      // APP BAR
-      // ==========================================================
-
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _goToHome();
+      },
+      child: Scaffold(
         backgroundColor: ChopdiColors.cream,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new,
-                color: ChopdiColors.navy,
-              ),
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => const MainScreen(
-                      initialIndex: 0,
-                      initialGaveLoanSelected: false,
-                    ),
-                  ),
-                      (route) => false,
-                );
-              },
-            ),
 
-            const Spacer(),
+        // ==========================================================
+        // APP BAR
+        // ==========================================================
 
-            IconButton(
-              icon: const Icon(
-                Icons.more_vert,
-                color: ChopdiColors.navy,
-              ),
-              onPressed: () {
-                showCustomerOptionsBottomSheet(context);
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // ==========================================================
-      // BOTTOM ACTION BUTTONS
-      // ==========================================================
-
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          color: AppColors.background,
-          child: Row(
+        appBar: AppBar(
+          backgroundColor: ChopdiColors.cream,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          titleSpacing: 0,
+          title: Row(
             children: [
-              // ====================================================
-              // YOU TOOK
-              // ALWAYS VISIBLE
-              // ====================================================
-
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return FractionallySizedBox(
-                          heightFactor: 0.82,
-                          child: TookLoanMoneyGaveBottomSheet(
-                            customer: widget.customer,
-                            onSaved: loadTransactions,
-                            isEdit: false,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00901B),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    // l10n.youGave,
-                    l10n.youGot,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: ChopdiColors.navy,
                 ),
+                onPressed: _goToHome,
               ),
 
-              // ====================================================
-              // YOU PAID
-              // SHOW ONLY AFTER FIRST TOOK TRANSACTION
-              // ====================================================
+              const Spacer(),
 
-              if (hasTakenLoan) ...[
-                const SizedBox(width: 14),
+              IconButton(
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: ChopdiColors.navy,
+                ),
+                onPressed: () {
+                  showCustomerOptionsBottomSheet(context);
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // ==========================================================
+        // BOTTOM ACTION BUTTONS
+        // ==========================================================
+
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            color: AppColors.background,
+            child: Row(
+              children: [
+                // ====================================================
+                // YOU TOOK
+                // ALWAYS VISIBLE
+                // ====================================================
 
                 Expanded(
                   child: ElevatedButton(
@@ -362,17 +331,17 @@ class _CustomerDetailsScreenState
                         builder: (context) {
                           return FractionallySizedBox(
                             heightFactor: 0.82,
-                            child:
-                            TookLoanMoneyReceivedBottomSheet(
-                              customer: widget.customer,
+                            child: TookLoanMoneyGaveBottomSheet(
+                              lender: widget.lender, // <-- PASSING LENDER
                               onSaved: loadTransactions,
+                              isEdit: false,
                             ),
                           );
                         },
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC74C4C),
+                      backgroundColor: const Color(0xFF00901B),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       minimumSize: const Size.fromHeight(54),
@@ -381,7 +350,7 @@ class _CustomerDetailsScreenState
                       ),
                     ),
                     child: Text(
-                      l10n.youGave,
+                      l10n.youGot,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -389,178 +358,223 @@ class _CustomerDetailsScreenState
                     ),
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
-      ),
 
-      // ==========================================================
-      // BODY
-      // ==========================================================
+                // ====================================================
+                // YOU PAID
+                // SHOW ONLY AFTER FIRST TOOK TRANSACTION
+                // ====================================================
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ======================================================
-            // CUSTOMER HEADER
-            // ======================================================
+                if (hasTakenLoan) ...[
+                  const SizedBox(width: 14),
 
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: ChopdiColors.lightGray,
-                  child: Text(
-                    customer.name.isNotEmpty
-                        ? customer.name[0].toUpperCase()
-                        : "?",
-                    style: GoogleFonts.manrope(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: ChopdiColors.navy,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 14),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        customer.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          color: ChopdiColors.navy,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return FractionallySizedBox(
+                              heightFactor: 0.82,
+                              child: TookLoanMoneyReceivedBottomSheet(
+                                lender: widget.lender, // <-- PASSING LENDER
+                                onSaved: loadTransactions,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFC74C4C),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size.fromHeight(54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-
-                      const SizedBox(height: 1),
-
-                      Text(
-                        customer.phone,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.manrope(
-                          color: Colors.black54,
+                      child: Text(
+                        l10n.youGave,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 8),
-
-                GestureDetector(
-                  onTap: () {
-                    PhoneCallService.makePhoneCall(
-                      context,
-                      customer.phone,
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: const Color.fromRGBO(
-                      141,
-                      208,
-                      113,
-                      0.34,
-                    ),
-                    child: Image.asset(
-                      'assets/call_logo.png',
                     ),
                   ),
-                ),
+                ],
               ],
             ),
+          ),
+        ),
 
-            const SizedBox(height: 22),
+        // ==========================================================
+        // BODY
+        // ==========================================================
 
-            // ======================================================
-            // SUMMARY
-            // ======================================================
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ======================================================
+              // LENDER HEADER
+              // ======================================================
 
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: width * 0.05,
-                vertical: height * 0.02,
-              ),
-              decoration: BoxDecoration(
-                color: const Color.fromRGBO(
-                  255,
-                  248,
-                  240,
-                  1,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFAAB9CF),
-                ),
-              ),
-              child: Row(
+              Row(
                 children: [
-                  Expanded(
-                    child: _infoItem(
-                      'assets/total_given.png',
-                      l10n.totalTaken,
-                      "₹${totalGiven.toStringAsFixed(0)}",
-                      ChopdiColors.navy,
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: ChopdiColors.lightGray,
+                    child: Text(
+                      lender.name.isNotEmpty
+                          ? lender.name[0].toUpperCase()
+                          : "?",
+                      style: GoogleFonts.manrope(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: ChopdiColors.navy,
+                      ),
                     ),
                   ),
 
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
+                  const SizedBox(width: 14),
 
                   Expanded(
-                    child: _infoItem(
-                      'assets/total_interest.png',
-                      l10n.interestDue,
-                      "₹${totalInterest.toStringAsFixed(0)}",
-                      const Color(0xFF00901B),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lender.name, // <-- LENDER NAME
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: ChopdiColors.navy,
+                          ),
+                        ),
+
+                        const SizedBox(height: 1),
+
+                        Text(
+                          lender.phone, // <-- LENDER PHONE
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: Colors.grey.shade300,
-                  ),
+                  const SizedBox(width: 8),
 
-                  Expanded(
-                    child: _infoItem(
-                      'assets/outstanding.png',
-                      l10n.outstanding,
-                      "₹${outstanding.toStringAsFixed(0)}",
-                      const Color(0xFFC74C4C),
+                  GestureDetector(
+                    onTap: () {
+                      PhoneCallService.makePhoneCall(
+                        context,
+                        lender.phone, // <-- LENDER PHONE
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: const Color.fromRGBO(
+                        141,
+                        208,
+                        113,
+                        0.34,
+                      ),
+                      child: Image.asset(
+                        'assets/call_logo.png',
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
-            // ======================================================
-            // TRANSACTION TABLE
-            // ======================================================
+              // ======================================================
+              // SUMMARY
+              // ======================================================
 
-            TookLoanTransactionTable(
-              transactions: transactions,
-              onChanged: loadTransactions,
-              customerId: customer.id,
-            ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.05,
+                  vertical: height * 0.02,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(
+                    255,
+                    248,
+                    240,
+                    1,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFAAB9CF),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_given.png',
+                        l10n.totalTaken,
+                        "₹${totalGiven.toStringAsFixed(0)}",
+                        ChopdiColors.navy,
+                      ),
+                    ),
 
-            const SizedBox(height: 20),
-          ],
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_interest.png',
+                        l10n.interestDue,
+                        "₹${totalInterest.toStringAsFixed(0)}",
+                        const Color(0xFF00901B),
+                      ),
+                    ),
+
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/outstanding.png',
+                        l10n.outstanding,
+                        "₹${outstanding.toStringAsFixed(0)}",
+                        const Color(0xFFC74C4C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ======================================================
+              // TRANSACTION TABLE
+              // ======================================================
+
+              TookLoanTransactionTable(
+                transactions: transactions,
+                onChanged: loadTransactions,
+                customerId: lender.id,
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -633,7 +647,7 @@ class _CustomerDetailsScreenState
   }
 
   // ============================================================
-  // CUSTOMER OPTIONS
+  // CUSTOMER OPTIONS (RE-ROUTED TO LENDER BOTTOM SHEETS)
   // ============================================================
 
   void showCustomerOptionsBottomSheet(
@@ -650,14 +664,14 @@ class _CustomerDetailsScreenState
         ),
       ),
       builder: (_) {
-        return CustomerOptionsBottomSheet(
+        return LenderOptionsBottomSheet( // <-- CALLING NEW LENDER OPTIONS SHEET
           onEdit: () {
             Navigator.pop(context);
 
             Future.delayed(
               const Duration(milliseconds: 200),
                   () {
-                showEditCustomerBottomSheet(context);
+                showEditLenderBottomSheet(context);
               },
             );
           },
@@ -677,10 +691,8 @@ class _CustomerDetailsScreenState
                         totalGiven: totalGiven,
                         totalOutstanding: outstanding,
                         totalInterest: totalInterest,
-                        lastPayment:
-                        lastReceivedTransaction,
-                        firstLoan:
-                        firstLoanTransaction,
+                        lastPayment: lastReceivedTransaction,
+                        firstLoan: firstLoanTransaction,
                       ),
                 );
               },
@@ -704,7 +716,7 @@ class _CustomerDetailsScreenState
             Future.delayed(
               const Duration(milliseconds: 250),
                   () {
-                showDeleteCustomerBottomSheet(context);
+                showDeleteLenderBottomSheet(context);
               },
             );
           },
@@ -714,12 +726,10 @@ class _CustomerDetailsScreenState
   }
 
   // ============================================================
-  // EDIT CUSTOMER
+  // EDIT LENDER
   // ============================================================
 
-  void showEditCustomerBottomSheet(
-      BuildContext context,
-      ) {
+  void showEditLenderBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -730,10 +740,10 @@ class _CustomerDetailsScreenState
         ),
       ),
       builder: (_) {
-        return EditCustomerBottomSheet(
-          customer: widget.customer,
+        return EditLenderBottomSheet( // <-- CALLING NEW LENDER EDIT SHEET
+          lender: widget.lender,
           onSaved: () async {
-            await loadCustomer();
+            await loadLender();
             await loadTransactions();
 
             if (mounted) {
@@ -749,15 +759,13 @@ class _CustomerDetailsScreenState
   // EXPORT PDF
   // ============================================================
 
-  void showExportPdfBottomSheet(
-      BuildContext context,
-      ) {
+  void showExportPdfBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ExportPdfBottomSheet(
-        customer: customer,
+      builder: (_) => ExportLenderPdfBottomSheet( // <-- CALLING NEW LENDER PDF SHEET
+        lender: lender,
         transactions: transactions,
         isTookLoan: true,
       ),
@@ -765,28 +773,26 @@ class _CustomerDetailsScreenState
   }
 
   // ============================================================
-  // DELETE CUSTOMER
+  // DELETE LENDER
   // ============================================================
 
-  void showDeleteCustomerBottomSheet(
-      BuildContext context,
-      ) {
+  void showDeleteLenderBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
-        return DeleteCustomerBottomSheet(
-          customerName: widget.customer.name,
+        return DeleteLenderBottomSheet( // <-- CALLING NEW LENDER DELETE SHEET
+          lenderName: widget.lender.name,
           onDelete: () async {
             await IsarService.isar.writeTxn(() async {
               await IsarService.isar.transactions
                   .filter()
-                  .customerIdEqualTo(widget.customer.id)
+                  .customerIdEqualTo(widget.lender.id)
                   .deleteAll();
 
-              await IsarService.isar.customers.delete(
-                widget.customer.id,
+              await IsarService.isar.lenders.delete(
+                widget.lender.id,
               );
             });
 
@@ -811,9 +817,7 @@ class _CustomerDetailsScreenState
   // ALL NOTES
   // ============================================================
 
-  void showAllNotesBottomSheet(
-      BuildContext context,
-      ) {
+  void showAllNotesBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
