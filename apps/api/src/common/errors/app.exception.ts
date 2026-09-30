@@ -56,6 +56,12 @@ export const ErrorCode = {
   IDEMPOTENCY_KEY_REUSE: 'IDEMPOTENCY_KEY_REUSE',
   /** More operations or bytes than one request may carry. */
   BATCH_TOO_LARGE: 'BATCH_TOO_LARGE',
+  /**
+   * A pull cursor beyond anything this user's log has reached. The device's
+   * sync state belongs to a different account or database; it must reset to 0
+   * and pull everything again.
+   */
+  CURSOR_AHEAD: 'CURSOR_AHEAD',
 
   // --- generic ---
   NOT_FOUND: 'NOT_FOUND',

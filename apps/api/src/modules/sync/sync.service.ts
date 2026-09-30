@@ -4,13 +4,23 @@ import { AppException, ErrorCode } from '../../common/errors/app.exception';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PushBatchDto, SyncOperationDto } from './dto/push.dto';
+import { ChopdiHandler } from './handlers/chopdi.handler';
 import { CustomerHandler } from './handlers/customer.handler';
 import { LedgerEntryHandler } from './handlers/ledger-entry.handler';
+import { LenderHandler } from './handlers/lender.handler';
 import { IdempotencyService } from './idempotency.service';
-import type { SyncOperationResult, SyncPushResponse } from './sync.types';
+import type { SyncEntity, SyncOperationResult, SyncPushResponse } from './sync.types';
 
-/** Customers must be applied before the entries that reference them. */
-const ENTITY_ORDER: Record<string, number> = { customer: 1, ledger_entry: 2 };
+/**
+ * Parents are applied before the rows that reference them: a book before its
+ * customers and lenders, those before their entries.
+ */
+const ENTITY_ORDER: Record<SyncEntity, number> = {
+  chopdi: 0,
+  customer: 1,
+  lender: 1,
+  ledger_entry: 2,
+};
 
 @Injectable()
 export class SyncService {
@@ -19,7 +29,9 @@ export class SyncService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly idempotency: IdempotencyService,
+    private readonly chopdis: ChopdiHandler,
     private readonly customers: CustomerHandler,
+    private readonly lenders: LenderHandler,
     private readonly entries: LedgerEntryHandler,
   ) {}
 
@@ -69,13 +81,13 @@ export class SyncService {
   }
 
   /**
-   * Sorts customers ahead of entries, preserving client order within a kind.
+   * Sorts parents ahead of children, preserving client order within a kind.
    *
    * The client already orders its outbox correctly; this exists because a
    * client bug shipped months ago should not become server-side data loss. The
-   * ranking assumes an FK graph exactly one level deep — true for
-   * customer → ledger_entry and nothing more. A deeper hierarchy would need a
-   * real topological sort.
+   * ranking is a fixed depth — chopdi → customer/lender → ledger_entry — which
+   * is the whole FK graph; a hierarchy with cycles would need a real
+   * topological sort.
    */
   private sortByDependency(operations: SyncOperationDto[]): SyncOperationDto[] {
     return operations
@@ -142,7 +154,12 @@ export class SyncService {
     operation: SyncOperationDto,
   ) {
     const meta = { deviceId: user.deviceId, opId: operation.opId };
-    const handler = operation.entity === 'customer' ? this.customers : this.entries;
+    const handler = {
+      chopdi: this.chopdis,
+      customer: this.customers,
+      lender: this.lenders,
+      ledger_entry: this.entries,
+    }[operation.entity];
 
     switch (operation.opType) {
       case 'create':

@@ -38,39 +38,7 @@ export class LedgerEntryHandler {
     payload: Record<string, unknown>,
     meta: { deviceId: string; opId: string },
   ): Promise<{ snapshot: EntitySnapshot; seq: bigint }> {
-    const customerId = this.requireUuid(payload.customerId, 'customerId');
-
-    // The parent must exist and belong to this user. Scoped in the query, so a
-    // cross-tenant customer id is indistinguishable from one that never
-    // existed.
-    const customer = await tx.customer.findFirst({
-      where: { id: customerId, userId },
-      select: { id: true, deletedAt: true },
-    });
-
-    if (!customer) {
-      // Not permanent: entries and their customer are usually created in the
-      // same batch, and a customer whose own operation failed may succeed on
-      // the next attempt. The client retries a bounded number of times before
-      // giving up, rather than dead-lettering a valid entry immediately.
-      throw new AppException(
-        409,
-        ErrorCode.PARENT_NOT_FOUND,
-        'That customer has not been synced yet.',
-        false,
-        { customerId },
-      );
-    }
-
-    if (customer.deletedAt) {
-      throw new AppException(
-        409,
-        ErrorCode.ENTITY_VOIDED,
-        'That customer has been deleted.',
-        true,
-        { customerId },
-      );
-    }
+    const parent = await this.resolveParent(tx, userId, payload);
 
     const existing = await tx.ledgerEntry.findUnique({
       where: { id: entityId },
@@ -93,7 +61,8 @@ export class LedgerEntryHandler {
       data: {
         id: entityId,
         userId,
-        customerId,
+        customerId: parent.customerId,
+        lenderId: parent.lenderId,
         amountPaise: this.requireAmount(payload.amountPaise),
         direction: this.requireEnum(payload.direction, DIRECTIONS, 'direction'),
         ledgerSide: this.optionalEnum(payload.ledgerSide, LEDGER_SIDES, 'ledgerSide') ?? 'lent',
@@ -229,6 +198,96 @@ export class LedgerEntryHandler {
 
   // ------------------------------------------------------------------ internals
 
+  /**
+   * The party an entry belongs to: `lenderId` for money the user took,
+   * `customerId` for money they gave. Exactly one.
+   *
+   * A `customerId` that matches no customer is also tried as a lender. Builds
+   * released before lenders synced separately queued their "took" entries as
+   * `customerId: <lender uuid>`, frozen in the outbox — they cannot be
+   * rewritten, because the idempotency hash covers the payload. Ids are UUIDv7
+   * in both tables, so the fallback cannot pick up the wrong row.
+   *
+   * The parent must exist and belong to this user. Scoped in the query, so a
+   * cross-tenant id is indistinguishable from one that never existed.
+   */
+  private async resolveParent(
+    tx: TransactionClient,
+    userId: string,
+    payload: Record<string, unknown>,
+  ): Promise<{ customerId: string | null; lenderId: string | null }> {
+    const hasCustomer = payload.customerId !== undefined && payload.customerId !== null;
+    const hasLender = payload.lenderId !== undefined && payload.lenderId !== null;
+
+    if (hasCustomer === hasLender) {
+      throw this.invalid('An entry needs exactly one of customerId or lenderId.', 'customerId');
+    }
+
+    if (hasLender) {
+      const lenderId = this.requireUuid(payload.lenderId, 'lenderId');
+      const lender = await tx.lender.findFirst({
+        where: { id: lenderId, userId },
+        select: { deletedAt: true },
+      });
+      this.assertParentLive(lender, 'lender', { lenderId });
+      return { customerId: null, lenderId };
+    }
+
+    const customerId = this.requireUuid(payload.customerId, 'customerId');
+    const customer = await tx.customer.findFirst({
+      where: { id: customerId, userId },
+      select: { deletedAt: true },
+    });
+
+    if (customer) {
+      this.assertParentLive(customer, 'customer', { customerId });
+      return { customerId, lenderId: null };
+    }
+
+    const lender = await tx.lender.findFirst({
+      where: { id: customerId, userId },
+      select: { deletedAt: true },
+    });
+
+    if (lender) {
+      this.assertParentLive(lender, 'lender', { lenderId: customerId });
+      return { customerId: null, lenderId: customerId };
+    }
+
+    this.assertParentLive(null, 'customer', { customerId });
+    throw new Error('unreachable');
+  }
+
+  private assertParentLive(
+    parent: { deletedAt: Date | null } | null,
+    label: 'customer' | 'lender',
+    details: Record<string, unknown>,
+  ): void {
+    if (!parent) {
+      // Not permanent: entries and their parent are usually created in the
+      // same batch, and a parent whose own operation failed may succeed on the
+      // next attempt. The client retries a bounded number of times before
+      // giving up, rather than dead-lettering a valid entry immediately.
+      throw new AppException(
+        409,
+        ErrorCode.PARENT_NOT_FOUND,
+        `That ${label} has not been synced yet.`,
+        false,
+        details,
+      );
+    }
+
+    if (parent.deletedAt) {
+      throw new AppException(
+        409,
+        ErrorCode.ENTITY_VOIDED,
+        `That ${label} has been deleted.`,
+        true,
+        details,
+      );
+    }
+  }
+
   private async load(tx: TransactionClient, userId: string, entityId: string) {
     const row = await tx.ledgerEntry.findFirst({ where: { id: entityId, userId } });
     if (!row) throw this.notFound();
@@ -351,43 +410,52 @@ export class LedgerEntryHandler {
     return trimmed;
   }
 
-  private snapshot(row: {
-    id: string;
-    customerId: string;
-    amountPaise: bigint;
-    direction: string;
-    ledgerSide: string;
-    interestRateBp: number;
-    interestType: string;
-    interestFrequency: string;
-    entryDate: Date;
-    description: string;
-    paymentMode: string;
-    version: number;
-    createdAt: Date;
-    updatedAt: Date;
-    voidedAt: Date | null;
-    voidedReason: string | null;
-  }): EntitySnapshot {
-    return {
-      id: row.id,
-      customerId: row.customerId,
-      // A string on the wire: JSON numbers are IEEE-754, and a ledger should
-      // not depend on staying under 2^53 to stay exact.
-      amountPaise: row.amountPaise.toString(),
-      direction: row.direction,
-      ledgerSide: row.ledgerSide,
-      interestRateBp: row.interestRateBp,
-      interestType: row.interestType,
-      interestFrequency: row.interestFrequency,
-      entryDate: row.entryDate.toISOString().slice(0, 10),
-      description: row.description,
-      paymentMode: row.paymentMode,
-      version: row.version,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-      voidedAt: row.voidedAt?.toISOString() ?? null,
-      voidedReason: row.voidedReason,
-    };
+  private snapshot(row: LedgerEntryRow): EntitySnapshot {
+    return ledgerEntrySnapshot(row);
   }
+}
+
+export interface LedgerEntryRow {
+  id: string;
+  customerId: string | null;
+  lenderId: string | null;
+  amountPaise: bigint;
+  direction: string;
+  ledgerSide: string;
+  interestRateBp: number;
+  interestType: string;
+  interestFrequency: string;
+  entryDate: Date;
+  description: string;
+  paymentMode: string;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+  voidedAt: Date | null;
+  voidedReason: string | null;
+}
+
+/** An entry as the server describes it back — in push results, the log and pulls. */
+export function ledgerEntrySnapshot(row: LedgerEntryRow): EntitySnapshot {
+  return {
+    id: row.id,
+    customerId: row.customerId,
+    lenderId: row.lenderId,
+    // A string on the wire: JSON numbers are IEEE-754, and a ledger should
+    // not depend on staying under 2^53 to stay exact.
+    amountPaise: row.amountPaise.toString(),
+    direction: row.direction,
+    ledgerSide: row.ledgerSide,
+    interestRateBp: row.interestRateBp,
+    interestType: row.interestType,
+    interestFrequency: row.interestFrequency,
+    entryDate: row.entryDate.toISOString().slice(0, 10),
+    description: row.description,
+    paymentMode: row.paymentMode,
+    version: row.version,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    voidedAt: row.voidedAt?.toISOString() ?? null,
+    voidedReason: row.voidedReason,
+  };
 }

@@ -59,7 +59,9 @@ model AppUser {
 
   devices        Device[]
   refreshTokens  RefreshToken[]
+  chopdis        Chopdi[]
   customers      Customer[]
+  lenders        Lender[]
   ledgerEntries  LedgerEntry[]
   syncOperations SyncOperation[]
   changeLog      SyncChangeLog[]
@@ -160,7 +162,33 @@ model RefreshToken {
 // Domain — Phase 1
 // ---------------------------------------------------------------------------
 
-/// A borrower in someone's ledger.
+/// A ledger book ("chopdi"). A user can keep several, and every customer and
+/// lender belongs to one.
+///
+/// Synced so a user signing in on a new device gets their books back with the
+/// same grouping, not one undifferentiated list.
+model Chopdi {
+  id     String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  name        String
+  description String @default("")
+
+  version Int @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user      AppUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers Customer[]
+  lenders   Lender[]
+
+  @@index([userId])
+  @@map("chopdi")
+}
+
+/// A borrower in someone's ledger — someone the user *gave* a loan to.
 ///
 /// `id` is a client-generated UUIDv7: the row must have a permanent identity
 /// from the moment it is created offline, because a ledger entry may reference
@@ -168,6 +196,10 @@ model RefreshToken {
 model Customer {
   id     String @id @db.Uuid
   userId String @map("user_id") @db.Uuid
+
+  /// Nullable: rows synced before books were synced have no chopdi on the
+  /// server until the client backfills it.
+  chopdiId String? @map("chopdi_id") @db.Uuid
 
   name      String
   phoneE164 String? @map("phone_e164")
@@ -187,10 +219,42 @@ model Customer {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   user    AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chopdi  Chopdi?       @relation(fields: [chopdiId], references: [id], onDelete: Restrict)
   entries LedgerEntry[]
 
   @@index([userId])
+  @@index([chopdiId])
   @@map("customer")
+}
+
+/// Someone the user *took* a loan from.
+///
+/// Its own table, mirroring the client's separate Isar collection, so the two
+/// kinds of party can never be confused. Ids are UUIDv7 and never collide with
+/// customer ids.
+model Lender {
+  id     String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  chopdiId String? @map("chopdi_id") @db.Uuid
+
+  name      String
+  phoneE164 String? @map("phone_e164")
+  notes     String  @default("")
+
+  version Int @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user    AppUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chopdi  Chopdi?       @relation(fields: [chopdiId], references: [id], onDelete: Restrict)
+  entries LedgerEntry[]
+
+  @@index([userId])
+  @@index([chopdiId])
+  @@map("lender")
 }
 
 /// One movement of money: a loan given, or a repayment received.
@@ -201,9 +265,13 @@ model Customer {
 /// property is what makes offline sync tractable here, and it is why no
 /// `balance` column exists on Customer.
 model LedgerEntry {
-  id         String @id @db.Uuid
-  userId     String @map("user_id") @db.Uuid
-  customerId String @map("customer_id") @db.Uuid
+  id     String @id @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  /// Exactly one of customerId / lenderId is set — enforced by the
+  /// `ledger_entry_one_parent` CHECK constraint.
+  customerId String? @map("customer_id") @db.Uuid
+  lenderId   String? @map("lender_id") @db.Uuid
 
   /// Money as an integer count of paise — never a float.
   ///
@@ -263,9 +331,11 @@ model LedgerEntry {
   voidedReason String?   @map("voided_reason")
 
   user     AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lender   Lender?   @relation(fields: [lenderId], references: [id], onDelete: Restrict)
 
   @@index([customerId, entryDate(sort: Desc)])
+  @@index([lenderId, entryDate(sort: Desc)])
   @@index([userId])
   @@map("ledger_entry")
 }

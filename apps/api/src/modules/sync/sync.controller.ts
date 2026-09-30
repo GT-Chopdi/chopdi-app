@@ -1,10 +1,12 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Post, Query } from '@nestjs/common';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { PullQueryDto } from './dto/pull.dto';
 import { PushBatchDto } from './dto/push.dto';
+import { PullService } from './pull.service';
 import { SyncService } from './sync.service';
-import type { SyncPushResponse } from './sync.types';
+import type { SyncPullResponse, SyncPushResponse } from './sync.types';
 
 /**
  * Sync endpoints.
@@ -16,7 +18,29 @@ import type { SyncPushResponse } from './sync.types';
  */
 @Controller('v1/sync')
 export class SyncController {
-  constructor(private readonly sync: SyncService) {}
+  constructor(
+    private readonly sync: SyncService,
+    private readonly pulls: PullService,
+  ) {}
+
+  /**
+   * Returns this user's changes after `cursor`, oldest first.
+   *
+   * Called with `cursor=0` when a user signs in on a device, to restore their
+   * books, customers, lenders and entries; afterwards with the stored cursor to
+   * pick up changes made on other devices. Page until `hasMore` is false.
+   *
+   * `no-store`: the body is someone's financial records, and no proxy or
+   * on-device HTTP cache has any business keeping a copy.
+   */
+  @Get('pull')
+  @Header('Cache-Control', 'no-store')
+  pull(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PullQueryDto,
+  ): Promise<SyncPullResponse> {
+    return this.pulls.pull(user, query);
+  }
 
   /**
    * Applies a batch of offline changes.

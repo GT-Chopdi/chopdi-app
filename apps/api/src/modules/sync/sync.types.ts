@@ -1,5 +1,13 @@
-/** Entities the sync protocol understands. */
-export type SyncEntity = 'customer' | 'ledger_entry';
+/**
+ * Entities the sync protocol understands.
+ *
+ * `customer` is someone the user gave a loan to, `lender` someone they took one
+ * from, `chopdi` the book both belong to. Kept as one list so the DTO, the
+ * change log and the pull response cannot disagree about the vocabulary.
+ */
+export const SYNC_ENTITIES = ['chopdi', 'customer', 'lender', 'ledger_entry'] as const;
+
+export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 
 /** What an operation does to a row. */
 export type SyncOpType = 'create' | 'update' | 'void';
@@ -35,6 +43,27 @@ export interface SyncOperationResult {
 export interface SyncPushResponse {
   results: SyncOperationResult[];
   /** This user's highest change-log sequence after the batch. */
+  serverCursor: string;
+}
+
+/** One change as `GET /v1/sync/pull` reports it. */
+export interface SyncChange {
+  /** Change-log position, as a string because it is a 64-bit value. */
+  seq: string;
+  entity: SyncEntity;
+  entityId: string;
+  opType: SyncOpType;
+  /** The full row after the change — apply it, don't merge it. */
+  data: Record<string, unknown>;
+}
+
+export interface SyncPullResponse {
+  changes: SyncChange[];
+  /** Pass back as `cursor` on the next page. Store it only once the page is applied. */
+  nextCursor: string;
+  /** More changes exist past `nextCursor`; request again straight away. */
+  hasMore: boolean;
+  /** This user's highest change-log sequence right now. */
   serverCursor: string;
 }
 
