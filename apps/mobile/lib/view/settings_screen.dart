@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:isar_community/isar.dart';
+import 'package:mychopdi/model/user_session.dart';
+import 'package:mychopdi/service/isar_service.dart';
+import 'package:mychopdi/view/profile_section.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
 import '../main.dart';
@@ -20,6 +25,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const Color backgroundColor = Color(0xFFFFEEDB);
   static const Color darkBlue = Color(0xFF223A5E);
   static const Color lightBlue = Color(0xFFDCE6F2);
+
+  static const String _userNameKey = 'profile_user_name';
+
+  String _phoneNumber = '';
+  String? _userName;
+  bool _isProfileLoading = true;
+
+  Future<void> _showNameBottomSheet() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _NameBottomSheet(
+        currentName: _userName ?? '',
+      ),
+    );
+
+    if (result == null || result.trim().isEmpty) return;
+
+    final name = result.trim();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userNameKey, name);
+
+    if (!mounted) return;
+
+    setState(() {
+      _userName = name;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final sessions =
+          await IsarService.isar.userSessions.where().findAll();
+
+      final prefs = await SharedPreferences.getInstance();
+
+      if (!mounted) return;
+
+      setState(() {
+        if (sessions.isNotEmpty) {
+          _phoneNumber = sessions.first.phoneNumber;
+        }
+
+        _userName = prefs.getString(_userNameKey);
+        _isProfileLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isProfileLoading = false;
+      });
+    }
+  }
 
   // ===========================================================================
   // BUILD
@@ -70,6 +139,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              if (_isProfileLoading)
+                const SizedBox(
+                  height: 150,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: darkBlue,
+                    ),
+                  ),
+                )
+              else
+                ProfileSection(
+                  phoneNumber: _phoneNumber,
+                  userName: _userName,
+                  onEditName: _showNameBottomSheet,
+                  onAddName: _showNameBottomSheet,
+                ),
               // ===============================================================
               // SETTINGS OPTIONS
               // ===============================================================
@@ -392,6 +478,156 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // ---------------------------------------------------------------
             if (isSelected)
               const Icon(Icons.check_rounded, color: darkBlue, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _NameBottomSheet extends StatefulWidget {
+  final String currentName;
+
+  const _NameBottomSheet({
+    required this.currentName,
+  });
+
+  @override
+  State<_NameBottomSheet> createState() => _NameBottomSheetState();
+}
+
+class _NameBottomSheetState extends State<_NameBottomSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = TextEditingController(
+      text: widget.currentName,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final value = _controller.text.trim();
+
+    if (value.isEmpty) return;
+
+    Navigator.pop(context, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.currentName.trim().isNotEmpty;
+    final l10n = AppLocalizations.of(context);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          24,
+        ),
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFF8F0),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD9D9D9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              isEditing
+                ? l10n.editYourName
+                : l10n.addYourNameTitle,
+              style: GoogleFonts.manrope(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF223A5E),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _save(),
+              decoration: InputDecoration(
+                hintText: l10n.enterYourName,
+                prefixIcon: const Icon(
+                  Icons.person_outline_rounded,
+                  color: const Color(0xFF223A5E),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: const Color(0xFF223A5E),
+                    width: 1.2,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF223A5E),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  isEditing
+                    ? l10n.updateName
+                    : l10n.saveName,
+                  style: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
