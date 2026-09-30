@@ -1516,6 +1516,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tookLoanNotificationSubtitle =>
       'You have recorded a new loan taken.';
 
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get addYourName => 'Add your name';
+
+  @override
+  String get editYourName => 'Edit your name';
+
+  @override
+  String get addYourNameTitle => 'Add your name';
+
+  @override
+  String get enterYourName => 'Enter your name';
+
+  @override
+  String get updateName => 'Update Name';
+
+  @override
+  String get saveName => 'Save Name';
+
 
 
   // String get lastPayment => 'Last Payment';

@@ -584,6 +584,15 @@ abstract class AppLocalizations {
   String get tookLoanNotificationTitle;
   String get tookLoanNotificationSubtitle;
 
+  String get editYourName;
+  String get addYourNameTitle;
+  String get enterYourName;
+  String get updateName;
+  String get saveName;
+  String get profile;
+  String get edit;
+  String get addYourName;
+
 
   Null get at => null;
 

@@ -1648,4 +1648,28 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get tookLoanNotificationSubtitle =>
       'आपने एक नया लिया गया लोन दर्ज किया है।';
+
+  @override
+  String get editYourName => 'अपना नाम संपादित करें';
+
+  @override
+  String get addYourNameTitle => 'अपना नाम जोड़ें';
+
+  @override
+  String get enterYourName => 'अपना नाम दर्ज करें';
+
+  @override
+  String get updateName => 'नाम अपडेट करें';
+
+  @override
+  String get saveName => 'नाम सहेजें';
+
+  @override
+  String get profile => 'प्रोफ़ाइल';
+
+  @override
+  String get edit => 'संपादित करें';
+
+  @override
+  String get addYourName => 'अपना नाम जोड़ें';
 }
