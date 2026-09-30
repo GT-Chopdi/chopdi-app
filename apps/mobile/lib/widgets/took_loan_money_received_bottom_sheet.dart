@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- CHANGED TO LENDER
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
@@ -11,12 +11,12 @@ import 'package:mychopdi/utils/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
-  final Customer customer;
+  final Lender lender; // <-- CHANGED TO LENDER
   final VoidCallback onSaved;
 
   const TookLoanMoneyReceivedBottomSheet({
     super.key,
-    required this.customer,
+    required this.lender, // <-- CHANGED TO LENDER
     required this.onSaved,
   });
 
@@ -27,26 +27,14 @@ class TookLoanMoneyReceivedBottomSheet extends StatefulWidget {
 
 class _MoneyReceiveBottomSheetState
     extends State<TookLoanMoneyReceivedBottomSheet> {
-  final TextEditingController amountController =
-  TextEditingController();
-
-  final TextEditingController interestController =
-  TextEditingController();
-
-  final TextEditingController descriptionController =
-  TextEditingController();
-
-  final ScrollController _scrollController =
-  ScrollController();
-
-  final FocusNode _amountFocusNode =
-  FocusNode();
-
-  final FocusNode _descriptionFocusNode =
-  FocusNode();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController interestController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _amountFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
 
   DateTime selectedDate = DateTime.now();
-
   String paymentMode = "";
 
   @override
@@ -95,10 +83,7 @@ class _MoneyReceiveBottomSheetState
 
     final picked = await showDatePicker(
       context: context,
-      initialDate:
-      selectedDate.isAfter(today)
-          ? today
-          : selectedDate,
+      initialDate: selectedDate.isAfter(today) ? today : selectedDate,
       firstDate: DateTime(2000),
       lastDate: today,
     );
@@ -164,16 +149,15 @@ class _MoneyReceiveBottomSheetState
       return;
     }
 
-    final amount =
-    double.tryParse(amountController.text.trim());
+    final amount = double.tryParse(amountController.text.trim());
 
     if (amount == null) {
       return;
     }
 
     final tx = Transaction()
-      ..customerId = widget.customer.id
-      ..chopdiId = widget.customer.chopdiId
+      ..customerId = widget.lender.id // <-- CHANGED TO LENDER
+      ..chopdiId = widget.lender.chopdiId // <-- CHANGED TO LENDER
       ..amountPaise = Money.toPaise(amount)
       ..interestRateBp = 0
       ..date = selectedDate
@@ -185,26 +169,17 @@ class _MoneyReceiveBottomSheetState
 
     await TransactionService.addTransaction(tx);
 
-    await LocalNotificationService.instance
-        .syncNotifications(
+    await LocalNotificationService.instance.syncNotifications(
       database: IsarService.isar,
     );
 
-    final localNotificationService =
-        LocalNotificationService.instance;
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
+    final localNotificationService = LocalNotificationService.instance;
+    final prefs = await SharedPreferences.getInstance();
     final paymentReminderEnabled =
-        prefs.getBool(
-          'notification_payment_reminder_enabled',
-        ) ??
-            true;
+        prefs.getBool('notification_payment_reminder_enabled') ?? true;
 
     if (paymentReminderEnabled) {
-      await localNotificationService
-          .rescheduleAllPaymentReminders();
+      await localNotificationService.rescheduleAllPaymentReminders();
     }
 
     widget.onSaved();
@@ -219,12 +194,9 @@ class _MoneyReceiveBottomSheetState
     amountController.dispose();
     interestController.dispose();
     descriptionController.dispose();
-
     _scrollController.dispose();
-
     _amountFocusNode.dispose();
     _descriptionFocusNode.dispose();
-
     super.dispose();
   }
 
@@ -237,13 +209,10 @@ class _MoneyReceiveBottomSheetState
     switch (value) {
       case "Cash":
         return l10n.cash;
-
       case "UPI":
         return l10n.upi;
-
       case "Bank":
         return l10n.bankTransfer;
-
       default:
         return value;
     }
@@ -252,24 +221,17 @@ class _MoneyReceiveBottomSheetState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-
-    final keyboardHeight =
-        MediaQuery.of(context).viewInsets.bottom;
-
-    final locale =
-    Localizations.localeOf(context).toLanguageTag();
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final locale = Localizations.localeOf(context).toLanguageTag();
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
-      padding: EdgeInsets.only(
-        bottom: keyboardHeight,
-      ),
+      padding: EdgeInsets.only(bottom: keyboardHeight),
       child: SafeArea(
         top: false,
         child: Container(
-          height:
-          MediaQuery.of(context).size.height * 0.90,
+          height: MediaQuery.of(context).size.height * 0.90,
           decoration: const BoxDecoration(
             color: Color(0xffFFF8F0),
             borderRadius: BorderRadius.vertical(
@@ -285,33 +247,24 @@ class _MoneyReceiveBottomSheetState
                   height: 5,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade500,
-                    borderRadius:
-                    BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
               ),
-
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   keyboardDismissBehavior:
                   ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(
-                    22,
-                    10,
-                    22,
-                    25,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 25),
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
-
-                      // RED ICON
                       Container(
                         height: 72,
                         width: 72,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFDEAEA),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFDEAEA),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -328,10 +281,7 @@ class _MoneyReceiveBottomSheetState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // RED TEXT
                       Text(
                         l10n.youPaid,
                         style: GoogleFonts.manrope(
@@ -340,14 +290,11 @@ class _MoneyReceiveBottomSheetState
                           fontSize: 22,
                         ),
                       ),
-
                       const SizedBox(height: 28),
-
                       Align(
                         alignment: Alignment.centerLeft,
                         child: title(l10n.amount),
                       ),
-
                       TextField(
                         controller: amountController,
                         focusNode: _amountFocusNode,
@@ -361,14 +308,11 @@ class _MoneyReceiveBottomSheetState
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
                         alignment: Alignment.centerLeft,
                         child: title(l10n.date),
                       ),
-
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
@@ -378,24 +322,19 @@ class _MoneyReceiveBottomSheetState
                             color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText: DateFormat(
-                            "dd MMM yyyy",
-                            locale,
-                          ).format(selectedDate),
+                          hintText: DateFormat("dd MMM yyyy", locale)
+                              .format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
                         alignment: Alignment.centerLeft,
                         child: title(l10n.description),
                       ),
-
                       TextField(
                         controller: descriptionController,
                         focusNode: _descriptionFocusNode,
@@ -403,28 +342,18 @@ class _MoneyReceiveBottomSheetState
                         maxLines: 4,
                         decoration: decoration(
                           hint: l10n.enterDescriptionHere,
-                        ).copyWith(
-                          counterText: "",
-                        ),
+                        ).copyWith(counterText: ""),
                         onChanged: (_) => setState(() {}),
                       ),
-
                       const SizedBox(height: 18),
-
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: title(
-                          l10n.paymentModeOptional,
-                        ),
+                        child: title(l10n.paymentModeOptional),
                       ),
-
                       DropdownButtonFormField<String>(
                         initialValue:
-                        paymentMode.isEmpty
-                            ? null
-                            : paymentMode,
-                        selectedItemBuilder:
-                            (context) => [
+                        paymentMode.isEmpty ? null : paymentMode,
+                        selectedItemBuilder: (context) => [
                           Text(l10n.cash),
                           Text(l10n.upi),
                           Text(l10n.bankTransfer),
@@ -432,9 +361,7 @@ class _MoneyReceiveBottomSheetState
                         decoration: decoration(
                           hint: l10n.selectPaymentMode,
                         ),
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                        ),
+                        icon: const Icon(Icons.keyboard_arrow_down),
                         items: [
                           DropdownMenuItem(
                             value: "Cash",
@@ -455,21 +382,14 @@ class _MoneyReceiveBottomSheetState
                           });
                         },
                       ),
-
                       const SizedBox(height: 18),
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
               ),
-
               Container(
-                padding: const EdgeInsets.fromLTRB(
-                  22,
-                  12,
-                  22,
-                  20,
-                ),
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 20),
                 color: const Color(0xffFFF8F0),
                 child: Row(
                   children: [
@@ -478,65 +398,45 @@ class _MoneyReceiveBottomSheetState
                         height: 52,
                         child: OutlinedButton(
                           onPressed: () {
-                            FocusScope.of(context)
-                                .unfocus();
-
+                            FocusScope.of(context).unfocus();
                             Navigator.pop(context);
                           },
-                          style:
-                          OutlinedButton.styleFrom(
+                          style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Color(0xffC7D0DF),
                             ),
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
                             l10n.cancel,
                             style: const TextStyle(
                               color: Color(0xff29406B),
-                              fontWeight:
-                              FontWeight.w700,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 18),
-
                     Expanded(
                       child: SizedBox(
                         height: 52,
                         child: ElevatedButton(
-                          onPressed:
-                          _saveTransaction,
-                          style:
-                          ElevatedButton.styleFrom(
-                            backgroundColor:
-                            const Color(
-                              0xff29406B,
-                            ),
+                          onPressed: _saveTransaction,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff29406B),
                             elevation: 0,
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(
-                                12,
-                              ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
                             l10n.saveEntry,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight:
-                              FontWeight.w700,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),

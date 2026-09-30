@@ -1,6 +1,7 @@
 import '../../service/isar_service.dart';
 import 'customer_repository.dart';
 import 'ledger_repository.dart';
+import 'lender_repo.dart';
 
 /// Access point for the repositories.
 ///
@@ -16,6 +17,7 @@ class Repositories {
 
   static CustomerRepository? _customers;
   static LedgerRepository? _ledger;
+  static LenderRepository? _lenders; // <-- 1. Added private variable for Lender
 
   static CustomerRepository get customers =>
       _customers ??= CustomerRepository(IsarService.isar);
@@ -23,8 +25,12 @@ class Repositories {
   static LedgerRepository get ledger =>
       _ledger ??= LedgerRepository(IsarService.isar);
 
+  static LenderRepository get lenders => // <-- 2. Added Lazy Getter for Lender
+  _lenders ??= LenderRepository(IsarService.isar);
+
   static Future<void> migrateLegacyCustomers() async {
     await customers.migrateLegacyCustomers();
+    // (Removed the broken lenders = ... code from here)
   }
 
   /// Drops the cached instances. Tests reopen Isar between cases, so a stale
@@ -32,5 +38,6 @@ class Repositories {
   static void reset() {
     _customers = null;
     _ledger = null;
+    _lenders = null; // <-- 3. Cleared in reset
   }
 }

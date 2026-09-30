@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 
 import 'package:mychopdi/l10n/app_localizations.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- IMPORT LENDER
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
@@ -11,11 +11,11 @@ import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 class TookLoanCustomerCard extends StatelessWidget {
-  final Customer customer;
+  final Lender lender; // <-- CHANGED TO LENDER
 
   const TookLoanCustomerCard({
     super.key,
-    required this.customer,
+    required this.lender, // <-- CHANGED TO LENDER
   });
 
   @override
@@ -25,101 +25,41 @@ class TookLoanCustomerCard extends StatelessWidget {
     return StreamBuilder<List<Transaction>>(
       stream: IsarService.isar.transactions
           .filter()
-          .customerIdEqualTo(customer.id)
+          .customerIdEqualTo(lender.id) // <-- CHANGED TO LENDER
           .voidedAtIsNull()
-          .watch(
-        fireImmediately: true,
-      ),
+          .watch(fireImmediately: true),
       builder: (context, snapshot) {
-        final transactions =
-            snapshot.data ?? <Transaction>[];
-
-        // ============================================================
-        // TOTAL LOAN TAKEN
-        // ============================================================
+        final transactions = snapshot.data ?? <Transaction>[];
 
         final double totalLoanTaken = transactions
-            .where(
-              (tx) => tx.type == TransactionType.took,
-        )
-            .fold<double>(
-          0,
-              (sum, tx) => sum + tx.amount,
-        );
-
-        // ============================================================
-        // TOTAL PAID
-        // ============================================================
+            .where((tx) => tx.type == TransactionType.took)
+            .fold<double>(0, (sum, tx) => sum + tx.amount);
 
         final double totalPaid = transactions
-            .where(
-              (tx) => tx.type == TransactionType.paid,
-        )
-            .fold<double>(
-          0,
-              (sum, tx) => sum + tx.amount,
-        );
-
-        // ============================================================
-        // TOTAL INTEREST
-        // ============================================================
+            .where((tx) => tx.type == TransactionType.paid)
+            .fold<double>(0, (sum, tx) => sum + tx.amount);
 
         final double totalInterest = transactions
-            .where(
-              (tx) => tx.type == TransactionType.took,
-        )
-            .fold<double>(
-          0,
-              (sum, tx) {
-            try {
-              return sum +
-                  InterestCalculator.calculate(
-                    principal: tx.amount,
-                    rate: tx.interestRate,
-                    startDate: tx.date,
-                    interestType: tx.interestType,
-                    frequency: tx.interestFrequency,
-                  );
-            } catch (e) {
-              debugPrint(
-                '[TookLoanCustomerCard] '
-                    'Interest calculation failed '
-                    'transaction=${tx.id}: $e',
-              );
+            .where((tx) => tx.type == TransactionType.took)
+            .fold<double>(0, (sum, tx) {
+          try {
+            return sum +
+                InterestCalculator.calculate(
+                  principal: tx.amount,
+                  rate: tx.interestRate,
+                  startDate: tx.date,
+                  interestType: tx.interestType,
+                  frequency: tx.interestFrequency,
+                );
+          } catch (e) {
+            return sum;
+          }
+        });
 
-              return sum;
-            }
-          },
-        );
+        final double outstanding = (totalLoanTaken + totalInterest - totalPaid)
+            .clamp(0.0, double.infinity);
 
-        // ============================================================
-        // OUTSTANDING
-        // ============================================================
-
-        final double outstanding =
-        (totalLoanTaken + totalInterest - totalPaid)
-            .clamp(
-          0.0,
-          double.infinity,
-        );
-
-        // ============================================================
-        // OUTSTANDING COLOR
-        // ============================================================
-
-        final Color outstandingColor = outstanding == 0
-            ? Colors.black
-            : Colors.green;
-
-        debugPrint(
-          '[TookLoanCustomerCard] '
-              'customer=${customer.name}, '
-              'customerId=${customer.id}, '
-              'totalLoanTaken=$totalLoanTaken, '
-              'totalInterest=$totalInterest, '
-              'totalPaid=$totalPaid, '
-              'outstanding=$outstanding',
-        );
+        final Color outstandingColor = outstanding == 0 ? Colors.black : Colors.green;
 
         return InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -127,46 +67,28 @@ class TookLoanCustomerCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    TookLoanCustomerDetailsScreen(
-                      customer: customer,
-                    ),
+                builder: (_) => TookLoanCustomerDetailsScreen(
+                  lender: lender, // <-- FIXED: PASS LENDER
+                ),
               ),
             );
           },
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color.fromRGBO(
-                170,
-                185,
-                207,
-                0.2,
-              ),
+              color: const Color.fromRGBO(170, 185, 207, 0.2),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: const Color.fromRGBO(
-                  170,
-                  185,
-                  207,
-                  1,
-                ),
+                color: const Color.fromRGBO(170, 185, 207, 1),
               ),
             ),
             child: Row(
               children: [
-                // ====================================================
-                // CUSTOMER AVATAR
-                // ====================================================
-
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor:
-                  ChopdiColors.lightGray,
+                  backgroundColor: ChopdiColors.lightGray,
                   child: Text(
-                    customer.name.isNotEmpty
-                        ? customer.name[0].toUpperCase()
-                        : '?',
+                    lender.name.isNotEmpty ? lender.name[0].toUpperCase() : '?', // <-- CHANGED TO LENDER
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -174,20 +96,13 @@ class TookLoanCustomerCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 12),
-
-                // ====================================================
-                // CUSTOMER INFORMATION
-                // ====================================================
-
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        customer.name,
+                        lender.name, // <-- CHANGED TO LENDER
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
@@ -196,13 +111,9 @@ class TookLoanCustomerCard extends StatelessWidget {
                           color: ChopdiColors.navy,
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
-                        customer.phone.isEmpty
-                            ? l10n.noPhoneNumber
-                            : customer.phone,
+                        lender.phone.isEmpty ? l10n.noPhoneNumber : lender.phone, // <-- CHANGED TO LENDER
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(
@@ -210,24 +121,12 @@ class TookLoanCustomerCard extends StatelessWidget {
                           color: Colors.grey.shade700,
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
-                      // ==================================================
-                      // TOTAL LOAN TAKEN
-                      // ==================================================
-
                       Container(
-                        padding:
-                        const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color:
-                          const Color(0xffEEF3FA),
-                          borderRadius:
-                          BorderRadius.circular(12),
+                          color: const Color(0xffEEF3FA),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${l10n.loan}: ₹${totalLoanTaken.toStringAsFixed(0)}',
@@ -241,18 +140,10 @@ class TookLoanCustomerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
-                // ====================================================
-                // OUTSTANDING + INTEREST
-                // ====================================================
-
                 Column(
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-                  crossAxisAlignment:
-                  CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '₹${outstanding.toStringAsFixed(0)}',
@@ -262,13 +153,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                         color: outstandingColor,
                       ),
                     ),
-
                     const SizedBox(height: 2),
-
-                    // ==================================================
-                    // INTEREST
-                    // ==================================================
-
                     if (totalInterest > 0) ...[
                       const SizedBox(height: 2),
                       Text(

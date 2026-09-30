@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- IMPORT LENDER
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
 import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
@@ -12,11 +12,11 @@ import '../model/transaction.dart';
 import '../service/isar_service.dart';
 
 class TookLoanCustomerListSection extends StatefulWidget {
-  final List<Customer> customers;
+  final List<Lender> lenders; // <-- CHANGED TO LENDER
 
   const TookLoanCustomerListSection({
     super.key,
-    required this.customers,
+    required this.lenders, // <-- CHANGED TO LENDER
   });
 
   @override
@@ -26,10 +26,9 @@ class TookLoanCustomerListSection extends StatefulWidget {
 
 class _TookLoanCustomerListSectionState
     extends State<TookLoanCustomerListSection> {
-  final TextEditingController searchController =
-  TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
-  late List<Customer> filteredCustomers;
+  late List<Lender> filteredLenders; // <-- CHANGED TO LENDER
 
   // ============================================================
   // FILTER VALUES
@@ -57,20 +56,20 @@ class _TookLoanCustomerListSectionState
   void initState() {
     super.initState();
 
-    filteredCustomers = List.from(widget.customers);
+    filteredLenders = List.from(widget.lenders);
 
     _initializeFilters();
   }
 
   Future<void> _initializeFilters() async {
-    final result = await _getFilteredCustomers();
+    final result = await _getFilteredLenders();
 
     _applySortToList(result);
 
     if (!mounted) return;
 
     setState(() {
-      filteredCustomers = result;
+      filteredLenders = result;
     });
   }
 
@@ -98,20 +97,21 @@ class _TookLoanCustomerListSectionState
   }
 
   // ============================================================
-  // GET CUSTOMER BALANCE
+  // GET LENDER BALANCE
   // ============================================================
 
-  Future<double> getCustomerBalance(int customerId) async {
+  Future<double> getLenderBalance(int lenderId) async {
     final transactions = await IsarService.isar.transactions
         .filter()
-        .customerIdEqualTo(customerId)
+        .customerIdEqualTo(lenderId) // Transaction table still uses customerId
         .voidedAtIsNull()
         .findAll();
 
     double balance = 0;
 
     for (final tx in transactions) {
-      if (tx.type == TransactionType.gave) {
+      // Replaced 'gave' with 'took' because this is the Took Loan section
+      if (tx.type == TransactionType.took) {
         balance += tx.amount;
       } else {
         balance -= tx.amount;
@@ -122,24 +122,22 @@ class _TookLoanCustomerListSectionState
   }
 
   // ============================================================
-  // FILTERED CUSTOMERS
+  // FILTERED LENDERS
   // ============================================================
 
-  Future<List<Customer>> _getFilteredCustomers() async {
-    final search =
-    searchController.text.toLowerCase().trim();
+  Future<List<Lender>> _getFilteredLenders() async {
+    final search = searchController.text.toLowerCase().trim();
 
-    final List<Customer> result = [];
+    final List<Lender> result = [];
 
-    for (final customer in widget.customers) {
+    for (final lender in widget.lenders) {
       // ========================================================
       // SEARCH
       // ========================================================
 
-      final matchesSearch =
-          search.isEmpty ||
-              customer.name.toLowerCase().contains(search) ||
-              customer.phone.contains(search);
+      final matchesSearch = search.isEmpty ||
+          lender.name.toLowerCase().contains(search) ||
+          lender.phone.contains(search);
 
       if (!matchesSearch) {
         continue;
@@ -152,20 +150,15 @@ class _TookLoanCustomerListSectionState
       bool matchesStatus = true;
 
       if (selectedStatus == "Pending") {
-        // Pending continues to use the customer's stored status.
-        matchesStatus =
-            customer.status.toLowerCase() == "pending";
+        // Pending continues to use the lender's stored status.
+        matchesStatus = lender.status.toLowerCase() == "pending";
       } else if (selectedStatus == "Settled") {
         // IMPORTANT:
         // Settled is calculated from the actual ledger balance.
         //
-        // A customer is settled when:
-        // Gave amount - Got amount = 0
-        //
-        // This avoids depending on customer.status being exactly
-        // "Settled".
-        final balance =
-        await getCustomerBalance(customer.id);
+        // A lender is settled when:
+        // Took amount - Paid amount = 0
+        final balance = await getLenderBalance(lender.id);
 
         matchesStatus = balance == 0;
       }
@@ -195,9 +188,8 @@ class _TookLoanCustomerListSectionState
           1,
         );
 
-        matchesDate =
-            !customer.updatedAt.isBefore(firstDayOfMonth) &&
-                customer.updatedAt.isBefore(nextMonth);
+        matchesDate = !lender.updatedAt.isBefore(firstDayOfMonth) &&
+            lender.updatedAt.isBefore(nextMonth);
       }
 
       if (selectedDate == "Custom") {
@@ -208,9 +200,7 @@ class _TookLoanCustomerListSectionState
             fromDate!.day,
           );
 
-          matchesDate =
-              matchesDate &&
-                  !customer.updatedAt.isBefore(startDate);
+          matchesDate = matchesDate && !lender.updatedAt.isBefore(startDate);
         }
 
         if (toDate != null) {
@@ -223,9 +213,7 @@ class _TookLoanCustomerListSectionState
             59,
           );
 
-          matchesDate =
-              matchesDate &&
-                  !customer.updatedAt.isAfter(endDate);
+          matchesDate = matchesDate && !lender.updatedAt.isAfter(endDate);
         }
       }
 
@@ -233,7 +221,7 @@ class _TookLoanCustomerListSectionState
         continue;
       }
 
-      result.add(customer);
+      result.add(lender);
     }
 
     return result;
@@ -244,14 +232,14 @@ class _TookLoanCustomerListSectionState
   // ============================================================
 
   Future<void> applyFilters() async {
-    final result = await _getFilteredCustomers();
+    final result = await _getFilteredLenders();
 
     _applySortToList(result);
 
     if (!mounted) return;
 
     setState(() {
-      filteredCustomers = result;
+      filteredLenders = result;
     });
   }
 
@@ -259,25 +247,21 @@ class _TookLoanCustomerListSectionState
   // SORT
   // ============================================================
 
-  void _applySortToList(List<Customer> customers) {
+  void _applySortToList(List<Lender> lenders) {
     if (selectedSort == "Name (A-Z)") {
-      customers.sort(
-            (a, b) => a.name
-            .toLowerCase()
-            .compareTo(
+      lenders.sort(
+            (a, b) => a.name.toLowerCase().compareTo(
           b.name.toLowerCase(),
         ),
       );
     } else if (selectedSort == "Name (Z-A)") {
-      customers.sort(
-            (a, b) => b.name
-            .toLowerCase()
-            .compareTo(
+      lenders.sort(
+            (a, b) => b.name.toLowerCase().compareTo(
           a.name.toLowerCase(),
         ),
       );
     } else if (selectedSort == "Recently Added") {
-      customers.sort(
+      lenders.sort(
             (a, b) => b.updatedAt.compareTo(
           a.updatedAt,
         ),
@@ -323,8 +307,7 @@ class _TookLoanCustomerListSectionState
   // ============================================================
 
   Future<void> showFilterSheet() async {
-    final result =
-    await showModalBottomSheet<Map<String, dynamic>>(
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -344,12 +327,8 @@ class _TookLoanCustomerListSectionState
     }
 
     setState(() {
-      selectedStatus =
-          result["status"] ?? "All";
-
-      selectedDate =
-          result["date"] ?? "This Month";
-
+      selectedStatus = result["status"] ?? "All";
+      selectedDate = result["date"] ?? "This Month";
       fromDate = result["from"];
       toDate = result["to"];
     });
@@ -362,8 +341,7 @@ class _TookLoanCustomerListSectionState
   // ============================================================
 
   Future<void> showSortSheet() async {
-    final result =
-    await showModalBottomSheet<String>(
+    final result = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) {
@@ -390,8 +368,7 @@ class _TookLoanCustomerListSectionState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    final localizedSort =
-    getLocalizedSortName(
+    final localizedSort = getLocalizedSortName(
       context,
       selectedSort,
     );
@@ -406,11 +383,9 @@ class _TookLoanCustomerListSectionState
         Row(
           children: [
             Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  // "Lender",
                   l10n.lender1,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
@@ -418,23 +393,16 @@ class _TookLoanCustomerListSectionState
                     color: ChopdiColors.navy,
                   ),
                 ),
-
                 Text(
                   l10n.manageAllLender,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color: const Color.fromRGBO(
-                      34,
-                      58,
-                      94,
-                      0.62,
-                    ),
+                    color: const Color.fromRGBO(34, 58, 94, 0.62),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
-
             const Spacer(),
           ],
         ),
@@ -451,26 +419,18 @@ class _TookLoanCustomerListSectionState
               child: Container(
                 height: 46,
                 decoration: BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: const Color.fromRGBO(
-                      170,
-                      185,
-                      207,
-                      1,
-                    ),
+                    color: const Color.fromRGBO(170, 185, 207, 1),
                   ),
                 ),
                 child: TextField(
                   controller: searchController,
                   onChanged: searchCustomer,
-                  textAlignVertical:
-                  TextAlignVertical.center,
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
                     prefixIcon: Padding(
-                      padding:
-                      const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(12),
                       child: Image.asset(
                         'assets/search_option.png',
                         width: 24,
@@ -478,20 +438,16 @@ class _TookLoanCustomerListSectionState
                         fit: BoxFit.contain,
                       ),
                     ),
-                    hintText:
-                    l10n.searchByNameAndPhone,
-                    hintStyle:
-                    const TextStyle(
+                    hintText: l10n.searchByNameAndPhone,
+                    hintStyle: const TextStyle(
                       fontSize: 12,
                     ),
                     border: InputBorder.none,
-                    contentPadding:
-                    EdgeInsets.zero,
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
             ),
-
             const SizedBox(width: 10),
 
             // ==================================================
@@ -500,24 +456,14 @@ class _TookLoanCustomerListSectionState
 
             InkWell(
               onTap: showFilterSheet,
-              borderRadius:
-              BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(25),
               child: Container(
                 height: 46,
-                padding:
-                const EdgeInsets.symmetric(
-                  horizontal: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: const Color.fromRGBO(
-                      170,
-                      185,
-                      207,
-                      1,
-                    ),
+                    color: const Color.fromRGBO(170, 185, 207, 1),
                   ),
                 ),
                 child: Row(
@@ -527,12 +473,8 @@ class _TookLoanCustomerListSectionState
                       height: 24,
                       width: 24,
                     ),
-
                     const SizedBox(width: 5),
-
-                    Text(
-                      l10n.filter,
-                    ),
+                    Text(l10n.filter),
                   ],
                 ),
               ),
@@ -549,16 +491,12 @@ class _TookLoanCustomerListSectionState
         Row(
           children: [
             Text(
-              l10n.lendersCount(
-                filteredCustomers.length,
-              ),
+              l10n.lendersCount(filteredLenders.length),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const Spacer(),
-
             GestureDetector(
               onTap: showSortSheet,
               child: Row(
@@ -567,16 +505,13 @@ class _TookLoanCustomerListSectionState
                     Icons.swap_vert,
                     size: 16,
                   ),
-
                   const SizedBox(width: 4),
-
                   Text(
                     '${l10n.sortBy} : $localizedSort',
                     style: const TextStyle(
                       fontSize: 11,
                     ),
                   ),
-
                   const Icon(
                     Icons.arrow_drop_down,
                   ),
@@ -592,12 +527,9 @@ class _TookLoanCustomerListSectionState
         // EMPTY STATE
         // ========================================================
 
-        if (filteredCustomers.isEmpty)
+        if (filteredLenders.isEmpty)
           Padding(
-            padding:
-            const EdgeInsets.symmetric(
-              vertical: 30,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 30),
             child: Center(
               child: Text(
                 l10n.noCustomersFound,
@@ -611,20 +543,16 @@ class _TookLoanCustomerListSectionState
         else
 
         // ======================================================
-        // TOOK LOAN CUSTOMER CARDS
+        // TOOK LOAN LENDER CARDS
         // ======================================================
 
           ...List.generate(
-            filteredCustomers.length,
+            filteredLenders.length,
                 (index) {
               return Padding(
-                padding:
-                const EdgeInsets.only(
-                  bottom: 10,
-                ),
+                padding: const EdgeInsets.only(bottom: 10),
                 child: TookLoanCustomerCard(
-                  customer:
-                  filteredCustomers[index],
+                  lender: filteredLenders[index], // <-- FIXED INSTANTIATION
                 ),
               );
             },

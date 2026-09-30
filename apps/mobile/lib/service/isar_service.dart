@@ -5,6 +5,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mychopdi/data/migration/local_migration.dart';
 import 'package:mychopdi/model/chopdi.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart'; // <-- 1. ADDED LENDER IMPORT
 import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:path_provider/path_provider.dart';
@@ -31,6 +32,7 @@ class IsarService {
     isar = await Isar.open(
       [
         CustomerSchema,
+        LenderSchema, // <-- 2. ADDED LENDER SCHEMA
         TransactionSchema,
         UserSessionSchema,
         SyncOpSchema,
@@ -172,9 +174,9 @@ class IsarService {
     }
   }
 
-  // -------------------------------------------------------------------
-  // GET ALL ACTIVE CUSTOMERS
-  // -------------------------------------------------------------------
+  // ===================================================================
+  // CUSTOMER METHODS ("I Gave Loan")
+  // ===================================================================
 
   static Future<List<Customer>> getCustomers() async {
     return await isar.customers
@@ -182,18 +184,6 @@ class IsarService {
         .deletedAtIsNull()
         .findAll();
   }
-
-  // -------------------------------------------------------------------
-  // GET CUSTOMER BY PHONE
-  // -------------------------------------------------------------------
-  //
-  // Keep this method because other parts of your application may already
-  // be using it.
-  //
-  // NOTE:
-  // This method checks phone only.
-  // For creating a customer, use getCustomerByNameAndPhone().
-  // -------------------------------------------------------------------
 
   static Future<Customer?> getCustomerByPhone(
       String phone,
@@ -210,10 +200,6 @@ class IsarService {
         .deletedAtIsNull()
         .findFirst();
   }
-
-  // -------------------------------------------------------------------
-  // GET CUSTOMER BY PHONE + CHOPDI
-  // -------------------------------------------------------------------
 
   static Future<Customer?> getCustomerByPhoneAndChopdi(
       String phone,
@@ -235,33 +221,6 @@ class IsarService {
         .findFirst();
   }
 
-  // -------------------------------------------------------------------
-  // GET CUSTOMER BY NAME + PHONE + CHOPDI
-  // -------------------------------------------------------------------
-  //
-  // This is the duplicate check used when creating a customer.
-  //
-  // Rules:
-  //
-  // 1. john + empty
-  //    john + empty
-  //    => DUPLICATE
-  //
-  // 2. john + empty
-  //    john + 98765
-  //    => NEW
-  //
-  // 3. john + 98765
-  //    john + 98765
-  //    => DUPLICATE
-  //
-  // 4. john + 98765
-  //    john + 12345
-  //    => NEW
-  //
-  // Different chopdiId values are treated as separate customers.
-  // -------------------------------------------------------------------
-
   static Future<Customer?> getCustomerByNameAndPhone(
       String name,
       String phone,
@@ -270,18 +229,9 @@ class IsarService {
     final cleanName = name.trim();
     final cleanPhone = phone.trim();
 
-    // Name is required.
     if (cleanName.isEmpty) {
       return null;
     }
-
-    // ---------------------------------------------------------------
-    // PHONE IS EMPTY
-    // ---------------------------------------------------------------
-    //
-    // If both names are the same and both phone numbers are empty,
-    // it is a duplicate.
-    // ---------------------------------------------------------------
 
     if (cleanPhone.isEmpty) {
       final customers = await isar.customers
@@ -299,19 +249,8 @@ class IsarService {
           }
         }
       }
-
       return null;
     }
-
-    // ---------------------------------------------------------------
-    // PHONE EXISTS
-    // ---------------------------------------------------------------
-    //
-    // Match:
-    // name + phone + chopdiId
-    //
-    // Name comparison is case-insensitive.
-    // ---------------------------------------------------------------
 
     final customers = await isar.customers
         .filter()
@@ -332,12 +271,110 @@ class IsarService {
     return null;
   }
 
+  // ===================================================================
+  // 3. LENDER METHODS ("I Took Loan") - ADDED THESE FOR THE NEW TABLE
+  // ===================================================================
+
+  static Future<List<Lender>> getLenders() async {
+    return await isar.lenders
+        .filter()
+        .deletedAtIsNull()
+        .findAll();
+  }
+
+  static Future<Lender?> getLenderByPhone(
+      String phone,
+      ) async {
+    final cleanPhone = phone.trim();
+
+    if (cleanPhone.isEmpty) {
+      return null;
+    }
+
+    return await isar.lenders
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .deletedAtIsNull()
+        .findFirst();
+  }
+
+  static Future<Lender?> getLenderByPhoneAndChopdi(
+      String phone,
+      int chopdiId,
+      ) async {
+    final cleanPhone = phone.trim();
+
+    if (cleanPhone.isEmpty) {
+      return null;
+    }
+
+    return await isar.lenders
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
+        .and()
+        .deletedAtIsNull()
+        .findFirst();
+  }
+
+  static Future<Lender?> getLenderByNameAndPhone(
+      String name,
+      String phone,
+      int chopdiId,
+      ) async {
+    final cleanName = name.trim();
+    final cleanPhone = phone.trim();
+
+    if (cleanName.isEmpty) {
+      return null;
+    }
+
+    if (cleanPhone.isEmpty) {
+      final lenders = await isar.lenders
+          .filter()
+          .chopdiIdEqualTo(chopdiId)
+          .and()
+          .deletedAtIsNull()
+          .findAll();
+
+      for (final lender in lenders) {
+        if (lender.name.trim().toLowerCase() ==
+            cleanName.toLowerCase()) {
+          if (lender.phone.trim().isEmpty) {
+            return lender;
+          }
+        }
+      }
+      return null;
+    }
+
+    final lenders = await isar.lenders
+        .filter()
+        .phoneEqualTo(cleanPhone)
+        .and()
+        .chopdiIdEqualTo(chopdiId)
+        .and()
+        .deletedAtIsNull()
+        .findAll();
+
+    for (final lender in lenders) {
+      if (lender.name.trim().toLowerCase() ==
+          cleanName.toLowerCase()) {
+        return lender;
+      }
+    }
+
+    return null;
+  }
+
   // -------------------------------------------------------------------
   // SUMMARY
   // -------------------------------------------------------------------
 
   static Future<SummaryData> getSummary() async {
     final customers = await getCustomers();
+    // If you need Lenders in the summary, you can now call await getLenders() here!
 
     double totalOutstanding = 0;
     double totalLoanGiven = 0;

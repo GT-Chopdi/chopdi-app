@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
 
@@ -77,6 +78,193 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCurrentChopdi();
   }
 
+  // ============================================================
+  // EXIT APP DIALOG
+  // ============================================================
+
+  Future<void> _handleBackPress() async {
+    final shouldExit = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Exit App',
+      barrierColor: Colors.black.withOpacity(0.45),
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        return const SizedBox.shrink();
+      },
+      transitionBuilder: (
+          dialogContext,
+          animation,
+          secondaryAnimation,
+          child,
+          ) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+        );
+
+        return ScaleTransition(
+          scale: Tween<double>(
+            begin: 0.75,
+            end: 1.0,
+          ).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 28),
+                  padding: const EdgeInsets.fromLTRB(
+                    22,
+                    22,
+                    22,
+                    18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBF3),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 30,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Animated icon
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.8, end: 1.0),
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.elasticOut,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          height: 68,
+                          width: 68,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0E8),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.exit_to_app_rounded,
+                            size: 32,
+                            color: Color(0xFFE85D3F),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Text(
+                        'Exit App?',
+                        style: GoogleFonts.poppins(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF29231F),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'Are you sure you want to exit the app?',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          height: 1.5,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF776F68),
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      Row(
+                        children: [
+                          // Cancel
+                          Expanded(
+                            child: SizedBox(
+                              height: 50,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop(false);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: Color(0xFFE3DCD4),
+                                    width: 1.2,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF514A45),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // Exit
+                          Expanded(
+                            child: SizedBox(
+                              height: 50,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop(true);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 0,
+                                  backgroundColor: const Color(0xFFE85D3F),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Exit',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (shouldExit == true) {
+      await SystemNavigator.pop();
+    }
+  }
   // ============================================================
   // LIVE PAGE POSITION
   // ============================================================
@@ -170,8 +358,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ============================================================
   // SCROLL NOTIFICATION HANDLER
-  //
-  // Each tab gets its own FAB notifier.
   // ============================================================
 
   bool _handleScrollNotification(
@@ -227,252 +413,259 @@ class _HomeScreenState extends State<HomeScreen> {
     final bool isGaveLoan =
         _selectedTabIndex == 0;
 
-    return Scaffold(
-      backgroundColor: ChopdiColors.cream,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult:
+          (didPop, result) async {
+        if (didPop) {
+          return;
+        }
 
-      // ========================================================
-      // FLOATING ACTION BUTTON
-      // ========================================================
+        await _handleBackPress();
+      },
+      child: Scaffold(
+        backgroundColor: ChopdiColors.cream,
 
-      floatingActionButton:
-      ValueListenableBuilder<bool>(
-        valueListenable: _currentFabNotifier(),
+        // ========================================================
+        // FLOATING ACTION BUTTON
+        // ========================================================
 
-        builder: (
-            context,
-            isFabSmall,
-            _,
-            ) {
-          return RepaintBoundary(
-            child: AnimatedContainer(
-              duration:
-              const Duration(milliseconds: 250),
-              curve:
-              Curves.easeOutCubic,
+        floatingActionButton:
+        ValueListenableBuilder<bool>(
+          valueListenable:
+          _currentFabNotifier(),
 
-              width:
-              isFabSmall ? 56 : 150,
+          builder: (
+              context,
+              isFabSmall,
+              _,
+              ) {
+            return RepaintBoundary(
+              child: AnimatedContainer(
+                duration:
+                const Duration(milliseconds: 250),
+                curve:
+                Curves.easeOutCubic,
 
-              height: 56,
+                width:
+                isFabSmall ? 56 : 150,
 
-              decoration:
-              BoxDecoration(
-                borderRadius:
-                BorderRadius.circular(19),
+                height: 56,
 
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(
-                      0xff243B67,
-                    ).withValues(
-                      alpha: 0.22,
-                    ),
-                    blurRadius: 14,
-                    offset:
-                    const Offset(0, 6),
-                  ),
-                ],
-              ),
-
-              child:
-              FloatingActionButton(
-                backgroundColor:
-                const Color(0xff243B67),
-
-                elevation: 0,
-
-                shape:
-                RoundedRectangleBorder(
+                decoration:
+                BoxDecoration(
                   borderRadius:
                   BorderRadius.circular(19),
+
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(
+                        0xff243B67,
+                      ).withValues(
+                        alpha: 0.22,
+                      ),
+                      blurRadius: 14,
+                      offset:
+                      const Offset(0, 6),
+                    ),
+                  ],
                 ),
 
-                onPressed: () =>
-                    _openAddScreen(
-                      isGaveLoan,
-                    ),
-
                 child:
-                AnimatedSwitcher(
-                  duration:
-                  const Duration(
-                    milliseconds: 180,
+                FloatingActionButton(
+                  backgroundColor:
+                  const Color(0xff243B67),
+
+                  elevation: 0,
+
+                  shape:
+                  RoundedRectangleBorder(
+                    borderRadius:
+                    BorderRadius.circular(19),
                   ),
 
-                  switchInCurve:
-                  Curves.easeOutCubic,
-
-                  switchOutCurve:
-                  Curves.easeInCubic,
-
-                  transitionBuilder:
-                      (
-                      child,
-                      animation,
-                      ) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child:
-                      ScaleTransition(
-                        scale: animation,
-                        child: child,
+                  onPressed: () =>
+                      _openAddScreen(
+                        isGaveLoan,
                       ),
-                    );
-                  },
 
-                  child: isFabSmall
-                      ? const Icon(
-                    Icons.add_rounded,
-                    key: ValueKey(
-                      'small_fab',
-                    ),
-                    color: Colors.white,
-                    size: 25,
-                  )
-                      : Row(
-                    key: const ValueKey(
-                      'large_fab',
+                  child:
+                  AnimatedSwitcher(
+                    duration:
+                    const Duration(
+                      milliseconds: 180,
                     ),
 
-                    mainAxisAlignment:
-                    MainAxisAlignment
-                        .center,
+                    switchInCurve:
+                    Curves.easeOutCubic,
 
-                    children: [
-                      const Icon(
-                        Icons.add_rounded,
-                        color:
-                        Colors.white,
-                        size: 23,
+                    switchOutCurve:
+                    Curves.easeInCubic,
+
+                    transitionBuilder:
+                        (
+                        child,
+                        animation,
+                        ) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child:
+                        ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+
+                    child: isFabSmall
+                        ? const Icon(
+                      Icons.add_rounded,
+                      key: ValueKey(
+                        'small_fab',
                       ),
-
-                      const SizedBox(
-                        width: 8,
+                      color: Colors.white,
+                      size: 25,
+                    )
+                        : Row(
+                      key: const ValueKey(
+                        'large_fab',
                       ),
+                      mainAxisAlignment:
+                      MainAxisAlignment
+                          .center,
+                      children: [
+                        const Icon(
+                          Icons.add_rounded,
+                          color:
+                          Colors.white,
+                          size: 23,
+                        ),
 
-                      Flexible(
-                        child: Text(
-                          isGaveLoan
-                              ? l10n
-                              .homeAddCustomer
-                              : l10n
-                              .homeAddLoan,
+                        const SizedBox(
+                          width: 8,
+                        ),
 
-                          maxLines: 1,
-
-                          overflow:
-                          TextOverflow
-                              .ellipsis,
-
-                          style:
-                          GoogleFonts
-                              .manrope(
-                            color:
-                            Colors.white,
-                            fontWeight:
-                            FontWeight
-                                .w700,
-                            fontSize: 13.5,
+                        Flexible(
+                          child: Text(
+                            isGaveLoan
+                                ? l10n
+                                .homeAddCustomer
+                                : l10n
+                                .homeAddLoan,
+                            maxLines: 1,
+                            overflow:
+                            TextOverflow
+                                .ellipsis,
+                            style:
+                            GoogleFonts
+                                .manrope(
+                              color:
+                              Colors.white,
+                              fontWeight:
+                              FontWeight
+                                  .w700,
+                              fontSize: 13.5,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+
+        // ========================================================
+        // BODY
+        // ========================================================
+
+        body: SafeArea(
+          child: Padding(
+            padding:
+            const EdgeInsets.all(14),
+
+            child: Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+
+              children: [
+                // ==================================================
+                // HEADER
+                // ==================================================
+
+                HomeHeader(
+                  currentChopdi:
+                  currentChopdi,
+
+                  onChopdiChanged:
+                      (chopdi) {
+                    setState(() {
+                      currentChopdi =
+                          chopdi;
+                    });
+                  },
+                ),
+
+                const SizedBox(
+                  height: 18,
+                ),
+
+                // ==================================================
+                // TAB SWITCHER
+                // ==================================================
+
+                _buildPremiumTabSwitcher(),
+
+                const SizedBox(
+                  height: 18,
+                ),
+
+                // ==================================================
+                // PAGES
+                // ==================================================
+
+                Expanded(
+                  child: PageView(
+                    controller:
+                    _pageController,
+
+                    physics:
+                    const BouncingScrollPhysics(),
+
+                    onPageChanged:
+                        (index) {
+                      if (!mounted) return;
+
+                      if (_selectedTabIndex !=
+                          index) {
+                        setState(() {
+                          _selectedTabIndex =
+                              index;
+                        });
+                      }
+
+                      _pageOffsetNotifier
+                          .value =
+                          index.toDouble();
+                    },
+
+                    children: [
+                      _KeepAliveTab(
+                        child:
+                        _buildGaveLoanContent(),
+                      ),
+
+                      _KeepAliveTab(
+                        child:
+                        _buildTookLoanContent(),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
-          );
-        },
-      ),
-
-      // ========================================================
-      // BODY
-      // ========================================================
-
-      body: SafeArea(
-        child: Padding(
-          padding:
-          const EdgeInsets.all(14),
-
-          child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-            children: [
-              // ==================================================
-              // HEADER
-              // ==================================================
-
-              HomeHeader(
-                currentChopdi:
-                currentChopdi,
-
-                onChopdiChanged:
-                    (chopdi) {
-                  setState(() {
-                    currentChopdi =
-                        chopdi;
-                  });
-                },
-              ),
-
-              const SizedBox(
-                height: 18,
-              ),
-
-              // ==================================================
-              // TAB SWITCHER
-              // ==================================================
-
-              _buildPremiumTabSwitcher(),
-
-              const SizedBox(
-                height: 18,
-              ),
-
-              // ==================================================
-              // PAGES
-              // ==================================================
-
-              Expanded(
-                child: PageView(
-                  controller:
-                  _pageController,
-
-                  physics:
-                  const BouncingScrollPhysics(),
-
-                  onPageChanged:
-                      (index) {
-                    if (!mounted) return;
-
-                    if (_selectedTabIndex !=
-                        index) {
-                      setState(() {
-                        _selectedTabIndex =
-                            index;
-                      });
-                    }
-
-                    _pageOffsetNotifier
-                        .value =
-                        index.toDouble();
-                  },
-
-                  children: [
-                    _KeepAliveTab(
-                      child:
-                      _buildGaveLoanContent(),
-                    ),
-
-                    _KeepAliveTab(
-                      child:
-                      _buildTookLoanContent(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -542,8 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child:
           RepaintBoundary(
             child:
-            ValueListenableBuilder<
-                double>(
+            ValueListenableBuilder<double>(
               valueListenable:
               _pageOffsetNotifier,
 
@@ -597,27 +789,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   Clip.none,
 
                   children: [
-                    // ACTIVE CAPSULE
-
                     Positioned(
                       left:
                       capsuleLeft,
-
                       top: 0,
-
                       bottom: 0,
-
                       width:
                       capsuleWidth,
-
                       child:
                       _buildMorphingCapsule(
                         movement:
                         movement,
                       ),
                     ),
-
-                    // TAB LABELS
 
                     Row(
                       children: [
@@ -684,10 +868,8 @@ class _HomeScreenState extends State<HomeScreen> {
         const LinearGradient(
           begin:
           Alignment.topLeft,
-
           end:
           Alignment.bottomRight,
-
           colors: [
             Color(0xff536DAA),
             Color(0xff243B67),
@@ -708,13 +890,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ).withValues(
               alpha: 0.27,
             ),
-
             blurRadius:
             13 + (movement * 7),
-
             spreadRadius:
             movement,
-
             offset:
             Offset(
               0,
@@ -774,7 +953,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 BorderRadius.circular(
                   20,
                 ),
-
                 color: Colors.white
                     .withValues(
                   alpha: 0.025,
@@ -898,7 +1076,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
 
                         borderRadius:
-                        BorderRadius.circular(
+                        BorderRadius
+                            .circular(
                           13,
                         ),
 
@@ -1033,8 +1212,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child:
         CircularProgressIndicator(),
       )
-          : StreamBuilder<
-          List<Customer>>(
+          : StreamBuilder<List<Customer>>(
         stream: IsarService
             .isar
             .customers
@@ -1078,9 +1256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child:
                   SummaryCard(
                     chopdiId:
-                    currentChopdi!
-                        .id,
-
+                    currentChopdi!.id,
                     isGaveLoanSelected:
                     true,
                   ),
@@ -1143,7 +1319,6 @@ class _HomeScreenState extends State<HomeScreen> {
           : TookLoanHomeContent(
         chopdiId:
         currentChopdi!.id,
-
         isGaveLoanSelected:
         false,
       ),
@@ -1155,8 +1330,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ============================================================
 
   Widget _buildEmptyState(
-      BuildContext context,
-      ) {
+      BuildContext context) {
     final l10n =
     AppLocalizations.of(context);
 
@@ -1229,10 +1403,8 @@ class _HomeScreenState extends State<HomeScreen> {
             GoogleFonts.manrope(
               color:
               ChopdiColors.navy,
-
               fontSize:
               titleFontSize,
-
               fontWeight:
               FontWeight.w700,
             ),
@@ -1252,13 +1424,10 @@ class _HomeScreenState extends State<HomeScreen> {
             GoogleFonts.manrope(
               color:
               ChopdiColors.navy,
-
               fontSize:
               descriptionFontSize,
-
               fontWeight:
               FontWeight.w700,
-
               height: 1.25,
             ),
           ),
@@ -1276,11 +1445,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             child: Image.asset(
               'assets/line_home.png',
-
               height: 105,
-
               width: 65,
-
               fit: BoxFit.contain,
             ),
           ),
@@ -1309,14 +1475,11 @@ class _KeepAliveTab extends StatefulWidget {
 class _KeepAliveTabState
     extends State<_KeepAliveTab>
     with AutomaticKeepAliveClientMixin {
-
   @override
   bool get wantKeepAlive => true;
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     super.build(context);
 
     return widget.child;
