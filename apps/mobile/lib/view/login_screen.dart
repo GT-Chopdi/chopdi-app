@@ -123,20 +123,17 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
         errorText = switch (error.code) {
           ApiErrorCode.rateLimited =>
-            "A code was already sent. Please wait a moment.",
+            AppLocalizations.of(context).loginOtpAlreadySent,
 
           'NETWORK_UNAVAILABLE' =>
-            "Can't reach the server. Check your connection.",
+            AppLocalizations.of(context).loginNetworkUnavailable,
 
           ApiErrorCode.devKeyRequired
               when ApiConfig.devKey.isEmpty =>
-            "This build has no DEV_KEY compiled in.\n\n"
-                "Paste AUTH_DEV_KEY into env/staging.env, then rebuild with\n"
-                "--dart-define-from-file=env/staging.env",
+            AppLocalizations.of(context).loginDevKeyMissing,
 
           ApiErrorCode.devKeyRequired =>
-            "The DEV_KEY in this build was rejected. Check it matches "
-                "AUTH_DEV_KEY on the server.",
+            AppLocalizations.of(context).loginDevKeyRejected,
 
           _ => error.message,
         };
@@ -157,52 +154,11 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
       setState(() {
         _requesting = false;
-        errorText = "Something went wrong. Please try again.";
+        errorText =  AppLocalizations.of(context).loginSomethingWentWrong;
       });
     }
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-
-  //   _phoneController.addListener(() {
-  //     if (errorText != null) {
-  //       setState(() {
-  //         errorText = null;
-  //       });
-  //     }
-  //   });
-
-  //   // ================================================================
-  //   // KEYBOARD / PHONE FIELD SCROLL FIX
-  //   // ================================================================
-  //   //
-  //   // When the phone field receives focus, wait for the keyboard to
-  //   // finish opening and then scroll the field into the visible area.
-  //   // ================================================================
-  //   // KEYBOARD / PHONE FIELD + CONTINUE BUTTON SCROLL FIX
-  //   // ================================================================
-
-  //   _phoneFocusNode.addListener(() {
-  //     if (_phoneFocusNode.hasFocus) {
-  //       Future.delayed(const Duration(milliseconds: 400), () {
-  //         if (!mounted) return;
-
-  //         final buttonContext = _continueButtonKey.currentContext;
-
-  //         if (buttonContext != null) {
-  //           Scrollable.ensureVisible(
-  //             buttonContext,
-  //             duration: const Duration(milliseconds: 350),
-  //             curve: Curves.easeOut,
-  //             alignment: 0.55,
-  //           );
-  //         }
-  //       });
-  //     }
-  //   });
-  // }
 
   void _scrollToContinueButton() {
     if (!mounted || !_phoneFocusNode.hasFocus) return;
@@ -451,8 +407,9 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
 
                                   // Subtitle
                                   Text(
-                                    'Track loans, interest and payments\n'
-                                    'with clarity and confidence.',
+                                    // 'Track loans, interest and payments\n'
+                                    // 'with clarity and confidence.',
+                                    AppLocalizations.of(context).loginTrackLoans,
                                     style: GoogleFonts.manrope(
                                       fontSize: subtitleFontSize,
                                       height: 1.35,
@@ -542,8 +499,7 @@ class _ChopdiOnboardingScreenState extends State<ChopdiOnboardingScreen> with Wi
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            "Enter your mobile number to\n"
-                                            "continue to Chopdi",
+                                            AppLocalizations.of(context).loginEnterMobileToContinue,
                                             style: GoogleFonts.manrope(
                                               fontSize:
                                                   width < 360 ? 13 : 14,

@@ -330,7 +330,7 @@ class _HelpFaqsScreenState extends State<HelpFaqsScreen> {
 
           children: [
             Text(
-              'Help & FAQs',
+              l10n.helpFaqs,
               style: GoogleFonts.manrope(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,

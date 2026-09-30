@@ -1,11 +1,10 @@
-
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mychopdi/core/config/api_config.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/data/remote/api_exception.dart';
 import 'package:mychopdi/data/remote/error_code.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/view/main_screen.dart';
@@ -124,7 +123,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
     if (otp.isEmpty) {
       setState(() {
-        otpError = "Please enter OTP";
+        otpError = AppLocalizations.of(context).otpRequired;
       });
 
       _scrollToOtp();
@@ -133,7 +132,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
     if (otp.length != 6) {
       setState(() {
-        otpError = "Please enter a valid 6-digit OTP";
+        otpError = AppLocalizations.of(context).otpInvalid;
       });
 
       _scrollToOtp();
@@ -190,7 +189,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
       setState(() {
         _verifying = false;
-        otpError = "Something went wrong. Please try again.";
+        otpError = AppLocalizations.of(context).otpSomethingWentWrong;
       });
     }
   }
@@ -199,22 +198,43 @@ class _OTPScreenState extends State<OTPScreen> {
   // ========================================================
   /// Turns a server error code into something a lender can act on.
 
+  // String _messageFor(ApiException error) {
+  //   switch (error.code) {
+  //     case ApiErrorCode.invalidCode:
+  //       return "Incorrect OTP. Please try again.";
+
+  //     case ApiErrorCode.challengeExpired:
+  //       return "This code has expired. Request a new one.";
+
+  //     case ApiErrorCode.tooManyAttempts:
+  //       return "Too many incorrect attempts. Request a new code.";
+
+  //     case ApiErrorCode.rateLimited:
+  //       return "Please wait a moment before trying again.";
+
+  //     case 'NETWORK_UNAVAILABLE':
+  //       return "Can't reach the server. Check your connection.";
+
+  //     default:
+  //       return error.message;
+  //   }
+  // }
   String _messageFor(ApiException error) {
     switch (error.code) {
       case ApiErrorCode.invalidCode:
-        return "Incorrect OTP. Please try again.";
+        return AppLocalizations.of(context).otpIncorrect;
 
       case ApiErrorCode.challengeExpired:
-        return "This code has expired. Request a new one.";
+        return AppLocalizations.of(context).otpExpired;
 
       case ApiErrorCode.tooManyAttempts:
-        return "Too many incorrect attempts. Request a new code.";
+        return AppLocalizations.of(context).otpTooManyAttempts;
 
       case ApiErrorCode.rateLimited:
-        return "Please wait a moment before trying again.";
+        return AppLocalizations.of(context).otpPleaseWait;
 
       case 'NETWORK_UNAVAILABLE':
-        return "Can't reach the server. Check your connection.";
+        return AppLocalizations.of(context).otpNetworkUnavailable;
 
       default:
         return error.message;
@@ -242,6 +262,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final size = MediaQuery.of(context).size;
 
     final width = size.width;
@@ -358,7 +379,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       // ==============================================                      // TITLE
                       // ==============================================
                       Text(
-                        "Verify your number",
+                        l10n.otpVerifyYourNumber,
 
                         textAlign: TextAlign.center,
 
@@ -374,7 +395,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       // ==============================================                      // SUBTITLE
                       // ==============================================
                       Text(
-                        "We've sent a 6-digit OTP to",
+                        l10n.otpSentTo,
 
                         textAlign: TextAlign.center,
 
@@ -531,7 +552,7 @@ class _OTPScreenState extends State<OTPScreen> {
                                 // Call your resend OTP API here.
                               },
                               child: Text(
-                                "Resend OTP",
+                                l10n.otpResend,
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   color: const Color(0xff173A63),
@@ -543,7 +564,7 @@ class _OTPScreenState extends State<OTPScreen> {
                             Row(
                               children: [
                                 Text(
-                                  "Resend OTP in ",
+                                  l10n.otpResendIn,
                                   style: GoogleFonts.inter(
                                     fontSize: 13,
                                     color: Colors.grey[700],
@@ -601,8 +622,7 @@ class _OTPScreenState extends State<OTPScreen> {
                                   ),
                                 )
                               : Text(
-                                  "Verify OTP",
-
+                                  l10n.otpVerify,
                                   style: GoogleFonts.inter(
                                     color: Colors.white,
                                     fontWeight:
@@ -624,7 +644,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         },
 
                         child: Text(
-                          "Change Mobile Number",
+                          l10n.otpChangeMobileNumber,
 
                           style: GoogleFonts.inter(
                             color: const Color(0xff173A63),

@@ -483,7 +483,7 @@ class _MoneyGaveBottomSheetState
                         Alignment
                             .centerLeft,
                         child:
-                        title("Amount"),
+                        title(l10n.amount),
                       ),
 
                       Container(
@@ -520,7 +520,7 @@ class _MoneyGaveBottomSheetState
                           decoration:
                           decoration(
                             hint:
-                            "Enter Amount",
+                            l10n.enterAmount,
                             prefix:
                             const Icon(
                               Icons
@@ -548,37 +548,54 @@ class _MoneyGaveBottomSheetState
                         Alignment
                             .centerLeft,
                         child:
-                        title("Date"),
+                        title(l10n.date),
                       ),
+
+                      // TextField(
+                      //   readOnly: true,
+                      //   onTap:
+                      //   _pickDate,
+
+                      //   decoration:
+                      //   decoration(
+                      //     suffix:
+                      //     const Icon(
+                      //       Icons
+                      //           .calendar_today_outlined,
+                      //       color:
+                      //       Colors.black,
+                      //     ),
+                      //   ).copyWith(
+                      //     hintText:
+                      //     DateFormat(
+                      //       "dd MMM yyyy",
+                      //     ).format(
+                      //       selectedDate,
+                      //     ),
+                      //     hintStyle:
+                      //     const TextStyle(
+                      //       color:
+                      //       Colors.black,
+                      //       fontWeight:
+                      //       FontWeight
+                      //           .w500,
+                      //     ),
+                      //   ),
+                      // ),
 
                       TextField(
                         readOnly: true,
-                        onTap:
-                        _pickDate,
-
-                        decoration:
-                        decoration(
-                          suffix:
-                          const Icon(
-                            Icons
-                                .calendar_today_outlined,
-                            color:
-                            Colors.black,
+                        onTap: _pickDate,
+                        decoration: decoration(
+                          suffix: const Icon(
+                            Icons.calendar_today_outlined,
+                            color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText:
-                          DateFormat(
-                            "dd MMM yyyy",
-                          ).format(
-                            selectedDate,
-                          ),
-                          hintStyle:
-                          const TextStyle(
-                            color:
-                            Colors.black,
-                            fontWeight:
-                            FontWeight
-                                .w500,
+                          hintText: DateFormat("dd MMM yyyy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
+                          hintStyle: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -596,7 +613,7 @@ class _MoneyGaveBottomSheetState
                         Alignment
                             .centerLeft,
                         child: title(
-                          "Interest Rate (%)",
+                          l10n.interestRatePercent,
                         ),
                       ),
 
@@ -620,7 +637,7 @@ class _MoneyGaveBottomSheetState
                             .centerLeft,
                         child:
                         title(
-                          "Description",
+                          l10n.description,
                         ),
                       ),
 
@@ -639,7 +656,7 @@ class _MoneyGaveBottomSheetState
                           decoration:
                           decoration(
                             hint:
-                            "Enter Description here...",
+                            l10n.enterDescriptionHere,
                           ).copyWith(
                             counterText:
                             "",
@@ -667,7 +684,7 @@ class _MoneyGaveBottomSheetState
                             .centerLeft,
                         child:
                         title(
-                          "Interest Type",
+                          l10n.interestType,
                         ),
                       ),
 
@@ -683,19 +700,19 @@ class _MoneyGaveBottomSheetState
                               .keyboard_arrow_down,
                         ),
                         items:
-                        const [
+                        [
                           DropdownMenuItem(
                             value:
                             "Simple Interest",
                             child: Text(
-                              "Simple Interest",
+                             l10n.simpleInterest,
                             ),
                           ),
                           DropdownMenuItem(
                             value:
                             "Compound Interest",
                             child: Text(
-                              "Compound Interest",
+                              l10n.compoundInterest,
                             ),
                           ),
                         ],
@@ -727,7 +744,7 @@ class _MoneyGaveBottomSheetState
                             .centerLeft,
                         child:
                         title(
-                          "Interest Frequency",
+                          l10n.interestFrequency,
                         ),
                       ),
 
@@ -743,13 +760,13 @@ class _MoneyGaveBottomSheetState
                               .keyboard_arrow_down,
                         ),
                         items:
-                        const [
+                        [
                           DropdownMenuItem(
                             value:
                             "Daily",
                             child:
                             Text(
-                              "Daily",
+                              l10n.daily,
                             ),
                           ),
                           DropdownMenuItem(
@@ -757,7 +774,7 @@ class _MoneyGaveBottomSheetState
                             "Weekly",
                             child:
                             Text(
-                              "Weekly",
+                              l10n.weekly,
                             ),
                           ),
                           DropdownMenuItem(
@@ -765,7 +782,7 @@ class _MoneyGaveBottomSheetState
                             "Monthly",
                             child:
                             Text(
-                              "Monthly",
+                              l10n.monthly,
                             ),
                           ),
                           DropdownMenuItem(
@@ -773,7 +790,7 @@ class _MoneyGaveBottomSheetState
                             "Yearly",
                             child:
                             Text(
-                              "Yearly",
+                              l10n.yearly,
                             ),
                           ),
                         ],
@@ -805,7 +822,7 @@ class _MoneyGaveBottomSheetState
                             .centerLeft,
                         child:
                         title(
-                          "Payment Mode (Optional)",
+                          l10n.paymentModeOptional,
                         ),
                       ),
 
@@ -820,7 +837,7 @@ class _MoneyGaveBottomSheetState
                         decoration:
                         decoration(
                           hint:
-                          "Select Payment Mode",
+                          l10n.selectPaymentMode,
                         ),
 
                         icon:
@@ -830,13 +847,13 @@ class _MoneyGaveBottomSheetState
                         ),
 
                         items:
-                        const [
+                        [
                           DropdownMenuItem(
                             value:
                             "Cash",
                             child:
                             Text(
-                              "Cash",
+                              l10n.cash,
                             ),
                           ),
                           DropdownMenuItem(
@@ -844,7 +861,7 @@ class _MoneyGaveBottomSheetState
                             "UPI",
                             child:
                             Text(
-                              "UPI",
+                              l10n.upi,
                             ),
                           ),
                           DropdownMenuItem(
@@ -852,7 +869,7 @@ class _MoneyGaveBottomSheetState
                             "Bank",
                             child:
                             Text(
-                              "Bank Transfer",
+                              l10n.bankTransfer,
                             ),
                           ),
                         ],
@@ -957,8 +974,8 @@ class _MoneyGaveBottomSheetState
                           ),
 
                           child:
-                          const Text(
-                            "Cancel",
+                          Text(
+                            l10n.cancel,
                             style:
                             TextStyle(
                               color:
@@ -1010,8 +1027,8 @@ class _MoneyGaveBottomSheetState
                           ),
 
                           child:
-                          const Text(
-                            "Save Entry",
+                          Text(
+                            l10n.saveEntry,
                             style:
                             TextStyle(
                               color:
@@ -1039,6 +1056,7 @@ class _MoneyGaveBottomSheetState
   // ============================================================
 
   Widget _buildInterestRateField() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment:
       CrossAxisAlignment.start,
@@ -1071,7 +1089,7 @@ class _MoneyGaveBottomSheetState
           decoration:
           decoration(
             hint:
-            "Enter Interest rate",
+            l10n.enterInterestRate,
           ).copyWith(
             enabledBorder:
             OutlineInputBorder(
@@ -1142,6 +1160,7 @@ class _MoneyGaveBottomSheetState
   // ============================================================
 
   Widget _buildContactBox() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding:
@@ -1188,7 +1207,7 @@ class _MoneyGaveBottomSheetState
               CrossAxisAlignment.start,
               children: [
                 Text(
-                  "If you have any questions, feel free to contact us at",
+                  l10n.contactSupportMessage,
                   style:
                   GoogleFonts.manrope(
                     fontSize: 11,
@@ -1231,6 +1250,7 @@ class _MoneyGaveBottomSheetState
   // ============================================================
 
   Future<void> _saveEntry() async {
+    final l10n = AppLocalizations.of(context);
     // ==========================================================
     // AMOUNT VALIDATION
     // ==========================================================
@@ -1252,7 +1272,7 @@ class _MoneyGaveBottomSheetState
 
     if (amount == null || amount <= 0) {
       _showError(
-        "Please enter a valid amount",
+         l10n.validAmountRequired,
       );
 
       return;
@@ -1352,7 +1372,7 @@ class _MoneyGaveBottomSheetState
         if (!mounted) return;
 
         _showError(
-          'This customer is no longer available. Please reopen the customer and try again.',
+          l10n.customerNoLongerAvailable,
         );
 
         return;
@@ -1490,8 +1510,8 @@ class _MoneyGaveBottomSheetState
       e.toString().contains(
         'Cannot add an entry to a deleted customer',
       )
-          ? 'This customer has been deleted. You cannot add a new entry.'
-          : 'Unable to save the transaction. Please try again.';
+          ? l10n.deletedCustomerCannotAddEntry
+          : l10n.unableToSaveTransaction;
 
       ScaffoldMessenger.of(
         context,

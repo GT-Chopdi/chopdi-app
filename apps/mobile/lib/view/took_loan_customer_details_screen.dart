@@ -680,7 +680,7 @@ class _CustomerDetailsScreenState
                         lastPayment:
                         lastReceivedTransaction,
                         firstLoan:
-                        firstLoanTransaction,
+                        firstLoanTransaction, isTookLoan: true,
                       ),
                 );
               },
@@ -707,7 +707,7 @@ class _CustomerDetailsScreenState
                 showDeleteCustomerBottomSheet(context);
               },
             );
-          },
+          }, isTookLoan: true,
         );
       },
     );
@@ -739,7 +739,7 @@ class _CustomerDetailsScreenState
             if (mounted) {
               setState(() {});
             }
-          },
+          }, isTookLoan: true,
         );
       },
     );
@@ -801,7 +801,7 @@ class _CustomerDetailsScreenState
                     (route) => false,
               );
             }
-          },
+          }, isTookLoan: true,
         );
       },
     );

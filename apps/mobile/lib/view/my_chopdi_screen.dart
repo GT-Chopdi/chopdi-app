@@ -494,7 +494,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                         const SizedBox(height: 14),
 
                         Text(
-                          'Logging out...',
+                           l10n.loggingOut,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.manrope(
                             fontSize: 14,
@@ -506,7 +506,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
                         const SizedBox(height: 4),
 
                         Text(
-                          'Please wait',
+                          l10n.pleaseWait,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.manrope(
                             fontSize: 11,
@@ -955,7 +955,7 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
         return 'हिन्दी';
       case 'en':
       default:
-        return 'English';
+        return 'अंग्रेज़ी';
     }
   }
 

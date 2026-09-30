@@ -428,8 +428,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   // ALL CONTACTS
                   // ------------------------------------------------
 
-                  const Text(
-                    "All Contacts",
+                  Text(
+                    l10n.allContacts,
                     style: TextStyle(
                       color: Color(0xff223A5E),
                       fontWeight: FontWeight.w700,
