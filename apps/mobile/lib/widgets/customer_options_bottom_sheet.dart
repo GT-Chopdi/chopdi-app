@@ -22,17 +22,20 @@
       required this.onSummary,
       required this.onExport,
       required this.onDelete,
+      required this.isTookLoan,
     });
   
     final VoidCallback onEdit;
     final VoidCallback onSummary;
     final VoidCallback onExport;
     final VoidCallback onDelete;
+     final bool isTookLoan;
   
     @override
     @override
     Widget build(BuildContext context) {
       final l10n = AppLocalizations.of(context);
+      final personType = isTookLoan ? l10n.lender : l10n.customer;
 
       return SafeArea(
         child: Padding(
@@ -51,22 +54,39 @@
 
               const SizedBox(height: 20),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.customerOptions,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    color: const Color.fromRGBO(34, 58, 94, 0.62),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      isTookLoan
+                        ? l10n.lenderOptions
+                        : l10n.customerOptions,
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        color: const Color.fromRGBO(34, 58, 94, 0.62),
+                      ),
+                    ),
                   ),
-                ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 22,
+                      color: ChopdiColors.navy,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),
 
               _OptionTile(
                 image: 'assets/edit_customer_logo.png',
-                title: l10n.editCustomer,
+                title: isTookLoan
+                  ? l10n.editLender
+                  : l10n.editCustomer,
                 subtitle: l10n.editNamePhoneOrLoanDetails,
                 onTap: onEdit,
               ),
@@ -75,7 +95,9 @@
 
               _OptionTile(
                 image: 'assets/summary.png',
-                title: l10n.accountSummary,
+                title: isTookLoan
+                  ? l10n.lenderAccountSummary
+                  : l10n.accountSummary,
                 subtitle: l10n.overviewAndSummary,
                 onTap: onSummary,
               ),
@@ -85,7 +107,9 @@
               _OptionTile(
                 image: 'assets/export_pdf.png',
                 title: l10n.exportPdf,
-                subtitle: l10n.downloadLedgerAsPdf,
+                subtitle: isTookLoan
+                    ? l10n.downloadLenderLedgerAsPdf
+                    : l10n.downloadLedgerAsPdf,
                 onTap: onExport,
               ),
 
@@ -93,23 +117,14 @@
 
               _OptionTile(
                 image: 'assets/delete_logo.png',
-                title: l10n.deleteCustomer,
-                subtitle: l10n.deleteCustomerPermanently,
+                title: isTookLoan
+                    ? l10n.deleteLender
+                    : l10n.deleteCustomer,
+                subtitle: isTookLoan
+                    ? l10n.deleteLenderPermanently
+                    : l10n.deleteCustomerPermanently,
                 titleColor: Colors.red,
                 onTap: onDelete,
-              ),
-
-              const SizedBox(height: 18),
-
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  l10n.cancel,
-                  style: GoogleFonts.manrope(
-                    color: ChopdiColors.navy,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
               ),
             ],
           ),
@@ -213,11 +228,13 @@
   class EditCustomerBottomSheet extends StatefulWidget {
     final Customer customer;
     final VoidCallback onSaved;
+    final bool isTookLoan;
   
     const EditCustomerBottomSheet({
       super.key,
       required this.customer,
       required this.onSaved,
+      required this.isTookLoan,
     });
   
     @override
@@ -415,6 +432,7 @@
   
     @override
     Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
       return SafeArea(
         child: Container(
           decoration: const BoxDecoration(
@@ -467,7 +485,9 @@
   
                   Center(
                     child: Text(
-                      "Edit Customer Details",
+                      widget.isTookLoan
+                        ? l10n.editLenderDetails
+                        : l10n.editCustomerDetails,
                       style: GoogleFonts.manrope(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -478,7 +498,7 @@
                   const SizedBox(height: 28),
   
                   Text(
-                    "Name",
+                    l10n.name,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w700,
                       color: const Color.fromRGBO(
@@ -496,12 +516,16 @@
                     controller: nameController,
                     textInputAction: TextInputAction.next,
                     decoration: inputDecoration(
-                      "Customer Name",
+                      widget.isTookLoan
+                        ? l10n.lenderName
+                        : l10n.customerName,
                     ),
                     validator: (value) {
                       if (value == null ||
                           value.trim().isEmpty) {
-                        return "Customer name is required";
+                        return widget.isTookLoan
+                          ? l10n.lenderNameRequired
+                          : l10n.customerNameRequired;
                       }
   
                       return null;
@@ -511,7 +535,7 @@
                   const SizedBox(height: 18),
   
                   Text(
-                    "Phone Number",
+                    l10n.phoneNumber,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w700,
                       color: const Color.fromRGBO(
@@ -569,7 +593,7 @@
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: inputDecoration(
-                            "Mobile Number",
+                            l10n.phoneNumber,
                           ).copyWith(
                             counterText: "",
                           ),
@@ -601,8 +625,8 @@
                               : () {
                             Navigator.pop(context);
                           },
-                          child: const Text(
-                            "Cancel",
+                          child: Text(
+                            l10n.cancel,
                             style: TextStyle(
                               color: Color(0xff2F477A),
                               fontWeight: FontWeight.w600,
@@ -641,8 +665,8 @@
                               color: Colors.white,
                             ),
                           )
-                              : const Text(
-                            "Save Changes",
+                              : Text(
+                            l10n.saveChanges,
                             style: TextStyle(
                               color: ChopdiColors.cream,
                               fontWeight:
@@ -673,6 +697,7 @@
     final double totalInterest;
     final Transaction? lastPayment;
     final Transaction? firstLoan;
+    final bool isTookLoan;
     
     const AccountSummaryBottomSheet({
       super.key,
@@ -681,6 +706,7 @@
       required this.totalInterest,
       required this.lastPayment,
       required this.firstLoan,
+      required this.isTookLoan,
     });
   
     @override
@@ -728,7 +754,9 @@
               const SizedBox(height: 14),
   
               Text(
-                l10n.accountSummary,
+                isTookLoan
+                  ? l10n.lenderAccountSummary
+                  : l10n.accountSummary,
                 style: GoogleFonts.manrope(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -739,7 +767,9 @@
               const SizedBox(height: 4),
   
               Text(
-                l10n.overviewOfCustomerAccount,
+                  isTookLoan
+                    ? l10n.overviewOfLenderAccount
+                    : l10n.overviewOfCustomerAccount,
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   color: const Color(0xff6E7A8A),
@@ -785,10 +815,13 @@
   
               SummaryTile(
                 icon: Icons.calendar_today_outlined,
-                title: "Loan Given On",
+                title: l10n.loanGivenOn,
                 value: firstLoan == null
-                  ? "-"
-                  : DateFormat("dd MMM yyyy").format(firstLoan!.date),
+                    ? "-"
+                    : DateFormat(
+                        "dd MMM yyyy",
+                        l10n.locale.languageCode,
+                      ).format(firstLoan!.date),
                 valueColor: const Color(0xff223A5E),
               ),
   
@@ -813,6 +846,10 @@
       required this.transactions,
       this.isTookLoan = false,
     });
+
+    String personType(AppLocalizations l10n) {
+      return isTookLoan ? l10n.lender : l10n.customer;
+    }
   
     // ============================================================
     // INTEREST CALCULATION
@@ -841,19 +878,22 @@
     // TRANSACTION TYPE
     // ============================================================
   
-    String transactionTypeText(TransactionType type) {
+    String transactionTypeText(
+      TransactionType type,
+      AppLocalizations l10n,
+    ) {
       switch (type) {
         case TransactionType.gave:
-          return "Given";
-  
+          return l10n.transactionTypeGiven;
+
         case TransactionType.received:
-          return "Received";
-  
+          return l10n.transactionTypeReceived;
+
         case TransactionType.took:
-          return "Took";
-  
+          return l10n.transactionTypeTook;
+
         case TransactionType.paid:
-          return "Paid";
+          return l10n.transactionTypePaid;
       }
     }
   
@@ -999,7 +1039,7 @@
     // GENERATE PDF
     // ============================================================
   
-    Future<Uint8List> generatePdf() async {
+    Future<Uint8List> generatePdf(AppLocalizations l10n) async {
       final pdf = pw.Document();
   
       // ==========================================================
@@ -1038,8 +1078,12 @@
       // GENERATED DATE
       // ==========================================================
   
+      // final generatedDate = DateFormat(
+      //   "dd MMM yyyy, hh:mm a",
+      // ).format(DateTime.now());
       final generatedDate = DateFormat(
         "dd MMM yyyy, hh:mm a",
+        l10n.locale.languageCode,
       ).format(DateTime.now());
   
       // ==========================================================
@@ -1134,7 +1178,7 @@
                         pw.SizedBox(height: 2),
   
                         pw.Text(
-                          "Your trusted digital ledger",
+                          l10n.yourTrustedDigitalLedger,
                           style: const pw.TextStyle(
                             fontSize: 7.5,
                             color:
@@ -1160,7 +1204,7 @@
                             pw.BorderRadius.circular(7),
                       ),
                       child: pw.Text(
-                        "ACCOUNT STATEMENT",
+                        l10n.accountStatement,
                         style: pw.TextStyle(
                           fontSize: 7.5,
                           fontWeight:
@@ -1204,7 +1248,7 @@
               child: pw.Row(
                 children: [
                   pw.Text(
-                    "Generated by Chopdi",
+                    l10n.generatedByChopdi,
                     style:
                         const pw.TextStyle(
                       fontSize: 7.5,
@@ -1240,7 +1284,10 @@
                   pw.Spacer(),
   
                   pw.Text(
-                    "Page ${context.pageNumber} of ${context.pagesCount}",
+                    l10n.pageOf(
+                      context.pageNumber,
+                      context.pagesCount,
+                    ),
                     style:
                         const pw.TextStyle(
                       fontSize: 7.5,
@@ -1270,8 +1317,8 @@
                   children: [
                     pw.Text(
                       isTookLoan
-                        ? "Took Loan Statement"
-                        : "Customer Statement",
+                        ? l10n.lenderStatement
+                        : l10n.customerStatement,
                       style: pw.TextStyle(
                         fontSize: 21,
                         fontWeight:
@@ -1284,8 +1331,8 @@
   
                     pw.Text(
                       isTookLoan
-                        ? "Loan summary and repayment history"
-                        : "Account summary and transaction history",
+                          ? l10n.lenderLoanSummaryAndRepaymentHistory
+                          : l10n.accountSummaryAndTransactionHistory,
                       style:
                           const pw.TextStyle(
                         fontSize: 9,
@@ -1297,7 +1344,12 @@
                     pw.SizedBox(height: 4),
   
                     pw.Text(
-                      "As of ${DateFormat("dd MMM yyyy, hh:mm a").format(DateTime.now())}",
+                      l10n.asOf(
+                        DateFormat(
+                          "dd MMM yyyy, hh:mm a",
+                          l10n.locale.languageCode,
+                        ).format(DateTime.now()),
+                      ),
                       style:
                           const pw.TextStyle(
                         fontSize: 8,
@@ -1377,6 +1429,16 @@
                                 .start,
                         children: [
                           pw.Text(
+                            personType(l10n),
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                              color: PdfColors.grey600,
+                            ),
+                          ),
+
+                          pw.SizedBox(height: 3),
+
+                          pw.Text(
                             customer.name,
                             style: pw.TextStyle(
                               fontSize: 18,
@@ -1401,7 +1463,7 @@
                           pw.SizedBox(height: 5),
   
                           pw.Text(
-                            "${transactions.length} transaction${transactions.length == 1 ? '' : 's'}",
+                            l10n.transactionCount(transactions.length),
                             style:
                                 const pw.TextStyle(
                               fontSize: 8,
@@ -1419,7 +1481,7 @@
                           pw.CrossAxisAlignment.end,
                       children: [
                         pw.Text(
-                          "CURRENT BALANCE",
+                          l10n.currentBalance,
                           style:
                               pw.TextStyle(
                             fontSize: 7.5,
@@ -1449,8 +1511,8 @@
   
                         pw.Text(
                           outstanding > 0
-                              ? "Outstanding"
-                              : "Settled",
+                            ? l10n.outstanding
+                            : l10n.settled,
                           style:
                               const pw.TextStyle(
                             fontSize: 8,
@@ -1471,7 +1533,7 @@
               // ==================================================
   
               pw.Text(
-                "Account Overview",
+                l10n.accountOverview,
                 style: pw.TextStyle(
                   fontSize: 15,
                   fontWeight:
@@ -1485,31 +1547,31 @@
               pw.Row(
                 children: [
                   summaryCard(
-                    title: isTookLoan ? "YOU TOOK" : "YOU GAVE",
+                    title: isTookLoan ? l10n.youTook : l10n.youGave,
                     value: money(pdfPrincipal),
                     subtitle: isTookLoan
-                        ? "Total loan taken"
-                        : "Total given",
+                        ? l10n.totalLoanTaken
+                        : l10n.totalGiven,
                     valueColor: navy,
                   ),
   
                   pw.SizedBox(width: 9),
   
                   summaryCard(
-                    title: isTookLoan ? "YOU PAID" : "YOU RECEIVED",
+                    title: isTookLoan ? l10n.youPaid : l10n.youReceived,
                     value: money(pdfPaid),
                     subtitle: isTookLoan
-                        ? "Total repaid"
-                        : "Total received",
+                        ? l10n.totalRepaid
+                        : l10n.totalReceived,
                     valueColor: PdfColors.green800,
                   ),
   
                   pw.SizedBox(width: 9),
   
                   summaryCard(
-                    title: "INTEREST",
+                    title: l10n.interest,
                     value: money(totalInterest),
-                    subtitle: "Calculated interest",
+                    subtitle: l10n.calculatedInterest,
                     valueColor: PdfColors.orange800,
                   ),
                 ],
@@ -1524,7 +1586,7 @@
               pw.Row(
                 children: [
                   pw.Text(
-                    "Transaction History",
+                    l10n.transactionHistory,
                     style: pw.TextStyle(
                       fontSize: 15,
                       fontWeight:
@@ -1536,7 +1598,7 @@
                   pw.Spacer(),
   
                   pw.Text(
-                    "${transactions.length} records",
+                    l10n.recordsCount(transactions.length),
                     style:
                         const pw.TextStyle(
                       fontSize: 8,
@@ -1551,9 +1613,10 @@
   
               // TRANSACTION TABLE
               sortedTransactions.isEmpty
-                  ? emptyTransactions()
+                  ? emptyTransactions(l10n)
                   : transactionTable(
                       sortedTransactions,
+                       l10n,
                     ),
   
               pw.SizedBox(height: 22),
@@ -1586,7 +1649,7 @@
                     pw.Row(
                       children: [
                         pw.Text(
-                          "Account Summary",
+                          l10n.accountSummary,
                           style:
                               pw.TextStyle(
                             fontSize: 12,
@@ -1599,7 +1662,7 @@
                         pw.Spacer(),
   
                         pw.Text(
-                          "FINAL BALANCE",
+                          l10n.finalBalance,
                           style:
                               const pw.TextStyle(
                             fontSize: 7,
@@ -1613,17 +1676,17 @@
                     pw.SizedBox(height: 12),
   
                     finalSummaryRow(
-                      isTookLoan ? "Total Taken" : "Total Given",
+                      isTookLoan ? l10n.totalTaken : l10n.totalGiven,
                       money(pdfPrincipal),
                     ),
   
                     finalSummaryRow(
-                      isTookLoan ? "Total Paid" : "Total Received",
+                      isTookLoan ? l10n.totalPaid : l10n.totalReceived,
                       money(pdfPaid),
                     ),
   
                     finalSummaryRow(
-                      "Total Interest",
+                      l10n.totalInterest,
                       money(totalInterest),
                     ),
   
@@ -1648,7 +1711,7 @@
                       child: pw.Row(
                         children: [
                           pw.Text(
-                            "Outstanding Balance",
+                            l10n.outstandingBalance,
                             style:
                                 pw.TextStyle(
                               fontSize: 11,
@@ -1717,7 +1780,7 @@
                     pw.SizedBox(height: 7),
   
                     pw.Text(
-                      "Thank you for using Chopdi",
+                      l10n.thankYouForUsingChopdi,
                       style: pw.TextStyle(
                         fontSize: 10,
                         fontWeight:
@@ -1729,7 +1792,7 @@
                     pw.SizedBox(height: 3),
   
                     pw.Text(
-                      "Keep your records simple. Keep them with Chopdi.",
+                      l10n.keepRecordsSimple,
                       style:
                           const pw.TextStyle(
                         fontSize: 7.5,
@@ -1822,6 +1885,7 @@
   
     pw.Widget transactionTable(
       List<Transaction> sortedTransactions,
+       AppLocalizations l10n,
     ) {
       return pw.Table(
         border: pw.TableBorder(
@@ -1854,14 +1918,14 @@
             ),
   
             children: [
-              tableHeader("DATE"),
-              tableHeader("TYPE"),
+              tableHeader(l10n.date),
+              tableHeader(l10n.type),
               tableHeader(
-                "AMOUNT",
+                l10n.amount,
                 align: pw.TextAlign.right,
               ),
-              tableHeader("MODE"),
-              tableHeader("DESCRIPTION"),
+              tableHeader(l10n.mode),
+              tableHeader(l10n.description),
             ],
           ),
   
@@ -1873,11 +1937,13 @@
                   tableCell(
                     DateFormat(
                       "dd MMM yyyy",
+                      l10n.locale.languageCode,
                     ).format(tx.date),
                   ),
   
                   transactionTypeCell(
                     tx.type,
+                    l10n
                   ),
   
                   tableCell(
@@ -1910,7 +1976,7 @@
     // EMPTY TRANSACTIONS
     // ============================================================
   
-    pw.Widget emptyTransactions() {
+    pw.Widget emptyTransactions(AppLocalizations l10n) {
       return pw.Container(
         width: double.infinity,
   
@@ -1930,7 +1996,7 @@
   
         child: pw.Center(
           child: pw.Text(
-            "No transactions available",
+            l10n.noTransactionsAvailable,
             style:
                 const pw.TextStyle(
               fontSize: 9,
@@ -2012,6 +2078,7 @@
   
     pw.Widget transactionTypeCell(
       TransactionType type,
+      AppLocalizations l10n,
     ) {
       PdfColor background;
       PdfColor textColor;
@@ -2060,7 +2127,7 @@
           ),
   
           child: pw.Text(
-            transactionTypeText(type),
+            transactionTypeText(type, l10n),
             textAlign:
                 pw.TextAlign.center,
   
@@ -2122,91 +2189,157 @@
     // VIEW PDF
     // ============================================================
   
+    // Future<void> viewPdf(
+    //     BuildContext context,
+    //     final l10n = AppLocalizations.of(context);
+    //   ) async {
+    //     try {
+    //       final bytes = await generatePdf(l10n);
+  
+    //       if (!context.mounted) return;
+  
+    //       const previewColor = Color(0xff223A5E);
+  
+    //       Navigator.push(
+    //         context,
+    //         MaterialPageRoute(
+    //           builder: (_) => Scaffold(
+    //             // ==================================================
+    //             // TOP APP BAR
+    //             // ==================================================
+    //             appBar: AppBar(
+    //               title: const Text(
+    //                 "PDF Preview",
+    //                 style: TextStyle(
+    //                   color: Colors.white,
+    //                   fontWeight: FontWeight.w500,
+    //                 ),
+    //               ),
+  
+    //               backgroundColor: previewColor,
+    //               foregroundColor: Colors.white,
+  
+    //               elevation: 0,
+  
+    //               // Makes the status-bar area use the same color
+    //               systemOverlayStyle:
+    //                   const SystemUiOverlayStyle(
+    //                 statusBarColor: previewColor,
+    //                 statusBarIconBrightness:
+    //                     Brightness.light,
+    //                 statusBarBrightness:
+    //                     Brightness.dark,
+    //               ),
+    //             ),
+  
+    //             // ==================================================
+    //             // PDF PREVIEW
+    //             // ==================================================
+    //             body: PdfPreview(
+    //               build: (format) async {
+    //                 return bytes;
+    //               },
+  
+    //               // Show only Print and Share
+    //               allowPrinting: true,
+    //               allowSharing: true,
+  
+    //               // Hide page format and orientation controls
+    //               canChangePageFormat: false,
+    //               canChangeOrientation: false,
+  
+    //               // Hide the Debug toggle
+    //               canDebug: false,
+  
+    //               pdfFileName: "${customer.name}_Chopdi.pdf",
+  
+    //               // Bottom action bar
+    //               actionBarTheme: const PdfActionBarTheme(
+    //                 backgroundColor: previewColor,
+    //                 iconColor: Colors.white,
+    //                 elevation: 0,
+    //               ),
+    //             ),
+    //           ),
+    //         ),
+    //       );
+    //     } catch (e) {
+    //       if (!context.mounted) return;
+  
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text(
+    //             l10n.unableToGeneratePdf(e.toString()),
+    //           ),
+    //         ),
+    //       );
+    //     }
+    //   }
+
     Future<void> viewPdf(
-        BuildContext context,
-      ) async {
-        try {
-          final bytes = await generatePdf();
-  
-          if (!context.mounted) return;
-  
-          const previewColor = Color(0xff223A5E);
-  
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => Scaffold(
-                // ==================================================
-                // TOP APP BAR
-                // ==================================================
-                appBar: AppBar(
-                  title: const Text(
-                    "PDF Preview",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+      BuildContext context,
+    ) async {
+      final l10n = AppLocalizations.of(context);
+
+      try {
+        final bytes = await generatePdf(l10n);
+
+        if (!context.mounted) return;
+
+        const previewColor = Color(0xff223A5E);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  l10n.pdfPreview,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
                   ),
-  
+                ),
+                backgroundColor: previewColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                  statusBarColor: previewColor,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
+              ),
+              body: PdfPreview(
+                build: (format) async {
+                  return bytes;
+                },
+                allowPrinting: true,
+                allowSharing: true,
+                canChangePageFormat: false,
+                canChangeOrientation: false,
+                canDebug: false,
+                pdfFileName: "${customer.name}_Chopdi.pdf",
+                actionBarTheme: const PdfActionBarTheme(
                   backgroundColor: previewColor,
-                  foregroundColor: Colors.white,
-  
+                  iconColor: Colors.white,
                   elevation: 0,
-  
-                  // Makes the status-bar area use the same color
-                  systemOverlayStyle:
-                      const SystemUiOverlayStyle(
-                    statusBarColor: previewColor,
-                    statusBarIconBrightness:
-                        Brightness.light,
-                    statusBarBrightness:
-                        Brightness.dark,
-                  ),
-                ),
-  
-                // ==================================================
-                // PDF PREVIEW
-                // ==================================================
-                body: PdfPreview(
-                  build: (format) async {
-                    return bytes;
-                  },
-  
-                  // Show only Print and Share
-                  allowPrinting: true,
-                  allowSharing: true,
-  
-                  // Hide page format and orientation controls
-                  canChangePageFormat: false,
-                  canChangeOrientation: false,
-  
-                  // Hide the Debug toggle
-                  canDebug: false,
-  
-                  pdfFileName: "${customer.name}_Chopdi.pdf",
-  
-                  // Bottom action bar
-                  actionBarTheme: const PdfActionBarTheme(
-                    backgroundColor: previewColor,
-                    iconColor: Colors.white,
-                    elevation: 0,
-                  ),
                 ),
               ),
             ),
-          );
-        } catch (e) {
-          if (!context.mounted) return;
-  
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "Unable to generate PDF: $e",
-              ),
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.unableToGeneratePdf(e.toString()),
             ),
-          );
-        }
+          ),
+        );
       }
+    }
   
     // ============================================================
     // DOWNLOAD PDF
@@ -2215,8 +2348,9 @@
     Future<void> downloadPdf(
       BuildContext context,
     ) async {
+      final l10n = AppLocalizations.of(context);
       try {
-        final bytes = await generatePdf();
+        final bytes = await generatePdf(l10n);
   
         final safeName = customer.name
             .replaceAll(
@@ -2241,7 +2375,7 @@
             .showSnackBar(
           SnackBar(
             content: Text(
-              "Unable to export PDF: $e",
+              l10n.unableToExportPdf(e.toString()),
             ),
           ),
         );
@@ -2254,6 +2388,7 @@
   
     @override
     Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
       return SafeArea(
         child: Container(
           decoration:
@@ -2324,7 +2459,7 @@
                 // ==================================================
   
                 Text(
-                  "Export PDF",
+                  l10n.exportPdf,
                   style:
                       GoogleFonts.manrope(
                     fontSize: 18,
@@ -2338,7 +2473,7 @@
                 const SizedBox(height: 6),
   
                 Text(
-                  "Create a professional statement for ${customer.name}",
+                  l10n.createProfessionalStatement(customer.name),
                   textAlign:
                       TextAlign.center,
   
@@ -2401,7 +2536,7 @@
   
                       Expanded(
                         child: Text(
-                          "The PDF includes ${customer.name}'s details, complete transaction history and account summary.",
+                          l10n.pdfIncludesCustomerDetails(customer.name),
   
                           style:
                               GoogleFonts.manrope(
@@ -2441,7 +2576,7 @@
                     ),
   
                     label: Text(
-                      "View PDF",
+                      l10n.viewPdf,
                       style:
                           GoogleFonts.manrope(
                         color:
@@ -2494,7 +2629,7 @@
                     ),
   
                     label: Text(
-                      "Download PDF",
+                      l10n.downloadPdf,
                       style:
                           GoogleFonts.manrope(
                         color:
@@ -2532,7 +2667,7 @@
                   },
   
                   child: Text(
-                    "Cancel",
+                    l10n.cancel,
                     style:
                         GoogleFonts.manrope(
                       color:
@@ -2553,11 +2688,13 @@
   class DeleteCustomerBottomSheet extends StatefulWidget {
     final String customerName;
     final VoidCallback onDelete;
+    final bool isTookLoan;
   
     const DeleteCustomerBottomSheet({
       super.key,
       required this.customerName,
       required this.onDelete,
+      required this.isTookLoan,
     });
   
     @override
@@ -2569,6 +2706,7 @@
   
     @override
     Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
       return SafeArea(
           child :Container(
             decoration: const BoxDecoration(
@@ -2608,7 +2746,9 @@
                   const SizedBox(height: 18),
   
                   Text(
-                    "Delete ${widget.customerName}?",
+                      widget.isTookLoan
+                        ? l10n.deleteLenderConfirmation(widget.customerName)
+                        : l10n.deleteCustomerConfirmation(widget.customerName),
                     style: GoogleFonts.manrope(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -2619,7 +2759,7 @@
                   const SizedBox(height: 6),
   
                   Text(
-                    "This action cannot be undone",
+                    l10n.thisActionCannotBeUndone,
                     style: GoogleFonts.manrope(
                       color: ChopdiColors.navy,
                       fontSize: 12,
@@ -2662,7 +2802,7 @@
                             children: [
   
                               Text(
-                                "All customer data will be permanently deleted including:",
+                                l10n.allCustomerDataWillBePermanentlyDeletedIncluding,
                                 style: GoogleFonts.manrope(
                                   color: Color(0xffE4554B),
                                   fontWeight: FontWeight.w600,
@@ -2672,7 +2812,7 @@
                               const SizedBox(height: 10),
   
                               Text(
-                                "• Customer Details",
+                                '• ${widget.isTookLoan ? l10n.lenderDetails : l10n.customerDetails}',
                                 style: GoogleFonts.manrope(
                                   color: Color(0xffE4554B),
                                 ),
@@ -2681,7 +2821,7 @@
                               const SizedBox(height: 5),
   
                               Text(
-                                "• Ledger and Transactions",
+                                '• ${l10n.ledgerAndTransactions}',
                                 style: GoogleFonts.manrope(
                                   color: Color(0xffE4554B),
                                 ),
@@ -2690,7 +2830,7 @@
                               const SizedBox(height: 5),
   
                               Text(
-                                "• Notes and reminders",
+                                '• ${l10n.notesAndReminders}',
                                 style: GoogleFonts.manrope(
                                   color: Color(0xffE4554B),
                                 ),
@@ -2699,7 +2839,7 @@
                               const SizedBox(height: 5),
   
                               Text(
-                                "• Loan information",
+                                '• ${l10n.loanInformation}',
                                 style: GoogleFonts.manrope(
                                   color: Color(0xffE4554B),
                                 ),
@@ -2739,7 +2879,7 @@
                           borderRadius: BorderRadius.circular(14),
                         ),
                         title: Text(
-                          "I understand this action cannot be undone.",
+                          l10n.iUnderstandThisActionCannotBeUndone,
                           style: GoogleFonts.manrope(
                             fontWeight: FontWeight.w700,
                             color: ChopdiColors.navy,
@@ -2776,8 +2916,8 @@
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text(
-                            "Cancel",
+                          child: Text(
+                            l10n.cancel,
                             style: TextStyle(
                               color: Color(0xff2F477A),
                               fontWeight: FontWeight.w600,
@@ -2803,8 +2943,10 @@
                           onPressed: agreed
                               ? widget.onDelete
                               : null,
-                          child: const Text(
-                            "Delete Customer",
+                          child: Text(
+                            widget.isTookLoan
+                              ? l10n.deleteLender
+                              : l10n.deleteCustomer,
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

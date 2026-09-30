@@ -698,7 +698,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     totalOutstanding: outstanding,
                     totalInterest: totalInterest,
                     lastPayment: lastReceivedTransaction,
-                    firstLoan: firstLoanTransaction,
+                    firstLoan: firstLoanTransaction, isTookLoan: false,
                   ),
                 );
               },
@@ -725,7 +725,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 showDeleteCustomerBottomSheet(context);
               },
             );
-          },
+          }, isTookLoan: false,
         );
       },
     );
@@ -757,7 +757,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             if (mounted) {
               setState(() {});
             }
-          },
+          }, isTookLoan: false,
         );
       },
     );
@@ -808,7 +808,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     (route) => false,
               );
             }
-          },
+          }, isTookLoan: false,
         );
       },
     );

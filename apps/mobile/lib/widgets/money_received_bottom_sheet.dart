@@ -384,7 +384,7 @@ class _MoneyReceiveBottomSheetState
                       const SizedBox(height: 10),
 
                       Text(
-                        l10n.youGot,
+                        l10n.youTook,
                         style: GoogleFonts.manrope(
                           color:
                           const Color(0xFF00901B),
@@ -509,13 +509,13 @@ class _MoneyReceiveBottomSheetState
                           Icons.keyboard_arrow_down,
                         ),
                         items: [
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: "Cash",
-                            child: Text("Cash"),
+                            child: Text(l10n.cash),
                           ),
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: "UPI",
-                            child: Text("UPI"),
+                            child: Text(l10n.upi),
                           ),
                           DropdownMenuItem(
                             value: "Bank",

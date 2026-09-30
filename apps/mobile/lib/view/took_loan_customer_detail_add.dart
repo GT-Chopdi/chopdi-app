@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:isar_community/isar.dart';
-import 'package:mychopdi/data/repository/repositories.dart';
-import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_add_new_lender_screen.dart';
-import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 
 import '../l10n/app_localizations.dart';
-import '../model/customer.dart';
 
 class TookLoanCustomerDetailAdd extends StatefulWidget {
   final String contactName;

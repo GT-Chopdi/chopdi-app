@@ -722,57 +722,44 @@ class _CustomerListSectionState
         // ========================================================
 
         Row(
-          crossAxisAlignment:
-          CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Text(
-                l10n.customersCount(
-                  filteredCustomers.length,
-                ),
+                l10n.customersCount(filteredCustomers.length),
                 maxLines: 1,
-                overflow:
-                TextOverflow.ellipsis,
-                style:
-                const TextStyle(
-                  fontWeight:
-                  FontWeight.bold,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
             ),
 
-            const Spacer(),
+            const SizedBox(width: 8),
 
-            Expanded(
-              flex: 1,
+            Flexible(
               child: GestureDetector(
                 onTap: showSortSheet,
-                behavior:
-                HitTestBehavior.opaque,
+                behavior: HitTestBehavior.opaque,
                 child: Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     const Icon(
                       Icons.swap_vert,
                       size: 16,
                     ),
 
-                    const SizedBox(
-                      width: 4,
-                    ),
+                    const SizedBox(width: 4),
 
-                    Expanded(
+                    Flexible(
                       child: Text(
                         '${l10n.sortBy} : $localizedSort',
                         maxLines: 1,
-                        overflow:
-                        TextOverflow.ellipsis,
-                        textAlign:
-                        TextAlign.end,
-                        style:
-                        const TextStyle(
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
                           fontSize: 11,
                         ),
                       ),
