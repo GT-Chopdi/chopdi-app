@@ -73,6 +73,7 @@ abstract class AppLocalizations {
   String get homeNoCustomersYet;
 
   String get homeStartAddingCustomer;
+  String get homeStartAddingLender;
   String get homeAddCustomer;
 
   String get homeAddLoan;
@@ -166,7 +167,6 @@ abstract class AppLocalizations {
   String get enterValid10DigitPhone;
 
   String get cancel;
-  String lendersCount(int count);
 
 // DUPLICATE CUSTOMER
   String get customerAlreadyExists;
@@ -531,6 +531,58 @@ abstract class AppLocalizations {
   String get customerNoLongerAvailable;
   String get deletedCustomerCannotAddEntry;
   String get unableToSaveTransaction;
+  String get homeNoLendersYet;
+  String createProfessionalStatement(String customerName);
+  String pdfIncludesCustomerDetails(String customerName);
+
+  String deleteCustomerConfirmation(String customerName);
+
+  String get allCustomerDataWillBePermanentlyDeletedIncluding;
+  String get ledgerAndTransactions;
+  String get notesAndReminders;
+  String get loanInformation;
+  String get iUnderstandThisActionCannotBeUndone;
+
+  String pageOf(int page, int totalPages);
+  String asOf(String date);
+  String transactionCount(int count);
+  String recordsCount(int count);
+  String get mode;
+  String get transactionTypeGiven;
+  String get transactionTypeReceived;
+  String get transactionTypeTook;
+  String get transactionTypePaid;
+
+  String unableToGeneratePdf(String error);
+  String unableToExportPdf(String error);
+  String get lender;
+  String get lenderStatement;
+  String get lenderLoanSummaryAndRepaymentHistory;
+  String get lenderOptions;
+  String get editLender;
+  String get lenderAccountSummary;
+  String get downloadLenderLedgerAsPdf;
+  String get deleteLender;
+  String get deleteLenderPermanently;
+  String get editLenderDetails;
+  String get lenderNameRequired;
+  String get overviewOfLenderAccount;
+  String deleteLenderConfirmation(String name);
+
+  String get interestCalculatedNotificationTitle;
+  String get interestCalculatedNotificationSubtitle;
+
+  String get interestUpdatedNotificationTitle;
+  String get interestUpdatedNotificationSubtitle;
+
+  String get appUpdateNotificationTitle;
+  String get appUpdateNotificationSubtitle;
+
+  String get paymentReminderNotificationTitle;
+  String get paymentReminderNotificationSubtitle;
+
+  String get tookLoanNotificationTitle;
+  String get tookLoanNotificationSubtitle;
 
 
   Null get at => null;

@@ -551,34 +551,51 @@ class _MoneyGaveBottomSheetState
                         title(l10n.date),
                       ),
 
+                      // TextField(
+                      //   readOnly: true,
+                      //   onTap:
+                      //   _pickDate,
+
+                      //   decoration:
+                      //   decoration(
+                      //     suffix:
+                      //     const Icon(
+                      //       Icons
+                      //           .calendar_today_outlined,
+                      //       color:
+                      //       Colors.black,
+                      //     ),
+                      //   ).copyWith(
+                      //     hintText:
+                      //     DateFormat(
+                      //       "dd MMM yyyy",
+                      //     ).format(
+                      //       selectedDate,
+                      //     ),
+                      //     hintStyle:
+                      //     const TextStyle(
+                      //       color:
+                      //       Colors.black,
+                      //       fontWeight:
+                      //       FontWeight
+                      //           .w500,
+                      //     ),
+                      //   ),
+                      // ),
+
                       TextField(
                         readOnly: true,
-                        onTap:
-                        _pickDate,
-
-                        decoration:
-                        decoration(
-                          suffix:
-                          const Icon(
-                            Icons
-                                .calendar_today_outlined,
-                            color:
-                            Colors.black,
+                        onTap: _pickDate,
+                        decoration: decoration(
+                          suffix: const Icon(
+                            Icons.calendar_today_outlined,
+                            color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText:
-                          DateFormat(
-                            "dd MMM yyyy",
-                          ).format(
-                            selectedDate,
-                          ),
-                          hintStyle:
-                          const TextStyle(
-                            color:
-                            Colors.black,
-                            fontWeight:
-                            FontWeight
-                                .w500,
+                          hintText: DateFormat("dd MMM yyyy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
+                          hintStyle: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -1039,6 +1056,7 @@ class _MoneyGaveBottomSheetState
   // ============================================================
 
   Widget _buildInterestRateField() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment:
       CrossAxisAlignment.start,
@@ -1071,7 +1089,7 @@ class _MoneyGaveBottomSheetState
           decoration:
           decoration(
             hint:
-            "Enter Interest rate",
+            l10n.enterInterestRate,
           ).copyWith(
             enabledBorder:
             OutlineInputBorder(

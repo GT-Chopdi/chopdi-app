@@ -31,6 +31,56 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _notificationsEnabled = true;
   bool _loadingNotificationSetting = true;
 
+  String _localizedNotificationTitle(
+    NotificationModel notification,
+    AppLocalizations l10n,
+  ) {
+    switch (notification.type) {
+      case 'interest_calculated':
+        return l10n.interestCalculatedNotificationTitle;
+
+      case 'interest_updated':
+        return l10n.interestUpdatedNotificationTitle;
+
+      case 'app_update':
+        return l10n.appUpdateNotificationTitle;
+
+      case 'payment_reminder':
+        return l10n.paymentReminderNotificationTitle;
+
+      case 'took_loan':
+        return l10n.tookLoanNotificationTitle;
+
+      default:
+        return notification.title;
+    }
+  }
+
+  String _localizedNotificationSubtitle(
+    NotificationModel notification,
+    AppLocalizations l10n,
+  ) {
+    switch (notification.type) {
+      case 'interest_calculated':
+        return l10n.interestCalculatedNotificationSubtitle;
+
+      case 'interest_updated':
+        return l10n.interestUpdatedNotificationSubtitle;
+
+      case 'app_update':
+        return l10n.appUpdateNotificationSubtitle;
+
+      case 'payment_reminder':
+        return l10n.paymentReminderNotificationSubtitle;
+
+      case 'took_loan':
+        return l10n.tookLoanNotificationSubtitle;
+
+      default:
+        return notification.subtitle;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -320,8 +370,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       BuildContext context,
       NotificationModel notification,
       ) {
-    final iconColor = _getNotificationColor(
-      notification.type,
+
+        final l10n = AppLocalizations.of(context);
+        final iconColor = _getNotificationColor(
+          notification.type,
     );
 
     final icon = _getNotificationIcon(
@@ -464,7 +516,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                           Expanded(
                             child: Text(
-                              notification.title,
+                              _localizedNotificationTitle(notification, l10n),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.manrope(
@@ -482,7 +534,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       const SizedBox(height: 5),
 
                       Text(
-                        notification.subtitle,
+                        _localizedNotificationSubtitle(notification, l10n),
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.manrope(

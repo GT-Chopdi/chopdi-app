@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/took_loan_add_new_lender_screen.dart';
-import 'package:mychopdi/view/took_loan_customer_detail_add.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 import 'package:mychopdi/widgets/took_loan_add_new_lender_card.dart';
 

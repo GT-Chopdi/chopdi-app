@@ -97,7 +97,7 @@ class TookLoanHomeContent extends StatelessWidget {
           const SizedBox(height: 6),
 
           Text(
-            l10n.homeNoCustomersYet,
+            l10n.homeNoLendersYet,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,
@@ -109,7 +109,7 @@ class TookLoanHomeContent extends StatelessWidget {
           const SizedBox(height: 3),
 
           Text(
-            l10n.homeStartAddingCustomer,
+            l10n.homeStartAddingLender,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               color: ChopdiColors.navy,

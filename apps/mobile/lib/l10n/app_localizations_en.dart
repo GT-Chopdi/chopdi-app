@@ -102,6 +102,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStartAddingCustomer =>
       "Start by adding a customer and\n"
           "keep track of your loans easily";
+
+  @override
+  String get homeStartAddingLender => 
+      "Start by adding a lender and\n"
+          "keep track of your loans easily";
   // ------------------------------------------------------------
 // HOME HEADER
 // ------------------------------------------------------------
@@ -229,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outstanding => "Outstanding";
 
   @override
-  String get addLender => "Add Lenders";
+  String get addLender => "Add Lender";
   @override
   String get addNewCustomer => "Add New Customer";
 
@@ -738,7 +743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editNamePhoneOrLoanDetails =>
-      'Edit name, phone or loan details';
+      'Edit name and phone details';
 
   @override
   String get accountSummary => 'Account Summary';
@@ -902,8 +907,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String lendersCount(int count) => "Lenders ($count)";
 
-  @override
-  String lendersCount(int count) => "Lenders ($count)";
   @override
   String get allNotes => 'All Notes';
 
@@ -1354,6 +1357,164 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unableToSaveTransaction =>
       "Unable to save the transaction. Please try again.";
+
+  @override
+  String get homeNoLendersYet => "No Lenders Yet!";
+
+  @override
+  String createProfessionalStatement(String customerName) =>
+      'Create a professional statement for $customerName';
+
+  @override
+  String pdfIncludesCustomerDetails(String customerName) =>
+      "The PDF includes $customerName's details, complete transaction history and account summary.";
+
+  @override
+  String deleteCustomerConfirmation(String customerName) =>
+      'Delete $customerName?';
+
+  @override
+  String get allCustomerDataWillBePermanentlyDeletedIncluding =>
+      'All customer data will be permanently deleted including:';
+
+  @override
+  String get ledgerAndTransactions => 'Ledger and Transactions';
+
+  @override
+  String get notesAndReminders => 'Notes and reminders';
+
+  @override
+  String get loanInformation => 'Loan information';
+
+  @override
+  String get iUnderstandThisActionCannotBeUndone =>
+      'I understand this action cannot be undone.';
+
+  @override
+  String pageOf(int page, int totalPages) =>
+      'Page $page of $totalPages';
+
+  @override
+  String asOf(String date) =>
+      'As of $date';
+
+  @override
+  String transactionCount(int count) =>
+      '$count transaction${count == 1 ? '' : 's'}';
+
+  @override
+  String recordsCount(int count) =>
+      '$count records';
+
+  @override
+  String get mode =>
+      'MODE';
+
+  @override
+  String get transactionTypeGiven =>
+      'Given';
+
+  @override
+  String get transactionTypeReceived =>
+      'Received';
+
+  @override
+  String get transactionTypeTook =>
+      'Took';
+
+  @override
+  String get transactionTypePaid =>
+      'Paid';
+
+  @override
+  String unableToGeneratePdf(String error) =>
+      'Unable to generate PDF: $error';
+
+  @override
+  String unableToExportPdf(String error) =>
+      'Unable to export PDF: $error';
+
+  @override
+  String get lender => 'Lender';
+
+  @override
+  String get lenderStatement => 'Lender Statement';
+
+  @override
+  String get lenderLoanSummaryAndRepaymentHistory =>
+      'Loan summary and repayment history';
+
+  @override
+  String get lenderOptions => "Lender Options";
+
+  @override
+  String get editLender => "Edit Lender";
+
+  @override
+  String get lenderAccountSummary => "Account Summary";
+
+  @override
+  String get downloadLenderLedgerAsPdf => "Download Ledger as PDF";
+
+  @override
+  String get deleteLender => "Delete Lender";
+
+  @override
+  String get deleteLenderPermanently => "Delete this lender permanently";
+
+  @override
+  String get editLenderDetails => 'Edit Lender Details';
+
+  @override
+  String get lenderNameRequired => 'Lender name is required';
+
+  @override
+  String get overviewOfLenderAccount =>
+      "Overview of this lender's account";
+
+  @override
+  String deleteLenderConfirmation(String name) =>
+      'Are you sure you want to delete lender "$name"?';
+
+  @override
+  String get interestCalculatedNotificationTitle =>
+      'Interest Calculated';
+
+  @override
+  String get interestCalculatedNotificationSubtitle =>
+      'Interest has been calculated for your account.';
+
+  @override
+  String get interestUpdatedNotificationTitle =>
+      'Interest Updated';
+
+  @override
+  String get interestUpdatedNotificationSubtitle =>
+      'The interest amount has been updated.';
+
+  @override
+  String get appUpdateNotificationTitle =>
+      'App Update';
+
+  @override
+  String get appUpdateNotificationSubtitle =>
+      'A new update is available for Chopdi.';
+
+  @override
+  String get paymentReminderNotificationTitle =>
+      'Payment Reminder';
+
+  @override
+  String get paymentReminderNotificationSubtitle =>
+      'You have a payment reminder.';
+
+  @override
+  String get tookLoanNotificationTitle =>
+      'Loan Taken';
+
+  @override
+  String get tookLoanNotificationSubtitle =>
+      'You have recorded a new loan taken.';
 
 
 

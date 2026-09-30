@@ -290,9 +290,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeNoCustomersYet => "अभी तक कोई ग्राहक नहीं है!";
 
   @override
+  String get homeNoLendersYet => "अभी तक कोई उधारदाता नहीं है!";
+
+  @override
   String get homeStartAddingCustomer =>
       "ग्राहक जोड़कर शुरुआत करें और\n"
           "अपने लोन को आसानी से ट्रैक करें";
+
+  @override
+  String get homeStartAddingLender =>
+      "उधारदाता जोड़कर शुरुआत करें और\n"
+        "अपने ऋणों का आसानी से हिसाब रखें";
 
   // ------------------------------------------------------------
 // HOME HEADER
@@ -482,7 +490,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get support => "सहायता";
 
   @override
-  String get helpFaqs => "मदद और सामान्य प्रश्न";
+  String get helpFaqs => "सहायता और सामान्य प्रश्न";
 
   @override
   String get getAnswersCommonQuestions =>
@@ -951,11 +959,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get customerOptions => 'ग्राहक विकल्प';
 
   @override
+  String get lenderOptions => 'उधारदाता विकल्प';
+
+  @override
   String get editCustomer => 'ग्राहक संपादित करें';
 
   @override
   String get editNamePhoneOrLoanDetails =>
-      'नाम, फोन या लोन की जानकारी संपादित करें';
+      'नाम, फोन की जानकारी संपादित करें';
 
   @override
   String get accountSummary => 'खाता सारांश';
@@ -1324,8 +1335,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paymentMethod => 'भुगतान का माध्यम';
   @override
   String get lender1 => 'उधारदाता';
-  @override
-  String lendersCount(int count) => '$count ऋणदाता';
+
   @override
   String get notSpecified => 'उल्लेख नहीं किया गया';
 
@@ -1481,4 +1491,161 @@ class AppLocalizationsHi extends AppLocalizations {
   String get otpSomethingWentWrong =>
       "कुछ गलत हो गया। कृपया पुनः प्रयास करें।";
 
+  @override
+  String createProfessionalStatement(String customerName) =>
+      '$customerName के लिए एक पेशेवर विवरण बनाएं';
+
+  @override
+  String pdfIncludesCustomerDetails(String customerName) =>
+      "PDF में $customerName का विवरण, पूरी लेन-देन की हिस्ट्री और खाते का सारांश शामिल है।";
+
+  @override
+  String deleteCustomerConfirmation(String customerName) =>
+      '$customerName को हटाएं?';
+
+  @override
+  String get allCustomerDataWillBePermanentlyDeletedIncluding =>
+      'ग्राहक का सभी डेटा स्थायी रूप से हटा दिया जाएगा, जिसमें शामिल हैं:';
+
+  @override
+  String get ledgerAndTransactions =>
+      'खाता और लेन-देन';
+
+  @override
+  String get notesAndReminders =>
+      'नोट्स और रिमाइंडर';
+
+  @override
+  String get loanInformation =>
+      'लोन की जानकारी';
+
+  @override
+  String get iUnderstandThisActionCannotBeUndone =>
+      'मैं समझता/समझती हूँ कि इस कार्रवाई को पूर्ववत नहीं किया जा सकता।';
+
+
+  @override
+  String pageOf(int page, int totalPages) =>
+      'पृष्ठ $page / $totalPages';
+
+  @override
+  String asOf(String date) =>
+      '$date तक';
+
+  @override
+  String transactionCount(int count) =>
+      '$count लेन-देन';
+
+  @override
+  String recordsCount(int count) =>
+      '$count रिकॉर्ड';
+
+  @override
+  String get mode =>
+      'भुगतान का तरीका';
+
+  @override
+  String get transactionTypeGiven =>
+      'दिया';
+
+  @override
+  String get transactionTypeReceived =>
+      'प्राप्त';
+
+  @override
+  String get transactionTypeTook =>
+      'लिया';
+
+  @override
+  String get transactionTypePaid =>
+      'भुगतान किया';
+
+  @override
+  String unableToGeneratePdf(String error) =>
+      'PDF बनाने में असमर्थ: $error';
+
+  @override
+  String unableToExportPdf(String error) =>
+      'PDF निर्यात करने में असमर्थ: $error';
+
+  @override
+  String get lender => 'उधारदाता';
+
+  @override
+  String get lenderStatement => 'उधारदाता का विवरण';
+
+  @override
+  String get lenderLoanSummaryAndRepaymentHistory =>
+      'लोन का सारांश और भुगतान इतिहास';
+
+  @override
+  String get editLender => 'उधारदाता संपादित करें';
+
+  @override
+  String get editLenderDetails => 'उधारदाता का विवरण संपादित करें';
+
+  @override
+  String get lenderNameRequired => 'उधारदाता का नाम आवश्यक है';
+
+  @override
+  String get lenderAccountSummary => 'उधारदाता का खाता सारांश';
+
+  @override
+  String get overviewOfLenderAccount =>
+      'इस उधारदाता के खाते का अवलोकन';
+
+  @override
+  String get downloadLenderLedgerAsPdf =>
+      'उधारदाता की खाता-बही PDF में डाउनलोड करें';
+
+  @override
+  String get deleteLender => 'उधारदाता हटाएं';
+
+  @override
+  String get deleteLenderPermanently =>
+      'इस उधारदाता को स्थायी रूप से हटाएं';
+
+  @override
+  String deleteLenderConfirmation(String name) =>
+      'क्या आप "$name" उधारदाता को हटाना चाहते हैं?';
+
+  @override
+  String get interestCalculatedNotificationTitle =>
+      'ब्याज की गणना की गई';
+
+  @override
+  String get interestCalculatedNotificationSubtitle =>
+      'आपके खाते के लिए ब्याज की गणना की गई है।';
+
+  @override
+  String get interestUpdatedNotificationTitle =>
+      'ब्याज अपडेट किया गया';
+
+  @override
+  String get interestUpdatedNotificationSubtitle =>
+      'ब्याज की राशि अपडेट की गई है।';
+
+  @override
+  String get appUpdateNotificationTitle =>
+      'ऐप अपडेट';
+
+  @override
+  String get appUpdateNotificationSubtitle =>
+      'Chopdi के लिए नया अपडेट उपलब्ध है।';
+
+  @override
+  String get paymentReminderNotificationTitle =>
+      'भुगतान अनुस्मारक';
+
+  @override
+  String get paymentReminderNotificationSubtitle =>
+      'आपके लिए भुगतान का एक अनुस्मारक है।';
+
+  @override
+  String get tookLoanNotificationTitle =>
+      'लोन लिया गया';
+
+  @override
+  String get tookLoanNotificationSubtitle =>
+      'आपने एक नया लिया गया लोन दर्ज किया है।';
 }
