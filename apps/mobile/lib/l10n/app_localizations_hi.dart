@@ -1678,4 +1678,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get amountCannotBeZero => 'राशि शून्य नहीं हो सकती';
+
+  @override
+  String get filterBy => 'से फ़िल्टर करें';
+  
+  @override
+  String get filterAll => 'सभी';
+
+  @override
+  String get mostRecent => 'सबसे नया';
+
+  @override
+  String get highestAmount => 'अधिकतम राशि';
+
+  @override
+  String get byNameAZ => 'नाम से (अ-ज्ञ)';
+
+  @override
+  String get oldest => 'सबसे पुराना';
+
+  @override
+  String get leastAmount => 'न्यूनतम राशि';
 }
