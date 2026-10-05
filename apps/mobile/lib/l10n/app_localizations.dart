@@ -594,6 +594,12 @@ abstract class AppLocalizations {
   String get addYourName;
   String get amountRequired;
   String get amountCannotBeZero;
+  String get filterBy => 'Filter by';
+  String get mostRecent => 'Most Recent';
+  String get highestAmount => 'Highest Amount';
+  String get byNameAZ => 'By Name (A-Z)';
+  String get oldest => 'Oldest';
+  String get leastAmount => 'Least Amount';
 
 
   Null get at => null;
