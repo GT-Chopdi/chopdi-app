@@ -34,11 +34,20 @@ class NotificationService {
       ..isRead = false
       ..chopdiId = chopdiId;
 
-    return isar.writeTxn(() async {
+    final id = await isar.writeTxn(() async {
       return isar.notificationModels.put(
         notification,
       );
     });
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: 'app_update',
+    );
+
+    return id;
   }
 
   // ============================================================
@@ -72,11 +81,20 @@ class NotificationService {
       ..amount = interestAmount
       ..chopdiId = chopdiId;
 
-    return isar.writeTxn(() async {
+    final id = await isar.writeTxn(() async {
       return isar.notificationModels.put(
         notification,
       );
     });
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: customerId != null ? 'interest_calculated:$customerId' : 'event_read:$id',
+    );
+
+    return id;
   }
 
   // ============================================================
@@ -112,11 +130,20 @@ class NotificationService {
       ..amount = interestAmount
       ..chopdiId = chopdiId;
 
-    return isar.writeTxn(() async {
+    final id = await isar.writeTxn(() async {
       return isar.notificationModels.put(
         notification,
       );
     });
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: customerId != null ? 'interest_updated:$customerId' : 'event_read:$id',
+    );
+
+    return id;
   }
 
   // ============================================================
@@ -150,9 +177,18 @@ class NotificationService {
       ..amount = amount
       ..chopdiId = chopdiId;
 
-    return isar.writeTxn(() async {
+    final id = await isar.writeTxn(() async {
       return isar.notificationModels.put(notification);
     });
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: customerId != null ? 'took_loan:$customerId' : 'event_read:$id',
+    );
+
+    return id;
   }
 
   // ============================================================

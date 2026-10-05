@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mychopdi/view/customer_details_screen.dart';
+import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:mychopdi/data/repository/repositories.dart';
@@ -14,16 +16,50 @@ import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/sync_service.dart';
 import 'package:mychopdi/view/splash_screen.dart';
 
+import 'model/customer.dart';
+import 'model/lender.dart';
+
+// ============================================================
+// GLOBAL NAVIGATOR KEY
+// ============================================================
+
+final GlobalKey<NavigatorState> appNavigatorKey =
+GlobalKey<NavigatorState>();
+
+// ============================================================
+// MAIN
+// ============================================================
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize intl date formatting for supported languages.
+  // ------------------------------------------------------------
+  // Initialize date formatting
+  // ------------------------------------------------------------
+
   await initializeDateFormatting('en');
   await initializeDateFormatting('hi');
+
+  // ------------------------------------------------------------
+  // Initialize local database
+  // ------------------------------------------------------------
 
   await IsarService.init();
 
   await Repositories.migrateLegacyCustomers();
+
+  // ------------------------------------------------------------
+  // Initialize local notifications
+  //
+  // IMPORTANT:
+  // LocalNotificationService.initialize() is responsible for
+  // checking whether the app was launched from a notification.
+  // If yes, it stores the payload in:
+  //
+  // LocalNotificationService.pendingNotificationPayload
+  //
+  // We DO NOT navigate here because SplashScreen has not finished.
+  // ------------------------------------------------------------
 
   final localNotificationService =
       LocalNotificationService.instance;
@@ -34,16 +70,26 @@ Future<void> main() async {
     database: IsarService.isar,
   );
 
+  // ------------------------------------------------------------
+  // Load environment
+  // ------------------------------------------------------------
+
   await dotenv.load(
     fileName: 'env/staging.env',
   );
 
-  // Start background sync without blocking app startup.
+  // ------------------------------------------------------------
+  // Start background sync
+  // ------------------------------------------------------------
+
   unawaited(
     SyncService.instance.start(),
   );
 
-  // Load saved language.
+  // ------------------------------------------------------------
+  // Load saved language
+  // ------------------------------------------------------------
+
   final prefs = await SharedPreferences.getInstance();
 
   final savedLanguage = prefs.getString('app_language');
@@ -54,12 +100,20 @@ Future<void> main() async {
     initialLocale = Locale(savedLanguage);
   }
 
+  // ------------------------------------------------------------
+  // Start application
+  // ------------------------------------------------------------
+
   runApp(
     ChopdiApp(
       initialLocale: initialLocale,
     ),
   );
 }
+
+// ============================================================
+// CHOPDI APP
+// ============================================================
 
 class ChopdiApp extends StatefulWidget {
   final Locale? initialLocale;
@@ -78,6 +132,10 @@ class ChopdiApp extends StatefulWidget {
   State<ChopdiApp> createState() => ChopdiAppState();
 }
 
+// ============================================================
+// CHOPDI APP STATE
+// ============================================================
+
 class ChopdiAppState extends State<ChopdiApp> {
   Locale? _locale;
 
@@ -94,7 +152,10 @@ class ChopdiAppState extends State<ChopdiApp> {
     _locale = widget.initialLocale;
   }
 
-  /// Change application language globally.
+  // ============================================================
+  // CHANGE LANGUAGE
+  // ============================================================
+
   Future<void> changeLanguage(Locale locale) async {
     if (_locale?.languageCode == locale.languageCode) {
       return;
@@ -112,20 +173,23 @@ class ChopdiAppState extends State<ChopdiApp> {
     );
   }
 
-  /// Get currently selected locale.
+  // ============================================================
+  // CURRENT LOCALE
+  // ============================================================
+
   Locale? get currentLocale => _locale;
 
-  /// Handles Android back button.
-  ///
-  /// First press:
-  /// Shows "Press back again to exit".
-  ///
-  /// Second press within 2 seconds:
-  /// Shows Exit App confirmation dialog.
+  // ============================================================
+  // HANDLE BACK BUTTON
+  // ============================================================
+
   Future<bool> _handleBackPress() async {
     final now = DateTime.now();
 
-    // First back press.
+    // ------------------------------------------------------------
+    // First back press
+    // ------------------------------------------------------------
+
     if (_lastBackPress == null ||
         now.difference(_lastBackPress!) > _exitTimeout) {
       _lastBackPress = now;
@@ -142,10 +206,16 @@ class ChopdiAppState extends State<ChopdiApp> {
       return false;
     }
 
-    // Reset so another back press starts the process again.
+    // ------------------------------------------------------------
+    // Reset timer
+    // ------------------------------------------------------------
+
     _lastBackPress = null;
 
-    // Second back press → show confirmation dialog.
+    // ------------------------------------------------------------
+    // Second back press
+    // ------------------------------------------------------------
+
     final shouldExit = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -176,29 +246,115 @@ class ChopdiAppState extends State<ChopdiApp> {
     return shouldExit ?? false;
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // ----------------------------------------------------------
+      // GLOBAL NAVIGATOR
+      // ----------------------------------------------------------
+
+      navigatorKey: appNavigatorKey,
+
+      // ----------------------------------------------------------
+      // NOTIFICATION DEEP-LINK ROUTES
+      // ----------------------------------------------------------
+
+      onGenerateRoute: (settings) {
+        // --------------------------------------------------------
+        // Customer Details
+        // --------------------------------------------------------
+
+        if (settings.name == '/customer_details') {
+          final customer = settings.arguments as Customer;
+
+          return MaterialPageRoute(
+            builder: (_) => CustomerDetailsScreen(
+              customer: customer,
+            ),
+          );
+        }
+
+        // --------------------------------------------------------
+        // Took Loan Customer Details
+        // --------------------------------------------------------
+
+        if (settings.name == '/took_loan_customer_details') {
+          final lender = settings.arguments as Lender;
+
+          return MaterialPageRoute(
+            builder: (_) => TookLoanCustomerDetailsScreen(
+              lender: lender,
+            ),
+          );
+        }
+
+        // --------------------------------------------------------
+        // Notifications
+        // --------------------------------------------------------
+
+        // if (settings.name == '/notifications') {
+        //   final args =
+        //   settings.arguments as Map<String, dynamic>;
+        //
+        //   return MaterialPageRoute(
+        //     builder: (_) => NotificationsScreen(
+        //       isar: args['isar'],
+        //       chopdiId: args['chopdiId'],
+        //     ),
+        //   );
+        // }
+
+        return null;
+      },
+
+      // ----------------------------------------------------------
+      // GENERAL SETTINGS
+      // ----------------------------------------------------------
+
       debugShowCheckedModeBanner: false,
 
-      // Current application language.
       locale: _locale,
 
-      // Flutter's built-in localization delegates
-      // + MyChopdi localization.
-      localizationsDelegates: [
+      // ----------------------------------------------------------
+      // LOCALIZATION
+      // ----------------------------------------------------------
+
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
 
-      // English + Hindi.
       supportedLocales: AppLocalizations.supportedLocales,
+
+      // ----------------------------------------------------------
+      // SPLASH SCREEN
+      //
+      // IMPORTANT:
+      // Notification navigation is NOT handled here.
+      //
+      // SplashScreen must first finish:
+      // - session check
+      // - authentication
+      // - chopdi loading
+      // - initial navigation
+      //
+      // After that, SplashScreen should call the pending
+      // notification handler.
+      // ----------------------------------------------------------
 
       home: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
+
+        onPopInvokedWithResult: (
+            bool didPop,
+            Object? result,
+            ) async {
           if (didPop) {
             return;
           }
@@ -206,10 +362,10 @@ class ChopdiAppState extends State<ChopdiApp> {
           final shouldExit = await _handleBackPress();
 
           if (shouldExit) {
-            // Close the application.
             await SystemNavigator.pop();
           }
         },
+
         child: const SplashScreen(),
       ),
     );
