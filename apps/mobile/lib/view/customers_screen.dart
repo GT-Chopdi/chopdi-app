@@ -137,7 +137,7 @@ class _CustomerListSectionState
       else if (selectedStatus == "Settled") {
         final balance =
         await getCustomerBalance(
-          customer.id,
+          customer.uuid,
         );
 
         matchesStatus = balance == 0;
@@ -368,7 +368,7 @@ class _CustomerListSectionState
       in filteredCustomers) {
         balances[customer.id] =
         await getCustomerBalance(
-          customer.id,
+          customer.uuid,
         );
       }
 
@@ -481,16 +481,10 @@ class _CustomerListSectionState
   // ============================================================
   // CUSTOMER BALANCE
   // ============================================================
-
-  Future<double> getCustomerBalance(
-      int customerId,
-      ) async {
-    final transactions =
-    await IsarService
-        .isar
-        .transactions
+  Future<double> getCustomerBalance(String customerUuid) async {
+    final transactions = await IsarService.isar.transactions
         .filter()
-        .customerIdEqualTo(customerId)
+        .customerUuidEqualTo(customerUuid)
         .voidedAtIsNull()
         .findAll();
 
@@ -499,14 +493,13 @@ class _CustomerListSectionState
     for (final tx in transactions) {
       if (tx.type == TransactionType.gave) {
         balance += tx.amount;
-      } else {
+      } else if (tx.type == TransactionType.received) {
         balance -= tx.amount;
       }
     }
 
     return balance;
   }
-
   // ============================================================
   // SORT BOTTOM SHEET
   // ============================================================

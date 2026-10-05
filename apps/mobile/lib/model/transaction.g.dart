@@ -65,37 +65,42 @@ const TransactionSchema = CollectionSchema(
       name: r'interestType',
       type: IsarType.string,
     ),
-    r'paymentMode': PropertySchema(
+    r'lenderUuid': PropertySchema(
       id: 12,
+      name: r'lenderUuid',
+      type: IsarType.string,
+    ),
+    r'paymentMode': PropertySchema(
+      id: 13,
       name: r'paymentMode',
       type: IsarType.string,
     ),
     r'syncStatus': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'syncStatus',
       type: IsarType.byte,
       enumMap: _TransactionsyncStatusEnumValueMap,
     ),
     r'type': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'type',
       type: IsarType.byte,
       enumMap: _TransactiontypeEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'uuid': PropertySchema(id: 16, name: r'uuid', type: IsarType.string),
-    r'version': PropertySchema(id: 17, name: r'version', type: IsarType.long),
+    r'uuid': PropertySchema(id: 17, name: r'uuid', type: IsarType.string),
+    r'version': PropertySchema(id: 18, name: r'version', type: IsarType.long),
     r'voidedAt': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'voidedAt',
       type: IsarType.dateTime,
     ),
     r'voidedReason': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'voidedReason',
       type: IsarType.string,
     ),
@@ -133,6 +138,19 @@ const TransactionSchema = CollectionSchema(
         ),
       ],
     ),
+    r'lenderUuid': IndexSchema(
+      id: -2062949215109885516,
+      name: r'lenderUuid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'lenderUuid',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -153,6 +171,7 @@ int _transactionEstimateSize(
   bytesCount += 3 + object.description.length * 3;
   bytesCount += 3 + object.interestFrequency.length * 3;
   bytesCount += 3 + object.interestType.length * 3;
+  bytesCount += 3 + object.lenderUuid.length * 3;
   bytesCount += 3 + object.paymentMode.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
   {
@@ -182,14 +201,15 @@ void _transactionSerialize(
   writer.writeDouble(offsets[9], object.legacyInterestRate);
   writer.writeLong(offsets[10], object.interestRateBp);
   writer.writeString(offsets[11], object.interestType);
-  writer.writeString(offsets[12], object.paymentMode);
-  writer.writeByte(offsets[13], object.syncStatus.index);
-  writer.writeByte(offsets[14], object.type.index);
-  writer.writeDateTime(offsets[15], object.updatedAt);
-  writer.writeString(offsets[16], object.uuid);
-  writer.writeLong(offsets[17], object.version);
-  writer.writeDateTime(offsets[18], object.voidedAt);
-  writer.writeString(offsets[19], object.voidedReason);
+  writer.writeString(offsets[12], object.lenderUuid);
+  writer.writeString(offsets[13], object.paymentMode);
+  writer.writeByte(offsets[14], object.syncStatus.index);
+  writer.writeByte(offsets[15], object.type.index);
+  writer.writeDateTime(offsets[16], object.updatedAt);
+  writer.writeString(offsets[17], object.uuid);
+  writer.writeLong(offsets[18], object.version);
+  writer.writeDateTime(offsets[19], object.voidedAt);
+  writer.writeString(offsets[20], object.voidedReason);
 }
 
 Transaction _transactionDeserialize(
@@ -212,18 +232,19 @@ Transaction _transactionDeserialize(
   object.legacyInterestRate = reader.readDouble(offsets[9]);
   object.interestRateBp = reader.readLong(offsets[10]);
   object.interestType = reader.readString(offsets[11]);
-  object.paymentMode = reader.readString(offsets[12]);
+  object.lenderUuid = reader.readString(offsets[12]);
+  object.paymentMode = reader.readString(offsets[13]);
   object.syncStatus =
-      _TransactionsyncStatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+      _TransactionsyncStatusValueEnumMap[reader.readByteOrNull(offsets[14])] ??
       SyncStatus.pending;
   object.type =
-      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+      _TransactiontypeValueEnumMap[reader.readByteOrNull(offsets[15])] ??
       TransactionType.gave;
-  object.updatedAt = reader.readDateTime(offsets[15]);
-  object.uuid = reader.readString(offsets[16]);
-  object.version = reader.readLong(offsets[17]);
-  object.voidedAt = reader.readDateTimeOrNull(offsets[18]);
-  object.voidedReason = reader.readStringOrNull(offsets[19]);
+  object.updatedAt = reader.readDateTime(offsets[16]);
+  object.uuid = reader.readString(offsets[17]);
+  object.version = reader.readLong(offsets[18]);
+  object.voidedAt = reader.readDateTimeOrNull(offsets[19]);
+  object.voidedReason = reader.readStringOrNull(offsets[20]);
   return object;
 }
 
@@ -261,24 +282,26 @@ P _transactionDeserializeProp<P>(
     case 12:
       return (reader.readString(offset)) as P;
     case 13:
+      return (reader.readString(offset)) as P;
+    case 14:
       return (_TransactionsyncStatusValueEnumMap[reader.readByteOrNull(
                 offset,
               )] ??
               SyncStatus.pending)
           as P;
-    case 14:
+    case 15:
       return (_TransactiontypeValueEnumMap[reader.readByteOrNull(offset)] ??
               TransactionType.gave)
           as P;
-    case 15:
-      return (reader.readDateTime(offset)) as P;
     case 16:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 18:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 19:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 20:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -510,6 +533,59 @@ extension TransactionQueryWhere
                 indexName: r'customerUuid',
                 lower: [],
                 upper: [customerUuid],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterWhereClause> lenderUuidEqualTo(
+    String lenderUuid,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'lenderUuid', value: [lenderUuid]),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterWhereClause>
+  lenderUuidNotEqualTo(String lenderUuid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'lenderUuid',
+                lower: [],
+                upper: [lenderUuid],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'lenderUuid',
+                lower: [lenderUuid],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'lenderUuid',
+                lower: [lenderUuid],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'lenderUuid',
+                lower: [],
+                upper: [lenderUuid],
                 includeUpper: false,
               ),
             );
@@ -1649,6 +1725,147 @@ extension TransactionQueryFilter
   }
 
   QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lenderUuid',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'lenderUuid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'lenderUuid',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lenderUuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+  lenderUuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'lenderUuid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
   paymentModeEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2555,6 +2772,18 @@ extension TransactionQuerySortBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByLenderUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lenderUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByLenderUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lenderUuid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByPaymentMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMode', Sort.asc);
@@ -2819,6 +3048,18 @@ extension TransactionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByLenderUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lenderUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByLenderUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lenderUuid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByPaymentMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMode', Sort.asc);
@@ -3002,6 +3243,14 @@ extension TransactionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctByLenderUuid({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lenderUuid', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QDistinct> distinctByPaymentMode({
     bool caseSensitive = true,
   }) {
@@ -3136,6 +3385,12 @@ extension TransactionQueryProperty
   QueryBuilder<Transaction, String, QQueryOperations> interestTypeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'interestType');
+    });
+  }
+
+  QueryBuilder<Transaction, String, QQueryOperations> lenderUuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lenderUuid');
     });
   }
 

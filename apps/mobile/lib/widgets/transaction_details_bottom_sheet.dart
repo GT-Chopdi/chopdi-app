@@ -11,8 +11,10 @@ import 'package:mychopdi/data/repository/repositories.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
-  final int customerId;
+  final String? customerUuid;
+  final String? lenderUuid;
   final VoidCallback? onChanged;
+
 
   /// For interest rows, this contains the calculated interest amount.
   final double? displayAmount;
@@ -26,10 +28,12 @@ class TransactionDetailsScreen extends StatelessWidget {
   const TransactionDetailsScreen({
     super.key,
     required this.transaction,
-    required this.customerId,
+    this.customerUuid,
+    this.lenderUuid,
     required this.onChanged,
     this.displayAmount,
     this.isInterestRow = false,
+
   });
 
   // ================================================================
@@ -60,13 +64,10 @@ class TransactionDetailsScreen extends StatelessWidget {
     switch (transaction.type) {
       case TransactionType.gave:
         return l10n.loanGiven;
-
       case TransactionType.received:
         return l10n.paymentReceived;
-
       case TransactionType.took:
         return l10n.loanTook;
-
       case TransactionType.paid:
         return l10n.amountPaid;
     }
@@ -169,16 +170,12 @@ class TransactionDetailsScreen extends StatelessWidget {
     switch (value) {
       case 'Daily':
         return l10n.daily;
-
       case 'Weekly':
         return l10n.weekly;
-
       case 'Monthly':
         return l10n.monthly;
-
       case 'Yearly':
         return l10n.yearly;
-
       default:
         return value;
     }
@@ -190,10 +187,8 @@ class TransactionDetailsScreen extends StatelessWidget {
     switch (value) {
       case 'Simple Interest':
         return l10n.simpleInterest;
-
       case 'Compound Interest':
         return l10n.compoundInterest;
-
       default:
         return value;
     }
@@ -205,17 +200,13 @@ class TransactionDetailsScreen extends StatelessWidget {
     switch (value) {
       case 'Cash':
         return l10n.cash;
-
       case 'UPI':
         return l10n.upi;
-
       case 'Bank':
       case 'Bank Transfer':
         return l10n.bankTransfer;
-
       case 'Other':
         return l10n.other;
-
       default:
         return value;
     }
@@ -441,8 +432,10 @@ class TransactionDetailsScreen extends StatelessWidget {
                         20,
                       ),
                       child:
-                      (transaction.type == TransactionType.received ||
-                          transaction.type == TransactionType.paid)
+                      (transaction.type ==
+                          TransactionType.received ||
+                          transaction.type ==
+                              TransactionType.paid)
                           ? _buildPaymentReceivedDetails(
                         context,
                       )
@@ -671,7 +664,8 @@ class TransactionDetailsScreen extends StatelessWidget {
             children: [
               Image.asset(
                 isInterestRow &&
-                    transaction.type == TransactionType.gave
+                    transaction.type ==
+                        TransactionType.gave
                     ? 'assets/arrow_down.png'
                     : 'assets/arrow_up.png',
                 height: 14,
@@ -832,44 +826,67 @@ class TransactionDetailsScreen extends StatelessWidget {
         // ============================================================
         // EDIT BUTTON
         // ============================================================
+        //
+        // Interest rows are NOT editable.
+        // Normal transaction details remain editable.
+        //
+        if (!isInterestRow)
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                // Interest rows are view-only.
+                if (isInterestRow) {
+                  return;
+                }
 
-        // IMPORTANT:
-        // Button is ALWAYS visible.
-        // For interest rows, _editTransaction() simply returns.
-        SizedBox(
-          width: double.infinity,
-          height: 40,
-          child: ElevatedButton.icon(
-            onPressed: () => _editTransaction(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF213F68),
-              foregroundColor: ChopdiColors.cream,
-              elevation: 0,
-              minimumSize: const Size(
-                double.infinity,
-                40,
+                final result = await showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) {
+                    return EditTransactionBottomSheet(
+                      transaction: transaction,
+                    );
+                  },
+                );
+
+                if (result == true && context.mounted) {
+                  Navigator.pop(context);
+                  onChanged?.call();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF213F68),
+                foregroundColor: ChopdiColors.cream,
+                elevation: 0,
+                minimumSize: const Size(
+                  double.infinity,
+                  40,
+                ),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-              padding: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+              icon: Image.asset(
+                'assets/edit_outline_rounded_transactions.png',
+                height: 24,
+                width: 24,
               ),
-            ),
-            icon: Image.asset(
-              'assets/edit_outline_rounded_transactions.png',
-              height: 24,
-              width: 24,
-            ),
-            label: Text(
-              l10n.editTransaction,
-              style: GoogleFonts.manrope(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              label: Text(
+                l10n.editTransaction,
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
 
-        const SizedBox(height: 9),
+        if (!isInterestRow)
+          const SizedBox(height: 9),
 
         // ============================================================
         // DELETE BUTTON
@@ -1022,8 +1039,10 @@ class TransactionDetailsScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                (transaction.type == TransactionType.received ||
-                    transaction.type == TransactionType.paid ||
+                (transaction.type ==
+                    TransactionType.received ||
+                    transaction.type ==
+                        TransactionType.paid ||
                     isInterestRow)
                     ? 'assets/arrow_down.png'
                     : 'assets/arrow_up.png',
@@ -1108,66 +1127,62 @@ class TransactionDetailsScreen extends StatelessWidget {
         // ============================================================
         // EDIT BUTTON
         // ============================================================
+        //
+        // Interest rows are NOT editable.
+        //
+        if (!isInterestRow)
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final result =
+                await showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) {
+                    return EditTransactionReceivedBottomSheet(
+                      transaction: transaction,
+                    );
+                  },
+                );
 
-        // IMPORTANT:
-        // Button is ALWAYS visible.
-        // For interest rows, tapping it does nothing.
-        SizedBox(
-          width: double.infinity,
-          height: 40,
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              // Interest rows are view-only.
-              if (isInterestRow) {
-                return;
-              }
-
-              final result =
-              await showModalBottomSheet<bool>(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) {
-                  return EditTransactionReceivedBottomSheet(
-                    transaction: transaction,
-                  );
-                },
-              );
-
-              if (result == true && context.mounted) {
-                Navigator.pop(context);
-                onChanged?.call();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF213F68),
-              foregroundColor: ChopdiColors.cream,
-              elevation: 0,
-              minimumSize: const Size(
-                double.infinity,
-                40,
+                if (result == true && context.mounted) {
+                  Navigator.pop(context);
+                  onChanged?.call();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF213F68),
+                foregroundColor: ChopdiColors.cream,
+                elevation: 0,
+                minimumSize: const Size(
+                  double.infinity,
+                  40,
+                ),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-              padding: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+              icon: Image.asset(
+                'assets/edit_outline_rounded_transactions.png',
+                height: 24,
+                width: 24,
               ),
-            ),
-            icon: Image.asset(
-              'assets/edit_outline_rounded_transactions.png',
-              height: 24,
-              width: 24,
-            ),
-            label: Text(
-              l10n.editTransaction,
-              style: GoogleFonts.manrope(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              label: Text(
+                l10n.editTransaction,
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
 
-        const SizedBox(height: 9),
+        if (!isInterestRow)
+          const SizedBox(height: 9),
 
         // ============================================================
         // DELETE BUTTON
