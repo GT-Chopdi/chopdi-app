@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart'; // <-- ADDED
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
@@ -32,6 +33,14 @@ GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ------------------------------------------------------------
+  // Pre-load Google Fonts
+  // Resolves the first-launch font pop / style flicker on Splash
+  // ------------------------------------------------------------
+  GoogleFonts.styleScript();
+  GoogleFonts.manrope();
+  await GoogleFonts.pendingFonts();
 
   // ------------------------------------------------------------
   // Initialize date formatting
@@ -264,10 +273,6 @@ class ChopdiAppState extends State<ChopdiApp> {
       // ----------------------------------------------------------
 
       onGenerateRoute: (settings) {
-        // --------------------------------------------------------
-        // Customer Details
-        // --------------------------------------------------------
-
         if (settings.name == '/customer_details') {
           final customer = settings.arguments as Customer;
 
@@ -278,10 +283,6 @@ class ChopdiAppState extends State<ChopdiApp> {
           );
         }
 
-        // --------------------------------------------------------
-        // Took Loan Customer Details
-        // --------------------------------------------------------
-
         if (settings.name == '/took_loan_customer_details') {
           final lender = settings.arguments as Lender;
 
@@ -291,22 +292,6 @@ class ChopdiAppState extends State<ChopdiApp> {
             ),
           );
         }
-
-        // --------------------------------------------------------
-        // Notifications
-        // --------------------------------------------------------
-
-        // if (settings.name == '/notifications') {
-        //   final args =
-        //   settings.arguments as Map<String, dynamic>;
-        //
-        //   return MaterialPageRoute(
-        //     builder: (_) => NotificationsScreen(
-        //       isar: args['isar'],
-        //       chopdiId: args['chopdiId'],
-        //     ),
-        //   );
-        // }
 
         return null;
       },
@@ -334,23 +319,10 @@ class ChopdiAppState extends State<ChopdiApp> {
 
       // ----------------------------------------------------------
       // SPLASH SCREEN
-      //
-      // IMPORTANT:
-      // Notification navigation is NOT handled here.
-      //
-      // SplashScreen must first finish:
-      // - session check
-      // - authentication
-      // - chopdi loading
-      // - initial navigation
-      //
-      // After that, SplashScreen should call the pending
-      // notification handler.
       // ----------------------------------------------------------
 
       home: PopScope(
         canPop: false,
-
         onPopInvokedWithResult: (
             bool didPop,
             Object? result,
@@ -365,7 +337,6 @@ class ChopdiAppState extends State<ChopdiApp> {
             await SystemNavigator.pop();
           }
         },
-
         child: const SplashScreen(),
       ),
     );
