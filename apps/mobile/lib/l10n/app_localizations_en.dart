@@ -1546,6 +1546,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get amountCannotBeZero => 'Amount cannot be zero';
 
+  @override
+  String get filterBy => 'Filter by';
+
+  @override
+  String get filterAll => 'All';
+
+  
+
 
 
   // String get lastPayment => 'Last Payment';
