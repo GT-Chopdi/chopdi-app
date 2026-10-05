@@ -925,12 +925,6 @@ class _MoneyGaveBottomSheetState
                         height: 20,
                       ),
 
-                      // ==================================================
-                      // CONTACT SUPPORT
-                      // ==================================================
-
-                      _buildContactBox(),
-
                       const SizedBox(
                         height: 20,
                       ),
@@ -1182,96 +1176,6 @@ class _MoneyGaveBottomSheetState
             ),
           ),
       ],
-    );
-  }
-
-  // ============================================================
-  // CONTACT BOX
-  // ============================================================
-
-  Widget _buildContactBox() {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      width: double.infinity,
-      padding:
-      const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 9,
-      ),
-      decoration:
-      BoxDecoration(
-        color:
-        const Color(0xFFFEE0C9),
-        borderRadius:
-        BorderRadius.circular(8),
-        border:
-        Border.all(
-          color:
-          const Color.fromRGBO(
-            177,
-            95,
-            39,
-            0.23,
-          ),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment:
-        CrossAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.info_outline,
-            size: 16,
-            color:
-            Color(0xFFC74C4C),
-          ),
-
-          const SizedBox(
-            width: 8,
-          ),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.contactSupportMessage,
-                  style:
-                  GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight:
-                    FontWeight.w700,
-                    color:
-                    const Color(
-                      0xFF223A5E,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 2,
-                ),
-
-                Text(
-                  "chopdi@geloratech.com",
-                  style:
-                  GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight:
-                    FontWeight.w700,
-                    color:
-                    const Color(
-                      0xFFC74C4C,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

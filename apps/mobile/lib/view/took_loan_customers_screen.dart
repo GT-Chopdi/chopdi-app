@@ -484,43 +484,6 @@ class _TookLoanCustomerListSectionState
 
         const SizedBox(height: 15),
 
-        // ========================================================
-        // COUNT + SORT
-        // ========================================================
-
-        Row(
-          children: [
-            Text(
-              l10n.lendersCount(filteredLenders.length),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: showSortSheet,
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.swap_vert,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${l10n.sortBy} : $localizedSort',
-                    style: const TextStyle(
-                      fontSize: 11,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_drop_down,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
         const SizedBox(height: 10),
 
         // ========================================================
