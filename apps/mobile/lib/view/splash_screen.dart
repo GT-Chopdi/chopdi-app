@@ -138,8 +138,7 @@ super.dispose();
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        // builder: (_) => const ChopdiOnboardingScreen(),
-        builder: (_) => const OTPScreen(phoneNumber: '7741939556', challengeId: '123456',),
+        builder: (_) => const ChopdiOnboardingScreen(),
       ),
           (route) => false,
     );
