@@ -1540,6 +1540,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get saveName => 'Save Name';
 
+  @override
+  String get amountRequired => 'Amount is required';
+
+  @override
+  String get amountCannotBeZero => 'Amount cannot be zero';
+
 
 
   // String get lastPayment => 'Last Payment';

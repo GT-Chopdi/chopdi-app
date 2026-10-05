@@ -518,7 +518,7 @@ class _InterestRow extends StatelessWidget {
     Localizations.localeOf(context).toLanguageTag();
 
     final dateFormat =
-    DateFormat("dd MMM yyyy", locale);
+    DateFormat("dd MMM yy", locale);
 
     void openTransactionDetails() {
       showModalBottomSheet(
@@ -590,7 +590,8 @@ class _InterestRow extends StatelessWidget {
                     _getInterestDescription(
                       context,
                     ),
-                    maxLines: 1,
+                    maxLines: 3,
+                    softWrap: true,
                     overflow:
                     TextOverflow.ellipsis,
                     style: const TextStyle(

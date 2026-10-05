@@ -25,11 +25,9 @@ class TransactionRow extends StatelessWidget {
   String _getDescription(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    // If user has entered a description, show that description.
+    // Show the complete user-entered description.
     if (transaction.description.trim().isNotEmpty) {
-      return _shortenDescription(
-        transaction.description.trim(),
-      );
+      return transaction.description.trim();
     }
 
     // Default description based on transaction type.
@@ -46,16 +44,6 @@ class TransactionRow extends StatelessWidget {
       case TransactionType.paid:
         return l10n.amountPaidDescription;
     }
-  }
-
-  String _shortenDescription(String description) {
-    const maxCharacters = 25;
-
-    if (description.length <= maxCharacters) {
-      return description;
-    }
-
-    return "${description.substring(0, maxCharacters).trim()}...";
   }
 
   // ================================================================
@@ -180,7 +168,7 @@ class TransactionRow extends StatelessWidget {
 
     final formattedDate =
     DateFormat(
-      "dd MMM yyyy",
+      "dd MMM yy",
       locale,
     ).format(transaction.date);
 
@@ -248,9 +236,9 @@ class TransactionRow extends StatelessWidget {
                   // User Description
                   Text(
                     _getDescription(context),
-                    maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xff8A93A6),

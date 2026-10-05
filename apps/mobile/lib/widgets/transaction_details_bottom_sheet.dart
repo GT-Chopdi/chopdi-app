@@ -206,7 +206,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).toLanguageTag();
-    return DateFormat('dd MMM yyyy', locale).format(date);
+    return DateFormat('dd MMM yy', locale).format(date);
   }
 
   String _getFullDescription(BuildContext context) {

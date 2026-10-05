@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/chopdi.dart';
-import 'package:mychopdi/model/notification.dart';
-import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/chopdi_bottom_sheet.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
