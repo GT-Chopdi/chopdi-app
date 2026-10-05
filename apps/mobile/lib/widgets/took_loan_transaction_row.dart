@@ -26,9 +26,7 @@ class TookLoanTransactionRow extends StatelessWidget {
 
     // If user entered a description, show it.
     if (transaction.description.trim().isNotEmpty) {
-      return _shortenDescription(
-        transaction.description.trim(),
-      );
+      return transaction.description.trim();
     }
 
     // Default description when user has not entered one.
@@ -45,16 +43,6 @@ class TookLoanTransactionRow extends StatelessWidget {
       case TransactionType.received:
         return l10n.paymentReceived;
     }
-  }
-
-  String _shortenDescription(String description) {
-    const maxCharacters = 25;
-
-    if (description.length <= maxCharacters) {
-      return description;
-    }
-
-    return "${description.substring(0, maxCharacters).trim()}...";
   }
 
   // TRANSACTION TYPE
@@ -215,7 +203,7 @@ class TookLoanTransactionRow extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat(
-                      "dd MMM yyyy",
+                      "dd MMM yy",
                       locale,
                     ).format(transaction.date),
                     style: GoogleFonts.manrope(
@@ -228,8 +216,9 @@ class TookLoanTransactionRow extends StatelessWidget {
 
                   Text(
                     _getDescription(context),
-                    maxLines: 1,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: GoogleFonts.manrope(
                       fontSize: 10,
                       color: const Color(0xff8A93A6),

@@ -1672,4 +1672,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addYourName => 'अपना नाम जोड़ें';
+
+  @override
+  String get amountRequired => 'राशि आवश्यक है';
+
+  @override
+  String get amountCannotBeZero => 'राशि शून्य नहीं हो सकती';
 }

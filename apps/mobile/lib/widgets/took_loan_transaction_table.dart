@@ -362,7 +362,7 @@ class _InterestRow extends StatelessWidget {
     Localizations.localeOf(context).toLanguageTag();
 
     final dateFormat = DateFormat(
-      "dd MMM yyyy",
+      "dd MMM yy",
       locale,
     );
 
@@ -430,8 +430,9 @@ class _InterestRow extends StatelessWidget {
 
                   Text(
                     _getInterestDescription(context),
-                    maxLines: 1,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: const TextStyle(
                       fontSize: 10,
                       color: Color(0xff8A93A6),

@@ -592,6 +592,8 @@ abstract class AppLocalizations {
   String get profile;
   String get edit;
   String get addYourName;
+  String get amountRequired;
+  String get amountCannotBeZero;
 
 
   Null get at => null;
