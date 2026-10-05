@@ -32,6 +32,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _userName;
   bool _isProfileLoading = true;
 
+  // Future<void> _showNameBottomSheet() async {
+  //   final result = await showModalBottomSheet<String>(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (_) => _NameBottomSheet(
+  //       currentName: _userName ?? '',
+  //     ),
+  //   );
+
+  //   if (result == null || result.trim().isEmpty) return;
+
+  //   final name = result.trim();
+
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString(_userNameKey, name);
+
+  //   if (!mounted) return;
+
+  //   setState(() {
+  //     _userName = name;
+  //   });
+  // }
+
   Future<void> _showNameBottomSheet() async {
     final result = await showModalBottomSheet<String>(
       context: context,
@@ -42,17 +66,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    if (result == null || result.trim().isEmpty) return;
+    if (result == null) return;
 
     final name = result.trim();
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userNameKey, name);
+
+    if (name.isEmpty) {
+      await prefs.remove(_userNameKey);
+    } else {
+      await prefs.setString(_userNameKey, name);
+    }
 
     if (!mounted) return;
 
     setState(() {
-      _userName = name;
+      _userName = name.isEmpty ? null : name;
     });
   }
 
@@ -154,8 +183,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   phoneNumber: _phoneNumber,
                   userName: _userName,
                   onEditName: _showNameBottomSheet,
-                  onAddName: _showNameBottomSheet,
                 ),
+
+               
+                const SizedBox(height: 10),
               // ===============================================================
               // SETTINGS OPTIONS
               // ===============================================================
@@ -518,8 +549,6 @@ class _NameBottomSheetState extends State<_NameBottomSheet> {
   void _save() {
     final value = _controller.text.trim();
 
-    if (value.isEmpty) return;
-
     Navigator.pop(context, value);
   }
 
@@ -585,7 +614,7 @@ class _NameBottomSheetState extends State<_NameBottomSheet> {
                 hintText: l10n.enterYourName,
                 prefixIcon: const Icon(
                   Icons.person_outline_rounded,
-                  color: const Color(0xFF223A5E),
+                  color: Color(0xFF223A5E),
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -596,7 +625,7 @@ class _NameBottomSheetState extends State<_NameBottomSheet> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: const BorderSide(
-                    color: const Color(0xFF223A5E),
+                    color: Color(0xFF223A5E),
                     width: 1.2,
                   ),
                 ),

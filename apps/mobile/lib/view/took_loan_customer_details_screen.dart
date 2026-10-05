@@ -18,7 +18,6 @@ import '../l10n/app_localizations.dart';
 import 'package:mychopdi/widgets/took_loan_money_gave_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_money_received_bottom_sheet.dart';
 import 'package:mychopdi/widgets/took_loan_transaction_table.dart';
-import 'package:mychopdi/widgets/customer_options_bottom_sheet.dart' hide AccountSummaryBottomSheet;
 
 import '../widgets/LenderOptionsBottomSheet.dart'; // Change this path if you saved your Lender bottom sheets in a different file
 
