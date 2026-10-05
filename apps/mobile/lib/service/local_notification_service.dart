@@ -1,73 +1,123 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/customer.dart';
+import 'package:mychopdi/model/lender.dart';
+import 'package:mychopdi/model/sync_meta.dart';
+import 'package:mychopdi/model/sync_op.dart';
+import 'package:mychopdi/model/user_session.dart';
+import 'package:mychopdi/model/chopdi.dart';
+import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:path_provider/path_provider.dart';
+
+import '../main.dart';
+import '../view/notifications_screen.dart';
+import 'chopdi_service.dart';
+
+// ============================================================
+// TOP-LEVEL BACKGROUND HANDLER (MUST BE OUTSIDE THE CLASS)
+// ============================================================
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) async {
+  if (notificationResponse.actionId == 'action_mark_read') {
+    debugPrint('Background: Marked as read -> ${notificationResponse.payload}');
+    final payload = notificationResponse.payload;
+    if (payload != null && payload.startsWith('event_read:')) {
+      final notifIdStr = payload.split(':')[1];
+      final notifId = int.tryParse(notifIdStr);
+
+      if (notifId != null) {
+        try {
+          final dir = await getApplicationDocumentsDirectory();
+          final isar = await Isar.open(
+            [
+              CustomerSchema,
+              LenderSchema,
+              TransactionSchema,
+              UserSessionSchema,
+              SyncOpSchema,
+              SyncMetaSchema,
+              ChopdiSchema,
+              NotificationModelSchema,
+            ],
+            directory: dir.path,
+          );
+
+          final notification = await isar.notificationModels.get(notifId);
+          if (notification != null && !notification.isRead) {
+            notification.isRead = true;
+            await isar.writeTxn(() async {
+              await isar.notificationModels.put(notification);
+            });
+            debugPrint('Background: Successfully marked notification $notifId as read in Isar.');
+          }
+
+          // Close Isar instance to prevent memory leaks in the background isolate
+          await isar.close();
+        } catch (e) {
+          debugPrint('Background: Failed to open Isar and mark as read: $e');
+        }
+      }
+    }
+  } else if (notificationResponse.actionId == 'action_reply') {
+    final String? replyText = notificationResponse.input;
+    debugPrint('Background: Replied -> $replyText');
+    // TODO: Handle the reply text (save to Isar, queue sync, etc.)
+  }
+}
 
 class LocalNotificationService {
   LocalNotificationService._();
 
-  static final LocalNotificationService instance =
-      LocalNotificationService._();
+  static final LocalNotificationService instance = LocalNotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+
+  // ============================================================
+  // PENDING PAYLOAD FOR KILLED APP NAVIGATION
+  // ============================================================
+  static String? pendingNotificationPayload;
 
   // ============================================================
   // CHANNELS
   // ============================================================
 
   static const String paymentChannelId = 'payment_reminders';
-
   static const String dailyChannelId = 'daily_reminders';
+  static const String eventChannelId = 'app_events';
 
   // ============================================================
   // NOTIFICATION IDS
   // ============================================================
 
   static const int dailyReminderId = 900000;
-
   static const int testNotificationId = 999999;
-
   static const int paymentReminderIdBase = 100000;
 
   // ============================================================
   // SHARED PREFERENCES KEYS
   // ============================================================
 
-  /// Master notification switch.
-  ///
-  /// This controls whether the app is allowed to send
-  /// any notification at all.
-  static const String notificationsEnabledKey =
-      'notifications_enabled';
-
-  static const String paymentReminderKey =
-      'notification_payment_reminder_enabled';
-
-  static const String dailyReminderKey =
-      'notification_daily_reminder_enabled';
-
-  static const String selectedReminderKey =
-      'notification_selected_reminder';
+  static const String notificationsEnabledKey = 'notifications_enabled';
+  static const String paymentReminderKey = 'notification_payment_reminder_enabled';
+  static const String dailyReminderKey = 'notification_daily_reminder_enabled';
+  static const String selectedReminderKey = 'notification_selected_reminder';
 
   // ============================================================
   // DEFAULT SETTINGS
   // ============================================================
 
-  /// Notifications are ON by default.
   static const bool defaultNotificationsEnabled = true;
-
   static const bool defaultPaymentReminder = true;
-
   static const bool defaultDailyReminder = false;
-
   static const String defaultReminderType = 'dueDate';
 
   // ============================================================
@@ -82,17 +132,17 @@ class LocalNotificationService {
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
+    DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
 
     const InitializationSettings initializationSettings =
-        InitializationSettings(
+    InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
@@ -100,14 +150,62 @@ class LocalNotificationService {
     await _plugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     await _createAndroidChannels();
 
     _initialized = true;
 
-    debugPrint(
-      '[LocalNotification] Initialized successfully',
+    debugPrint('[LocalNotification] Initialized successfully');
+  }
+
+  // ============================================================
+  // GENERAL EVENT NOTIFICATION
+  // ============================================================
+  Future<void> showAppEventNotification({
+    required int id,
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
+
+    await initialize();
+
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      eventChannelId,
+      'App Events',
+      channelDescription: 'Important updates and activity',
+      importance: Importance.max,
+      priority: Priority.high,
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'action_mark_read',
+          'Mark as read',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+      ],
+    );
+
+    final NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    // FIXED: Strictly using named arguments
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
+      payload: payload,
     );
   }
 
@@ -116,40 +214,41 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> _createAndroidChannels() async {
-    final AndroidFlutterLocalNotificationsPlugin?
-        androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidPlugin == null) {
       return;
     }
 
     const AndroidNotificationChannel paymentChannel =
-        AndroidNotificationChannel(
+    AndroidNotificationChannel(
       paymentChannelId,
       'Payment Reminders',
-      description:
-          'Notifications for upcoming customer payment due dates.',
+      description: 'Notifications for upcoming customer payment due dates.',
       importance: Importance.high,
     );
 
     const AndroidNotificationChannel dailyChannel =
-        AndroidNotificationChannel(
+    AndroidNotificationChannel(
       dailyChannelId,
       'Daily Reminders',
-      description:
-          'Daily reminders to review pending collections.',
+      description: 'Daily reminders to review pending collections.',
       importance: Importance.defaultImportance,
     );
 
-    await androidPlugin.createNotificationChannel(
-      paymentChannel,
+    const AndroidNotificationChannel eventChannel =
+    AndroidNotificationChannel(
+      eventChannelId,
+      'App Events',
+      description: 'Important updates and messages.',
+      importance: Importance.max,
     );
 
-    await androidPlugin.createNotificationChannel(
-      dailyChannel,
-    );
+    await androidPlugin.createNotificationChannel(paymentChannel);
+    await androidPlugin.createNotificationChannel(dailyChannel);
+    await androidPlugin.createNotificationChannel(eventChannel);
   }
 
   // ============================================================
@@ -159,19 +258,17 @@ class LocalNotificationService {
   Future<void> requestPermission() async {
     await initialize();
 
-    final AndroidFlutterLocalNotificationsPlugin?
-        androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
     }
 
-    final IOSFlutterLocalNotificationsPlugin?
-        iosPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+    final IOSFlutterLocalNotificationsPlugin? iosPlugin =
+    _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
 
     if (iosPlugin != null) {
       await iosPlugin.requestPermissions(
@@ -183,42 +280,145 @@ class LocalNotificationService {
   }
 
   // ============================================================
+  // NOTIFICATION CLICK HANDLER (FOREGROUND/BACKGROUND)
+  // ============================================================
+
+  void _onNotificationResponse(NotificationResponse response) async {
+    debugPrint('[LocalNotification] Notification clicked');
+    debugPrint('[LocalNotification] Payload: ${response.payload}');
+
+    if (response.payload == null) return;
+    final payload = response.payload!;
+
+    if (payload.startsWith('event_read:') ||
+        payload.startsWith('payment:') ||
+        payload.startsWith('took_payment:')) {
+
+      // If app is cold-booting, save payload for the HomeScreen
+      if (appNavigatorKey.currentState == null || !appNavigatorKey.currentState!.canPop()) {
+        debugPrint('[LocalNotification] Cold start detected. Saving payload for Home Screen.');
+        pendingNotificationPayload = payload;
+        return;
+      }
+
+      // App is already running in background, navigate instantly
+      final isar = IsarService.isar;
+      final currentChopdi = await ChopdiService.getCurrentChopdi();
+
+      // FIXED: Removed the unnecessary `if (currentChopdi != null)` check to resolve the warning
+      await Future.delayed(const Duration(milliseconds: 100));
+      appNavigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => NotificationsScreen(
+            isar: isar,
+            chopdiId: currentChopdi.id, // currentChopdi is non-nullable
+          ),
+        ),
+      );
+
+    } else if (payload == 'daily_reminder') {
+      debugPrint('[LocalNotification] Daily reminder clicked');
+    }
+  }
+
+  // ============================================================
+  // RICH CHAT-STYLE NOTIFICATION (LIKE GOOGLE CHAT)
+  // ============================================================
+  Future<void> showRichEventNotification({
+    required int id,
+    required String senderName,
+    required String message,
+    required String payload,
+  }) async {
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
+
+    await initialize();
+
+    final Person me = const Person(
+      name: 'Me',
+      key: '1',
+    );
+
+    final Person sender = Person(
+      name: senderName,
+      key: '2',
+    );
+
+    final MessagingStyleInformation messagingStyle = MessagingStyleInformation(
+      me,
+      groupConversation: false,
+      messages: [
+        Message(message, DateTime.now(), sender),
+      ],
+    );
+
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      eventChannelId,
+      'App Events',
+      channelDescription: 'Important updates and messages',
+      importance: Importance.max,
+      priority: Priority.high,
+      styleInformation: messagingStyle,
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          'action_mark_read',
+          'Mark as read',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
+        const AndroidNotificationAction(
+          'action_reply',
+          'Reply',
+          showsUserInterface: false,
+          inputs: <AndroidNotificationActionInput>[
+            AndroidNotificationActionInput(label: 'Type a reply...'),
+          ],
+        ),
+      ],
+    );
+
+    final NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    await _plugin.show(
+      id: id,
+      title: senderName,
+      body: message,
+      notificationDetails: details,
+      payload: payload,
+    );
+  }
+
+  // ============================================================
   // MASTER NOTIFICATION SETTING
   // ============================================================
 
   Future<bool> areNotificationsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-
     return prefs.getBool(notificationsEnabledKey) ??
         defaultNotificationsEnabled;
   }
 
   Future<void> setNotificationsEnabled(
-    bool enabled, {
-    Isar? database,
-  }) async {
+      bool enabled, {
+        Isar? database,
+      }) async {
     final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool(
-      notificationsEnabledKey,
-      enabled,
-    );
-
-    debugPrint(
-      '[LocalNotification] Master notifications: $enabled',
-    );
+    await prefs.setBool(notificationsEnabledKey, enabled);
+    debugPrint('[LocalNotification] Master notifications: $enabled');
 
     if (!enabled) {
-      // Immediately remove every scheduled notification.
       await cancelAllNotifications();
       return;
     }
-
-    // When enabled again, restore the user's existing
-    // daily/payment reminder settings.
-    await syncNotifications(
-      database: database,
-    );
+    await syncNotifications(database: database);
   }
 
   // ============================================================
@@ -227,29 +427,22 @@ class LocalNotificationService {
 
   Future<bool> isPaymentReminderEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-
-    return prefs.getBool(paymentReminderKey) ??
-        defaultPaymentReminder;
+    return prefs.getBool(paymentReminderKey) ?? defaultPaymentReminder;
   }
 
   Future<bool> isDailyReminderEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-
-    return prefs.getBool(dailyReminderKey) ??
-        defaultDailyReminder;
+    return prefs.getBool(dailyReminderKey) ?? defaultDailyReminder;
   }
 
   Future<String> getSelectedReminderType() async {
     final prefs = await SharedPreferences.getInstance();
-
     final value = prefs.getString(selectedReminderKey);
-
     if (value == 'dueDate' ||
         value == 'oneDayBefore' ||
         value == 'threeDaysBefore') {
       return value!;
     }
-
     return defaultReminderType;
   }
 
@@ -263,40 +456,11 @@ class LocalNotificationService {
     required String selectedReminder,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(paymentReminderKey, paymentReminderEnabled);
+    await prefs.setBool(dailyReminderKey, dailyReminderEnabled);
+    await prefs.setString(selectedReminderKey, selectedReminder);
 
-    await prefs.setBool(
-      paymentReminderKey,
-      paymentReminderEnabled,
-    );
-
-    await prefs.setBool(
-      dailyReminderKey,
-      dailyReminderEnabled,
-    );
-
-    await prefs.setString(
-      selectedReminderKey,
-      selectedReminder,
-    );
-
-    debugPrint(
-      '[LocalNotification] Settings saved',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Payment: $paymentReminderEnabled',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Daily: $dailyReminderEnabled',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Reminder type: $selectedReminder',
-    );
+    debugPrint('[LocalNotification] Settings saved');
   }
 
   // ============================================================
@@ -309,64 +473,21 @@ class LocalNotificationService {
   }) async {
     await initialize();
 
-    final bool masterEnabled =
-        await areNotificationsEnabled();
-
-    debugPrint(
-      '[LocalNotification] '
-      'Master notifications enabled: $masterEnabled',
-    );
-
-    // ==========================================================
-    // MASTER SWITCH OFF
-    // ==========================================================
+    final bool masterEnabled = await areNotificationsEnabled();
+    debugPrint('[LocalNotification] Master notifications enabled: $masterEnabled');
 
     if (!masterEnabled) {
       await cancelAllNotifications();
-
-      debugPrint(
-        '[LocalNotification] '
-        'Master switch is OFF. '
-        'No notifications will be scheduled.',
-      );
-
       return;
     }
-
-    // ==========================================================
-    // PERMISSION
-    // ==========================================================
 
     if (requestPermissionIfNeeded) {
       await requestPermission();
     }
 
-    final Isar db =
-        database ?? IsarService.isar;
-
-    final bool paymentEnabled =
-        await isPaymentReminderEnabled();
-
-    final bool dailyEnabled =
-        await isDailyReminderEnabled();
-
-    debugPrint(
-      '[LocalNotification] Starting notification sync',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Payment enabled: $paymentEnabled',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Daily enabled: $dailyEnabled',
-    );
-
-    // ==========================================================
-    // DAILY REMINDER
-    // ==========================================================
+    final Isar db = database ?? IsarService.isar;
+    final bool paymentEnabled = await isPaymentReminderEnabled();
+    final bool dailyEnabled = await isDailyReminderEnabled();
 
     if (dailyEnabled) {
       await scheduleDailyReminder();
@@ -374,23 +495,11 @@ class LocalNotificationService {
       await cancelDailyReminder();
     }
 
-    // ==========================================================
-    // PAYMENT REMINDERS
-    // ==========================================================
-
     if (paymentEnabled) {
-      await rescheduleAllPaymentReminders(
-        database: db,
-      );
+      await rescheduleAllPaymentReminders(database: db);
     } else {
-      await cancelAllPaymentReminders(
-        database: db,
-      );
+      await cancelAllPaymentReminders(database: db);
     }
-
-    debugPrint(
-      '[LocalNotification] Notification sync completed',
-    );
   }
 
   // ============================================================
@@ -402,26 +511,12 @@ class LocalNotificationService {
     required String frequency,
   }) {
     final today = DateTime.now();
-
-    DateTime dueDate = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-    );
-
-    final todayOnly = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    );
+    DateTime dueDate = DateTime(startDate.year, startDate.month, startDate.day);
+    final todayOnly = DateTime(today.year, today.month, today.day);
 
     while (!dueDate.isAfter(todayOnly)) {
-      dueDate = _addFrequency(
-        dueDate,
-        frequency,
-      );
+      dueDate = _addFrequency(dueDate, frequency);
     }
-
     return dueDate;
   }
 
@@ -429,27 +524,16 @@ class LocalNotificationService {
   // ADD FREQUENCY
   // ============================================================
 
-  DateTime _addFrequency(
-    DateTime date,
-    String frequency,
-  ) {
+  DateTime _addFrequency(DateTime date, String frequency) {
     switch (frequency) {
       case 'Daily':
-        return date.add(
-          const Duration(days: 1),
-        );
-
+        return date.add(const Duration(days: 1));
       case 'Weekly':
-        return date.add(
-          const Duration(days: 7),
-        );
-
+        return date.add(const Duration(days: 7));
       case 'Monthly':
         return _addMonth(date);
-
       case 'Yearly':
         return _addYear(date);
-
       default:
         return _addMonth(date);
     }
@@ -460,28 +544,11 @@ class LocalNotificationService {
   // ============================================================
 
   DateTime _addMonth(DateTime date) {
-    final int nextMonth =
-        date.month == 12 ? 1 : date.month + 1;
-
-    final int nextYear =
-        date.month == 12
-            ? date.year + 1
-            : date.year;
-
-    final int lastDay = DateTime(
-      nextYear,
-      nextMonth + 1,
-      0,
-    ).day;
-
-    final int day =
-        date.day > lastDay ? lastDay : date.day;
-
-    return DateTime(
-      nextYear,
-      nextMonth,
-      day,
-    );
+    final int nextMonth = date.month == 12 ? 1 : date.month + 1;
+    final int nextYear = date.month == 12 ? date.year + 1 : date.year;
+    final int lastDay = DateTime(nextYear, nextMonth + 1, 0).day;
+    final int day = date.day > lastDay ? lastDay : date.day;
+    return DateTime(nextYear, nextMonth, day);
   }
 
   // ============================================================
@@ -490,29 +557,17 @@ class LocalNotificationService {
 
   DateTime _addYear(DateTime date) {
     final int nextYear = date.year + 1;
-
     if (date.month == 2 && date.day == 29) {
-      return DateTime(
-        nextYear,
-        2,
-        28,
-      );
+      return DateTime(nextYear, 2, 28);
     }
-
-    return DateTime(
-      nextYear,
-      date.month,
-      date.day,
-    );
+    return DateTime(nextYear, date.month, date.day);
   }
 
   // ============================================================
   // PAYMENT REMINDER ID
   // ============================================================
 
-  int paymentReminderNotificationId(
-    int customerId,
-  ) {
+  int paymentReminderNotificationId(int customerId) {
     return paymentReminderIdBase + customerId;
   }
 
@@ -530,14 +585,9 @@ class LocalNotificationService {
   }) async {
     await initialize();
 
-    final bool masterEnabled =
-        await areNotificationsEnabled();
+    final bool masterEnabled = await areNotificationsEnabled();
 
     if (!masterEnabled) {
-      debugPrint(
-        '[LocalNotification] '
-        'Skipped payment reminder because notifications are OFF.',
-      );
       return;
     }
 
@@ -545,97 +595,55 @@ class LocalNotificationService {
 
     switch (reminderType) {
       case 'oneDayBefore':
-        scheduledDate = DateTime(
-          dueDate.year,
-          dueDate.month,
-          dueDate.day,
-          9,
-          0,
-        ).subtract(
-          const Duration(days: 1),
-        );
+        scheduledDate = DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0)
+            .subtract(const Duration(days: 1));
         break;
-
       case 'threeDaysBefore':
-        scheduledDate = DateTime(
-          dueDate.year,
-          dueDate.month,
-          dueDate.day,
-          9,
-          0,
-        ).subtract(
-          const Duration(days: 3),
-        );
+        scheduledDate = DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0)
+            .subtract(const Duration(days: 3));
         break;
-
       case 'dueDate':
       default:
-        scheduledDate = DateTime(
-          dueDate.year,
-          dueDate.month,
-          dueDate.day,
-          9,
-          0,
-        );
+        scheduledDate = DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0);
         break;
     }
 
     if (scheduledDate.isBefore(DateTime.now())) {
-      debugPrint(
-        '[LocalNotification] '
-        'Skipping past reminder: $scheduledDate',
-      );
       return;
     }
 
-    final String amountText = amount == null
-        ? ''
-        : ' Amount: ₹${amount.toStringAsFixed(2)}.';
-
-    final bool isTookLoan =
-        transactionType == TransactionType.took;
-
+    final String amountText =
+    amount == null ? '' : ' Amount: ₹${amount.toStringAsFixed(2)}.';
+    final bool isTookLoan = transactionType == TransactionType.took;
     final String title =
-        isTookLoan
-            ? 'Loan Repayment Reminder'
-            : 'Payment Reminder';
-
+    isTookLoan ? 'Loan Repayment Reminder' : 'Payment Reminder';
     final String body;
 
     switch (reminderType) {
       case 'oneDayBefore':
         body = isTookLoan
-            ? 'You have a loan payment due tomorrow for $customerName.'
-                '$amountText'
-            : '$customerName has a payment due tomorrow.'
-                '$amountText';
+            ? 'You have a loan payment due tomorrow for $customerName.$amountText'
+            : '$customerName has a payment due tomorrow.$amountText';
         break;
-
       case 'threeDaysBefore':
         body = isTookLoan
-            ? 'You have a loan payment due in 3 days for $customerName.'
-                '$amountText'
-            : '$customerName has a payment due in 3 days.'
-                '$amountText';
+            ? 'You have a loan payment due in 3 days for $customerName.$amountText'
+            : '$customerName has a payment due in 3 days.$amountText';
         break;
-
       case 'dueDate':
       default:
         body = isTookLoan
-            ? 'Your loan payment to $customerName is due today.'
-                '$amountText'
-            : '$customerName has a payment due today.'
-                '$amountText';
+            ? 'Your loan payment to $customerName is due today.$amountText'
+            : '$customerName has a payment due today.$amountText';
         break;
     }
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         paymentChannelId,
         'Payment Reminders',
         channelDescription:
-            'Notifications for upcoming customer payment due dates.',
+        'Notifications for upcoming customer payment due dates.',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -647,10 +655,7 @@ class LocalNotificationService {
     );
 
     final tz.TZDateTime notificationDate =
-        tz.TZDateTime.from(
-      scheduledDate,
-      tz.local,
-    );
+    tz.TZDateTime.from(scheduledDate, tz.local);
 
     await _plugin.zonedSchedule(
       id: notificationId,
@@ -658,17 +663,10 @@ class LocalNotificationService {
       body: body,
       scheduledDate: notificationDate,
       notificationDetails: details,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: isTookLoan
           ? 'took_payment:$notificationId'
           : 'payment:$notificationId',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      '${isTookLoan ? 'TOOK' : 'GAVE'} reminder scheduled: '
-      '$notificationDate',
     );
   }
 
@@ -684,16 +682,10 @@ class LocalNotificationService {
     required TransactionType transactionType,
     double? amount,
   }) async {
-    final bool masterEnabled =
-        await areNotificationsEnabled();
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
 
-    if (!masterEnabled) {
-      return;
-    }
-
-    final int notificationId =
-        paymentReminderNotificationId(customer.id);
-
+    final int notificationId = paymentReminderNotificationId(customer.id);
     await cancelPaymentReminder(notificationId);
 
     final DateTime dueDate = calculateNextDueDate(
@@ -709,280 +701,89 @@ class LocalNotificationService {
       transactionType: transactionType,
       amount: amount,
     );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Customer: ${customer.name}',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Loan type: $transactionType',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Loan date: $loanDate',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Frequency: $interestFrequency',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Next due date: $dueDate',
-    );
   }
 
   // ============================================================
   // RESCHEDULE ALL PAYMENT REMINDERS
   // ============================================================
 
-  Future<void> rescheduleAllPaymentReminders({
-    Isar? database,
-  }) async {
+  Future<void> rescheduleAllPaymentReminders({Isar? database}) async {
     await initialize();
 
-    final Isar db =
-        database ?? IsarService.isar;
-
-    final bool masterEnabled =
-        await areNotificationsEnabled();
+    final Isar db = database ?? IsarService.isar;
+    final bool masterEnabled = await areNotificationsEnabled();
 
     if (!masterEnabled) {
-      await cancelAllPaymentReminders(
-        database: db,
-      );
+      await cancelAllPaymentReminders(database: db);
       return;
     }
 
-    final bool enabled =
-        await isPaymentReminderEnabled();
-
-    final String reminderType =
-        await getSelectedReminderType();
-
-    final customers =
-        await db.customers
-            .where()
-            .findAll();
-
-    debugPrint(
-      '[LocalNotification] '
-      'Customers found: ${customers.length}',
-    );
+    final bool enabled = await isPaymentReminderEnabled();
+    final String reminderType = await getSelectedReminderType();
+    final customers = await db.customers.where().findAll();
 
     for (final customer in customers) {
-      final int notificationId =
-          paymentReminderNotificationId(
-        customer.id,
-      );
+      final int notificationId = paymentReminderNotificationId(customer.id);
+      await cancelPaymentReminder(notificationId);
 
-      // Always cancel old reminder.
-      await cancelPaymentReminder(
-        notificationId,
-      );
+      if (!enabled) continue;
 
-      if (!enabled) {
-        continue;
-      }
+      final transactions = await db.transactions
+          .filter()
+          .customerIdEqualTo(customer.id)
+          .sortByDate()
+          .findAll();
 
-      // ========================================================
-      // CUSTOMER TRANSACTIONS
-      // ========================================================
+      if (transactions.isEmpty) continue;
 
-      final transactions =
-          await db.transactions
-              .filter()
-              .customerIdEqualTo(
-                customer.id,
-              )
-              .sortByDate()
-              .findAll();
+      final gaveTransactions = transactions
+          .where((t) => t.type == TransactionType.gave)
+          .toList();
+      final tookTransactions = transactions
+          .where((t) => t.type == TransactionType.took)
+          .toList();
 
-      if (transactions.isEmpty) {
-        continue;
-      }
+      if (gaveTransactions.isEmpty && tookTransactions.isEmpty) continue;
 
-      // ========================================================
-      // GAVE
-      // ========================================================
-
-      final gaveTransactions =
-          transactions
-              .where(
-                (transaction) =>
-                    transaction.type ==
-                    TransactionType.gave,
-              )
-              .toList();
-
-      // ========================================================
-      // TOOK
-      // ========================================================
-
-      final tookTransactions =
-          transactions
-              .where(
-                (transaction) =>
-                    transaction.type ==
-                    TransactionType.took,
-              )
-              .toList();
-
-      if (gaveTransactions.isEmpty &&
-          tookTransactions.isEmpty) {
-        continue;
-      }
-
-      // ========================================================
-      // CUSTOMER OWES YOU
-      //
-      // GIVEN - RECEIVED + INTEREST
-      // ========================================================
-
-      final double totalGiven =
-          gaveTransactions.fold(
-        0.0,
-        (sum, transaction) =>
-            sum + transaction.amount,
-      );
-
-      final double totalReceived =
-          transactions
-              .where(
-                (transaction) =>
-                    transaction.type ==
-                    TransactionType.received,
-              )
-              .fold(
-                0.0,
-                (sum, transaction) =>
-                    sum + transaction.amount,
-              );
-
+      final double totalGiven = gaveTransactions.fold(0.0, (s, t) => s + t.amount);
+      final double totalReceived = transactions
+          .where((t) => t.type == TransactionType.received)
+          .fold(0.0, (s, t) => s + t.amount);
       final double totalGivenInterest =
-          gaveTransactions.fold(
-        0.0,
-        (sum, transaction) =>
-            sum + transaction.interest,
-      );
-
+      gaveTransactions.fold(0.0, (s, t) => s + t.interest);
       final double customerOwesYou =
-          (totalGiven - totalReceived) +
-              totalGivenInterest;
+          (totalGiven - totalReceived) + totalGivenInterest;
 
-      // ========================================================
-      // YOU OWE CUSTOMER
-      //
-      // TOOK - PAID + INTEREST
-      // ========================================================
-
-      final double totalTook =
-          tookTransactions.fold(
-        0.0,
-        (sum, transaction) =>
-            sum + transaction.amount,
-      );
-
-      final double totalPaid =
-          transactions
-              .where(
-                (transaction) =>
-                    transaction.type ==
-                    TransactionType.paid,
-              )
-              .fold(
-                0.0,
-                (sum, transaction) =>
-                    sum + transaction.amount,
-              );
-
+      final double totalTook = tookTransactions.fold(0.0, (s, t) => s + t.amount);
+      final double totalPaid = transactions
+          .where((t) => t.type == TransactionType.paid)
+          .fold(0.0, (s, t) => s + t.amount);
       final double totalTookInterest =
-          tookTransactions.fold(
-        0.0,
-        (sum, transaction) =>
-            sum + transaction.interest,
-      );
-
+      tookTransactions.fold(0.0, (s, t) => s + t.interest);
       final double youOweCustomer =
-          (totalTook - totalPaid) +
-              totalTookInterest;
+          (totalTook - totalPaid) + totalTookInterest;
 
-      // ========================================================
-      // SELECT ACTIVE SIDE
-      // ========================================================
+      final bool hasCustomerOwesYouBalance = customerOwesYou > 0;
+      final bool hasYouOweCustomerBalance = youOweCustomer > 0;
 
-      final bool hasCustomerOwesYouBalance =
-          customerOwesYou > 0;
+      if (!hasCustomerOwesYouBalance && !hasYouOweCustomerBalance) continue;
 
-      final bool hasYouOweCustomerBalance =
-          youOweCustomer > 0;
-
-      // Fully settled.
-      if (!hasCustomerOwesYouBalance &&
-          !hasYouOweCustomerBalance) {
-        debugPrint(
-          '[LocalNotification] '
-          'No reminder for ${customer.name}. '
-          'Both balances are settled.',
-        );
-
-        continue;
-      }
-
-      // If both sides somehow exist, prefer
-      // the customer-owes-you side.
-      final bool useCustomerOwesYou =
-          hasCustomerOwesYouBalance;
-
+      final bool useCustomerOwesYou = hasCustomerOwesYouBalance;
       final List<Transaction> activeLoans =
-          useCustomerOwesYou
-              ? gaveTransactions
-              : tookTransactions;
+      useCustomerOwesYou ? gaveTransactions : tookTransactions;
 
-      if (activeLoans.isEmpty) {
-        continue;
-      }
+      if (activeLoans.isEmpty) continue;
 
       final double outstanding =
-          useCustomerOwesYou
-              ? customerOwesYou
-              : youOweCustomer;
+      useCustomerOwesYou ? customerOwesYou : youOweCustomer;
 
-      if (outstanding <= 0) {
-        continue;
-      }
+      if (outstanding <= 0) continue;
 
-      // ========================================================
-      // ORIGINAL LOAN TRANSACTION
-      // ========================================================
-
-      activeLoans.sort(
-        (a, b) =>
-            a.date.compareTo(b.date),
-      );
-
-      final Transaction loan =
-          activeLoans.first;
-
-      final String frequency =
-          loan.interestFrequency.isNotEmpty
-              ? loan.interestFrequency
-              : 'Monthly';
-
-      debugPrint(
-        '[LocalNotification] '
-        '${customer.name}: '
-        '${useCustomerOwesYou ? 'customer owes you' : 'you owe customer'} '
-        'Outstanding: $outstanding',
-      );
-
-      // ========================================================
-      // SCHEDULE
-      // ========================================================
+      activeLoans.sort((a, b) => a.date.compareTo(b.date));
+      final Transaction loan = activeLoans.first;
+      final String frequency = loan.interestFrequency.isNotEmpty
+          ? loan.interestFrequency
+          : 'Monthly';
 
       await scheduleCustomerPaymentReminder(
         customer: customer,
@@ -1001,51 +802,27 @@ class LocalNotificationService {
   // DAILY REMINDER
   // ============================================================
 
-  Future<void> scheduleDailyReminder({
-    int hour = 9,
-    int minute = 0,
-  }) async {
+  Future<void> scheduleDailyReminder({int hour = 9, int minute = 0}) async {
     await initialize();
 
-    final bool masterEnabled =
-        await areNotificationsEnabled();
-
-    if (!masterEnabled) {
-      debugPrint(
-        '[LocalNotification] '
-        'Skipped daily reminder because notifications are OFF.',
-      );
-      return;
-    }
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
 
     await cancelDailyReminder();
 
-    final tz.TZDateTime now =
-        tz.TZDateTime.now(tz.local);
-
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
     tz.TZDateTime scheduled =
-        tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      minute,
-    );
+    tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
 
     if (!scheduled.isAfter(now)) {
-      scheduled = scheduled.add(
-        const Duration(days: 1),
-      );
+      scheduled = scheduled.add(const Duration(days: 1));
     }
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         dailyChannelId,
         'Daily Reminders',
-        channelDescription:
-            'Daily reminders to review pending collections.',
+        channelDescription: 'Daily reminders to review pending collections.',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
       ),
@@ -1059,21 +836,12 @@ class LocalNotificationService {
     await _plugin.zonedSchedule(
       id: dailyReminderId,
       title: 'Daily Reminder',
-      body:
-          'Review today\'s pending collections.',
+      body: 'Review today\'s pending collections.',
       scheduledDate: scheduled,
       notificationDetails: details,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents:
-          DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
       payload: 'daily_reminder',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Daily reminder scheduled at '
-      '$hour:$minute',
     );
   }
 
@@ -1083,68 +851,31 @@ class LocalNotificationService {
 
   Future<void> cancelDailyReminder() async {
     await initialize();
-
-    await _plugin.cancel(
-      id: dailyReminderId,
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Daily reminder cancelled',
-    );
+    await _plugin.cancel(id: dailyReminderId);
   }
 
   // ============================================================
   // CANCEL ONE PAYMENT REMINDER
   // ============================================================
 
-  Future<void> cancelPaymentReminder(
-    int notificationId,
-  ) async {
+  Future<void> cancelPaymentReminder(int notificationId) async {
     await initialize();
-
-    await _plugin.cancel(
-      id: notificationId,
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'Payment reminder cancelled: $notificationId',
-    );
+    await _plugin.cancel(id: notificationId);
   }
 
   // ============================================================
   // CANCEL ALL PAYMENT REMINDERS
   // ============================================================
 
-  Future<void> cancelAllPaymentReminders({
-    Isar? database,
-  }) async {
+  Future<void> cancelAllPaymentReminders({Isar? database}) async {
     await initialize();
-
-    final Isar db =
-        database ?? IsarService.isar;
-
-    final customers =
-        await db.customers
-            .where()
-            .findAll();
+    final Isar db = database ?? IsarService.isar;
+    final customers = await db.customers.where().findAll();
 
     for (final customer in customers) {
-      final int notificationId =
-          paymentReminderNotificationId(
-        customer.id,
-      );
-
-      await _plugin.cancel(
-        id: notificationId,
-      );
+      final int notificationId = paymentReminderNotificationId(customer.id);
+      await _plugin.cancel(id: notificationId);
     }
-
-    debugPrint(
-      '[LocalNotification] '
-      'All payment reminders cancelled',
-    );
   }
 
   // ============================================================
@@ -1153,13 +884,7 @@ class LocalNotificationService {
 
   Future<void> cancelAllNotifications() async {
     await initialize();
-
     await _plugin.cancelAll();
-
-    debugPrint(
-      '[LocalNotification] '
-      'All notifications cancelled',
-    );
   }
 
   // ============================================================
@@ -1167,28 +892,18 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> showRealDeviceTestNotification() async {
-    final bool masterEnabled =
-        await areNotificationsEnabled();
-
-    if (!masterEnabled) {
-      debugPrint(
-        '[LocalNotification] '
-        'Test notification blocked because notifications are OFF.',
-      );
-      return;
-    }
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
 
     await initialize();
-
     await requestPermission();
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         paymentChannelId,
         'Payment Reminders',
         channelDescription:
-            'Notifications for upcoming customer payment due dates.',
+        'Notifications for upcoming customer payment due dates.',
         importance: Importance.max,
         priority: Priority.high,
         playSound: true,
@@ -1203,15 +918,9 @@ class LocalNotificationService {
     await _plugin.show(
       id: testNotificationId,
       title: 'MyChopdi Test Notification',
-      body:
-          'Notifications are working correctly on this device.',
+      body: 'Notifications are working correctly on this device.',
       notificationDetails: details,
       payload: 'device_test',
-    );
-
-    debugPrint(
-      '[LocalNotification] '
-      'REAL DEVICE TEST SENT',
     );
   }
 
@@ -1220,33 +929,21 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> scheduleTestNotificationAfterOneMinute() async {
-    final bool masterEnabled =
-        await areNotificationsEnabled();
-
-    if (!masterEnabled) {
-      debugPrint(
-        '[LocalNotification] '
-        'Test notification blocked because notifications are OFF.',
-      );
-      return;
-    }
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
 
     await initialize();
-
     await requestPermission();
 
     final tz.TZDateTime scheduledDate =
-        tz.TZDateTime.now(tz.local).add(
-      const Duration(minutes: 1),
-    );
+    tz.TZDateTime.now(tz.local).add(const Duration(minutes: 1));
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         paymentChannelId,
         'Payment Reminders',
         channelDescription:
-            'Notifications for upcoming customer payment due dates.',
+        'Notifications for upcoming customer payment due dates.',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -1260,18 +957,11 @@ class LocalNotificationService {
     await _plugin.zonedSchedule(
       id: 777777,
       title: 'TEST Payment Reminder',
-      body:
-          'This is a test notification from MyChopdi.',
+      body: 'This is a test notification from MyChopdi.',
       scheduledDate: scheduledDate,
       notificationDetails: details,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'test_payment',
-    );
-
-    debugPrint(
-      '[TEST] Notification scheduled for: '
-      '$scheduledDate',
     );
   }
 
@@ -1280,33 +970,20 @@ class LocalNotificationService {
   // ============================================================
 
   Future<void> scheduleTestDailyReminder() async {
-    final bool masterEnabled =
-        await areNotificationsEnabled();
-
-    if (!masterEnabled) {
-      debugPrint(
-        '[LocalNotification] '
-        'Test daily notification blocked because notifications are OFF.',
-      );
-      return;
-    }
+    final bool masterEnabled = await areNotificationsEnabled();
+    if (!masterEnabled) return;
 
     await initialize();
-
     await requestPermission();
 
     final tz.TZDateTime scheduled =
-        tz.TZDateTime.now(tz.local).add(
-      const Duration(minutes: 1),
-    );
+    tz.TZDateTime.now(tz.local).add(const Duration(minutes: 1));
 
-    const NotificationDetails details =
-        NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         dailyChannelId,
         'Daily Reminders',
-        channelDescription:
-            'Daily reminders to review pending collections.',
+        channelDescription: 'Daily reminders to review pending collections.',
         importance: Importance.high,
         priority: Priority.high,
       ),
@@ -1320,66 +997,11 @@ class LocalNotificationService {
     await _plugin.zonedSchedule(
       id: dailyReminderId,
       title: 'Daily Reminder',
-      body:
-          'Review today\'s pending collections.',
+      body: 'Review today\'s pending collections.',
       scheduledDate: scheduled,
       notificationDetails: details,
-      androidScheduleMode:
-          AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'daily_reminder',
     );
-
-    debugPrint(
-      '[TEST] Daily reminder scheduled for: '
-      '$scheduled',
-    );
-  }
-
-  // ============================================================
-  // NOTIFICATION CLICK
-  // ============================================================
-
-  void _onNotificationResponse(
-    NotificationResponse response,
-  ) {
-    debugPrint(
-      '[LocalNotification] '
-      'Notification clicked',
-    );
-
-    debugPrint(
-      '[LocalNotification] Payload: '
-      '${response.payload}',
-    );
-
-    if (response.payload == null) {
-      return;
-    }
-
-    final payload = response.payload!;
-
-    if (payload.startsWith('payment:')) {
-      final String id =
-          payload.replaceFirst(
-        'payment:',
-        '',
-      );
-
-      debugPrint(
-        '[LocalNotification] '
-        'Payment notification clicked: $id',
-      );
-
-      // Navigation can be added here later.
-    }
-
-    if (payload == 'daily_reminder') {
-      debugPrint(
-        '[LocalNotification] '
-        'Daily reminder clicked',
-      );
-
-      // Navigate to pending collections later.
-    }
   }
 }

@@ -1,8 +1,12 @@
+import 'package:flutter/material.dart';
+
 import '../core/config/api_config.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/auth_api.dart';
 import '../data/remote/token_storage.dart';
 import '../model/user_session.dart';
+import '../main.dart';
+import '../view/login_screen.dart';
 import 'isar_service.dart';
 
 /// Authentication against the Chopdi API.
@@ -114,12 +118,21 @@ class AuthService {
   Future<void> _clearLocalSession() async {
     await _tokens.clearSession();
 
-    // Ledger data is deliberately left intact. Entries that have not synced
-    // yet exist only on this device, and discarding them because a token
-    // expired would destroy a user's records.
+    // Clear all local ledger data and session data.
     await IsarService.isar.writeTxn(() async {
-      await IsarService.isar.userSessions.clear();
+      await IsarService.isar.clear();
     });
+
+    // Navigate the user out of the app to the Onboarding screen
+    final context = appNavigatorKey.currentContext;
+    if (context != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   Future<void> _recordLocalSession(String phone) async {

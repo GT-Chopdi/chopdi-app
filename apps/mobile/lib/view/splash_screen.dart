@@ -4,6 +4,10 @@ import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
+import 'package:mychopdi/view/notifications_screen.dart';
+import 'package:mychopdi/service/local_notification_service.dart';
+import 'package:mychopdi/service/chopdi_service.dart';
+import 'package:mychopdi/service/isar_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -67,6 +71,31 @@ class _SplashScreenState extends State<SplashScreen>
           builder: (_) => const MainScreen(),
         ),
       );
+
+      // Handle Cold-Boot Notification Tap
+      final payload = LocalNotificationService.pendingNotificationPayload;
+      if (payload != null) {
+        LocalNotificationService.pendingNotificationPayload = null;
+
+        if (payload.startsWith('event_read:') ||
+            payload.startsWith('payment:') ||
+            payload.startsWith('took_payment:')) {
+          
+          final currentChopdi = await ChopdiService.getCurrentChopdi();
+          
+          if (!mounted) return;
+          
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NotificationsScreen(
+                isar: IsarService.isar,
+                chopdiId: currentChopdi.id,
+              ),
+            ),
+          );
+        }
+      }
     } else {
       await AuthService.instance.logout();
 
@@ -76,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
         MaterialPageRoute(
           builder: (_) => const ChopdiOnboardingScreen(),
         ),
-            (route) => false,
+        (route) => false,
       );
     }
   }

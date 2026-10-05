@@ -14,6 +14,11 @@ import 'package:mychopdi/service/local_notification_service.dart';
 import 'package:mychopdi/service/sync_service.dart';
 import 'package:mychopdi/view/splash_screen.dart';
 
+// ============================================================
+// 1. DEFINE GLOBAL NAVIGATOR KEY HERE
+// ============================================================
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -179,6 +184,11 @@ class ChopdiAppState extends State<ChopdiApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // ============================================================
+      // 2. ATTACH THE NAVIGATOR KEY TO MATERIAL APP
+      // ============================================================
+      navigatorKey: appNavigatorKey,
+
       debugShowCheckedModeBanner: false,
 
       // Current application language.

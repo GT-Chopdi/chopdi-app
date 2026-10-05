@@ -62,8 +62,8 @@ class InterestCalculator {
     // SIMPLE INTEREST
     // ============================================================
 
-    if (normalizedInterestType ==
-        "simple interest") {
+    if (normalizedInterestType == "simple interest" || 
+        normalizedInterestType == "simple") {
       double periods;
 
       switch (normalizedFrequency) {

@@ -10,6 +10,7 @@ import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../model/customer.dart';
+import '../../model/lender.dart';
 import '../../model/sync_meta.dart';
 import '../../model/sync_op.dart';
 import '../../model/sync_status.dart';
@@ -316,6 +317,15 @@ class SyncEngine {
       if (version != null) row.version = version;
       await _isar.customers.put(row);
       return;
+    } else if (op.entity == 'lender') {
+      final row =
+          await _isar.lenders.filter().uuidEqualTo(op.entityId).findFirst();
+      if (row == null) return;
+
+      row.syncStatus = SyncStatus.synced;
+      if (version != null) row.version = version;
+      await _isar.lenders.put(row);
+      return;
     }
 
     final row =
@@ -335,6 +345,14 @@ class SyncEngine {
 
       row.syncStatus = status;
       await _isar.customers.put(row);
+      return;
+    } else if (op.entity == 'lender') {
+      final row =
+          await _isar.lenders.filter().uuidEqualTo(op.entityId).findFirst();
+      if (row == null) return;
+
+      row.syncStatus = status;
+      await _isar.lenders.put(row);
       return;
     }
 
