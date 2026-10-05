@@ -47,29 +47,38 @@ class TookLoanTransactionTable extends StatelessWidget {
       return rows;
     }
 
-    final interest = InterestCalculator.calculate(
+    // ============================================================
+    // MONTHLY INTEREST BREAKDOWN
+    // Each month gets its own separate entry
+    // ============================================================
+
+    final monthlyEntries = InterestCalculator.calculateMonthlyBreakdown(
       principal: tx.amount,
       rate: tx.interestRate,
       startDate: startDate,
       interestType: tx.interestType,
       frequency: tx.interestFrequency,
       endDate: today,
+      activeLoanCount: 1, // Single loan per entry in this context
     );
 
-    rows.add(
-      _InterestRow(
-        transaction: tx,
-        startDate: startDate,
-        endDate: today,
-        interest: interest,
-        lenderUuid: lenderUuid,
-        onChanged: onChanged,
-      ),
-    );
+    for (final entry in monthlyEntries) {
+      rows.add(
+        _InterestRow(
+          transaction: tx,
+          startDate: entry.startDate,
+          endDate: entry.endDate,
+          interest: entry.interest,
+          lenderUuid: lenderUuid,
+          onChanged: onChanged,
+          description: entry.description,
+        ),
+      );
 
-    rows.add(
-      const SizedBox(height: 8),
-    );
+      rows.add(
+        const SizedBox(height: 8),
+      );
+    }
 
     return rows;
   }
@@ -259,6 +268,7 @@ class _InterestRow extends StatelessWidget {
   final Transaction transaction;
   final String lenderUuid;
   final VoidCallback onChanged;
+  final String? description;
 
   const _InterestRow({
     required this.transaction,
@@ -267,6 +277,7 @@ class _InterestRow extends StatelessWidget {
     required this.interest,
     required this.lenderUuid,
     required this.onChanged,
+    this.description,
   });
 
   String _localizedFrequency(
@@ -429,7 +440,7 @@ class _InterestRow extends StatelessWidget {
                   const SizedBox(height: 3),
 
                   Text(
-                    _getInterestDescription(context),
+                    description ?? _getInterestDescription(context),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     softWrap: true,
