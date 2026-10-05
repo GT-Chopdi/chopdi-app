@@ -30,10 +30,11 @@ class OTPScreen extends StatefulWidget {
   State<OTPScreen> createState() => _OTPScreenState();
 }
 
-class _OTPScreenState extends State<OTPScreen> {
+class _OTPScreenState extends State<OTPScreen> with WidgetsBindingObserver{
   final TextEditingController otpController = TextEditingController();
 
   final FocusNode otpFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
 
   String? otpError;
   bool _verifying = false;
@@ -76,40 +77,63 @@ class _OTPScreenState extends State<OTPScreen> {
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
+
     _startResendTimer();
 
     otpFocusNode.addListener(() {
       if (otpFocusNode.hasFocus) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-
-          final context = otpFocusNode.context;
-
-          if (context != null) {
-            Scrollable.ensureVisible(
-              context,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              alignment: 0.35,
-            );
-          }
-        });
+        _scrollAfterKeyboardOpens();
       }
     });
   }
 
-  // @override
-  // void dispose() {
-  //   otpController.dispose();
-  //   otpFocusNode.dispose();
-  //   super.dispose();
-  // }
+  void _scrollAfterKeyboardOpens() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted || !otpFocusNode.hasFocus) return;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+      });
+    });
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resendTimer?.cancel();
     otpController.dispose();
     otpFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+
+    if (!mounted || !otpFocusNode.hasFocus) return;
+
+    final bottomInset =
+        WidgetsBinding.instance.platformDispatcher.views.first.viewInsets.bottom;
+
+    if (bottomInset > 0) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted || !_scrollController.hasClients) return;
+
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
   }
 
   // ========================================================  // VERIFY OTP
@@ -244,19 +268,14 @@ class _OTPScreenState extends State<OTPScreen> {
   // ========================================================  // SCROLL OTP INTO VIEW
   // ========================================================
   void _scrollToOtp() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted || !_scrollController.hasClients) return;
 
-      final context = otpFocusNode.context;
-
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          alignment: 0.35,
-        );
-      }
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -296,10 +315,14 @@ class _OTPScreenState extends State<OTPScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
+              controller: _scrollController,
               keyboardDismissBehavior:
                   ScrollViewKeyboardDismissBehavior.onDrag,
 
               physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+              ),
 
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -456,48 +479,49 @@ class _OTPScreenState extends State<OTPScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 35),
+                      // const SizedBox(height: 35),
+                      const SizedBox(height: 24),
 
                       // ==============================================                      // OTP INPUT
                       // ==============================================
                      AutofillGroup(
-                      child: Pinput(
-                        controller: otpController,
-                        focusNode: otpFocusNode,
-                        length: 6,
-                        defaultPinTheme: defaultPinTheme,
-                        focusedPinTheme: defaultPinTheme.copyDecorationWith(
-                          border: Border.all(
-                            color: const Color(0xff173A63),
-                            width: 1.5,
+                        child: Pinput(
+                          controller: otpController,
+                          focusNode: otpFocusNode,
+                          length: 6,
+                          defaultPinTheme: defaultPinTheme,
+                          focusedPinTheme: defaultPinTheme.copyDecorationWith(
+                            border: Border.all(
+                              color: const Color(0xff173A63),
+                              width: 1.5,
+                            ),
                           ),
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                        
+                          // Enables OTP auto-fill from SMS on supported devices.
+                          autofillHints: const [
+                            AutofillHints.oneTimeCode,
+                          ],
+                        
+                          enableSuggestions: true,
+                          autofocus: false,
+                        
+                          onChanged: (value) {
+                            if (otpError != null) {
+                              setState(() {
+                                otpError = null;
+                              });
+                            }
+                          },
+                        
+                          // Automatically verify when all 6 digits are entered.
+                          onCompleted: (_) {
+                            if (!_verifying) {
+                              _verify();
+                            }
+                          },
                         ),
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.done,
-
-                        // Enables OTP auto-fill from SMS on supported devices.
-                        autofillHints: const [
-                          AutofillHints.oneTimeCode,
-                        ],
-
-                        enableSuggestions: true,
-                        autofocus: false,
-
-                        onChanged: (value) {
-                          if (otpError != null) {
-                            setState(() {
-                              otpError = null;
-                            });
-                          }
-                        },
-
-                        // Automatically verify when all 6 digits are entered.
-                        onCompleted: (_) {
-                          if (!_verifying) {
-                            _verify();
-                          }
-                        },
-                      ),
                     ),
 
                       // ==============================================                      // OTP ERROR
@@ -583,7 +607,8 @@ class _OTPScreenState extends State<OTPScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 50),
+                      // const SizedBox(height: 50),
+                      const SizedBox(height: 32),
 
                       // ==============================================                      // VERIFY BUTTON
                       // ==============================================
