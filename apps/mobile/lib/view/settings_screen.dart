@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mychopdi/core/config/app_environment.dart';
 import 'package:mychopdi/model/user_session.dart';
 import 'package:mychopdi/service/isar_service.dart';
 import 'package:mychopdi/view/profile_section.dart';
@@ -133,21 +134,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // -----------------------------------------------------------------------
       // APP BAR
       // -----------------------------------------------------------------------
+
       appBar: AppBar(
         backgroundColor: backgroundColor,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: darkBlue),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: darkBlue,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
 
         title: Text(
-          // 'Settings',
-          // Later you can replace with:
           l10n.settings,
-
           style: GoogleFonts.manrope(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -159,62 +161,122 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // -----------------------------------------------------------------------
       // BODY
       // -----------------------------------------------------------------------
+
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
 
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                8,
+                14,
+                16,
+              ),
 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              if (_isProfileLoading)
-                const SizedBox(
-                  height: 150,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: darkBlue,
-                    ),
-                  ),
-                )
-              else
-                ProfileSection(
-                  phoneNumber: _phoneNumber,
-                  userName: _userName,
-                  onEditName: _showNameBottomSheet,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 24,
                 ),
 
-               
-                const SizedBox(height: 10),
-              // ===============================================================
-              // SETTINGS OPTIONS
-              // ===============================================================
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-              _buildMenuCard(
-                icon: Icons.notifications_none_rounded,
-                title: l10n.notificationsSettings,
-                subtitle: l10n.manageAppNotifications,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationSettingsScreen(),
-                    ),
-                  );
-                },
+                      // =========================================================
+                      // PROFILE
+                      // =========================================================
+
+                      if (_isProfileLoading)
+                        const SizedBox(
+                          height: 150,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: darkBlue,
+                            ),
+                          ),
+                        )
+                      else
+                        ProfileSection(
+                          phoneNumber: _phoneNumber,
+                          userName: _userName,
+                          onEditName: _showNameBottomSheet,
+                        ),
+
+                      const SizedBox(height: 10),
+
+                      // =========================================================
+                      // NOTIFICATION SETTINGS
+                      // =========================================================
+
+                      _buildMenuCard(
+                        icon: Icons.notifications_none_rounded,
+                        title: l10n.notificationsSettings,
+                        subtitle: l10n.manageAppNotifications,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const NotificationSettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // =========================================================
+                      // LANGUAGE
+                      // =========================================================
+
+                      _buildMenuCard(
+                        icon: Icons.language_rounded,
+                        title: l10n.language,
+                        subtitle: _getCurrentLanguageName(),
+                        onTap: _showLanguageSheet,
+                      ),
+
+                      // =========================================================
+                      // RESPONSIVE SPACE
+                      // =========================================================
+
+                      const Spacer(),
+
+                      const SizedBox(height: 24),
+
+                      // =========================================================
+                      // VERSION
+                      // =========================================================
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          child: Text(
+                            'Version ${AppEnvironment.appVersion} '
+                            '(${AppEnvironment.buildNumber})',
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.manrope(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF8A8A8A),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-
-              const SizedBox(height: 10),
-
-              _buildMenuCard(
-                icon: Icons.language_rounded,
-                title: l10n.language,
-                subtitle: _getCurrentLanguageName(),
-                onTap: _showLanguageSheet,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
