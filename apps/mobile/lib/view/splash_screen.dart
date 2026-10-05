@@ -6,6 +6,7 @@ import 'package:mychopdi/service/auth_service.dart';
 import 'package:mychopdi/view/login_screen.dart';
 import 'package:mychopdi/view/main_screen.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
+import 'package:mychopdi/view/otp_screen.dart';
 
 class SplashScreen extends StatefulWidget {
 const SplashScreen({super.key});
@@ -137,7 +138,8 @@ super.dispose();
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (_) => const ChopdiOnboardingScreen(),
+        // builder: (_) => const ChopdiOnboardingScreen(),
+        builder: (_) => const OTPScreen(phoneNumber: '7741939556', challengeId: '123456',),
       ),
           (route) => false,
     );
