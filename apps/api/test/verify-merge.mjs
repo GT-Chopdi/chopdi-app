@@ -312,5 +312,53 @@ console.log('\n6. Both devices push the same new person at the same moment');
   ok('one Sita row', sitas.length === 1, String(sitas.length));
 }
 
+// ---------------------------------------------------------------------------
+console.log('\n7. Two devices hammer one merged customer at once (no deadlocks)');
+{
+  // Device 2's entries re-count the merge, which voids/reinstates entries and
+  // rewrites the customer's notes when the outcome flips; device 1 is editing
+  // that customer at the same time. Inconsistent lock ordering would show up
+  // as a deadlock, reported to the client as INTERNAL. The window is narrow,
+  // so a pass here is evidence, not proof — the guarantee is the fixed lock
+  // order in SyncService.applyOne.
+  const main = uuid7();
+  const alias = uuid7();
+  await push(device1, [create('customer', main, { name: t('Hari'), phone: tp(7) })]);
+  const mainEntries = [uuid7(), uuid7(), uuid7()];
+  await push(device1, mainEntries.map((id) => create('ledger_entry', id, entry({ customerId: main }, 10000))));
+  await push(device2, [create('customer', alias, { name: t('Hari'), phone: tp(7), notes: 'alias notes' })]);
+
+  const results = [];
+  for (let round = 0; round < 6; round++) {
+    const { rows } = await state(device1);
+    const version = rows.get(main).version;
+    const [a, b] = await Promise.all([
+      push(device1, [
+        {
+          opId: uuid(),
+          entity: 'customer',
+          entityId: main,
+          opType: 'update',
+          expectedVersion: version,
+          payload: { notes: `round ${round}` },
+        },
+      ]),
+      push(device2, [create('ledger_entry', uuid7(), entry({ customerId: alias }, 20000))]),
+    ]);
+    results.push(...a.json.results, ...b.json.results);
+  }
+
+  const internal = results.filter((r) => r.error?.code === 'INTERNAL');
+  ok('no INTERNAL errors under concurrent edits and settles', internal.length === 0, JSON.stringify(internal));
+  const rejected = results.filter((r) => r.status === 'rejected');
+  ok('nothing rejected (a version conflict on the edit is fine)', rejected.length === 0, JSON.stringify(rejected));
+
+  const { rows } = await state(device1);
+  const onHari = [...rows.values()].filter((r) => r.entity === 'ledger_entry' && r.customerId === main);
+  const liveMain = mainEntries.filter((id) => rows.get(id)?.voidedAt === null).length;
+  ok('alias side (6 entries) beat main side (3): main entries voided', liveMain === 0, `${liveMain} live`);
+  ok('all 6 alias entries live', onHari.filter((r) => r.voidedAt === null).length === 6, String(onHari.length));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

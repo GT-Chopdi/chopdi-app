@@ -9,6 +9,7 @@ import { CustomerHandler } from './handlers/customer.handler';
 import { LedgerEntryHandler } from './handlers/ledger-entry.handler';
 import { LenderHandler } from './handlers/lender.handler';
 import { IdempotencyService } from './idempotency.service';
+import { MergeService } from './merge.service';
 import type { SyncEntity, SyncOperationResult, SyncPushResponse } from './sync.types';
 
 /**
@@ -33,6 +34,7 @@ export class SyncService {
     private readonly customers: CustomerHandler,
     private readonly lenders: LenderHandler,
     private readonly entries: LedgerEntryHandler,
+    private readonly merges: MergeService,
   ) {}
 
   /**
@@ -108,6 +110,15 @@ export class SyncService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
+        // The user's row lock first, before any domain row is touched. Every
+        // write ends up taking it anyway (the change-log sequence lives on that
+        // row), but a merge settle then goes on to update entries and the party
+        // after holding it. Taking it last in one transaction and first in
+        // another is a deadlock between two devices syncing at once; taking it
+        // first everywhere is one fixed order. It also serialises a retried
+        // operation against its own first attempt before the idempotency read.
+        await this.merges.lockUser(tx, user.userId);
+
         // Claimed inside the same transaction as the write, so the record and
         // the row commit together or not at all.
         const recorded = await this.idempotency.findRecorded(
