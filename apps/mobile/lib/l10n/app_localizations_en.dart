@@ -272,7 +272,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get LenderAlreadyExists =>
-      "Customer Already Exists";
+      "Lender Already Exists";
 
   @override
   String get duplicateCustomerMessage =>
