@@ -151,7 +151,7 @@ class _AddNewLenderScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      l10n.customerAlreadyExists,
+                      l10n.LenderAlreadyExists,
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,

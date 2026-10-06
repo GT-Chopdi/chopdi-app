@@ -170,6 +170,7 @@ abstract class AppLocalizations {
 
 // DUPLICATE CUSTOMER
   String get customerAlreadyExists;
+  String get LenderAlreadyExists;
   String get duplicateCustomerMessage;
   String get ok;
 

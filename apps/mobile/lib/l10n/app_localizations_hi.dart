@@ -29,6 +29,10 @@ class AppLocalizationsHi extends AppLocalizations {
       "लिए गए लोन का विवरण";
 
   @override
+  String get LenderAlreadyExists =>
+      "Customer Already Exists";
+
+  @override
   String get customerStatement =>
       "ग्राहक विवरण";
 
