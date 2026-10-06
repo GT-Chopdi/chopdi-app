@@ -15,6 +15,97 @@ import 'package:flutter/services.dart'
 import 'package:printing/printing.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
 
+// class LenderOptionsBottomSheet extends StatelessWidget {
+//   const LenderOptionsBottomSheet({
+//     super.key,
+//     required this.onEdit,
+//     required this.onSummary,
+//     required this.onExport,
+//     required this.onDelete,
+//   });
+
+//   final VoidCallback onEdit;
+//   final VoidCallback onSummary;
+//   final VoidCallback onExport;
+//   final VoidCallback onDelete;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final l10n = AppLocalizations.of(context);
+
+//     return SafeArea(
+//       child: Padding(
+//         padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             Container(
+//               width: 55,
+//               height: 5,
+//               decoration: BoxDecoration(
+//                 color: Colors.grey.shade400,
+//                 borderRadius: BorderRadius.circular(20),
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             Align(
+//               alignment: Alignment.centerLeft,
+//               child: Text(
+//                 "Lender Options", // Fallback if l10n.lenderOptions doesn't exist yet
+//                 style: GoogleFonts.manrope(
+//                   fontSize: 13,
+//                   color: const Color.fromRGBO(34, 58, 94, 0.62),
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _OptionTile(
+//               image: 'assets/edit_customer_logo.png',
+//               title: "Edit Lender",
+//               subtitle: l10n.editNamePhoneOrLoanDetails,
+//               onTap: onEdit,
+//             ),
+//             const SizedBox(height: 10),
+//             _OptionTile(
+//               image: 'assets/summary.png',
+//               title: l10n.accountSummary,
+//               subtitle: l10n.overviewAndSummary,
+//               onTap: onSummary,
+//             ),
+//             const SizedBox(height: 10),
+//             _OptionTile(
+//               image: 'assets/export_pdf.png',
+//               title: l10n.exportPdf,
+//               subtitle: l10n.downloadLedgerAsPdf,
+//               onTap: onExport,
+//             ),
+//             const SizedBox(height: 10),
+//             _OptionTile(
+//               image: 'assets/delete_logo.png',
+//               title: "Delete Lender",
+//               subtitle: "Delete lender permanently",
+//               titleColor: Colors.red,
+//               onTap: onDelete,
+//             ),
+//             const SizedBox(height: 18),
+//             TextButton(
+//               onPressed: () => Navigator.pop(context),
+//               child: Text(
+//                 l10n.cancel,
+//                 style: GoogleFonts.manrope(
+//                   color: ChopdiColors.navy,
+//                   fontWeight: FontWeight.w700,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
 class LenderOptionsBottomSheet extends StatelessWidget {
   const LenderOptionsBottomSheet({
     super.key,
@@ -31,55 +122,109 @@ class LenderOptionsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // Responsive horizontal padding.
+    final horizontalPadding = screenWidth < 360
+        ? 14.0
+        : screenWidth < 600
+            ? 18.0
+            : 24.0;
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
+        padding: EdgeInsets.fromLTRB(
+          horizontalPadding,
+          12,
+          horizontalPadding,
+          18,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 55,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade400,
-                borderRadius: BorderRadius.circular(20),
+            // Top row: drag handle + close button
+            SizedBox(
+              height: 32,
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Drag handle
+                  Container(
+                    width: screenWidth < 360 ? 45 : 55,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+
+                  // Close button
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: screenWidth < 360 ? 22 : 24,
+                            color: ChopdiColors.navy,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Lender Options", // Fallback if l10n.lenderOptions doesn't exist yet
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color.fromRGBO(34, 58, 94, 0.62),
-                ),
-              ),
+
+            SizedBox(
+              height: screenWidth < 360 ? 12 : 16,
             ),
-            const SizedBox(height: 12),
+
+            // Edit
             _OptionTile(
               image: 'assets/edit_customer_logo.png',
               title: "Edit Lender",
-              subtitle: l10n.editNamePhoneOrLoanDetails,
+              subtitle: AppLocalizations.of(context)
+                  .editNamePhoneOrLoanDetails,
               onTap: onEdit,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Account Summary
             _OptionTile(
               image: 'assets/summary.png',
-              title: l10n.accountSummary,
-              subtitle: l10n.overviewAndSummary,
+              title: AppLocalizations.of(context).accountSummary,
+              subtitle: AppLocalizations.of(context).overviewAndSummary,
               onTap: onSummary,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Export PDF
             _OptionTile(
               image: 'assets/export_pdf.png',
-              title: l10n.exportPdf,
-              subtitle: l10n.downloadLedgerAsPdf,
+              title: AppLocalizations.of(context).exportPdf,
+              subtitle: AppLocalizations.of(context).downloadLedgerAsPdf,
               onTap: onExport,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Delete
             _OptionTile(
               image: 'assets/delete_logo.png',
               title: "Delete Lender",
@@ -87,16 +232,9 @@ class LenderOptionsBottomSheet extends StatelessWidget {
               titleColor: Colors.red,
               onTap: onDelete,
             ),
-            const SizedBox(height: 18),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                l10n.cancel,
-                style: GoogleFonts.manrope(
-                  color: ChopdiColors.navy,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+
+            SizedBox(
+              height: screenWidth < 360 ? 4 : 8,
             ),
           ],
         ),
@@ -105,6 +243,90 @@ class LenderOptionsBottomSheet extends StatelessWidget {
   }
 }
 
+// class _OptionTile extends StatelessWidget {
+//   const _OptionTile({
+//     required this.image,
+//     required this.title,
+//     required this.subtitle,
+//     required this.onTap,
+//     this.titleColor = ChopdiColors.navy,
+//   });
+
+//   final String image;
+//   final String title;
+//   final String subtitle;
+//   final Color titleColor;
+//   final VoidCallback onTap;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return InkWell(
+//       borderRadius: BorderRadius.circular(12),
+//       onTap: onTap,
+//       child: Container(
+//         height: 62,
+//         padding: const EdgeInsets.symmetric(horizontal: 12),
+//         decoration: BoxDecoration(
+//           color: const Color.fromRGBO(255, 248, 240, 1),
+//           borderRadius: BorderRadius.circular(12),
+//           border: Border.all(
+//             color: const Color.fromRGBO(170, 185, 207, 1),
+//           ),
+//         ),
+//         child: Row(
+//           children: [
+//             Container(
+//               height: 34,
+//               width: 34,
+//               decoration: const BoxDecoration(
+//                 shape: BoxShape.circle,
+//                 color: Color.fromRGBO(255, 248, 240, 1),
+//               ),
+//               child: Center(
+//                 child: Image.asset(
+//                   image,
+//                   height: 18,
+//                   width: 18,
+//                   fit: BoxFit.contain,
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(width: 12),
+//             Expanded(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     title,
+//                     style: GoogleFonts.manrope(
+//                       fontSize: 15,
+//                       fontWeight: FontWeight.w600,
+//                       color: titleColor,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 2),
+//                   Text(
+//                     subtitle,
+//                     style: GoogleFonts.manrope(
+//                       fontSize: 12,
+//                       color: const Color.fromRGBO(34, 58, 94, 0.86),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             Image.asset(
+//               "assets/right_arrow.png",
+//               width: 18,
+//               height: 18,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 class _OptionTile extends StatelessWidget {
   const _OptionTile({
     required this.image,
@@ -122,68 +344,101 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 62,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 248, 240, 1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color.fromRGBO(170, 185, 207, 1),
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    final iconSize = screenWidth < 360 ? 32.0 : 36.0;
+    final imageSize = screenWidth < 360 ? 17.0 : 19.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(
+            minHeight: 62,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              height: 34,
-              width: 34,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.fromRGBO(255, 248, 240, 1),
-              ),
-              child: Center(
-                child: Image.asset(
-                  image,
-                  height: 18,
-                  width: 18,
-                  fit: BoxFit.contain,
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth < 360 ? 10 : 12,
+            vertical: 9,
+          ),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(255, 248, 240, 1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color.fromRGBO(170, 185, 207, 1),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Icon container
+              Container(
+                height: iconSize,
+                width: iconSize,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromRGBO(255, 248, 240, 1),
+                ),
+                child: Center(
+                  child: Image.asset(
+                    image,
+                    height: imageSize,
+                    width: imageSize,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: titleColor,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      color: const Color.fromRGBO(34, 58, 94, 0.86),
-                    ),
-                  ),
-                ],
+
+              SizedBox(
+                width: screenWidth < 360 ? 9 : 12,
               ),
-            ),
-            Image.asset(
-              "assets/right_arrow.png",
-              width: 18,
-              height: 18,
-            ),
-          ],
+
+              // Text
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontSize: screenWidth < 360 ? 14 : 15,
+                        fontWeight: FontWeight.w600,
+                        color: titleColor,
+                      ),
+                    ),
+
+                    const SizedBox(height: 2),
+
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontSize: screenWidth < 360 ? 11 : 12,
+                        height: 1.2,
+                        color: const Color.fromRGBO(34, 58, 94, 0.86),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              // Arrow
+              Image.asset(
+                "assets/right_arrow.png",
+                width: screenWidth < 360 ? 16 : 18,
+                height: screenWidth < 360 ? 16 : 18,
+                fit: BoxFit.contain,
+              ),
+            ],
+          ),
         ),
       ),
     );
