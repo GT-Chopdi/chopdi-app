@@ -422,13 +422,14 @@ class _MoneyGaveBottomSheetState
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
-                        decoration: decoration().copyWith(
+                        decoration: decoration(
                           suffix: const Icon(
                             Icons.calendar_today_outlined,
                             color: Colors.black,
+                            size: 20,
                           ),
-                          hintText: DateFormat("dd MMM yyyy", locale)
-                              .format(selectedDate),
+                        ).copyWith(
+                          hintText: DateFormat("dd MMM yyyy", locale).format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,
