@@ -98,6 +98,26 @@ class _TookLoanCustomerListSectionState
   // GET LENDER BALANCE
   // ============================================================
 
+  //Lender balance calculation is wrong.
+
+  // Future<double> getLenderBalance(int lenderId) async {
+  //   final transactions = await IsarService.isar.transactions
+  //       .filter()
+  //       .customerIdEqualTo(lenderId) // Transaction table still uses customerId
+  //       .voidedAtIsNull()
+  //       .findAll();
+  //   double balance = 0;
+  //   for (final tx in transactions) {
+  //     // Replaced 'gave' with 'took' because this is the Took Loan section
+  //     if (tx.type == TransactionType.took) {
+  //       balance += tx.amount;
+  //     } else {
+  //       balance -= tx.amount;
+  //     }
+  //   }
+  //   return balance;
+  // }
+
   Future<double> getLenderBalance(int lenderId) async {
     final transactions = await IsarService.isar.transactions
         .filter()
