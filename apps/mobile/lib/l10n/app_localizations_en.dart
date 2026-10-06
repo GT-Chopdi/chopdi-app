@@ -281,7 +281,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get duplicateLenderMessage =>
-      "A customer with the same name and phone number is already added.";
+      "A Lender with the same name and phone number is already added.";
 
 
   @override
