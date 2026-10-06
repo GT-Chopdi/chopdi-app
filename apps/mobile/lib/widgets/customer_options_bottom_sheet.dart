@@ -598,7 +598,7 @@
                   const SizedBox(height: 18),
   
                   Text(
-                    l10n.phoneNumber,
+                    l10n.mobileNumber,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w700,
                       color: const Color.fromRGBO(
@@ -656,7 +656,7 @@
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: inputDecoration(
-                            l10n.phoneNumber,
+                            l10n.mobileNumber,
                           ).copyWith(
                             counterText: "",
                           ),
@@ -868,11 +868,11 @@
                 title: l10n.lastPayment,
                 value: lastPayment == null
                   ? "-"
-                  : DateFormat("dd MMM yyyy").format(lastPayment!.date),
+                  : DateFormat("dd MMM yy",l10n.locale.languageCode).format(lastPayment!.date),
   
                 subtitle: lastPayment == null
                     ? null
-                    : "(₹${lastPayment!.amount.toStringAsFixed(0)} received)",
+                    : "(₹${lastPayment!.amount.toStringAsFixed(0)} ${l10n.paymentReceived})",
                 valueColor: const Color(0xff223A5E),
               ),
   
@@ -882,7 +882,7 @@
                 value: firstLoan == null
                     ? "-"
                     : DateFormat(
-                        "dd MMM yyyy",
+                        "dd MMM yy",
                         l10n.locale.languageCode,
                       ).format(firstLoan!.date),
                 valueColor: const Color(0xff223A5E),
@@ -1145,7 +1145,7 @@
       //   "dd MMM yyyy, hh:mm a",
       // ).format(DateTime.now());
       final generatedDate = DateFormat(
-        "dd MMM yyyy, hh:mm a",
+        "dd MMM yy, hh:mm a",
         l10n.locale.languageCode,
       ).format(DateTime.now());
   

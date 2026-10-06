@@ -384,7 +384,7 @@ class _MoneyReceiveBottomSheetState
                             color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText: DateFormat("dd MMM yyyy", locale)
+                          hintText: DateFormat("dd MMM yy", locale)
                               .format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
