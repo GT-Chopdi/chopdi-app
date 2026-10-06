@@ -1,1481 +1,1481 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:mychopdi/l10n/app_localizations.dart';
-import 'package:mychopdi/model/customer.dart';
-import 'package:mychopdi/model/transaction.dart';
-import 'package:mychopdi/service/isar_service.dart';
-import 'package:mychopdi/service/local_notification_service.dart';
-import 'package:mychopdi/service/notification_service.dart';
-import 'package:mychopdi/service/transaction_service.dart';
-import 'package:mychopdi/utils/interest_calculator.dart';
-import 'package:mychopdi/utils/money.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+  import 'package:flutter/material.dart';
+  import 'package:google_fonts/google_fonts.dart';
+  import 'package:intl/intl.dart';
+  import 'package:mychopdi/l10n/app_localizations.dart';
+  import 'package:mychopdi/model/customer.dart';
+  import 'package:mychopdi/model/transaction.dart';
+  import 'package:mychopdi/service/isar_service.dart';
+  import 'package:mychopdi/service/local_notification_service.dart';
+  import 'package:mychopdi/service/notification_service.dart';
+  import 'package:mychopdi/service/transaction_service.dart';
+  import 'package:mychopdi/utils/interest_calculator.dart';
+  import 'package:mychopdi/utils/money.dart';
+  import 'package:shared_preferences/shared_preferences.dart';
 
 
-class MoneyGaveBottomSheet extends StatefulWidget {
-  final Customer customer;
-  final VoidCallback onSaved;
-  final bool isEdit;
-  final Transaction? transaction;
+  class MoneyGaveBottomSheet extends StatefulWidget {
+    final Customer customer;
+    final VoidCallback onSaved;
+    final bool isEdit;
+    final Transaction? transaction;
 
-  const MoneyGaveBottomSheet({
-    super.key,
-    required this.customer,
-    required this.onSaved,
-    required this.isEdit,
-    this.transaction,
-  });
+    const MoneyGaveBottomSheet({
+      super.key,
+      required this.customer,
+      required this.onSaved,
+      required this.isEdit,
+      this.transaction,
+    });
 
-  @override
-  State<MoneyGaveBottomSheet> createState() =>
-      _MoneyGaveBottomSheetState();
-}
-
-class _MoneyGaveBottomSheetState
-    extends State<MoneyGaveBottomSheet> {
-  final TextEditingController amountController =
-  TextEditingController();
-
-  final TextEditingController interestController =
-  TextEditingController();
-
-  final TextEditingController descriptionController =
-  TextEditingController();
-
-  // ============================================================
-  // SCROLL CONTROLLER
-  // ============================================================
-
-  final ScrollController _scrollController =
-  ScrollController();
-
-  // ============================================================
-  // FOCUS NODES
-  // ============================================================
-
-  final FocusNode _amountFocusNode =
-  FocusNode();
-
-  final FocusNode _interestFocusNode =
-  FocusNode();
-
-  final FocusNode _descriptionFocusNode =
-  FocusNode();
-
-  // ============================================================
-  // FIELD KEYS
-  // ============================================================
-
-  final GlobalKey _amountKey =
-  GlobalKey();
-
-  final GlobalKey _interestKey =
-  GlobalKey();
-
-  final GlobalKey _descriptionKey =
-  GlobalKey();
-
-  // ============================================================
-  // VALIDATION
-  // ============================================================
-
-  bool _interestRateError = false;
-
-  bool _amountError = false;
-
-  // ============================================================
-  // VALUES
-  // ============================================================
-
-  DateTime selectedDate = DateTime.now();
-
-  String interestType = "Simple Interest";
-
-  String interestFrequency = "Monthly";
-
-  String paymentMode = "";
-
-  // ============================================================
-  // INTEREST AMOUNT
-  // ============================================================
-
-  double get interestAmount {
-    final amount =
-        double.tryParse(amountController.text) ?? 0;
-
-    final percent =
-        double.tryParse(interestController.text) ?? 0;
-
-    return amount * percent / 100;
+    @override
+    State<MoneyGaveBottomSheet> createState() =>
+        _MoneyGaveBottomSheetState();
   }
 
-  // ============================================================
-  // INIT STATE
-  // ============================================================
+  class _MoneyGaveBottomSheetState
+      extends State<MoneyGaveBottomSheet> {
+    final TextEditingController amountController =
+    TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+    final TextEditingController interestController =
+    TextEditingController();
 
-    if (widget.transaction != null) {
-      amountController.text =
-          widget.transaction!.amount.toString();
+    final TextEditingController descriptionController =
+    TextEditingController();
 
-      interestController.text =
-          widget.transaction!.interestRate.toString();
+    // ============================================================
+    // SCROLL CONTROLLER
+    // ============================================================
 
-      descriptionController.text =
-          widget.transaction!.description;
+    final ScrollController _scrollController =
+    ScrollController();
 
-      paymentMode =
-          widget.transaction!.paymentMode;
+    // ============================================================
+    // FOCUS NODES
+    // ============================================================
 
-      selectedDate =
-          widget.transaction!.date;
+    final FocusNode _amountFocusNode =
+    FocusNode();
 
-      interestType =
-          widget.transaction!.interestType;
+    final FocusNode _interestFocusNode =
+    FocusNode();
 
-      interestFrequency =
-          widget.transaction!.interestFrequency;
+    final FocusNode _descriptionFocusNode =
+    FocusNode();
+
+    // ============================================================
+    // FIELD KEYS
+    // ============================================================
+
+    final GlobalKey _amountKey =
+    GlobalKey();
+
+    final GlobalKey _interestKey =
+    GlobalKey();
+
+    final GlobalKey _descriptionKey =
+    GlobalKey();
+
+    // ============================================================
+    // VALIDATION
+    // ============================================================
+
+    bool _interestRateError = false;
+
+    bool _amountError = false;
+
+    // ============================================================
+    // VALUES
+    // ============================================================
+
+    DateTime selectedDate = DateTime.now();
+
+    String interestType = "Simple Interest";
+
+    String interestFrequency = "Monthly";
+
+    String paymentMode = "";
+
+    // ============================================================
+    // INTEREST AMOUNT
+    // ============================================================
+
+    double get interestAmount {
+      final amount =
+          double.tryParse(amountController.text) ?? 0;
+
+      final percent =
+          double.tryParse(interestController.text) ?? 0;
+
+      return amount * percent / 100;
     }
 
     // ============================================================
-    // AMOUNT FOCUS
+    // INIT STATE
     // ============================================================
 
-    _amountFocusNode.addListener(() {
-      if (_amountFocusNode.hasFocus) {
-        _scrollToField(_amountKey);
+    @override
+    void initState() {
+      super.initState();
+
+      if (widget.transaction != null) {
+        amountController.text =
+            widget.transaction!.amount.toString();
+
+        interestController.text =
+            widget.transaction!.interestRate.toString();
+
+        descriptionController.text =
+            widget.transaction!.description;
+
+        paymentMode =
+            widget.transaction!.paymentMode;
+
+        selectedDate =
+            widget.transaction!.date;
+
+        interestType =
+            widget.transaction!.interestType;
+
+        interestFrequency =
+            widget.transaction!.interestFrequency;
       }
-    });
 
-    // ============================================================
-    // INTEREST FOCUS
-    // ============================================================
+      // ============================================================
+      // AMOUNT FOCUS
+      // ============================================================
 
-    _interestFocusNode.addListener(() {
-      if (_interestFocusNode.hasFocus) {
-        _scrollToField(_interestKey);
-      }
-    });
+      _amountFocusNode.addListener(() {
+        if (_amountFocusNode.hasFocus) {
+          _scrollToField(_amountKey);
+        }
+      });
 
-    // ============================================================
-    // DESCRIPTION FOCUS
-    // ============================================================
+      // ============================================================
+      // INTEREST FOCUS
+      // ============================================================
 
-    _descriptionFocusNode.addListener(() {
-      if (_descriptionFocusNode.hasFocus) {
-        _scrollToField(_descriptionKey);
-      }
-    });
-  }
+      _interestFocusNode.addListener(() {
+        if (_interestFocusNode.hasFocus) {
+          _scrollToField(_interestKey);
+        }
+      });
 
-  // ============================================================
-  // SCROLL FIELD INTO VIEW
-  // ============================================================
+      // ============================================================
+      // DESCRIPTION FOCUS
+      // ============================================================
 
-  void _scrollToField(GlobalKey key) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = key.currentContext;
-
-      if (context == null) return;
-
-      Scrollable.ensureVisible(
-        context,
-        duration:
-        const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
-        alignment: 0.25,
-      );
-    });
-  }
-
-  // ============================================================
-  // DISPOSE
-  // ============================================================
-
-  @override
-  void dispose() {
-    amountController.dispose();
-    interestController.dispose();
-    descriptionController.dispose();
-
-    _scrollController.dispose();
-
-    _amountFocusNode.dispose();
-    _interestFocusNode.dispose();
-    _descriptionFocusNode.dispose();
-
-    super.dispose();
-  }
-
-  // ============================================================
-  // DATE PICKER
-  // ============================================================
-
-  Future<void> _pickDate() async {
-    final DateTime today =
-    DateTime.now();
-
-    final picked =
-    await showDatePicker(
-      context: context,
-      initialDate:
-      selectedDate.isAfter(today)
-          ? today
-          : selectedDate,
-      firstDate:
-      DateTime(2000),
-      lastDate: today,
-    );
-
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
+      _descriptionFocusNode.addListener(() {
+        if (_descriptionFocusNode.hasFocus) {
+          _scrollToField(_descriptionKey);
+        }
       });
     }
-  }
 
-  // ============================================================
-  // COMMON DECORATION
-  // ============================================================
+    // ============================================================
+    // SCROLL FIELD INTO VIEW
+    // ============================================================
 
-  InputDecoration decoration({
-    String? hint,
-    Widget? suffix,
-    Widget? prefix,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle:
-      const TextStyle(
-        color: Color(0xff8A93A6),
-        fontWeight: FontWeight.w500,
-      ),
-      prefixIcon: prefix,
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding:
-      const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 16,
-      ),
-      enabledBorder:
-      OutlineInputBorder(
-        borderRadius:
-        BorderRadius.circular(12),
-        borderSide:
-        const BorderSide(
-          color: Color(0xffC9D2E3),
+    void _scrollToField(GlobalKey key) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = key.currentContext;
+
+        if (context == null) return;
+
+        Scrollable.ensureVisible(
+          context,
+          duration:
+          const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+          alignment: 0.25,
+        );
+      });
+    }
+
+    // ============================================================
+    // DISPOSE
+    // ============================================================
+
+    @override
+    void dispose() {
+      amountController.dispose();
+      interestController.dispose();
+      descriptionController.dispose();
+
+      _scrollController.dispose();
+
+      _amountFocusNode.dispose();
+      _interestFocusNode.dispose();
+      _descriptionFocusNode.dispose();
+
+      super.dispose();
+    }
+
+    // ============================================================
+    // DATE PICKER
+    // ============================================================
+
+    Future<void> _pickDate() async {
+      final DateTime today =
+      DateTime.now();
+
+      final picked =
+      await showDatePicker(
+        context: context,
+        initialDate:
+        selectedDate.isAfter(today)
+            ? today
+            : selectedDate,
+        firstDate:
+        DateTime(2000),
+        lastDate: today,
+      );
+
+      if (picked != null) {
+        setState(() {
+          selectedDate = picked;
+        });
+      }
+    }
+
+    // ============================================================
+    // COMMON DECORATION
+    // ============================================================
+
+    InputDecoration decoration({
+      String? hint,
+      Widget? suffix,
+      Widget? prefix,
+    }) {
+      return InputDecoration(
+        hintText: hint,
+        hintStyle:
+        const TextStyle(
+          color: Color(0xff8A93A6),
+          fontWeight: FontWeight.w500,
         ),
-      ),
-      focusedBorder:
-      OutlineInputBorder(
-        borderRadius:
-        BorderRadius.circular(12),
-        borderSide:
-        const BorderSide(
-          color: Color(0xff29406B),
-          width: 1.3,
+        prefixIcon: prefix,
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+        const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 16,
         ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // TITLE
-  // ============================================================
-
-  Widget title(String text) {
-    return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 8,
-      ),
-      child: Align(
-        alignment:
-        Alignment.centerLeft,
-        child: Text(
-          text,
-          style:
-          const TextStyle(
-            fontSize: 15,
-            color:
-            Color(0xff737D8C),
-            fontWeight:
-            FontWeight.w600,
+        enabledBorder:
+        OutlineInputBorder(
+          borderRadius:
+          BorderRadius.circular(12),
+          borderSide:
+          const BorderSide(
+            color: Color(0xffC9D2E3),
           ),
         ),
-      ),
-    );
-  }
+        focusedBorder:
+        OutlineInputBorder(
+          borderRadius:
+          BorderRadius.circular(12),
+          borderSide:
+          const BorderSide(
+            color: Color(0xff29406B),
+            width: 1.3,
+          ),
+        ),
+      );
+    }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+    // ============================================================
+    // TITLE
+    // ============================================================
 
-  @override
-  Widget build(
-      BuildContext context,
-      ) {
-    final keyboardHeight =
-        MediaQuery.of(context)
-            .viewInsets
-            .bottom;
-    final l10n = AppLocalizations.of(context);
-
-    return AnimatedPadding(
-      duration:
-      const Duration(
-        milliseconds: 250,
-      ),
-      curve: Curves.easeOut,
-
-      // Move entire bottom sheet above keyboard.
-      padding: EdgeInsets.only(
-        bottom: keyboardHeight,
-      ),
-
-      child: SafeArea(
-        top: false,
-        child: Container(
-          height:
-          MediaQuery.of(context)
-              .size
-              .height *
-              0.90,
-
-          decoration:
-          const BoxDecoration(
-            color:
-            Color(0xffFFF8F0),
-            borderRadius:
-            BorderRadius.vertical(
-              top:
-              Radius.circular(34),
+    Widget title(String text) {
+      return Padding(
+        padding:
+        const EdgeInsets.only(
+          bottom: 8,
+        ),
+        child: Align(
+          alignment:
+          Alignment.centerLeft,
+          child: Text(
+            text,
+            style:
+            const TextStyle(
+              fontSize: 15,
+              color:
+              Color(0xff737D8C),
+              fontWeight:
+              FontWeight.w600,
             ),
           ),
+        ),
+      );
+    }
 
-          child: Column(
-            children: [
-              // ==========================================================
-              // TOP HANDLE
-              // ==========================================================
+    // ============================================================
+    // BUILD
+    // ============================================================
 
-              Padding(
-                padding:
-                const EdgeInsets.only(
-                  top: 10,
-                ),
-                child: Container(
-                  width: 55,
-                  height: 5,
-                  decoration:
-                  BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius:
-                    BorderRadius.circular(
-                      50,
+    @override
+    Widget build(
+        BuildContext context,
+        ) {
+      final keyboardHeight =
+          MediaQuery.of(context)
+              .viewInsets
+              .bottom;
+      final l10n = AppLocalizations.of(context);
+
+      return AnimatedPadding(
+        duration:
+        const Duration(
+          milliseconds: 250,
+        ),
+        curve: Curves.easeOut,
+
+        // Move entire bottom sheet above keyboard.
+        padding: EdgeInsets.only(
+          bottom: keyboardHeight,
+        ),
+
+        child: SafeArea(
+          top: false,
+          child: Container(
+            height:
+            MediaQuery.of(context)
+                .size
+                .height *
+                0.90,
+
+            decoration:
+            const BoxDecoration(
+              color:
+              Color(0xffFFF8F0),
+              borderRadius:
+              BorderRadius.vertical(
+                top:
+                Radius.circular(34),
+              ),
+            ),
+
+            child: Column(
+              children: [
+                // ==========================================================
+                // TOP HANDLE
+                // ==========================================================
+
+                Padding(
+                  padding:
+                  const EdgeInsets.only(
+                    top: 10,
+                  ),
+                  child: Container(
+                    width: 55,
+                    height: 5,
+                    decoration:
+                    BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius:
+                      BorderRadius.circular(
+                        50,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // ==========================================================
-              // SCROLLABLE FORM
-              // ==========================================================
+                // ==========================================================
+                // SCROLLABLE FORM
+                // ==========================================================
 
-              Expanded(
-                child:
-                SingleChildScrollView(
-                  controller:
-                  _scrollController,
+                Expanded(
+                  child:
+                  SingleChildScrollView(
+                    controller:
+                    _scrollController,
 
-                  keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior
-                      .onDrag,
+                    keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior
+                        .onDrag,
 
-                  padding:
-                  const EdgeInsets.fromLTRB(
-                    22,
-                    10,
-                    22,
-                    25,
-                  ),
+                    padding:
+                    const EdgeInsets.fromLTRB(
+                      22,
+                      10,
+                      22,
+                      25,
+                    ),
 
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 12,
-                      ),
-
-                      // ==================================================
-                      // ICON
-                      // ==================================================
-
-                      Container(
-                        height: 72,
-                        width: 72,
-                        decoration:
-                        const BoxDecoration(
-                          color:
-                          Color.fromRGBO(
-                            199,
-                            76,
-                            76,
-                            0.19,
-                          ),
-                          shape:
-                          BoxShape.circle,
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 12,
                         ),
-                        child:
-                        Center(
+
+                        // ==================================================
+                        // ICON
+                        // ==================================================
+
+                        Container(
+                          height: 72,
+                          width: 72,
+                          decoration:
+                          const BoxDecoration(
+                            color:
+                            Color.fromRGBO(
+                              199,
+                              76,
+                              76,
+                              0.19,
+                            ),
+                            shape:
+                            BoxShape.circle,
+                          ),
                           child:
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor:
-                            Colors
-                                .transparent,
+                          Center(
                             child:
-                            Image.asset(
-                              'assets/you_gave.png',
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor:
+                              Colors
+                                  .transparent,
+                              child:
+                              Image.asset(
+                                'assets/you_gave.png',
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(
-                        height: 10,
-                      ),
-
-                      Text(
-                        l10n.youPaid,
-                        style:
-                        GoogleFonts
-                            .manrope(
-                          color:
-                          const Color
-                              .fromRGBO(
-                            199,
-                            76,
-                            76,
-                            1,
-                          ),
-                          fontWeight:
-                          FontWeight.w700,
-                          fontSize: 22,
+                        const SizedBox(
+                          height: 10,
                         ),
-                      ),
 
-                      const SizedBox(
-                        height: 28,
-                      ),
-
-                      // ==================================================
-                      // AMOUNT
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(l10n.amount),
-                      ),
-
-                      Container(
-                        key: _amountKey,
-                        child:
-                        TextField(
-                          controller: amountController,
-                          focusNode: _amountFocusNode,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                        Text(
+                          l10n.youPaid,
+                          style:
+                          GoogleFonts
+                              .manrope(
+                            color:
+                            const Color
+                                .fromRGBO(
+                              199,
+                              76,
+                              76,
+                              1,
+                            ),
+                            fontWeight:
+                            FontWeight.w700,
+                            fontSize: 22,
                           ),
-                          onChanged: (value) {
-                            final amount = double.tryParse(value.trim());
+                        ),
 
-                            setState(() {
-                              _amountError =
-                                  value.trim().isEmpty || (amount != null && amount == 0);
-                            });
-                          },
+                        const SizedBox(
+                          height: 28,
+                        ),
+
+                        // ==================================================
+                        // AMOUNT
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(l10n.amount),
+                        ),
+
+                        Container(
+                          key: _amountKey,
+                          child:
+                          TextField(
+                            controller: amountController,
+                            focusNode: _amountFocusNode,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            onChanged: (value) {
+                              final amount = double.tryParse(value.trim());
+
+                              setState(() {
+                                _amountError =
+                                    value.trim().isEmpty || (amount != null && amount == 0);
+                              });
+                            },
+                            decoration: decoration(
+                              hint: l10n.enterAmount,
+                              prefix: const Icon(
+                                Icons.currency_rupee,
+                                size: 20,
+                                color: Color(0xff6D7B94),
+                              ),
+                            ).copyWith(
+                              errorText: _amountError
+                                  ? (amountController.text.trim().isEmpty
+                                      ? l10n.amountRequired
+                                      : l10n.amountCannotBeZero)
+                                  : null,
+
+                              errorStyle: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+
+                              // 🔴 Border when there is an error and field is NOT focused
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1.2,
+                                ),
+                              ),
+
+                              // 🔴 Border when there is an error and field IS focused
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1.3,
+                                ),
+                              ),
+
+                              // Normal border
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _amountError
+                                      ? Colors.red
+                                      : const Color(0xffC9D2E3),
+                                ),
+                              ),
+
+                              // Normal focused border
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _amountError
+                                      ? Colors.red
+                                      : const Color(0xff29406B),
+                                  width: 1.3,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        // ==================================================
+                        // DATE
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(l10n.date),
+                        ),
+
+                        // TextField(
+                        //   readOnly: true,
+                        //   onTap:
+                        //   _pickDate,
+
+                        //   decoration:
+                        //   decoration(
+                        //     suffix:
+                        //     const Icon(
+                        //       Icons
+                        //           .calendar_today_outlined,
+                        //       color:
+                        //       Colors.black,
+                        //     ),
+                        //   ).copyWith(
+                        //     hintText:
+                        //     DateFormat(
+                        //       "dd MMM yyyy",
+                        //     ).format(
+                        //       selectedDate,
+                        //     ),
+                        //     hintStyle:
+                        //     const TextStyle(
+                        //       color:
+                        //       Colors.black,
+                        //       fontWeight:
+                        //       FontWeight
+                        //           .w500,
+                        //     ),
+                        //   ),
+                        // ),
+
+                        TextField(
+                          readOnly: true,
+                          onTap: _pickDate,
                           decoration: decoration(
-                            hint: l10n.enterAmount,
-                            prefix: const Icon(
-                              Icons.currency_rupee,
-                              size: 20,
-                              color: Color(0xff6D7B94),
+                            suffix: const Icon(
+                              Icons.calendar_today_outlined,
+                              color: Colors.black,
                             ),
                           ).copyWith(
-                            errorText: _amountError
-                                ? (amountController.text.trim().isEmpty
-                                    ? l10n.amountRequired
-                                    : l10n.amountCannotBeZero)
-                                : null,
-
-                            errorStyle: const TextStyle(
-                              color: Colors.red,
+                            hintText: DateFormat("dd MMM yyyy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
+                            hintStyle: const TextStyle(
+                              color: Colors.black,
                               fontWeight: FontWeight.w500,
                             ),
-
-                            // 🔴 Border when there is an error and field is NOT focused
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 1.2,
-                              ),
-                            ),
-
-                            // 🔴 Border when there is an error and field IS focused
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 1.3,
-                              ),
-                            ),
-
-                            // Normal border
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: _amountError
-                                    ? Colors.red
-                                    : const Color(0xffC9D2E3),
-                              ),
-                            ),
-
-                            // Normal focused border
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: _amountError
-                                    ? Colors.red
-                                    : const Color(0xff29406B),
-                                width: 1.3,
-                              ),
-                            ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                        const SizedBox(
+                          height: 18,
+                        ),
 
-                      // ==================================================
-                      // DATE
-                      // ==================================================
+                        // ==================================================
+                        // INTEREST RATE
+                        // ==================================================
 
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(l10n.date),
-                      ),
-
-                      // TextField(
-                      //   readOnly: true,
-                      //   onTap:
-                      //   _pickDate,
-
-                      //   decoration:
-                      //   decoration(
-                      //     suffix:
-                      //     const Icon(
-                      //       Icons
-                      //           .calendar_today_outlined,
-                      //       color:
-                      //       Colors.black,
-                      //     ),
-                      //   ).copyWith(
-                      //     hintText:
-                      //     DateFormat(
-                      //       "dd MMM yyyy",
-                      //     ).format(
-                      //       selectedDate,
-                      //     ),
-                      //     hintStyle:
-                      //     const TextStyle(
-                      //       color:
-                      //       Colors.black,
-                      //       fontWeight:
-                      //       FontWeight
-                      //           .w500,
-                      //     ),
-                      //   ),
-                      // ),
-
-                      TextField(
-                        readOnly: true,
-                        onTap: _pickDate,
-                        decoration: decoration(
-                          suffix: const Icon(
-                            Icons.calendar_today_outlined,
-                            color: Colors.black,
-                          ),
-                        ).copyWith(
-                          hintText: DateFormat("dd MMM yy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
-                          hintStyle: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child: title(
+                            l10n.interestRatePercent,
                           ),
                         ),
-                      ),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // ==================================================
-                      // INTEREST RATE
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child: title(
-                          l10n.interestRatePercent,
+                        Container(
+                          key: _interestKey,
+                          child:
+                          _buildInterestRateField(),
                         ),
-                      ),
 
-                      Container(
-                        key: _interestKey,
-                        child:
-                        _buildInterestRateField(),
-                      ),
-
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // ==================================================
-                      // DESCRIPTION
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(
-                          l10n.description,
+                        const SizedBox(
+                          height: 18,
                         ),
-                      ),
 
-                      Container(
-                        key:
-                        _descriptionKey,
-                        child:
-                        TextField(
-                          controller:
-                          descriptionController,
-                          focusNode:
-                          _descriptionFocusNode,
-                          maxLength: 100,
-                          maxLines: 4,
+                        // ==================================================
+                        // DESCRIPTION
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(
+                            l10n.description,
+                          ),
+                        ),
+
+                        Container(
+                          key:
+                          _descriptionKey,
+                          child:
+                          TextField(
+                            controller:
+                            descriptionController,
+                            focusNode:
+                            _descriptionFocusNode,
+                            maxLength: 100,
+                            maxLines: 4,
+
+                            decoration:
+                            decoration(
+                              hint:
+                              l10n.enterDescriptionHere,
+                            ).copyWith(
+                              counterText:
+                              "",
+                            ),
+
+                            onChanged:
+                                (_) =>
+                                setState(
+                                      () {},
+                                ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        // ==================================================
+                        // INTEREST TYPE
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(
+                            l10n.interestType,
+                          ),
+                        ),
+
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue:
+                          interestType,
+                          decoration:
+                          decoration(),
+                          icon:
+                          const Icon(
+                            Icons
+                                .keyboard_arrow_down,
+                          ),
+                          items:
+                          [
+                            DropdownMenuItem(
+                              value:
+                              "Simple Interest",
+                              child: Text(
+                               l10n.simpleInterest,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "Compound Interest",
+                              child: Text(
+                                l10n.compoundInterest,
+                              ),
+                            ),
+                          ],
+                          onChanged:
+                              (v) {
+                            if (v ==
+                                null) {
+                              return;
+                            }
+
+                            setState(() {
+                              interestType =
+                                  v;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        // ==================================================
+                        // INTEREST FREQUENCY
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(
+                            l10n.interestFrequency,
+                          ),
+                        ),
+
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue:
+                          interestFrequency,
+                          decoration:
+                          decoration(),
+                          icon:
+                          const Icon(
+                            Icons
+                                .keyboard_arrow_down,
+                          ),
+                          items:
+                          [
+                            DropdownMenuItem(
+                              value:
+                              "Daily",
+                              child:
+                              Text(
+                                l10n.daily,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "Weekly",
+                              child:
+                              Text(
+                                l10n.weekly,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "Monthly",
+                              child:
+                              Text(
+                                l10n.monthly,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "Yearly",
+                              child:
+                              Text(
+                                l10n.yearly,
+                              ),
+                            ),
+                          ],
+                          onChanged:
+                              (v) {
+                            if (v ==
+                                null) {
+                              return;
+                            }
+
+                            setState(() {
+                              interestFrequency =
+                                  v;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        // ==================================================
+                        // PAYMENT MODE
+                        // ==================================================
+
+                        Align(
+                          alignment:
+                          Alignment
+                              .centerLeft,
+                          child:
+                          title(
+                            l10n.paymentModeOptional,
+                          ),
+                        ),
+
+                        DropdownButtonFormField<
+                            String>(
+                          initialValue:
+                          paymentMode
+                              .isEmpty
+                              ? null
+                              : paymentMode,
 
                           decoration:
                           decoration(
                             hint:
-                            l10n.enterDescriptionHere,
-                          ).copyWith(
-                            counterText:
-                            "",
+                            l10n.selectPaymentMode,
                           ),
+
+                          icon:
+                          const Icon(
+                            Icons
+                                .keyboard_arrow_down,
+                          ),
+
+                          items:
+                          [
+                            DropdownMenuItem(
+                              value:
+                              "Cash",
+                              child:
+                              Text(
+                                l10n.cash,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "UPI",
+                              child:
+                              Text(
+                                l10n.upi,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value:
+                              "Bank",
+                              child:
+                              Text(
+                                l10n.bankTransfer,
+                              ),
+                            ),
+                          ],
 
                           onChanged:
-                              (_) =>
-                              setState(
-                                    () {},
-                              ),
-                        ),
-                      ),
+                              (v) {
+                            if (v ==
+                                null) {
+                              setState(() {
+                                paymentMode =
+                                "";
+                              });
+                              return;
+                            }
 
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // ==================================================
-                      // INTEREST TYPE
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(
-                          l10n.interestType,
-                        ),
-                      ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        interestType,
-                        decoration:
-                        decoration(),
-                        icon:
-                        const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
-                        items:
-                        [
-                          DropdownMenuItem(
-                            value:
-                            "Simple Interest",
-                            child: Text(
-                             l10n.simpleInterest,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "Compound Interest",
-                            child: Text(
-                              l10n.compoundInterest,
-                            ),
-                          ),
-                        ],
-                        onChanged:
-                            (v) {
-                          if (v ==
-                              null) {
-                            return;
-                          }
-
-                          setState(() {
-                            interestType =
-                                v;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // ==================================================
-                      // INTEREST FREQUENCY
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(
-                          l10n.interestFrequency,
-                        ),
-                      ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        interestFrequency,
-                        decoration:
-                        decoration(),
-                        icon:
-                        const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
-                        items:
-                        [
-                          DropdownMenuItem(
-                            value:
-                            "Daily",
-                            child:
-                            Text(
-                              l10n.daily,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "Weekly",
-                            child:
-                            Text(
-                              l10n.weekly,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "Monthly",
-                            child:
-                            Text(
-                              l10n.monthly,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "Yearly",
-                            child:
-                            Text(
-                              l10n.yearly,
-                            ),
-                          ),
-                        ],
-                        onChanged:
-                            (v) {
-                          if (v ==
-                              null) {
-                            return;
-                          }
-
-                          setState(() {
-                            interestFrequency =
-                                v;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      // ==================================================
-                      // PAYMENT MODE
-                      // ==================================================
-
-                      Align(
-                        alignment:
-                        Alignment
-                            .centerLeft,
-                        child:
-                        title(
-                          l10n.paymentModeOptional,
-                        ),
-                      ),
-
-                      DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                        paymentMode
-                            .isEmpty
-                            ? null
-                            : paymentMode,
-
-                        decoration:
-                        decoration(
-                          hint:
-                          l10n.selectPaymentMode,
-                        ),
-
-                        icon:
-                        const Icon(
-                          Icons
-                              .keyboard_arrow_down,
-                        ),
-
-                        items:
-                        [
-                          DropdownMenuItem(
-                            value:
-                            "Cash",
-                            child:
-                            Text(
-                              l10n.cash,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "UPI",
-                            child:
-                            Text(
-                              l10n.upi,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value:
-                            "Bank",
-                            child:
-                            Text(
-                              l10n.bankTransfer,
-                            ),
-                          ),
-                        ],
-
-                        onChanged:
-                            (v) {
-                          if (v ==
-                              null) {
                             setState(() {
                               paymentMode =
-                              "";
+                                  v;
                             });
-                            return;
-                          }
+                          },
+                        ),
 
-                          setState(() {
-                            paymentMode =
-                                v;
-                          });
-                        },
+                        const SizedBox(
+                          height: 20,
+                        ),
+
+                        const SizedBox(
+                          height: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ==========================================================
+                // FIXED BUTTONS
+                // ==========================================================
+
+                Container(
+                  padding:
+                  const EdgeInsets.fromLTRB(
+                    22,
+                    12,
+                    22,
+                    20,
+                  ),
+
+                  decoration:
+                  const BoxDecoration(
+                    color:
+                    Color(0xffFFF8F0),
+                  ),
+
+                  child: Row(
+                    children: [
+                      // ====================================================
+                      // CANCEL
+                      // ====================================================
+
+                      Expanded(
+                        child:
+                        SizedBox(
+                          height: 52,
+                          child:
+                          OutlinedButton(
+                            onPressed:
+                                () {
+                              FocusScope
+                                  .of(
+                                context,
+                              ).unfocus();
+
+                              Navigator.pop(
+                                context,
+                              );
+                            },
+
+                            style:
+                            OutlinedButton
+                                .styleFrom(
+                              side:
+                              const BorderSide(
+                                color:
+                                Color(
+                                  0xffC7D0DF,
+                                ),
+                              ),
+                              shape:
+                              RoundedRectangleBorder(
+                                borderRadius:
+                                BorderRadius
+                                    .circular(
+                                  12,
+                                ),
+                              ),
+                            ),
+
+                            child:
+                            Text(
+                              l10n.cancel,
+                              style:
+                              TextStyle(
+                                color:
+                                Color(
+                                  0xff29406B,
+                                ),
+                                fontWeight:
+                                FontWeight
+                                    .w700,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
 
                       const SizedBox(
-                        height: 20,
+                        width: 18,
                       ),
 
-                      const SizedBox(
-                        height: 20,
+                      // ====================================================
+                      // SAVE ENTRY
+                      // ====================================================
+
+                      Expanded(
+                        child:
+                        SizedBox(
+                          height: 52,
+                          child:
+                          ElevatedButton(
+                            onPressed:
+                            _saveEntry,
+
+                            style:
+                            ElevatedButton
+                                .styleFrom(
+                              backgroundColor:
+                              const Color(
+                                0xff29406B,
+                              ),
+
+                              elevation: 0,
+                              shape:
+                              RoundedRectangleBorder(
+                                borderRadius:
+                                BorderRadius
+                                    .circular(
+                                  12,
+                                ),
+                              ),
+                            ),
+
+                            child:
+                            Text(
+                              l10n.saveEntry,
+                              style:
+                              TextStyle(
+                                color:
+                                Colors.white,
+                                fontWeight:
+                                FontWeight
+                                    .w700,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
-              // ==========================================================
-              // FIXED BUTTONS
-              // ==========================================================
+    // ============================================================
+    // INTEREST RATE FIELD
+    // ============================================================
 
-              Container(
-                padding:
-                const EdgeInsets.fromLTRB(
-                  22,
+    Widget _buildInterestRateField() {
+      final l10n = AppLocalizations.of(context);
+      return Column(
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller:
+            interestController,
+            focusNode:
+            _interestFocusNode,
+
+            keyboardType:
+            const TextInputType
+                .numberWithOptions(
+              decimal: true,
+            ),
+
+            onChanged:
+                (value) {
+              if (_interestRateError &&
+                  value.trim().isNotEmpty) {
+                setState(() {
+                  _interestRateError =
+                  false;
+                });
+              }
+
+              setState(() {});
+            },
+
+            decoration:
+            decoration(
+              hint:
+              l10n.enterInterestRate,
+            ).copyWith(
+              enabledBorder:
+              OutlineInputBorder(
+                borderRadius:
+                BorderRadius.circular(
                   12,
-                  22,
-                  20,
                 ),
-
-                decoration:
-                const BoxDecoration(
+                borderSide:
+                BorderSide(
                   color:
-                  Color(0xffFFF8F0),
-                ),
-
-                child: Row(
-                  children: [
-                    // ====================================================
-                    // CANCEL
-                    // ====================================================
-
-                    Expanded(
-                      child:
-                      SizedBox(
-                        height: 52,
-                        child:
-                        OutlinedButton(
-                          onPressed:
-                              () {
-                            FocusScope
-                                .of(
-                              context,
-                            ).unfocus();
-
-                            Navigator.pop(
-                              context,
-                            );
-                          },
-
-                          style:
-                          OutlinedButton
-                              .styleFrom(
-                            side:
-                            const BorderSide(
-                              color:
-                              Color(
-                                0xffC7D0DF,
-                              ),
-                            ),
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
-                            ),
-                          ),
-
-                          child:
-                          Text(
-                            l10n.cancel,
-                            style:
-                            TextStyle(
-                              color:
-                              Color(
-                                0xff29406B,
-                              ),
-                              fontWeight:
-                              FontWeight
-                                  .w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      width: 18,
-                    ),
-
-                    // ====================================================
-                    // SAVE ENTRY
-                    // ====================================================
-
-                    Expanded(
-                      child:
-                      SizedBox(
-                        height: 52,
-                        child:
-                        ElevatedButton(
-                          onPressed:
-                          _saveEntry,
-
-                          style:
-                          ElevatedButton
-                              .styleFrom(
-                            backgroundColor:
-                            const Color(
-                              0xff29406B,
-                            ),
-                            
-                            elevation: 0,
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                12,
-                              ),
-                            ),
-                          ),
-
-                          child:
-                          Text(
-                            l10n.saveEntry,
-                            style:
-                            TextStyle(
-                              color:
-                              Colors.white,
-                              fontWeight:
-                              FontWeight
-                                  .w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  _interestRateError
+                      ? Colors.red
+                      : const Color(
+                    0xffC9D2E3,
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  // ============================================================
-  // INTEREST RATE FIELD
-  // ============================================================
-
-  Widget _buildInterestRateField() {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller:
-          interestController,
-          focusNode:
-          _interestFocusNode,
-
-          keyboardType:
-          const TextInputType
-              .numberWithOptions(
-            decimal: true,
-          ),
-
-          onChanged:
-              (value) {
-            if (_interestRateError &&
-                value.trim().isNotEmpty) {
-              setState(() {
-                _interestRateError =
-                false;
-              });
-            }
-
-            setState(() {});
-          },
-
-          decoration:
-          decoration(
-            hint:
-            l10n.enterInterestRate,
-          ).copyWith(
-            enabledBorder:
-            OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(
-                12,
-              ),
-              borderSide:
-              BorderSide(
-                color:
-                _interestRateError
-                    ? Colors.red
-                    : const Color(
-                  0xffC9D2E3,
+              focusedBorder:
+              OutlineInputBorder(
+                borderRadius:
+                BorderRadius.circular(
+                  12,
+                ),
+                borderSide:
+                BorderSide(
+                  color:
+                  _interestRateError
+                      ? Colors.red
+                      : const Color(
+                    0xff29406B,
+                  ),
+                  width: 1.3,
                 ),
               ),
             ),
+          ),
 
-            focusedBorder:
-            OutlineInputBorder(
-              borderRadius:
-              BorderRadius.circular(
-                12,
+          // ==========================================================
+          // ERROR MESSAGE
+          // ==========================================================
+
+          if (_interestRateError)
+            Padding(
+              padding:
+              const EdgeInsets.only(
+                left: 4,
+                top: 5,
               ),
-              borderSide:
-              BorderSide(
-                color:
-                _interestRateError
-                    ? Colors.red
-                    : const Color(
-                  0xff29406B,
+              child: Text(
+                "Interest rate is required",
+                style:
+                GoogleFonts.manrope(
+                  color:
+                  Colors.red,
+                  fontSize: 12,
+                  fontWeight:
+                  FontWeight.w500,
                 ),
-                width: 1.3,
               ),
             ),
-          ),
-        ),
-
-        // ==========================================================
-        // ERROR MESSAGE
-        // ==========================================================
-
-        if (_interestRateError)
-          Padding(
-            padding:
-            const EdgeInsets.only(
-              left: 4,
-              top: 5,
-            ),
-            child: Text(
-              "Interest rate is required",
-              style:
-              GoogleFonts.manrope(
-                color:
-                Colors.red,
-                fontSize: 12,
-                fontWeight:
-                FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // SAVE ENTRY
-  // ============================================================
-
-  Future<void> _saveEntry() async {
-    final l10n = AppLocalizations.of(context);
-    // ==========================================================
-    // AMOUNT VALIDATION
-    // ==========================================================
-
-    final amountText = amountController.text.trim();
-    final amount = double.tryParse(amountText);
-
-    if (amountText.isEmpty || amount == null || amount == 0) {
-      setState(() {
-        _amountError = true;
-      });
-
-      return;
+        ],
+      );
     }
 
-    // final amount = double.tryParse(
-    //   amountController.text.trim(),
-    // );
+    // ============================================================
+    // SAVE ENTRY
+    // ============================================================
 
-    // if (amount == null || amount <= 0) {
-    //   _showError(
-    //      l10n.validAmountRequired,
-    //   );
+    Future<void> _saveEntry() async {
+      final l10n = AppLocalizations.of(context);
+      // ==========================================================
+      // AMOUNT VALIDATION
+      // ==========================================================
 
-    //   return;
-    // }
+      final amountText = amountController.text.trim();
+      final amount = double.tryParse(amountText);
 
-    // ==========================================================
-    // INTEREST RATE REQUIRED VALIDATION
-    // ==========================================================
+      if (amountText.isEmpty || amount == null || amount == 0) {
+        setState(() {
+          _amountError = true;
+        });
 
-    if (interestController.text.trim().isEmpty) {
-      setState(() {
-        _interestRateError = true;
-      });
-
-      _interestFocusNode.requestFocus();
-
-      _scrollToField(
-        _interestKey,
-      );
-
-      return;
-    }
-
-    // ==========================================================
-    // INTEREST RATE NUMBER VALIDATION
-    // ==========================================================
-
-    final rate = double.tryParse(
-      interestController.text.trim(),
-    );
-
-    if (rate == null || rate < 0) {
-      setState(() {
-        _interestRateError = true;
-      });
-
-      _interestFocusNode.requestFocus();
-
-      _scrollToField(
-        _interestKey,
-      );
-
-      return;
-    }
-
-    try {
-      // ========================================================
-      // GET CURRENT ACTIVE CUSTOMER
-      // ========================================================
-      //
-      // Important:
-      // widget.customer may contain the OLD deleted customer.
-      // Find the current active record using the phone number.
-      //
-      // ========================================================
-      // GET CURRENT CUSTOMER BY ID
-      // ========================================================
-      //
-      // DO NOT use phone number here.
-      //
-      // Phone number is optional, so a customer can have:
-      // phone = ""
-      //
-      // The Isar customer ID is the correct local identity.
-      // If the customer was deleted, deletedAt will be non-null.
-      //
-
-      debugPrint('========== CUSTOMER DEBUG ==========');
-      debugPrint('Widget customer ID: ${widget.customer.id}');
-      debugPrint('Widget customer UUID: ${widget.customer.uuid}');
-      debugPrint('Widget customer name: ${widget.customer.name}');
-      debugPrint('Widget customer phone: "${widget.customer.phone}"');
-      debugPrint('Widget deletedAt: ${widget.customer.deletedAt}');
-
-      final activeCustomer =
-      await IsarService.isar.customers.get(
-        widget.customer.id,
-      );
-
-      debugPrint('========== ACTIVE CUSTOMER DEBUG ==========');
-
-      if (activeCustomer != null) {
-        debugPrint('Active customer ID: ${activeCustomer.id}');
-        debugPrint('Active customer UUID: ${activeCustomer.uuid}');
-        debugPrint('Active customer name: ${activeCustomer.name}');
-        debugPrint('Active customer phone: "${activeCustomer.phone}"');
-        debugPrint(
-          'Active customer deletedAt: ${activeCustomer.deletedAt}',
-        );
-      } else {
-        debugPrint('Active customer: NULL');
+        return;
       }
 
-      // Customer doesn't exist OR was soft deleted.
-      if (activeCustomer == null ||
-          activeCustomer.deletedAt != null) {
-        if (!mounted) return;
+      // final amount = double.tryParse(
+      //   amountController.text.trim(),
+      // );
 
-        _showError(
-          l10n.customerNoLongerAvailable,
+      // if (amount == null || amount <= 0) {
+      //   _showError(
+      //      l10n.validAmountRequired,
+      //   );
+
+      //   return;
+      // }
+
+      // ==========================================================
+      // INTEREST RATE REQUIRED VALIDATION
+      // ==========================================================
+
+      if (interestController.text.trim().isEmpty) {
+        setState(() {
+          _interestRateError = true;
+        });
+
+        _interestFocusNode.requestFocus();
+
+        _scrollToField(
+          _interestKey,
         );
 
         return;
       }
-      // ========================================================
-      // CALCULATE INTEREST
-      // ========================================================
 
-      final calculatedInterest =
-      InterestCalculator.calculate(
-        principal: amount,
-        rate: rate,
-        startDate: selectedDate,
-        interestType: interestType,
-        frequency: interestFrequency,
+      // ==========================================================
+      // INTEREST RATE NUMBER VALIDATION
+      // ==========================================================
+
+      final rate = double.tryParse(
+        interestController.text.trim(),
       );
 
-      // ========================================================
-      // CREATE TRANSACTION
-      // ========================================================
-      //
-      // IMPORTANT:
-      // Use activeCustomer.id, NOT widget.customer.id.
-      //
+      if (rate == null || rate < 0) {
+        setState(() {
+          _interestRateError = true;
+        });
 
-      final tx = Transaction()
-        ..customerId = activeCustomer.id
-        ..customerUuid = activeCustomer.uuid // authoritative identity
-        ..amountPaise = Money.toPaise(
-          amount,
-        )
-        ..interest = calculatedInterest
-        ..interestRateBp =
-        Money.rateToBasisPoints(
-          rate,
-        )
-        ..date = selectedDate
-        ..type = TransactionType.gave
-        ..description =
-        descriptionController.text.trim()
-        ..paymentMode = paymentMode
-        ..interestType = interestType
-        ..interestFrequency = interestFrequency;
+        _interestFocusNode.requestFocus();
 
-      // ========================================================
-      // SAVE TRANSACTION
-      // ========================================================
+        _scrollToField(
+          _interestKey,
+        );
 
-      await TransactionService.addTransaction(
-        tx,
-      );
+        return;
+      }
 
-      // ========================================================
-      // SYNC NOTIFICATIONS
-      // ========================================================
+      try {
+        // ========================================================
+        // GET CURRENT ACTIVE CUSTOMER
+        // ========================================================
+        //
+        // Important:
+        // widget.customer may contain the OLD deleted customer.
+        // Find the current active record using the phone number.
+        //
+        // ========================================================
+        // GET CURRENT CUSTOMER BY ID
+        // ========================================================
+        //
+        // DO NOT use phone number here.
+        //
+        // Phone number is optional, so a customer can have:
+        // phone = ""
+        //
+        // The Isar customer ID is the correct local identity.
+        // If the customer was deleted, deletedAt will be non-null.
+        //
 
-      await LocalNotificationService
-          .instance
-          .syncNotifications(
-        database: IsarService.isar,
-      );
+        debugPrint('========== CUSTOMER DEBUG ==========');
+        debugPrint('Widget customer ID: ${widget.customer.id}');
+        debugPrint('Widget customer UUID: ${widget.customer.uuid}');
+        debugPrint('Widget customer name: ${widget.customer.name}');
+        debugPrint('Widget customer phone: "${widget.customer.phone}"');
+        debugPrint('Widget deletedAt: ${widget.customer.deletedAt}');
 
-      // ========================================================
-      // PAYMENT REMINDER
-      // ========================================================
+        final activeCustomer =
+        await IsarService.isar.customers.get(
+          widget.customer.id,
+        );
 
-      final localNotificationService =
-          LocalNotificationService.instance;
+        debugPrint('========== ACTIVE CUSTOMER DEBUG ==========');
 
-      final prefs =
-      await SharedPreferences.getInstance();
+        if (activeCustomer != null) {
+          debugPrint('Active customer ID: ${activeCustomer.id}');
+          debugPrint('Active customer UUID: ${activeCustomer.uuid}');
+          debugPrint('Active customer name: ${activeCustomer.name}');
+          debugPrint('Active customer phone: "${activeCustomer.phone}"');
+          debugPrint(
+            'Active customer deletedAt: ${activeCustomer.deletedAt}',
+          );
+        } else {
+          debugPrint('Active customer: NULL');
+        }
 
-      final paymentReminderEnabled =
-          prefs.getBool(
-            'notification_payment_reminder_enabled',
-          ) ??
-              true;
+        // Customer doesn't exist OR was soft deleted.
+        if (activeCustomer == null ||
+            activeCustomer.deletedAt != null) {
+          if (!mounted) return;
 
-      if (paymentReminderEnabled) {
-        final reminderType =
-            prefs.getString(
-              'notification_selected_reminder',
+          _showError(
+            l10n.customerNoLongerAvailable,
+          );
+
+          return;
+        }
+        // ========================================================
+        // CALCULATE INTEREST
+        // ========================================================
+
+        final calculatedInterest =
+        InterestCalculator.calculate(
+          principal: amount,
+          rate: rate,
+          startDate: selectedDate,
+          interestType: interestType,
+          frequency: interestFrequency,
+        );
+
+        // ========================================================
+        // CREATE TRANSACTION
+        // ========================================================
+        //
+        // IMPORTANT:
+        // Use activeCustomer.id, NOT widget.customer.id.
+        //
+
+        final tx = Transaction()
+          ..customerId = activeCustomer.id
+          ..customerUuid = activeCustomer.uuid // authoritative identity
+          ..amountPaise = Money.toPaise(
+            amount,
+          )
+          ..interest = calculatedInterest
+          ..interestRateBp =
+          Money.rateToBasisPoints(
+            rate,
+          )
+          ..date = selectedDate
+          ..type = TransactionType.gave
+          ..description =
+          descriptionController.text.trim()
+          ..paymentMode = paymentMode
+          ..interestType = interestType
+          ..interestFrequency = interestFrequency;
+
+        // ========================================================
+        // SAVE TRANSACTION
+        // ========================================================
+
+        await TransactionService.addTransaction(
+          tx,
+        );
+
+        // ========================================================
+        // SYNC NOTIFICATIONS
+        // ========================================================
+
+        await LocalNotificationService
+            .instance
+            .syncNotifications(
+          database: IsarService.isar,
+        );
+
+        // ========================================================
+        // PAYMENT REMINDER
+        // ========================================================
+
+        final localNotificationService =
+            LocalNotificationService.instance;
+
+        final prefs =
+        await SharedPreferences.getInstance();
+
+        final paymentReminderEnabled =
+            prefs.getBool(
+              'notification_payment_reminder_enabled',
             ) ??
-                'dueDate';
+                true;
 
-        await localNotificationService
-            .scheduleCustomerPaymentReminder(
-          customer: activeCustomer,
-          loanDate: selectedDate,
-          interestFrequency:
-          interestFrequency,
-          reminderType: reminderType,
-          transactionType: TransactionType.gave,
-          amount: amount,
-        );
-      }
+        if (paymentReminderEnabled) {
+          final reminderType =
+              prefs.getString(
+                'notification_selected_reminder',
+              ) ??
+                  'dueDate';
 
-      // ========================================================
-      // INTEREST NOTIFICATION
-      // ========================================================
+          await localNotificationService
+              .scheduleCustomerPaymentReminder(
+            customer: activeCustomer,
+            loanDate: selectedDate,
+            interestFrequency:
+            interestFrequency,
+            reminderType: reminderType,
+            transactionType: TransactionType.gave,
+            amount: amount,
+          );
+        }
 
-      if (calculatedInterest > 0) {
-        final notificationService =
-        NotificationService(
-          IsarService.isar,
-        );
+        // ========================================================
+        // INTEREST NOTIFICATION
+        // ========================================================
 
-        await notificationService
-            .createInterestNotification(
-          chopdiId: activeCustomer.chopdiId,
-          customerName: activeCustomer.name,
-          interestAmount: calculatedInterest,
-          customerId: activeCustomer.id,
-        );
-      }
+        if (calculatedInterest > 0) {
+          final notificationService =
+          NotificationService(
+            IsarService.isar,
+          );
 
-      // ========================================================
-      // SUCCESS
-      // ========================================================
+          await notificationService
+              .createCustomerInterestNotification(
+            chopdiId: activeCustomer.chopdiId,
+            customerName: activeCustomer.name,
+            interestAmount: calculatedInterest,
+            customerId: activeCustomer.id,  transactionId: tx.id,
+          );
+        }
 
-      widget.onSaved();
+        // ========================================================
+        // SUCCESS
+        // ========================================================
 
-      if (mounted) {
-        FocusScope.of(context).unfocus();
+        widget.onSaved();
 
-        Navigator.pop(
+        if (mounted) {
+          FocusScope.of(context).unfocus();
+
+          Navigator.pop(
+            context,
+          );
+        }
+      } catch (e) {
+        if (!mounted) {
+          return;
+        }
+
+        final message =
+        e.toString().contains(
+          'Cannot add an entry to a deleted customer',
+        )
+            ? l10n.deletedCustomerCannotAddEntry
+            : l10n.unableToSaveTransaction;
+
+        ScaffoldMessenger.of(
           context,
+        ).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
+    }
 
-      final message =
-      e.toString().contains(
-        'Cannot add an entry to a deleted customer',
-      )
-          ? l10n.deletedCustomerCannotAddEntry
-          : l10n.unableToSaveTransaction;
+    // ============================================================
+    // ERROR SNACKBAR
+    // ============================================================
 
+    void _showError(
+        String message,
+        ) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(
         SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
+          content:
+          Text(message),
+          behavior:
+          SnackBarBehavior
+              .floating,
         ),
       );
     }
   }
-
-  // ============================================================
-  // ERROR SNACKBAR
-  // ============================================================
-
-  void _showError(
-      String message,
-      ) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(
-        content:
-        Text(message),
-        behavior:
-        SnackBarBehavior
-            .floating,
-      ),
-    );
-  }
-}

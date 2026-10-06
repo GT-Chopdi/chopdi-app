@@ -1112,7 +1112,7 @@ class _EditTransactionBottomSheetState
       );
 
       await notificationService
-          .createInterestUpdatedNotification(
+          .createCustomerInterestUpdatedNotification(
         chopdiId:
         transaction.chopdiId,
         customerName:
@@ -1121,8 +1121,8 @@ class _EditTransactionBottomSheetState
         calculatedInterest,
         interestPeriod:
         interestPeriod,
-        customerId:
-        transaction.customerId,
+        customerId: transaction.customerId,
+        transactionId: transaction.id,
       );
     }
 

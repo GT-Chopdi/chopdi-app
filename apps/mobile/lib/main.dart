@@ -274,7 +274,22 @@ class ChopdiAppState extends State<ChopdiApp> {
 
       onGenerateRoute: (settings) {
         if (settings.name == '/customer_details') {
-          final customer = settings.arguments as Customer;
+          final args = settings.arguments;
+
+          if (args is Map<String, dynamic>) {
+            final customer = args['customer'] as Customer;
+            final transactionId =
+            args['transactionId'] as int?;
+
+            return MaterialPageRoute(
+              builder: (_) => CustomerDetailsScreen(
+                customer: customer,
+                highlightTransactionId: transactionId,
+              ),
+            );
+          }
+
+          final customer = args as Customer;
 
           return MaterialPageRoute(
             builder: (_) => CustomerDetailsScreen(
@@ -284,7 +299,22 @@ class ChopdiAppState extends State<ChopdiApp> {
         }
 
         if (settings.name == '/took_loan_customer_details') {
-          final lender = settings.arguments as Lender;
+          final args = settings.arguments;
+
+          if (args is Map<String, dynamic>) {
+            final lender = args['lender'] as Lender;
+            final transactionId =
+            args['transactionId'] as int?;
+
+            return MaterialPageRoute(
+              builder: (_) => TookLoanCustomerDetailsScreen(
+                lender: lender,
+                highlightTransactionId: transactionId,
+              ),
+            );
+          }
+
+          final lender = args as Lender;
 
           return MaterialPageRoute(
             builder: (_) => TookLoanCustomerDetailsScreen(

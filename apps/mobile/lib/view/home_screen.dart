@@ -196,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       Row(
                         children: [
+
                           // Cancel
                           Expanded(
                             child: SizedBox(

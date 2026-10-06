@@ -17,4 +17,7 @@ class NotificationModel {
   String? customerName;
   double? amount;
   int? chopdiId;
+  @Index()
+  int transactionId = 0;
+
 }
