@@ -377,7 +377,6 @@ class LocalNotificationService {
   // NOTIFICATION CLICK HANDLER
   // FOREGROUND / BACKGROUND
   // ============================================================
-
   void _onNotificationResponse(
       NotificationResponse response,
       ) async {
@@ -393,17 +392,14 @@ class LocalNotificationService {
       '[LocalNotification] Action: ${response.actionId}',
     );
 
-    final String? payload = response.payload;
+    final payload = response.payload;
 
     if (payload == null || payload.isEmpty) {
-      debugPrint(
-        '[LocalNotification] Empty payload.',
-      );
       return;
     }
 
     // ==========================================================
-    // ACTION BUTTON: MARK AS READ
+    // ACTION BUTTONS
     // ==========================================================
 
     if (response.actionId == 'action_mark_read') {
@@ -413,24 +409,15 @@ class LocalNotificationService {
       return;
     }
 
-    // ==========================================================
-    // ACTION BUTTON: REPLY
-    // ==========================================================
-
     if (response.actionId == 'action_reply') {
       debugPrint(
-        '[LocalNotification] Reply action: '
-            '${response.input}',
+        '[LocalNotification] Reply action: ${response.input}',
       );
       return;
     }
 
     // ==========================================================
-    // IMPORTANT:
-    // Only check whether Navigator exists.
-    //
-    // DO NOT USE:
-    // navigator.canPop()
+    // NAVIGATOR NOT READY
     // ==========================================================
 
     final navigator = appNavigatorKey.currentState;
@@ -445,23 +432,24 @@ class LocalNotificationService {
       return;
     }
 
+    // ==========================================================
+    // NAVIGATOR READY
+    // ==========================================================
+
     debugPrint(
       '[LocalNotification] Navigator ready. '
           'Routing: $payload',
     );
 
-    // Give Flutter time to finish the current frame.
     await Future.delayed(
-      const Duration(milliseconds: 100),
+      const Duration(milliseconds: 300),
     );
 
     await handleNotificationRouting(payload);
   }
-
   // ============================================================
   // DEEP LINK ROUTING LOGIC
   // ============================================================
-
   static Future<void> handleNotificationRouting(
       String payload,
       ) async {
@@ -479,24 +467,20 @@ class LocalNotificationService {
     final isar = IsarService.isar;
 
     try {
-      // ========================================================
+      // ==========================================================
       // APP UPDATE
-      // ========================================================
+      // ==========================================================
 
       if (payload == 'app_update') {
-        // Add update route here if required.
         return;
       }
 
-      // ========================================================
-      // CUSTOMER NOTIFICATIONS
-      // ========================================================
+      // ==========================================================
+      // CUSTOMER - INTEREST CALCULATED
+      // ==========================================================
 
-      if (payload.startsWith('interest_calculated:') ||
-          payload.startsWith('interest_updated:') ||
-          payload.startsWith('payment:')) {
+      if (payload.startsWith('interest_calculated:customer:')) {
         final idStr = payload.split(':').last;
-
         final customerId = int.tryParse(idStr);
 
         if (customerId == null) {
@@ -511,15 +495,14 @@ class LocalNotificationService {
 
         if (customer == null) {
           debugPrint(
-            '[LocalNotification] '
-                'Customer not found: $customerId',
+            '[LocalNotification] Customer not found: $customerId',
           );
           return;
         }
 
         debugPrint(
-          '[LocalNotification] '
-              'Opening customer: ${customer.id}',
+          '[LocalNotification] Opening customer: '
+              '${customer.id}',
         );
 
         nav.pushNamed(
@@ -530,20 +513,149 @@ class LocalNotificationService {
         return;
       }
 
-      // ========================================================
-      // LENDER / LOAN NOTIFICATIONS
-      // ========================================================
+      // ==========================================================
+      // LENDER - INTEREST CALCULATED
+      // ==========================================================
 
-      if (payload.startsWith('took_loan:') ||
-          payload.startsWith('took_payment:')) {
+      if (payload.startsWith('interest_calculated:lender:')) {
         final idStr = payload.split(':').last;
-
         final lenderId = int.tryParse(idStr);
 
         if (lenderId == null) {
           debugPrint(
-            '[LocalNotification] '
-                'Invalid lender ID: $idStr',
+            '[LocalNotification] Invalid lender ID: $idStr',
+          );
+          return;
+        }
+
+        final lender =
+        await isar.lenders.get(lenderId);
+
+        if (lender == null) {
+          debugPrint(
+            '[LocalNotification] Lender not found: $lenderId',
+          );
+          return;
+        }
+
+        debugPrint(
+          '[LocalNotification] Opening lender: '
+              '${lender.id}',
+        );
+
+        nav.pushNamed(
+          '/took_loan_customer_details',
+          arguments: lender,
+        );
+
+        return;
+      }
+
+      // ==========================================================
+      // CUSTOMER - INTEREST UPDATED
+      // ==========================================================
+
+      if (payload.startsWith('interest_updated:customer:')) {
+        final idStr = payload.split(':').last;
+        final customerId = int.tryParse(idStr);
+
+        if (customerId == null) {
+          debugPrint(
+            '[LocalNotification] Invalid customer ID: $idStr',
+          );
+          return;
+        }
+
+        final customer =
+        await isar.customers.get(customerId);
+
+        if (customer == null) {
+          debugPrint(
+            '[LocalNotification] Customer not found: $customerId',
+          );
+          return;
+        }
+
+        nav.pushNamed(
+          '/customer_details',
+          arguments: customer,
+        );
+
+        return;
+      }
+
+      // ==========================================================
+      // LENDER - INTEREST UPDATED
+      // ==========================================================
+
+      if (payload.startsWith('interest_updated:lender:')) {
+        final idStr = payload.split(':').last;
+        final lenderId = int.tryParse(idStr);
+
+        if (lenderId == null) {
+          debugPrint(
+            '[LocalNotification] Invalid lender ID: $idStr',
+          );
+          return;
+        }
+
+        final lender =
+        await isar.lenders.get(lenderId);
+
+        if (lender == null) {
+          debugPrint(
+            '[LocalNotification] Lender not found: $lenderId',
+          );
+          return;
+        }
+
+        nav.pushNamed(
+          '/took_loan_customer_details',
+          arguments: lender,
+        );
+
+        return;
+      }
+
+      // ==========================================================
+      // OLD CUSTOMER PAYLOAD - BACKWARD COMPATIBILITY
+      // ==========================================================
+
+      if (payload.startsWith('interest_calculated:') ||
+          payload.startsWith('interest_updated:') ||
+          payload.startsWith('payment:')) {
+        final idStr = payload.split(':').last;
+        final customerId = int.tryParse(idStr);
+
+        if (customerId == null) {
+          return;
+        }
+
+        final customer =
+        await isar.customers.get(customerId);
+
+        if (customer != null) {
+          nav.pushNamed(
+            '/customer_details',
+            arguments: customer,
+          );
+        }
+
+        return;
+      }
+
+      // ==========================================================
+      // LENDER - TOOK LOAN
+      // ==========================================================
+
+      if (payload.startsWith('took_loan:') ||
+          payload.startsWith('took_payment:')) {
+        final idStr = payload.split(':').last;
+        final lenderId = int.tryParse(idStr);
+
+        if (lenderId == null) {
+          debugPrint(
+            '[LocalNotification] Invalid lender ID: $idStr',
           );
           return;
         }
@@ -553,8 +665,8 @@ class LocalNotificationService {
 
         if (lender != null) {
           debugPrint(
-            '[LocalNotification] '
-                'Opening lender: ${lender.id}',
+            '[LocalNotification] Opening lender: '
+                '${lender.id}',
           );
 
           nav.pushNamed(
@@ -565,7 +677,7 @@ class LocalNotificationService {
           return;
         }
 
-        // Legacy fallback.
+        // Legacy fallback only.
         final oldCustomer =
         await isar.customers.get(lenderId);
 
@@ -579,9 +691,9 @@ class LocalNotificationService {
         return;
       }
 
-      // ========================================================
+      // ==========================================================
       // NOTIFICATION LIST
-      // ========================================================
+      // ==========================================================
 
       if (payload.startsWith('event_read:')) {
         final currentChopdi =
@@ -598,9 +710,9 @@ class LocalNotificationService {
         return;
       }
 
-      // ========================================================
+      // ==========================================================
       // DAILY REMINDER
-      // ========================================================
+      // ==========================================================
 
       if (payload == 'daily_reminder') {
         final currentChopdi =
@@ -616,15 +728,9 @@ class LocalNotificationService {
 
         return;
       }
-
-      debugPrint(
-        '[LocalNotification] '
-            'Unknown notification payload: $payload',
-      );
     } catch (e, stackTrace) {
       debugPrint(
-        '[LocalNotification] '
-            'Error routing notification: $e',
+        '[LocalNotification] Error routing notification: $e',
       );
 
       debugPrintStack(
@@ -632,7 +738,6 @@ class LocalNotificationService {
       );
     }
   }
-
   // ============================================================
   // RICH CHAT-STYLE NOTIFICATION
   // ============================================================

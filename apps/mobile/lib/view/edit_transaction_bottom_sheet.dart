@@ -1112,7 +1112,7 @@ class _EditTransactionBottomSheetState
       );
 
       await notificationService
-          .createInterestUpdatedNotification(
+          .createCustomerInterestUpdatedNotification(
         chopdiId:
         transaction.chopdiId,
         customerName:

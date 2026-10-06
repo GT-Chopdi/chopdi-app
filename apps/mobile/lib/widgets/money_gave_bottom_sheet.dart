@@ -1415,7 +1415,7 @@ class _MoneyGaveBottomSheetState
         );
 
         await notificationService
-            .createInterestNotification(
+            .createCustomerInterestNotification(
           chopdiId: activeCustomer.chopdiId,
           customerName: activeCustomer.name,
           interestAmount: calculatedInterest,

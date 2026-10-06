@@ -17,4 +17,5 @@ class NotificationModel {
   String? customerName;
   double? amount;
   int? chopdiId;
+
 }
