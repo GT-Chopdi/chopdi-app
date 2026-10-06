@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/lender.dart';
 import 'package:mychopdi/model/transaction.dart';
@@ -48,6 +47,7 @@ class _MoneyGaveBottomSheetState
   final GlobalKey _descriptionKey = GlobalKey();
 
   bool _interestRateError = false;
+  bool _amountError = false;
 
   DateTime selectedDate = DateTime.now();
 
@@ -279,23 +279,47 @@ class _MoneyGaveBottomSheetState
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
+                      // Container(
+                      //   height: 72,
+                      //   width: 72,
+                      //   decoration: const BoxDecoration(
+                      //     color: Color(0xFF00901B),
+                      //     shape: BoxShape.circle,
+                      //   ),
+                      //   child: Center(
+                      //     child: CircleAvatar(
+                      //       radius: 18,
+                      //       backgroundColor: Colors.transparent,
+                      //       child: Image.asset(
+                      //         'assets/you_gave.png',
+                      //         width: 32,
+                      //         height: 32,
+                      //         color: Colors.white,
+                      //         colorBlendMode: BlendMode.srcIn,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       Container(
                         height: 72,
                         width: 72,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00901B),
+                        decoration:
+                        const BoxDecoration(
+                          color: Color.fromRGBO(
+                            141,
+                            208,
+                            113,
+                            0.34,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: Colors.transparent,
+                            backgroundColor:
+                            Colors.transparent,
                             child: Image.asset(
-                              'assets/you_gave.png',
-                              width: 32,
-                              height: 32,
-                              color: Colors.white,
-                              colorBlendMode: BlendMode.srcIn,
+                              'assets/you_got.png',
                             ),
                           ),
                         ),
@@ -319,14 +343,73 @@ class _MoneyGaveBottomSheetState
                         child: TextField(
                           controller: amountController,
                           focusNode: _amountFocusNode,
-                          onChanged: (_) => setState(() {}),
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (value) {
+                            final amount = double.tryParse(value.trim());
+
+                            setState(() {
+                              _amountError =
+                                  value.trim().isEmpty || (amount != null && amount == 0);
+                            });
+                          },
                           decoration: decoration(
                             hint: l10n.enterAmount,
                             prefix: const Icon(
                               Icons.currency_rupee,
                               size: 20,
                               color: Color(0xff6D7B94),
+                            ),
+                          ).copyWith(
+                            errorText: _amountError
+                                ? (amountController.text.trim().isEmpty
+                                    ? l10n.amountRequired
+                                    : l10n.amountCannotBeZero)
+                                : null,
+
+                            errorStyle: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+
+                            // 🔴 Border when there is an error and field is NOT focused
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Colors.red,
+                                width: 1.2,
+                              ),
+                            ),
+
+                            // 🔴 Border when there is an error and field IS focused
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Colors.red,
+                                width: 1.3,
+                              ),
+                            ),
+
+                            // Normal border
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: _amountError
+                                    ? Colors.red
+                                    : const Color(0xffC9D2E3),
+                              ),
+                            ),
+
+                            // Normal focused border
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: _amountError
+                                    ? Colors.red
+                                    : const Color(0xff29406B),
+                                width: 1.3,
+                              ),
                             ),
                           ),
                         ),
@@ -339,13 +422,14 @@ class _MoneyGaveBottomSheetState
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
-                        decoration: decoration().copyWith(
+                        decoration: decoration(
                           suffix: const Icon(
                             Icons.calendar_today_outlined,
                             color: Colors.black,
+                            size: 20,
                           ),
-                          hintText: DateFormat("dd MMM yyyy", locale)
-                              .format(selectedDate),
+                        ).copyWith(
+                          hintText: DateFormat("dd MMM yy", locale).format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,
@@ -580,6 +664,17 @@ class _MoneyGaveBottomSheetState
                         height: 52,
                         child: ElevatedButton(
                           onPressed: () async {
+
+                            final amountText = amountController.text.trim();
+                            final amount = double.tryParse(amountText);
+
+                            if (amountText.isEmpty || amount == null || amount == 0) {
+                              setState(() {
+                                _amountError = true;
+                              });
+
+                              return;
+                            }
                             if (amountController.text.trim().isEmpty ||
                                 interestController.text.trim().isEmpty) {
                               setState(() {
@@ -666,21 +761,20 @@ class _MoneyGaveBottomSheetState
                                   IsarService.isar,
                                 );
 
-                                await notificationService
-                                    .createTookLoanNotification(
-                                  chopdiId: widget.lender.chopdiId,
-                                  customerName: widget.lender.name,
-                                  amount: amount,
-                                  customerId: widget.lender.id,
-                                );
+                                // await notificationService
+                                //     .createTookLoanNotification(
+                                //   chopdiId: widget.lender.chopdiId,
+                                //   customerName: widget.lender.name,
+                                //   amount: amount,
+                                //   customerId: widget.lender.id,
+                                // );
 
                                 if (interestAmount > 0) {
-                                  await notificationService
-                                      .createInterestNotification(
+                                  await notificationService.createLenderInterestNotification(
                                     chopdiId: widget.lender.chopdiId,
-                                    customerName: widget.lender.name,
+                                    lenderName: widget.lender.name,
                                     interestAmount: interestAmount,
-                                    customerId: widget.lender.id,
+                                    lenderId: widget.lender.id, transactionId: tx.id,
                                   );
                                 }
                               }

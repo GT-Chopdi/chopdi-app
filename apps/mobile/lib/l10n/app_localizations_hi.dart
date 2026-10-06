@@ -27,6 +27,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get tookLoanStatement =>
       "लिए गए लोन का विवरण";
+  @override
+  String get LenderAlreadyExists =>
+      "लेंडर पहले से मौजूद है";
 
   @override
   String get customerStatement =>
@@ -1572,7 +1575,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lender => 'उधारदाता';
 
   @override
-  String get lenderStatement => 'उधारदाता का विवरण';
+  String get lenderStatement => 'उधारदाता विवरण';
 
   @override
   String get lenderLoanSummaryAndRepaymentHistory =>
@@ -1672,4 +1675,104 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addYourName => 'अपना नाम जोड़ें';
+
+  @override
+  String get amountRequired => 'राशि आवश्यक है';
+
+  @override
+  String get amountCannotBeZero => 'राशि शून्य नहीं हो सकती';
+
+  @override
+  String get filterBy => 'से फ़िल्टर करें';
+  
+  @override
+  String get filterAll => 'सभी';
+
+  @override
+  String get mostRecent => 'सबसे नया';
+
+  @override
+  String get highestAmount => 'अधिकतम राशि';
+
+  @override
+  String get byNameAZ => 'नाम से (अ-ज्ञ)';
+
+  @override
+  String get oldest => 'सबसे पुराना';
+
+  @override
+  String get leastAmount => 'न्यूनतम राशि';
+
+  @override
+  String get totalAmountTaken =>
+      'कुल लिया गया लोन';
+
+  @override
+  String get loanTakenOn =>
+      'लोन लेने की तारीख';
+
+  @override
+  String get paymentPaid =>
+      'भुगतान किया';
+
+  @override
+  String get statement =>
+      'खाता विवरण';
+
+  @override
+  String get generatedDate =>
+      'बनाने की तारीख';
+
+  @override
+  String get trustedDigitalLedger =>
+      'आपकी भरोसेमंद डिजिटल खाता-बही';
+
+  @override
+  String pdfIncludesLenderDetails(String name) =>
+      'PDF में $name का विवरण, पूरी लेन-देन की हिस्ट्री और खाते का सारांश शामिल है।';
+
+  @override
+  String deleteLenderTitle(String name) =>
+      '$name को हटाएं?';
+
+  @override
+  String get deleteActionCannotBeUndone =>
+      'यह कार्रवाई वापस नहीं की जा सकती';
+
+  @override
+  String get allLenderDataDeleted =>
+      'उधारदाता का सभी डेटा स्थायी रूप से हटा दिया जाएगा, जिसमें शामिल हैं:';
+
+  @override
+  String get understandDeleteAction =>
+      'मैं समझता/समझती हूं कि यह कार्रवाई वापस नहीं की जा सकती।';
+
+  @override
+  String get phoneNumberNotAvailable => 'फ़ोन नंबर उपलब्ध नहीं है';
+
+  @override
+  String get phoneNumberNotAvailableForCustomer =>
+      'इस ग्राहक का फ़ोन नंबर उपलब्ध नहीं है।';
+
+  @override
+  String get phonePermissionRequired => 'फ़ोन अनुमति आवश्यक है';
+
+  @override
+  String get phonePermissionRequiredToMakeCall =>
+      'कॉल करने के लिए फ़ोन की अनुमति आवश्यक है।';
+
+  @override
+  String get phonePermissionDeniedOpenSettings =>
+      'फ़ोन की अनुमति अस्वीकार कर दी गई है। '
+      'कॉल करने के लिए कृपया ऐप की सेटिंग्स में जाकर अनुमति सक्षम करें।';
+
+  @override
+  String get unableToOpenDialer => 'डायलर खोलने में असमर्थ';
+
+  @override
+  String get unableToOpenPhoneDialer =>
+      'इस डिवाइस पर फ़ोन डायलर खोलने में असमर्थ।';
+
+  @override
+  String get openSettings => 'सेटिंग्स खोलें';
 }

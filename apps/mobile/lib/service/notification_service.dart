@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mychopdi/model/notification.dart';
 import 'package:mychopdi/service/local_notification_service.dart';
@@ -17,8 +18,8 @@ class NotificationService {
     String? message,
   }) async {
     final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
+    await LocalNotificationService.instance
+        .areNotificationsEnabled();
 
     if (!enabled) {
       return -1;
@@ -28,32 +29,40 @@ class NotificationService {
       ..title = 'App Update'
       ..subtitle =
           message ??
-          'A new version of Chopdi ($version) is available.'
+              'A new version of Chopdi ($version) is available.'
       ..type = 'app_update'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..chopdiId = chopdiId;
 
-    return isar.writeTxn(() async {
-      return isar.notificationModels.put(
-        notification,
-      );
+    final id = await isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: 'app_update',
+    );
+
+    return id;
   }
 
   // ============================================================
-  // INTEREST CALCULATED
+  // INTEREST CALCULATED - CUSTOMER
   // ============================================================
 
-  Future<int> createInterestNotification({
+  Future<int> createCustomerInterestNotification({
     required int chopdiId,
     required String customerName,
     required double interestAmount,
-    int? customerId,
+    required int customerId,
+    required int transactionId,
   }) async {
     final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
+    await LocalNotificationService.instance
+        .areNotificationsEnabled();
 
     if (!enabled) {
       return -1;
@@ -63,36 +72,107 @@ class NotificationService {
       ..title = 'Interest Calculated'
       ..subtitle =
           '₹${interestAmount.toStringAsFixed(2)} '
-          'interest calculated for $customerName.'
+          'interest calculated for Customer $customerName.'
       ..type = 'interest_calculated'
       ..createdAt = DateTime.now()
       ..isRead = false
       ..customerId = customerId
       ..customerName = customerName
       ..amount = interestAmount
-      ..chopdiId = chopdiId;
+      ..chopdiId = chopdiId
+      ..transactionId = transactionId;
 
-    return isar.writeTxn(() async {
-      return isar.notificationModels.put(
-        notification,
-      );
+    final id = await isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
+
+    final payload =
+        'interest_calculated:customer:'
+        '$customerId:$transactionId';
+
+    print(
+      '[NotificationService] Customer interest payload: $payload',
+    );
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: payload,
+    );
+
+    return id;
   }
 
   // ============================================================
-  // INTEREST UPDATED
+  // INTEREST CALCULATED - LENDER
   // ============================================================
 
-  Future<int> createInterestUpdatedNotification({
+  Future<int> createLenderInterestNotification({
+    required int chopdiId,
+    required String lenderName,
+    required double interestAmount,
+    required int lenderId,
+    required int transactionId,
+  }) async {
+    final enabled =
+    await LocalNotificationService.instance
+        .areNotificationsEnabled();
+
+    if (!enabled) {
+      return -1;
+    }
+
+    final notification = NotificationModel()
+      ..title = 'Interest Calculated'
+      ..subtitle =
+          '₹${interestAmount.toStringAsFixed(2)} '
+          'interest calculated for Lender $lenderName.'
+      ..type = 'lender_interest_calculated'
+      ..createdAt = DateTime.now()
+      ..isRead = false
+      ..customerName = lenderName
+      ..amount = interestAmount
+      ..chopdiId = chopdiId
+      ..transactionId = transactionId;
+
+    final id = await isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
+    });
+
+    final payload =
+        'interest_calculated:lender:'
+        '$lenderId:$transactionId';
+
+    print(
+      '[NotificationService] Lender interest payload: $payload',
+    );
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: payload,
+    );
+
+    return id;
+  }
+
+  // ============================================================
+  // INTEREST UPDATED - CUSTOMER
+  // ============================================================
+
+  Future<int> createCustomerInterestUpdatedNotification({
     required int chopdiId,
     required String customerName,
     required double interestAmount,
     required String interestPeriod,
-    int? customerId,
+    required int customerId,
+    required int transactionId,
   }) async {
     final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
+    await LocalNotificationService.instance
+        .areNotificationsEnabled();
 
     if (!enabled) {
       return -1;
@@ -101,8 +181,8 @@ class NotificationService {
     final notification = NotificationModel()
       ..title = 'Interest Updated'
       ..subtitle =
-          'Interest for $interestPeriod for $customerName '
-          'has been updated to '
+          'Interest for $interestPeriod for Customer '
+          '$customerName has been updated to '
           '₹${interestAmount.toStringAsFixed(2)}.'
       ..type = 'interest_updated'
       ..createdAt = DateTime.now()
@@ -110,109 +190,85 @@ class NotificationService {
       ..customerId = customerId
       ..customerName = customerName
       ..amount = interestAmount
-      ..chopdiId = chopdiId;
+      ..chopdiId = chopdiId
+      ..transactionId = transactionId;
 
-    return isar.writeTxn(() async {
-      return isar.notificationModels.put(
-        notification,
-      );
-    });
-  }
-
-  // ============================================================
-  // I TOOK LOAN
-  // ============================================================
-
-  Future<int> createTookLoanNotification({
-    required int chopdiId,
-    required String customerName,
-    required double amount,
-    int? customerId,
-  }) async {
-    final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
-
-    if (!enabled) {
-      return -1;
-    }
-
-    final notification = NotificationModel()
-      ..title = 'I Took Loan'
-      ..subtitle =
-          'You took ₹${amount.toStringAsFixed(2)} '
-          'from $customerName.'
-      ..type = 'took_loan'
-      ..createdAt = DateTime.now()
-      ..isRead = false
-      ..customerId = customerId
-      ..customerName = customerName
-      ..amount = amount
-      ..chopdiId = chopdiId;
-
-    return isar.writeTxn(() async {
+    final id = await isar.writeTxn(() async {
       return isar.notificationModels.put(notification);
     });
+
+    final payload =
+        'interest_updated:customer:'
+        '$customerId:$transactionId';
+
+    print(
+      '[NotificationService] Customer updated payload: $payload',
+    );
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: payload,
+    );
+
+    return id;
   }
 
   // ============================================================
-  // PAYMENT REMINDER
+  // INTEREST UPDATED - LENDER
   // ============================================================
 
-  Future<int> createPaymentReminderNotification({
+  Future<int> createLenderInterestUpdatedNotification({
     required int chopdiId,
-    required String customerName,
-    required DateTime dueDate,
-    required String reminderType,
-    int? customerId,
-    double? amount,
+    required String lenderName,
+    required double interestAmount,
+    required String interestPeriod,
+    required int lenderId,
+    required int transactionId,
   }) async {
     final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
+    await LocalNotificationService.instance
+        .areNotificationsEnabled();
 
     if (!enabled) {
       return -1;
     }
 
-    String reminderText;
-
-    switch (reminderType) {
-      case 'oneDayBefore':
-        reminderText = 'Payment is due tomorrow';
-        break;
-
-      case 'threeDaysBefore':
-        reminderText = 'Payment is due in 3 days';
-        break;
-
-      case 'dueDate':
-      default:
-        reminderText = 'Payment is due today';
-        break;
-    }
-
-    final amountText = amount == null
-        ? ''
-        : ' Amount: ₹${amount.toStringAsFixed(2)}.';
-
     final notification = NotificationModel()
-      ..title = 'Payment Reminder'
+      ..title = 'Interest Updated'
       ..subtitle =
-          '$reminderText for $customerName.$amountText'
-      ..type = 'payment_reminder'
+          'Interest for $interestPeriod for Lender '
+          '$lenderName has been updated to '
+          '₹${interestAmount.toStringAsFixed(2)}.'
+      ..type = 'lender_interest_updated'
       ..createdAt = DateTime.now()
       ..isRead = false
-      ..customerId = customerId
-      ..customerName = customerName
-      ..amount = amount
-      ..chopdiId = chopdiId;
+      ..customerName = lenderName
+      ..amount = interestAmount
+      ..chopdiId = chopdiId
+      ..transactionId = transactionId;
 
-    return isar.writeTxn(() async {
-      return isar.notificationModels.put(
-        notification,
-      );
+    final id = await isar.writeTxn(() async {
+      return isar.notificationModels.put(notification);
     });
+
+    final payload =
+        'interest_updated:lender:'
+        '$lenderId:$transactionId';
+
+    print(
+      '[NotificationService] Lender updated payload: $payload',
+    );
+
+    await LocalNotificationService.instance.showAppEventNotification(
+      id: id,
+      title: notification.title,
+      body: notification.subtitle,
+      payload: payload,
+    );
+
+    return id;
   }
 
   // ============================================================
@@ -220,15 +276,15 @@ class NotificationService {
   // ============================================================
 
   Stream<List<NotificationModel>> watchNotifications(
-    int chopdiId,
-  ) {
+      int chopdiId,
+      ) {
     return isar.notificationModels
         .filter()
         .chopdiIdEqualTo(chopdiId)
         .sortByCreatedAtDesc()
         .watch(
-          fireImmediately: true,
-        );
+      fireImmediately: true,
+    );
   }
 
   // ============================================================
@@ -236,19 +292,18 @@ class NotificationService {
   // ============================================================
 
   Stream<int> watchUnreadCount(
-    int chopdiId,
-  ) {
+      int chopdiId,
+      ) {
     return isar.notificationModels
         .filter()
         .chopdiIdEqualTo(chopdiId)
         .isReadEqualTo(false)
         .watch(
-          fireImmediately: true,
-        )
+      fireImmediately: true,
+    )
         .map(
-          (notifications) =>
-              notifications.length,
-        );
+          (notifications) => notifications.length,
+    );
   }
 
   // ============================================================
@@ -256,12 +311,10 @@ class NotificationService {
   // ============================================================
 
   Future<void> markAsRead(
-    int notificationId,
-  ) async {
+      int notificationId,
+      ) async {
     final notification =
-        await isar.notificationModels.get(
-      notificationId,
-    );
+    await isar.notificationModels.get(notificationId);
 
     if (notification == null) {
       return;
@@ -274,9 +327,7 @@ class NotificationService {
     notification.isRead = true;
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.put(
-        notification,
-      );
+      await isar.notificationModels.put(notification);
     });
   }
 
@@ -285,12 +336,10 @@ class NotificationService {
   // ============================================================
 
   Future<void> markAsUnread(
-    int notificationId,
-  ) async {
+      int notificationId,
+      ) async {
     final notification =
-        await isar.notificationModels.get(
-      notificationId,
-    );
+    await isar.notificationModels.get(notificationId);
 
     if (notification == null) {
       return;
@@ -303,9 +352,7 @@ class NotificationService {
     notification.isRead = false;
 
     await isar.writeTxn(() async {
-      await isar.notificationModels.put(
-        notification,
-      );
+      await isar.notificationModels.put(notification);
     });
   }
 
@@ -314,14 +361,14 @@ class NotificationService {
   // ============================================================
 
   Future<void> markAllAsRead(
-    int chopdiId,
-  ) async {
+      int chopdiId,
+      ) async {
     final notifications =
-        await isar.notificationModels
-            .filter()
-            .chopdiIdEqualTo(chopdiId)
-            .isReadEqualTo(false)
-            .findAll();
+    await isar.notificationModels
+        .filter()
+        .chopdiIdEqualTo(chopdiId)
+        .isReadEqualTo(false)
+        .findAll();
 
     if (notifications.isEmpty) {
       return;
@@ -343,8 +390,8 @@ class NotificationService {
   // ============================================================
 
   Future<void> deleteNotification(
-    int notificationId,
-  ) async {
+      int notificationId,
+      ) async {
     await isar.writeTxn(() async {
       await isar.notificationModels.delete(
         notificationId,
@@ -353,12 +400,108 @@ class NotificationService {
   }
 
   // ============================================================
+// TEST - MULTIPLE NOTIFICATIONS
+// ============================================================
+
+  Future<void> triggerTestNotifications({
+    required int chopdiId,
+    required int customerId,
+    required String customerName,
+    required int transactionId,
+  }) async {
+    debugPrint(
+      '[NotificationService] TEST: Triggering multiple notifications...',
+    );
+
+    // 1
+    await createCustomerInterestNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 125.50,
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    // 2
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    await createCustomerInterestUpdatedNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 150.75,
+      interestPeriod: 'Monthly',
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    // 3
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    await createCustomerInterestNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 200.00,
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    // 4
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    await createCustomerInterestUpdatedNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 225.25,
+      interestPeriod: 'Weekly',
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    // 5
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    await createCustomerInterestNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 300.00,
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    // 6
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    await createCustomerInterestUpdatedNotification(
+      chopdiId: chopdiId,
+      customerName: customerName,
+      interestAmount: 350.50,
+      interestPeriod: 'Daily',
+      customerId: customerId,
+      transactionId: transactionId,
+    );
+
+    debugPrint(
+      '[NotificationService] TEST: 6 notifications triggered.',
+    );
+  }
+
+  // ============================================================
   // CLEAR ALL
   // ============================================================
 
   Future<void> clearAll(
-    int chopdiId,
-  ) async {
+      int chopdiId,
+      ) async {
     await isar.writeTxn(() async {
       await isar.notificationModels
           .filter()

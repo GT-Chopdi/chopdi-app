@@ -9,8 +9,14 @@ export const SYNC_ENTITIES = ['chopdi', 'customer', 'lender', 'ledger_entry'] as
 
 export type SyncEntity = (typeof SYNC_ENTITIES)[number];
 
-/** What an operation does to a row. */
-export type SyncOpType = 'create' | 'update' | 'void';
+/**
+ * What a change did to a row.
+ *
+ * `merge` only ever comes back from a pull — a client cannot send one. It says
+ * that `entityId` was a duplicate of `data.mergedInto`: the device should move
+ * anything it holds under the first id to the second.
+ */
+export type SyncOpType = 'create' | 'update' | 'void' | 'merge';
 
 /**
  * Outcome of one operation.
@@ -38,6 +44,13 @@ export interface SyncOperationResult {
   };
   /** Attached on a conflict so the client can show the user both versions. */
   serverState?: Record<string, unknown>;
+  /**
+   * Set when a customer or lender create matched one that already exists
+   * (same name and phone, created on another device). Nothing was inserted:
+   * the client should re-key its row, and everything pointing at it, to this
+   * id. Operations still sent with the old id keep working regardless.
+   */
+  mergedInto?: string;
 }
 
 export interface SyncPushResponse {

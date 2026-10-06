@@ -65,6 +65,7 @@ model AppUser {
   ledgerEntries  LedgerEntry[]
   syncOperations SyncOperation[]
   changeLog      SyncChangeLog[]
+  partyMerges    PartyMerge[]
 
   @@map("app_user")
 }
@@ -203,6 +204,14 @@ model Customer {
 
   name      String
   phoneE164 String? @map("phone_e164")
+
+  /// Matching key for duplicate detection: trimmed, single-spaced, lowercased
+  /// name. Server-maintained on every create and update — see party-keys.ts.
+  /// Two devices that each created "Ravi" offline produce two ids; this is
+  /// what lets the server recognise them as one person.
+  nameKey  String @default("") @map("name_key")
+  /// Last 10 digits of the phone, or '' when there is none.
+  phoneKey String @default("") @map("phone_key")
   notes     String  @default("")
 
   /// Optimistic-concurrency guard. Server-owned: a client never sends it as
@@ -224,6 +233,7 @@ model Customer {
 
   @@index([userId])
   @@index([chopdiId])
+  @@index([userId, nameKey, phoneKey], map: "customer_match_key_idx")
   @@map("customer")
 }
 
@@ -240,6 +250,14 @@ model Lender {
 
   name      String
   phoneE164 String? @map("phone_e164")
+
+  /// Matching key for duplicate detection: trimmed, single-spaced, lowercased
+  /// name. Server-maintained on every create and update — see party-keys.ts.
+  /// Two devices that each created "Ravi" offline produce two ids; this is
+  /// what lets the server recognise them as one person.
+  nameKey  String @default("") @map("name_key")
+  /// Last 10 digits of the phone, or '' when there is none.
+  phoneKey String @default("") @map("phone_key")
   notes     String  @default("")
 
   version Int @default(1)
@@ -254,6 +272,7 @@ model Lender {
 
   @@index([userId])
   @@index([chopdiId])
+  @@index([userId, nameKey, phoneKey], map: "lender_match_key_idx")
   @@map("lender")
 }
 
@@ -330,6 +349,15 @@ model LedgerEntry {
   voidedAt     DateTime? @map("voided_at") @db.Timestamptz(6)
   voidedReason String?   @map("voided_reason")
 
+  /// Device whose push created the entry. Decides which side of a customer
+  /// merge an entry belongs to — see MergeService.
+  originDeviceId String? @map("origin_device_id") @db.Uuid
+
+  /// Set when the client addressed the entry to a party id that the server
+  /// had merged into another (`party_merge.alias_id`). The entry is stored
+  /// against the surviving party; this records which copy it came from.
+  viaAliasId String? @map("via_alias_id") @db.Uuid
+
   user     AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
   lender   Lender?   @relation(fields: [lenderId], references: [id], onDelete: Restrict)
@@ -337,6 +365,7 @@ model LedgerEntry {
   @@index([customerId, entryDate(sort: Desc)])
   @@index([lenderId, entryDate(sort: Desc)])
   @@index([userId])
+  @@index([viaAliasId])
   @@map("ledger_entry")
 }
 
@@ -355,6 +384,47 @@ model LedgerEntry {
 /// instead would break the guarantee at the exact moment it matters: a crash
 /// between the two writes could record the key without the row, and the retry
 /// would then be told "already applied" for an entry that does not exist.
+/// One duplicate customer or lender folded into another.
+///
+/// Two offline devices can each create the same person under different ids.
+/// The second to reach the server is not inserted; instead its id is recorded
+/// here as an alias of the first, so every later operation that names it —
+/// entries queued in that device's outbox, edits, deletes — lands on the
+/// surviving row. Which side's entries stay live is decided by
+/// MergeService.settle: the side with more entries wins.
+model PartyMerge {
+  /// The id the duplicate was created under. Never a row in customer/lender
+  /// for live merges; a soft-deleted row for ones made by the cleanup script.
+  aliasId String @id @map("alias_id") @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+
+  /// customer | lender
+  entity String
+  mainId String @map("main_id") @db.Uuid
+
+  /// Device that created the surviving row, and the one that sent the alias.
+  /// Null for merges made by the cleanup script.
+  mainDeviceId  String? @map("main_device_id") @db.Uuid
+  aliasDeviceId String? @map("alias_device_id") @db.Uuid
+
+  /// The duplicate's fields as sent, so they can be applied if it wins.
+  aliasSnapshot Json @map("alias_snapshot")
+
+  /// sync | cleanup
+  source String @default("sync")
+
+  /// main | alias — whose entries are currently live.
+  winner String @default("main")
+
+  mergedAt DateTime @default(now()) @map("merged_at") @db.Timestamptz(6)
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([mainId])
+  @@index([userId])
+  @@map("party_merge")
+}
+
 model SyncOperation {
   id       BigInt @id @default(autoincrement())
   userId   String @map("user_id") @db.Uuid

@@ -8,21 +8,30 @@ class ProfileSection extends StatelessWidget {
   final String phoneNumber;
   final String? userName;
   final VoidCallback onEditName;
-  final VoidCallback onAddName;
 
   const ProfileSection({
     super.key,
     required this.phoneNumber,
     this.userName,
     required this.onEditName,
-    required this.onAddName,
   });
+
+
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
     final hasName = userName != null && userName!.trim().isNotEmpty;
+
+    String formattedPhoneNumber = phoneNumber.trim();
+
+    if (formattedPhoneNumber.startsWith('+91')) {
+      formattedPhoneNumber =
+          '+91-${formattedPhoneNumber.substring(3).trim()}';
+    } else {
+      formattedPhoneNumber = '+91-$formattedPhoneNumber';
+    }
 
     return Container(
       width: double.infinity,
@@ -70,21 +79,24 @@ class ProfileSection extends StatelessWidget {
                 ),
               ),
 
-              if (hasName)
-                TextButton.icon(
-                  onPressed: onEditName,
-                  icon: const Icon(
-                    Icons.edit_outlined,
-                    size: 17,
-                  ),
-                  label: Text(l10n.edit),
-                  style: TextButton.styleFrom(
-                    foregroundColor: ChopdiColors.navy,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                    ),
+              // -----------------------------------------------------------
+              // EDIT
+              // Always visible so user can add/update the name.
+              // -----------------------------------------------------------
+              TextButton.icon(
+                onPressed: onEditName,
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 17,
+                ),
+                label: Text(l10n.edit),
+                style: TextButton.styleFrom(
+                  foregroundColor: ChopdiColors.navy,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
                   ),
                 ),
+              ),
             ],
           ),
 
@@ -104,39 +116,14 @@ class ProfileSection extends StatelessWidget {
 
           const SizedBox(height: 5),
 
-          if (hasName)
-            Text(
-              userName!,
-              style: GoogleFonts.manrope(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: ChopdiColors.navy,
-              ),
-            )
-          else
-            InkWell(
-              onTap: onAddName,
-              borderRadius: BorderRadius.circular(8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.addYourName,
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: ChopdiColors.navy,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  const Icon(
-                    Icons.add_rounded,
-                    size: 20,
-                    color: ChopdiColors.navy,
-                  ),
-                ],
-              ),
+          Text(
+            hasName ? userName!.trim() : '-',
+            style: GoogleFonts.manrope(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: ChopdiColors.navy,
             ),
+          ),
 
           const SizedBox(height: 16),
 
@@ -173,7 +160,7 @@ class ProfileSection extends StatelessWidget {
 
               Expanded(
                 child: Text(
-                  phoneNumber,
+                   formattedPhoneNumber,
                   style: GoogleFonts.manrope(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

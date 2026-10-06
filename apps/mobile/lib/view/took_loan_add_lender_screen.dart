@@ -277,6 +277,7 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
     final width = size.width;
     final height = size.height;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xffF8EEDC),
@@ -317,8 +318,8 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
 
                       const SizedBox(width: 12),
 
-                      const Text(
-                        "Add Lender",
+                      Text(
+                        l10n.addLender,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -363,8 +364,8 @@ class _TookLoanAddLenderScreen extends State<TookLoanAddLenderScreen> {
                   // ALL CONTACTS
                   // ------------------------------------------------
 
-                  const Text(
-                    "All Contacts",
+                  Text(
+                    l10n.allContacts,
                     style: TextStyle(
                       color: Color(0xff223A5E),
                       fontWeight: FontWeight.w700,

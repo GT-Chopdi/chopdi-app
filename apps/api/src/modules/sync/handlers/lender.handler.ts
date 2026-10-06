@@ -4,6 +4,8 @@ import {
   ChangeLogService,
   type TransactionClient,
 } from '../change-log.service';
+import { MergeService } from '../merge.service';
+import { partyKeys } from '../party-keys';
 import { ledgerEntrySnapshot } from './ledger-entry.handler';
 import {
   PartyHandler,
@@ -16,8 +18,8 @@ import {
 /** Applies operations for lenders — people the user took a loan from. */
 @Injectable()
 export class LenderHandler extends PartyHandler {
-  constructor(changeLog: ChangeLogService) {
-    super(changeLog);
+  constructor(changeLog: ChangeLogService, merges: MergeService) {
+    super(changeLog, merges);
   }
 
   protected readonly entity = 'lender' as const;
@@ -67,6 +69,7 @@ export class LenderHandler extends PartyHandler {
         name: fields.name,
         phoneE164: fields.phone,
         notes: fields.notes,
+        ...partyKeys(fields.name, fields.phone),
       },
     });
 

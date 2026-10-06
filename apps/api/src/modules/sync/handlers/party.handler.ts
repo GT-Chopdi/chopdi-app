@@ -3,6 +3,8 @@ import {
   ChangeLogService,
   type TransactionClient,
 } from '../change-log.service';
+import type { MergeService } from '../merge.service';
+import { partyKeys } from '../party-keys';
 import type { EntitySnapshot } from '../sync.types';
 
 export type PartyEntity = 'customer' | 'lender';
@@ -41,6 +43,8 @@ export interface PartyDelegate {
       name: string;
       phoneE164: string | null;
       notes: string;
+      nameKey: string;
+      phoneKey: string;
     };
   }): Promise<PartyRow>;
   update(args: {
@@ -58,7 +62,7 @@ export interface PartyPayload {
 }
 
 export type Meta = { deviceId: string; opId: string };
-export type Applied = { snapshot: EntitySnapshot; seq: bigint };
+export type Applied = { snapshot: EntitySnapshot; seq: bigint; mergedInto?: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -71,7 +75,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * separately is one that can be forgotten in the next method.
  */
 export abstract class PartyHandler {
-  constructor(protected readonly changeLog: ChangeLogService) {}
+  constructor(
+    protected readonly changeLog: ChangeLogService,
+    protected readonly merges: MergeService,
+  ) {}
 
   static readonly maxNameLength = 120;
 
@@ -111,6 +118,9 @@ export abstract class PartyHandler {
     const notes = this.optionalString(payload.notes, 'notes') ?? '';
     const chopdiId = await this.resolveChopdi(tx, userId, payload.chopdiId);
 
+    // Before the duplicate check, not after: see MergeService.lockUser.
+    await this.merges.lockUser(tx, userId);
+
     const existing = await this.table(tx).findUnique({
       where: { id: entityId },
       select: { id: true, userId: true },
@@ -132,6 +142,15 @@ export abstract class PartyHandler {
       );
     }
 
+    // Already folded into another row — the same create sent again under a
+    // new opId, e.g. after a reinstall. Answer as the merge did.
+    const merged = await this.merges.findByAlias(tx, userId, entityId);
+    if (merged) {
+      if (merged.entity !== this.entity) throw this.notFound();
+      const main = await this.load(tx, userId, merged.mainId);
+      return { snapshot: this.snapshot(main), seq: 0n, mergedInto: main.id };
+    }
+
     const adopted = await this.adopt?.(
       tx,
       userId,
@@ -141,8 +160,22 @@ export abstract class PartyHandler {
     );
     if (adopted) return adopted;
 
+    // The same person created on another device while this one was offline.
+    const keys = partyKeys(name, phone);
+    const match = await this.merges.findMatch(tx, this.entity, userId, chopdiId, keys);
+    if (match) {
+      return this.merges.merge(tx, {
+        entity: this.entity,
+        userId,
+        main: match,
+        aliasId: entityId,
+        alias: { chopdiId, name, phone, notes },
+        meta,
+      });
+    }
+
     const row = await this.table(tx).create({
-      data: { id: entityId, userId, chopdiId, name, phoneE164: phone, notes },
+      data: { id: entityId, userId, chopdiId, name, phoneE164: phone, notes, ...keys },
     });
 
     const seq = await this.changeLog.append(tx, {
@@ -184,27 +217,43 @@ export abstract class PartyHandler {
 
     const previous = this.snapshot(current);
 
+    const name =
+      payload.name === undefined ? current.name : this.requireName(payload.name);
+    const phone =
+      payload.phone === undefined
+        ? current.phoneE164
+        : this.optionalString(payload.phone, 'phone');
+    const chopdiId =
+      payload.chopdiId === undefined
+        ? current.chopdiId
+        : await this.resolveChopdi(tx, userId, payload.chopdiId);
+    const keys = partyKeys(name, phone);
+    const before = partyKeys(current.name, current.phoneE164);
+
+    // Only an edit that changes who this is can collide. Checking every edit
+    // would also refuse a notes change on a row that is already one of a
+    // duplicate pair from before merging existed.
+    if (
+      keys.nameKey !== before.nameKey ||
+      keys.phoneKey !== before.phoneKey ||
+      chopdiId !== current.chopdiId
+    ) {
+      await this.assertNoOtherMatch(tx, userId, current.id, chopdiId, keys);
+    }
+
     const row = await this.table(tx).update({
-      where: { id: entityId },
+      where: { id: current.id },
       data: {
-        name:
-          payload.name === undefined
-            ? undefined
-            : this.requireName(payload.name),
-        phoneE164:
-          payload.phone === undefined
-            ? undefined
-            : this.optionalString(payload.phone, 'phone'),
+        name,
+        phoneE164: phone,
+        ...keys,
         notes:
           payload.notes === undefined
             ? undefined
             : (this.optionalString(payload.notes, 'notes') ?? ''),
         // Sent by a client backfilling the book on rows synced before books
         // were, and when a party moves between books.
-        chopdiId:
-          payload.chopdiId === undefined
-            ? undefined
-            : await this.resolveChopdi(tx, userId, payload.chopdiId),
+        chopdiId,
         version: { increment: 1 },
       },
     });
@@ -212,7 +261,7 @@ export abstract class PartyHandler {
     const seq = await this.changeLog.append(tx, {
       userId,
       entity: this.entity,
-      entityId,
+      entityId: current.id,
       opType: 'update',
       snapshot: this.snapshot(row),
       previous,
@@ -220,7 +269,7 @@ export abstract class PartyHandler {
       opId: meta.opId,
     });
 
-    return { snapshot: this.snapshot(row), seq };
+    return { snapshot: this.snapshot(row), seq, ...this.redirected(entityId, current.id) };
   }
 
   async void(
@@ -237,7 +286,7 @@ export abstract class PartyHandler {
     // retrying a delete it never got a response for must not be told its data
     // is broken.
     if (current.deletedAt) {
-      return { snapshot: this.snapshot(current), seq: 0n };
+      return { snapshot: this.snapshot(current), seq: 0n, ...this.redirected(entityId, current.id) };
     }
 
     this.assertVersion(current, expectedVersion);
@@ -245,14 +294,14 @@ export abstract class PartyHandler {
     const previous = this.snapshot(current);
 
     const row = await this.table(tx).update({
-      where: { id: entityId },
+      where: { id: current.id },
       data: { deletedAt: new Date(), version: { increment: 1 } },
     });
 
     const seq = await this.changeLog.append(tx, {
       userId,
       entity: this.entity,
-      entityId,
+      entityId: current.id,
       opType: 'void',
       snapshot: this.snapshot(row),
       previous,
@@ -260,21 +309,57 @@ export abstract class PartyHandler {
       opId: meta.opId,
     });
 
-    return { snapshot: this.snapshot(row), seq };
+    return { snapshot: this.snapshot(row), seq, ...this.redirected(entityId, current.id) };
   }
 
   // ------------------------------------------------------------------ internals
 
+  /**
+   * The row an id refers to — following a merge, so an edit or delete a device
+   * queued against its own copy of a merged party lands on the survivor.
+   */
   protected async load(
     tx: TransactionClient,
     userId: string,
     entityId: string,
   ) {
+    const { id } = await this.merges.resolve(tx, userId, entityId);
     const row = await this.table(tx).findFirst({
-      where: { id: entityId, userId },
+      where: { id, userId },
     });
     if (!row) throw this.notFound();
     return row;
+  }
+
+  /** Tells the client which id an operation sent under a merged alias landed on. */
+  private redirected(sentId: string, actualId: string): { mergedInto?: string } {
+    return sentId === actualId ? {} : { mergedInto: actualId };
+  }
+
+  /**
+   * An edit that would make this party a duplicate of another live one.
+   *
+   * Refused rather than merged: unlike a create, both rows already have their
+   * own entries and history, and silently voiding one side's entries because
+   * of a rename is not something the user asked for.
+   */
+  private async assertNoOtherMatch(
+    tx: TransactionClient,
+    userId: string,
+    selfId: string,
+    chopdiId: string | null,
+    keys: { nameKey: string; phoneKey: string },
+  ): Promise<void> {
+    const other = await this.merges.findMatch(tx, this.entity, userId, chopdiId, keys);
+    if (!other || other.id === selfId) return;
+
+    throw new AppException(
+      409,
+      ErrorCode.PARTY_EXISTS,
+      `Another ${this.label} already has this name and phone number.`,
+      true,
+      { otherId: other.id },
+    );
   }
 
   /**

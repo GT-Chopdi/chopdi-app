@@ -8,31 +8,36 @@ class TransactionRow extends StatelessWidget {
   final Transaction transaction;
   final double balance;
   final VoidCallback? onChanged;
-  final int customerId;
+  final String customerUuid;
+
+  // ============================================================
+  // HIGHLIGHT
+  // ============================================================
+
+  final bool isHighlighted;
 
   const TransactionRow({
     super.key,
     required this.transaction,
     required this.balance,
     this.onChanged,
-    required this.customerId,
+    required this.customerUuid,
+    this.isHighlighted = false,
   });
 
-  // ================================================================
+  // ============================================================
   // USER DESCRIPTION
-  // ================================================================
+  // ============================================================
 
-  String _getDescription(BuildContext context) {
+  String _getDescription(
+      BuildContext context,
+      ) {
     final l10n = AppLocalizations.of(context);
 
-    // If user has entered a description, show that description.
     if (transaction.description.trim().isNotEmpty) {
-      return _shortenDescription(
-        transaction.description.trim(),
-      );
+      return transaction.description.trim();
     }
 
-    // Default description based on transaction type.
     switch (transaction.type) {
       case TransactionType.gave:
         return l10n.loanGivenDescription;
@@ -48,61 +53,65 @@ class TransactionRow extends StatelessWidget {
     }
   }
 
-  String _shortenDescription(String description) {
-    const maxCharacters = 25;
+  // ============================================================
+  // GIVEN DESCRIPTION
+  // ============================================================
 
-    if (description.length <= maxCharacters) {
-      return description;
-    }
-
-    return "${description.substring(0, maxCharacters).trim()}...";
-  }
-
-  // ================================================================
-  // TRANSACTION TYPE
-  // ================================================================
-
-  String _getGivenDescription(BuildContext context) {
+  String _getGivenDescription(
+      BuildContext context,
+      ) {
     final l10n = AppLocalizations.of(context);
+
     return l10n.loanGiven;
   }
 
-  String _getReceivedDescription(BuildContext context) {
+  // ============================================================
+  // RECEIVED DESCRIPTION
+  // ============================================================
+
+  String _getReceivedDescription(
+      BuildContext context,
+      ) {
     final l10n = AppLocalizations.of(context);
+
     return l10n.paymentReceived;
   }
 
-  // ================================================================
+  // ============================================================
   // INTEREST / ROW DESCRIPTION
-  // ================================================================
+  // ============================================================
 
-  String _getRowDescription(BuildContext context) {
+  String _getRowDescription(
+      BuildContext context,
+      ) {
     final l10n = AppLocalizations.of(context);
 
     final locale = Localizations.localeOf(context).toLanguageTag();
 
     final startDate = transaction.date;
+
     final endDate = DateTime.now();
 
-    final formattedStart =
-    DateFormat("dd MMM yyyy", locale).format(startDate);
+    final formattedStart = DateFormat(
+      "dd MMM yyyy",
+      locale,
+    ).format(startDate);
 
-    final formattedEnd =
-    DateFormat("dd MMM yyyy", locale).format(endDate);
+    final formattedEnd = DateFormat(
+      "dd MMM yyyy",
+      locale,
+    ).format(endDate);
 
-    final rate =
-    transaction.interestRate.toStringAsFixed(0);
+    final rate = transaction.interestRate.toStringAsFixed(0);
 
-    final frequency =
-    transaction.interestFrequency.isEmpty
+    final frequency = transaction.interestFrequency.isEmpty
         ? l10n.monthly
         : _localizedFrequency(
       context,
       transaction.interestFrequency,
     );
 
-    final interestType =
-    transaction.interestType.isEmpty
+    final interestType = transaction.interestType.isEmpty
         ? l10n.simpleInterest
         : _localizedInterestType(
       context,
@@ -113,9 +122,9 @@ class TransactionRow extends StatelessWidget {
         "$rate% $frequency $interestType";
   }
 
-  // ================================================================
-  // LOCALIZED INTEREST FREQUENCY
-  // ================================================================
+  // ============================================================
+  // LOCALIZED FREQUENCY
+  // ============================================================
 
   String _localizedFrequency(
       BuildContext context,
@@ -141,9 +150,9 @@ class TransactionRow extends StatelessWidget {
     }
   }
 
-  // ================================================================
+  // ============================================================
   // LOCALIZED INTEREST TYPE
-  // ================================================================
+  // ============================================================
 
   String _localizedInterestType(
       BuildContext context,
@@ -163,12 +172,14 @@ class TransactionRow extends StatelessWidget {
     }
   }
 
-  // ================================================================
+  // ============================================================
   // BUILD
-  // ================================================================
+  // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     final bool isGiven =
         transaction.type == TransactionType.gave;
 
@@ -178,9 +189,8 @@ class TransactionRow extends StatelessWidget {
     final locale =
     Localizations.localeOf(context).toLanguageTag();
 
-    final formattedDate =
-    DateFormat(
-      "dd MMM yyyy",
+    final formattedDate = DateFormat(
+      "dd MMM yy",
       locale,
     ).format(transaction.date);
 
@@ -196,35 +206,88 @@ class TransactionRow extends StatelessWidget {
           builder: (_) {
             return TransactionDetailsScreen(
               transaction: transaction,
-              customerId: customerId,
+              customerUuid: customerUuid,
               onChanged: onChanged,
             );
           },
         );
       },
-      child: Container(
+
+      child: AnimatedContainer(
+        // ==========================================================
+        // SMOOTH HIGHLIGHT ANIMATION
+        // ==========================================================
+
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+
+        width: double.infinity,
+
         margin: const EdgeInsets.only(
           bottom: 10,
         ),
+
         padding: const EdgeInsets.symmetric(
           horizontal: 8,
           vertical: 8,
         ),
+
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F0),
+
+          // ======================================================
+          // CARD COLOR
+          // ======================================================
+
+          color: isHighlighted
+              ? const Color(0xFFE4EAF2)
+              : const Color(0xFFFFFBF6),
+
           borderRadius: BorderRadius.circular(10),
+
+          // ======================================================
+          // BORDER
+          // ======================================================
+
           border: Border.all(
-            color: const Color(0xFFAAB9CF),
+            color: isHighlighted
+                ? const Color(0xFF243B67)
+                : const Color(0xFFD4D9E2),
+            width: isHighlighted ? 1.6 : 1,
           ),
+
+          // ======================================================
+          // SOFT SHADOW
+          // ======================================================
+
+          boxShadow: isHighlighted
+              ? [
+            BoxShadow(
+              color: const Color(0xFF243B67).withValues(
+                alpha: 0.14,
+              ),
+              blurRadius: 8,
+              spreadRadius: 0.5,
+              offset: const Offset(0, 2),
+            ),
+          ]
+              : [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: 0.025,
+              ),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
+
         child: Row(
-          crossAxisAlignment:
-          CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
 
-            // ==================================
-            // DATE + USER DESCRIPTION
-            // ==================================
+            // ==================================================
+            // DATE + DESCRIPTION
+            // ==================================================
 
             Expanded(
               flex: 3,
@@ -234,76 +297,69 @@ class TransactionRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
 
-                  // Date
                   Text(
                     formattedDate,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: Colors.black87,
+                      fontWeight: isHighlighted
+                          ? FontWeight.w700
+                          : FontWeight.normal,
                     ),
                   ),
 
                   const SizedBox(height: 3),
 
-                  // User Description
                   Text(
                     _getDescription(context),
-                    maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xff8A93A6),
+                      color: isHighlighted
+                          ? Colors.black87
+                          : const Color(0xff8A93A6),
+                      fontWeight: isHighlighted
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ],
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // GIVEN
-            // ==================================
+            // ==================================================
 
             Expanded(
               flex: 2,
               child: isGiven
                   ? Column(
-                mainAxisSize:
-                MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 children: [
 
-                  // Amount
                   Text(
                     "₹${transaction.amount.toStringAsFixed(0)}",
-                    textAlign:
-                    TextAlign.center,
-                    style:
-                    const TextStyle(
-                      color:
-                      Color(0xFFC74C4C),
-                      fontWeight:
-                      FontWeight.bold,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFC74C4C),
+                      fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
 
                   const SizedBox(height: 2),
 
-                  // Loan Given
                   Text(
-                    _getGivenDescription(
-                      context,
-                    ),
-                    textAlign:
-                    TextAlign.center,
+                    _getGivenDescription(context),
+                    textAlign: TextAlign.center,
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
-                    style:
-                    const TextStyle(
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       fontSize: 10,
-                      color:
-                      Colors.black87,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -318,50 +374,37 @@ class TransactionRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // RECEIVED
-            // ==================================
+            // ==================================================
 
             Expanded(
               flex: 2,
               child: isReceived
                   ? Column(
-                mainAxisSize:
-                MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 children: [
 
-                  // Amount
                   Text(
                     "₹${transaction.amount.toStringAsFixed(0)}",
-                    textAlign:
-                    TextAlign.center,
-                    style:
-                    const TextStyle(
-                      color:
-                      Color(0xFF00901B),
-                      fontWeight:
-                      FontWeight.bold,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF00901B),
+                      fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
 
                   const SizedBox(height: 2),
 
-                  // Payment Received
                   Text(
-                    _getReceivedDescription(
-                      context,
-                    ),
-                    textAlign:
-                    TextAlign.center,
+                    _getReceivedDescription(context),
+                    textAlign: TextAlign.center,
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
-                    style:
-                    const TextStyle(
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       fontSize: 9,
-                      color:
-                      Colors.black87,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -376,20 +419,18 @@ class TransactionRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // BALANCE
-            // ==================================
+            // ==================================================
 
             Expanded(
               flex: 2,
               child: Align(
-                alignment:
-                Alignment.centerRight,
+                alignment: Alignment.centerRight,
                 child: Text(
                   "₹${balance.toStringAsFixed(0)}",
                   style: const TextStyle(
-                    fontWeight:
-                    FontWeight.w600,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                     color: Colors.black,
                   ),

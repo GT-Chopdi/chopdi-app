@@ -269,9 +269,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerAlreadyExists =>
       "Customer Already Exists";
 
+
+  @override
+  String get LenderAlreadyExists =>
+      "Lender Already Exists";
+
   @override
   String get duplicateCustomerMessage =>
       "A customer with the same name and phone number is already added.";
+
+
+  @override
+  String get duplicateLenderMessage =>
+      "A Lender with the same name and phone number is already added.";
+
 
   @override
   String get ok => "OK";
@@ -457,9 +468,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lenderAlreadyExists =>
       'Lender Already Exists';
 
-  @override
-  String get duplicateLenderMessage =>
-      'A lender with the same name and phone number is already added.';
+
 
   @override
   String get failedToAddLender =>
@@ -1540,6 +1549,106 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get saveName => 'Save Name';
 
+  @override
+  String get amountRequired => 'Amount is required';
+
+  @override
+  String get amountCannotBeZero => 'Amount cannot be zero';
+
+  @override
+  String get filterBy => 'Filter by';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get mostRecent => 'Most Recent';
+
+  @override
+  String get highestAmount => 'Highest Amount';
+
+  @override
+  String get byNameAZ => 'By Name (A-Z)';
+
+  @override
+  String get oldest => 'Oldest';
+
+  @override
+  String get leastAmount => 'Least Amount';
+
+  @override
+  String get totalAmountTaken =>
+      'Total Amount Taken';
+
+  @override
+  String get loanTakenOn =>
+      'Loan Taken On';
+
+  @override
+  String get paymentPaid =>
+      'Paid';
+
+  @override
+  String get statement =>
+      'Account Statement';
+
+  @override
+  String get generatedDate =>
+      'Generated Date';
+
+  @override
+  String get trustedDigitalLedger => 'Your trusted digital ledger';
+
+  @override
+  String pdfIncludesLenderDetails(String name) =>
+      "The PDF includes $name's details, complete transaction history and account summary.";
+
+  @override
+  String get deleteActionCannotBeUndone =>
+      'This action cannot be undone';
+
+  @override
+  String get allLenderDataDeleted =>
+      'All lender data will be permanently deleted including:';
+
+  @override
+  String get understandDeleteAction =>
+      'I understand this action cannot be undone.';
+
+  @override
+  String deleteLenderTitle(String name) =>
+      'Delete $name?';
+
+  @override
+  String get phoneNumberNotAvailable => 'Phone Number Not Available';
+
+  @override
+  String get phoneNumberNotAvailableForCustomer =>
+      'Phone number is not available for this customer.';
+
+  @override
+  String get phonePermissionRequired => 'Phone Permission Required';
+
+  @override
+  String get phonePermissionRequiredToMakeCall =>
+      'Phone permission is required to make a call.';
+
+  @override
+  String get phonePermissionDeniedOpenSettings =>
+      'Phone permission has been denied. '
+      'Please enable it from app settings to make a call.';
+
+  @override
+  String get unableToOpenDialer => 'Unable to Open Dialer';
+
+  @override
+  String get unableToOpenPhoneDialer =>
+      'Unable to open the phone dialer on this device.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  
 
 
   // String get lastPayment => 'Last Payment';

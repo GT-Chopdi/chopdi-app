@@ -19,6 +19,7 @@ import 'package:mychopdi/view/took_loan_home_screen.dart';
 import 'package:mychopdi/widgets/home_header.dart';
 import 'package:mychopdi/widgets/summary_card.dart';
 
+import '../service/local_notification_service.dart';
 import 'customer_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -61,6 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    LocalNotificationService.instance.requestPermission();
+
+
     _selectedTabIndex =
     widget.initialGaveLoanSelected ? 0 : 1;
 
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Exit App',
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 350),
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return const SizedBox.shrink();
@@ -129,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
+                        color: Colors.black.withValues(alpha: 0.18),
                         blurRadius: 30,
                         offset: const Offset(0, 12),
                       ),
@@ -192,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       Row(
                         children: [
+
                           // Cancel
                           Expanded(
                             child: SizedBox(
@@ -551,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? l10n
                                 .homeAddCustomer
                                 : l10n
-                                .homeAddLoan,
+                                .addLender,
                             maxLines: 1,
                             overflow:
                             TextOverflow

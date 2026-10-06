@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/widgets/customer_card.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
 import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
@@ -20,14 +21,11 @@ class CustomerListSection extends StatefulWidget {
   });
 
   @override
-  State<CustomerListSection> createState() =>
-      _CustomerListSectionState();
+  State<CustomerListSection> createState() => _CustomerListSectionState();
 }
 
-class _CustomerListSectionState
-    extends State<CustomerListSection> {
-  final TextEditingController searchController =
-  TextEditingController();
+class _CustomerListSectionState extends State<CustomerListSection> {
+  final TextEditingController searchController = TextEditingController();
 
   late List<Customer> filteredCustomers;
 
@@ -36,11 +34,7 @@ class _CustomerListSectionState
   // ============================================================
 
   String selectedStatus = "All";
-  String selectedDate = "This Month";
-  String selectedSort = "Recently Added";
-
-  DateTime? fromDate;
-  DateTime? toDate;
+  String selectedSort = "Most Recent";
 
   // ============================================================
   // INIT
@@ -52,7 +46,7 @@ class _CustomerListSectionState
 
     filteredCustomers = List.from(widget.customers);
 
-    applySortWithoutSetState();
+    applyFilters();
   }
 
   // ============================================================
@@ -61,11 +55,13 @@ class _CustomerListSectionState
 
   @override
   void didUpdateWidget(
-      CustomerListSection oldWidget,
-      ) {
+    CustomerListSection oldWidget,
+  ) {
     super.didUpdateWidget(oldWidget);
 
-    applyFilters();
+    if (oldWidget.customers != widget.customers) {
+      applyFilters();
+    }
   }
 
   // ============================================================
@@ -83,156 +79,33 @@ class _CustomerListSectionState
   // ============================================================
 
   Future<List<Customer>> _getFilteredCustomers() async {
-    final search =
-    searchController.text.toLowerCase().trim();
+    final search = searchController.text.toLowerCase().trim();
 
     final List<Customer> result = [];
 
     for (final customer in widget.customers) {
-      // --------------------------------------------------------
       // SEARCH
-      // --------------------------------------------------------
-
       final matchesSearch =
           search.isEmpty ||
-              customer.name
-                  .toLowerCase()
-                  .contains(search) ||
-              customer.phone.contains(search);
+          customer.name.toLowerCase().contains(search) ||
+          customer.phone.contains(search);
 
       if (!matchesSearch) {
         continue;
       }
 
-      // --------------------------------------------------------
-      // STATUS
-      // --------------------------------------------------------
+      // FILTER
+      if (selectedStatus == "Settled") {
+        final balance = await getCustomerBalance(customer.id);
 
-      bool matchesStatus = true;
-
-      // --------------------------------------------------------
-      // ALL CUSTOMERS
-      // --------------------------------------------------------
-
-      if (selectedStatus == "All") {
-        matchesStatus = true;
-      }
-
-      // --------------------------------------------------------
-      // PENDING
-      // --------------------------------------------------------
-
-      else if (selectedStatus == "Pending") {
-        matchesStatus =
-            customer.status.toLowerCase() ==
-                "pending";
-      }
-
-      // --------------------------------------------------------
-      // SETTLED
-      //
-      // Settled means the actual customer balance is zero.
-      // --------------------------------------------------------
-
-      else if (selectedStatus == "Settled") {
-        final balance =
-        await getCustomerBalance(
-          customer.id,
-        );
-
-        matchesStatus = balance == 0;
-      }
-
-      // --------------------------------------------------------
-      // DATE
-      // --------------------------------------------------------
-
-      bool matchesDate = true;
-
-      // --------------------------------------------------------
-      // THIS MONTH
-      // --------------------------------------------------------
-
-      if (selectedDate == "This Month") {
-        final now = DateTime.now();
-
-        final firstDayOfMonth = DateTime(
-          now.year,
-          now.month,
-          1,
-        );
-
-        final nextMonth = DateTime(
-          now.year,
-          now.month + 1,
-          1,
-        );
-
-        matchesDate =
-            customer.updatedAt.isAfter(
-              firstDayOfMonth.subtract(
-                const Duration(
-                  seconds: 1,
-                ),
-              ),
-            ) &&
-                customer.updatedAt.isBefore(
-                  nextMonth,
-                );
-      }
-
-      // --------------------------------------------------------
-      // CUSTOM DATE
-      // --------------------------------------------------------
-
-      if (selectedDate == "Custom") {
-        // ------------------------------------------------------
-        // FROM DATE
-        // ------------------------------------------------------
-
-        if (fromDate != null) {
-          final startDate = DateTime(
-            fromDate!.year,
-            fromDate!.month,
-            fromDate!.day,
-          );
-
-          matchesDate =
-              matchesDate &&
-                  !customer.updatedAt.isBefore(
-                    startDate,
-                  );
-        }
-
-        // ------------------------------------------------------
-        // TO DATE
-        // ------------------------------------------------------
-
-        if (toDate != null) {
-          final endDate = DateTime(
-            toDate!.year,
-            toDate!.month,
-            toDate!.day,
-            23,
-            59,
-            59,
-          );
-
-          matchesDate =
-              matchesDate &&
-                  !customer.updatedAt.isAfter(
-                    endDate,
-                  );
+        // Settled = balance is zero
+        if (balance != 0) {
+          continue;
         }
       }
 
-      // --------------------------------------------------------
-      // FINAL MATCH
-      // --------------------------------------------------------
-
-      if (matchesStatus && matchesDate) {
-        result.add(customer);
-      }
+      // If status is "All", DON'T filter anything.
+      result.add(customer);
     }
 
     return result;
@@ -243,10 +116,9 @@ class _CustomerListSectionState
   // ============================================================
 
   Future<void> applyFilters() async {
-    final customers =
-    await _getFilteredCustomers();
+    final customers = await _getFilteredCustomers();
 
-    _applySortToList(customers);
+    await _applySortToList(customers);
 
     if (!mounted) return;
 
@@ -259,143 +131,108 @@ class _CustomerListSectionState
   // SORT
   // ============================================================
 
-  void _applySortToList(
-      List<Customer> customers,
-      ) {
-    if (selectedSort == "Name (A-Z)") {
-      customers.sort(
-            (a, b) => a.name
-            .toLowerCase()
-            .compareTo(
-          b.name.toLowerCase(),
-        ),
-      );
-    } else if (selectedSort == "Name (Z-A)") {
-      customers.sort(
-            (a, b) => b.name
-            .toLowerCase()
-            .compareTo(
-          a.name.toLowerCase(),
-        ),
-      );
-    } else if (selectedSort == "Recently Added") {
-      customers.sort(
-            (a, b) => b.updatedAt.compareTo(
-          a.updatedAt,
-        ),
-      );
-    }
-  }
+  Future<void> _applySortToList(
+    List<Customer> customers,
+  ) async {
+    switch (selectedSort) {
+      case "Most Recent":
+        customers.sort(
+          (a, b) => b.updatedAt.compareTo(a.updatedAt),
+        );
+        break;
 
-  // ============================================================
-  // INITIAL SORT
-  // ============================================================
+      case "Oldest":
+        customers.sort(
+          (a, b) => a.updatedAt.compareTo(b.updatedAt),
+        );
+        break;
 
-  void applySortWithoutSetState() {
-    _applySortToList(
-      filteredCustomers,
-    );
-  }
-
-  // ============================================================
-  // APPLY SORT
-  // ============================================================
-
-  Future<void> applySort() async {
-    // ----------------------------------------------------------
-    // NAME A-Z
-    // ----------------------------------------------------------
-
-    if (selectedSort == "Name (A-Z)") {
-      setState(() {
-        filteredCustomers.sort(
-              (a, b) => a.name
+      case "By Name (A-Z)":
+        customers.sort(
+          (a, b) => a.name
               .toLowerCase()
-              .compareTo(
-            b.name.toLowerCase(),
-          ),
+              .compareTo(b.name.toLowerCase()),
         );
-      });
+        break;
 
-      return;
-    }
+      case "Highest Amount":
+        final balances = <int, double>{};
 
-    // ----------------------------------------------------------
-    // NAME Z-A
-    // ----------------------------------------------------------
+        for (final customer in customers) {
+          balances[customer.id] =
+              await getCustomerBalance(customer.id);
+        }
 
-    if (selectedSort == "Name (Z-A)") {
-      setState(() {
-        filteredCustomers.sort(
-              (a, b) => b.name
-              .toLowerCase()
-              .compareTo(
-            a.name.toLowerCase(),
-          ),
+        customers.sort(
+          (a, b) {
+            final balanceA = balances[a.id] ?? 0;
+            final balanceB = balances[b.id] ?? 0;
+
+            return balanceB.compareTo(balanceA);
+          },
         );
-      });
+        break;
 
-      return;
-    }
+      case "Least Amount":
+        final balances = <int, double>{};
 
-    // ----------------------------------------------------------
-    // RECENTLY ADDED
-    // ----------------------------------------------------------
+        for (final customer in customers) {
+          final balance = await getCustomerBalance(customer.id);
 
-    if (selectedSort == "Recently Added") {
-      setState(() {
-        filteredCustomers.sort(
-              (a, b) => b.updatedAt.compareTo(
-            a.updatedAt,
-          ),
+          balances[customer.id] = balance;
+
+          debugPrint(
+            "LEAST SORT -> ${customer.name} | "
+            "ID: ${customer.id} | "
+            "BALANCE: $balance",
+          );
+        }
+
+        customers.sort(
+          (a, b) {
+            final balanceA = balances[a.id] ?? 0;
+            final balanceB = balances[b.id] ?? 0;
+
+            return balanceA.compareTo(balanceB);
+          },
         );
-      });
-
-      return;
+        break;
     }
 
     // ----------------------------------------------------------
     // LOAN AMOUNT SORT
     // ----------------------------------------------------------
 
-    if (selectedSort ==
-        "Loan Amount (High to Low)" ||
-        selectedSort ==
-            "Loan Amount (Low to High)") {
+    if (selectedSort == "Loan Amount (High to Low)" ||
+        selectedSort == "Loan Amount (Low to High)") {
       final balances = <int, double>{};
 
-      for (final customer
-      in filteredCustomers) {
+      for (final customer in customers) {
         balances[customer.id] =
-        await getCustomerBalance(
-          customer.id,
-        );
+            await getCustomerBalance(customer.id);
       }
 
-      if (!mounted) return;
+      customers.sort(
+        (a, b) {
+          final balanceA = balances[a.id] ?? 0;
+          final balanceB = balances[b.id] ?? 0;
 
-      setState(() {
-        filteredCustomers.sort(
-              (a, b) {
-            final balanceA =
-                balances[a.id] ?? 0;
+          debugPrint(
+            "COMPARE -> ${a.name}: $balanceA vs ${b.name}: $balanceB",
+          );
 
-            final balanceB =
-                balances[b.id] ?? 0;
+          if (selectedSort == "Loan Amount (High to Low)") {
+            return balanceB.compareTo(balanceA);
+          } else {
+            return balanceA.compareTo(balanceB);
+          }
+        },
+      );
 
-            if (selectedSort ==
-                "Loan Amount (High to Low)") {
-              return balanceB.compareTo(
-                balanceA,
-              );
-            } else {
-              return balanceA.compareTo(
-                balanceB,
-              );
-            }
-          },
-        );
-      });
+      debugPrint(
+        "SORTED RESULT -> "
+        "${customers.map((e) => e.name).toList()}",
+      );
     }
   }
 
@@ -404,27 +241,26 @@ class _CustomerListSectionState
   // ============================================================
 
   String getLocalizedSortName(
-      BuildContext context,
-      String sort,
-      ) {
-    final l10n =
-    AppLocalizations.of(context);
+    BuildContext context,
+    String sort,
+  ) {
+    final l10n = AppLocalizations.of(context);
 
     switch (sort) {
-      case "Name (A-Z)":
-        return l10n.sortNameAZ;
+      case "Most Recent":
+        return l10n.mostRecent;
 
-      case "Name (Z-A)":
-        return l10n.sortNameZA;
+      case "Oldest":
+        return l10n.oldest;
 
-      case "Recently Added":
-        return l10n.sortRecentlyAdded;
+      case "By Name (A-Z)":
+        return l10n.byNameAZ;
 
-      case "Loan Amount (High to Low)":
-        return l10n.sortLoanAmountHighToLow;
+      case "Highest Amount":
+        return l10n.highestAmount;
 
-      case "Loan Amount (Low to High)":
-        return l10n.sortLoanAmountLowToHigh;
+      case "Least Amount":
+        return l10n.leastAmount;
 
       default:
         return sort;
@@ -445,17 +281,14 @@ class _CustomerListSectionState
 
   Future<void> showFilterSheet() async {
     final result =
-    await showModalBottomSheet<
-        Map<String, dynamic>>(
+        await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) {
         return CustomerFilterBottomSheet(
           selectedStatus: selectedStatus,
-          selectedDate: selectedDate,
-          fromDate: fromDate,
-          toDate: toDate,
+          selectedSort: selectedSort,
         );
       },
     );
@@ -465,14 +298,8 @@ class _CustomerListSectionState
     }
 
     setState(() {
-      selectedStatus =
-          result["status"] ?? "All";
-
-      selectedDate =
-          result["date"] ?? "This Month";
-
-      fromDate = result["from"];
-      toDate = result["to"];
+      selectedStatus = result["status"] ?? "All";
+      selectedSort = result["sort"] ?? "Most Recent";
     });
 
     await applyFilters();
@@ -482,29 +309,52 @@ class _CustomerListSectionState
   // CUSTOMER BALANCE
   // ============================================================
 
-  Future<double> getCustomerBalance(
-      int customerId,
-      ) async {
-    final transactions =
-    await IsarService
-        .isar
-        .transactions
+  //In this function it calculates the wrong balance of a customer.
+  // ============================================================
+  // CUSTOMER BALANCE
+  // ============================================================
+
+  // Future<double> getCustomerBalance(
+  //   int customerId,
+  // ) async {
+  //   final transactions =
+  //   await IsarService
+  //       .isar
+  //       .transactions
+  //       .filter()
+  //       .customerIdEqualTo(customerId)
+  //       .voidedAtIsNull()
+  //       .findAll();
+  //   double balance = 0;
+  //   for (final tx in transactions) {
+  //     if (tx.type == TransactionType.gave) {
+  //     balance += tx.amount;
+  //     } else {
+  //     balance -= tx.amount;
+  //     }
+  //   }
+  //   return balance;
+  // }
+
+  Future<double> getCustomerBalance(int customerId) async {
+    final transactions = await IsarService.isar.transactions
         .filter()
         .customerIdEqualTo(customerId)
         .voidedAtIsNull()
         .findAll();
 
-    double balance = 0;
+    double totalGiven = 0;
+    double totalReceived = 0;
 
     for (final tx in transactions) {
       if (tx.type == TransactionType.gave) {
-        balance += tx.amount;
-      } else {
-        balance -= tx.amount;
+        totalGiven += tx.amount;
+      } else if (tx.type == TransactionType.received) {
+        totalReceived += tx.amount;
       }
     }
 
-    return balance;
+    return totalGiven - totalReceived;
   }
 
   // ============================================================
@@ -513,11 +363,10 @@ class _CustomerListSectionState
 
   Future<void> showSortSheet() async {
     final result =
-    await showModalBottomSheet<String>(
+        await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-      const SortBottomSheet(),
+      builder: (_) => const SortBottomSheet(),
     );
 
     if (result == null) {
@@ -528,7 +377,11 @@ class _CustomerListSectionState
       selectedSort = result;
     });
 
-    await applySort();
+    await _applySortToList(filteredCustomers);
+
+    if (!mounted) return;
+
+    setState(() {});
   }
 
   // ============================================================
@@ -537,11 +390,9 @@ class _CustomerListSectionState
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-    AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
-    final localizedSort =
-    getLocalizedSortName(
+    final localizedSort = getLocalizedSortName(
       context,
       selectedSort,
     );
@@ -556,32 +407,27 @@ class _CustomerListSectionState
         Row(
           children: [
             Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.customersTitle,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
-                    fontWeight:
-                    FontWeight.w700,
-                    color:
-                    ChopdiColors.navy,
+                    fontWeight: FontWeight.w700,
+                    color: ChopdiColors.navy,
                   ),
                 ),
                 Text(
                   l10n.manageAllCustomers,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       34,
                       58,
                       94,
                       0.62,
                     ),
-                    fontWeight:
-                    FontWeight.w700,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -601,15 +447,10 @@ class _CustomerListSectionState
             Expanded(
               child: Container(
                 height: 46,
-                decoration:
-                BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(
-                    30,
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       170,
                       185,
                       207,
@@ -618,18 +459,11 @@ class _CustomerListSectionState
                   ),
                 ),
                 child: TextField(
-                  controller:
-                  searchController,
-                  onChanged:
-                  searchCustomer,
-                  decoration:
-                  InputDecoration(
-                    prefixIcon:
-                    Padding(
-                      padding:
-                      const EdgeInsets.all(
-                        12,
-                      ),
+                  controller: searchController,
+                  onChanged: searchCustomer,
+                  decoration: InputDecoration(
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(12),
                       child: Image.asset(
                         'assets/search_option.png',
                         width: 24,
@@ -638,21 +472,17 @@ class _CustomerListSectionState
                       ),
                     ),
                     prefixIconConstraints:
-                    const BoxConstraints(
+                        const BoxConstraints(
                       minWidth: 44,
                       minHeight: 44,
                       maxWidth: 44,
                       maxHeight: 44,
                     ),
-                    hintText:
-                    l10n
-                        .searchByNameAndPhone,
-                    hintStyle:
-                    const TextStyle(
+                    hintText: l10n.searchByNameAndPhone,
+                    hintStyle: const TextStyle(
                       fontSize: 12,
                     ),
-                    border:
-                    InputBorder.none,
+                    border: InputBorder.none,
                   ),
                 ),
               ),
@@ -662,28 +492,17 @@ class _CustomerListSectionState
 
             // FILTER BUTTON
             InkWell(
-              onTap:
-              showFilterSheet,
-              borderRadius:
-              BorderRadius.circular(
-                25,
-              ),
+              onTap: showFilterSheet,
+              borderRadius: BorderRadius.circular(25),
               child: Container(
                 height: 46,
-                padding:
-                const EdgeInsets
-                    .symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-                decoration:
-                BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(
-                    25,
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       170,
                       185,
                       207,
@@ -698,13 +517,10 @@ class _CustomerListSectionState
                       height: 24,
                       width: 24,
                     ),
-                    const SizedBox(
-                      width: 5,
-                    ),
+                    const SizedBox(width: 5),
                     Text(
                       l10n.filter,
-                      style:
-                      const TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                       ),
                     ),
@@ -717,65 +533,6 @@ class _CustomerListSectionState
 
         const SizedBox(height: 15),
 
-        // ========================================================
-        // COUNT + SORT
-        // ========================================================
-
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                l10n.customersCount(filteredCustomers.length),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            Flexible(
-              child: GestureDetector(
-                onTap: showSortSheet,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Icon(
-                      Icons.swap_vert,
-                      size: 16,
-                    ),
-
-                    const SizedBox(width: 4),
-
-                    Flexible(
-                      child: Text(
-                        '${l10n.sortBy} : $localizedSort',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      size: 22,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-
         const SizedBox(height: 10),
 
         // ========================================================
@@ -784,19 +541,15 @@ class _CustomerListSectionState
 
         if (filteredCustomers.isEmpty)
           Padding(
-            padding:
-            const EdgeInsets
-                .symmetric(
+            padding: const EdgeInsets.symmetric(
               vertical: 30,
             ),
             child: Center(
               child: Text(
                 l10n.noCustomersFound,
-                style:
-                const TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  fontWeight:
-                  FontWeight.w500,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -804,16 +557,13 @@ class _CustomerListSectionState
         else
           ...List.generate(
             filteredCustomers.length,
-                (index) {
+            (index) {
               return Padding(
-                padding:
-                const EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   bottom: 10,
                 ),
                 child: CustomerCard(
-                  customer:
-                  filteredCustomers[
-                  index],
+                  customer: filteredCustomers[index],
                 ),
               );
             },

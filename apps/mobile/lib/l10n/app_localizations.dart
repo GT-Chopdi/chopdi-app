@@ -170,12 +170,14 @@ abstract class AppLocalizations {
 
 // DUPLICATE CUSTOMER
   String get customerAlreadyExists;
+  String get LenderAlreadyExists;
   String get duplicateCustomerMessage;
   String get ok;
 
 // ERROR
   String get failedToAddCustomer;
   String get manageCurrentChopdi;
+  String get duplicateLenderMessage;
   String get preferences;
   String get notificationsSettings;
   String get manageAppNotifications;
@@ -229,7 +231,7 @@ abstract class AppLocalizations {
   String get get;
   String get addNewLender;
   String get lenderAlreadyExists;
-  String get duplicateLenderMessage;
+
   String get failedToAddLender;
   String get lenderDetails;
   String get lenderName;
@@ -592,6 +594,37 @@ abstract class AppLocalizations {
   String get profile;
   String get edit;
   String get addYourName;
+  String get amountRequired;
+  String get amountCannotBeZero;
+  String get filterBy;
+  String get mostRecent;
+  String get highestAmount;
+  String get byNameAZ;
+  String get oldest;
+  String get leastAmount;
+  String get totalAmountTaken;
+  String get loanTakenOn;
+  String get paymentPaid;
+  String get statement;
+  String get generatedDate;
+
+  String get trustedDigitalLedger;
+  String pdfIncludesLenderDetails(String name);
+
+  String deleteLenderTitle(String name);
+  String get deleteActionCannotBeUndone;
+  String get allLenderDataDeleted;
+  String get understandDeleteAction;
+
+  String get phoneNumberNotAvailable;
+  String get phoneNumberNotAvailableForCustomer;
+  String get phonePermissionRequired;
+  String get phonePermissionRequiredToMakeCall;
+  String get phonePermissionDeniedOpenSettings;
+  String get unableToOpenDialer;
+  String get unableToOpenPhoneDialer;
+  String get openSettings;
+
 
 
   Null get at => null;

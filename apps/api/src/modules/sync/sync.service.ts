@@ -102,6 +102,7 @@ export class SyncService {
   private async applyOne(
     user: AuthenticatedUser,
     operation: SyncOperationDto,
+    attempt = 0,
   ): Promise<SyncOperationResult> {
     const payloadHash = this.idempotency.fingerprint(operation.payload);
 
@@ -120,14 +121,17 @@ export class SyncService {
           return { ...recorded.result, status: 'duplicate' as const };
         }
 
-        const { snapshot, seq } = await this.dispatch(tx, user, operation);
+        const applied: { snapshot: { version: number }; seq: bigint; mergedInto?: string } =
+          await this.dispatch(tx, user, operation);
+        const { snapshot, seq, mergedInto } = applied;
 
         const result: SyncOperationResult = {
           opId: operation.opId,
           status: 'applied',
-          entityId: operation.entityId,
+          entityId: mergedInto ?? operation.entityId,
           version: snapshot.version,
           seq: seq.toString(),
+          ...(mergedInto ? { mergedInto } : {}),
         };
 
         await this.idempotency.record(tx, {
@@ -144,8 +148,24 @@ export class SyncService {
         return result;
       });
     } catch (error) {
+      // A unique-index violation on a customer or lender means another write
+      // inserted the same person between this one's check and its insert. The
+      // user lock makes that unreachable through this service; the index is the
+      // backstop for anything else. Running the operation again finds the row
+      // and merges into it, so once is enough.
+      if (attempt === 0 && this.isUniqueViolation(error)) {
+        return this.applyOne(user, operation, attempt + 1);
+      }
       return this.toResult(operation, error);
     }
+  }
+
+  private isUniqueViolation(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { code?: unknown }).code === 'P2002'
+    );
   }
 
   private dispatch(

@@ -36,6 +36,7 @@ class _MoneyReceiveBottomSheetState
 
   DateTime selectedDate = DateTime.now();
   String paymentMode = "";
+  bool _amountError = false;
 
   @override
   void initState() {
@@ -145,13 +146,14 @@ class _MoneyReceiveBottomSheetState
   }
 
   Future<void> _saveTransaction() async {
-    if (amountController.text.trim().isEmpty) {
-      return;
-    }
+    final amountText = amountController.text.trim();
+    final amount = double.tryParse(amountText);
 
-    final amount = double.tryParse(amountController.text.trim());
+    if (amountText.isEmpty || amount == null || amount == 0) {
+      setState(() {
+        _amountError = true;
+      });
 
-    if (amount == null) {
       return;
     }
 
@@ -298,13 +300,73 @@ class _MoneyReceiveBottomSheetState
                       TextField(
                         controller: amountController,
                         focusNode: _amountFocusNode,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (value) {
+                          final amount = double.tryParse(value.trim());
+
+                          setState(() {
+                            _amountError =
+                                value.trim().isEmpty || (amount != null && amount == 0);
+                          });
+                        },
                         decoration: decoration(
                           hint: l10n.enterAmount,
                           prefix: const Icon(
                             Icons.currency_rupee,
                             size: 20,
                             color: Color(0xff6D7B94),
+                          ),
+                        ).copyWith(
+                          errorText: _amountError
+                              ? (amountController.text.trim().isEmpty
+                                  ? l10n.amountRequired
+                                  : l10n.amountCannotBeZero)
+                              : null,
+
+                          errorStyle: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+
+                          // 🔴 Border when there is an error and field is NOT focused
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Colors.red,
+                              width: 1.2,
+                            ),
+                          ),
+
+                          // 🔴 Border when there is an error and field IS focused
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Colors.red,
+                              width: 1.3,
+                            ),
+                          ),
+
+                          // Normal border
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: _amountError
+                                  ? Colors.red
+                                  : const Color(0xffC9D2E3),
+                            ),
+                          ),
+
+                          // Normal focused border
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: _amountError
+                                  ? Colors.red
+                                  : const Color(0xff29406B),
+                              width: 1.3,
+                            ),
                           ),
                         ),
                       ),
@@ -322,7 +384,7 @@ class _MoneyReceiveBottomSheetState
                             color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText: DateFormat("dd MMM yyyy", locale)
+                          hintText: DateFormat("dd MMM yy", locale)
                               .format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,

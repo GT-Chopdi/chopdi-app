@@ -6,6 +6,7 @@ import { CustomerHandler } from './handlers/customer.handler';
 import { LedgerEntryHandler } from './handlers/ledger-entry.handler';
 import { LenderHandler } from './handlers/lender.handler';
 import { IdempotencyService } from './idempotency.service';
+import { MergeService } from './merge.service';
 import { PullService } from './pull.service';
 import { SyncController } from './sync.controller';
 import { SyncService } from './sync.service';
@@ -17,6 +18,7 @@ import { SyncService } from './sync.service';
     PullService,
     IdempotencyService,
     ChangeLogService,
+    MergeService,
     ChopdiHandler,
     CustomerHandler,
     LenderHandler,

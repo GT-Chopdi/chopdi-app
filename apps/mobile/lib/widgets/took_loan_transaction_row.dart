@@ -9,29 +9,30 @@ class TookLoanTransactionRow extends StatelessWidget {
   final Transaction transaction;
   final double balance;
   final VoidCallback? onChanged;
-  final int customerId;
+  final String lenderUuid;
+
+  // ============================================================
+  // HIGHLIGHT
+  // ============================================================
+
+  final bool isHighlighted;
 
   const TookLoanTransactionRow({
     super.key,
     required this.transaction,
     required this.balance,
     this.onChanged,
-    required this.customerId,
+    required this.lenderUuid,
+    this.isHighlighted = false,
   });
-
-  // USER DESCRIPTION
 
   String _getDescription(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    // If user entered a description, show it.
     if (transaction.description.trim().isNotEmpty) {
-      return _shortenDescription(
-        transaction.description.trim(),
-      );
+      return transaction.description.trim();
     }
 
-    // Default description when user has not entered one.
     switch (transaction.type) {
       case TransactionType.took:
         return l10n.loanTook;
@@ -47,126 +48,14 @@ class TookLoanTransactionRow extends StatelessWidget {
     }
   }
 
-  String _shortenDescription(String description) {
-    const maxCharacters = 25;
-
-    if (description.length <= maxCharacters) {
-      return description;
-    }
-
-    return "${description.substring(0, maxCharacters).trim()}...";
-  }
-
-  // TRANSACTION TYPE
-
-  String _getGivenDescription(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return l10n.loanTook;
-  }
-
-  String _getReceivedDescription(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return l10n.amountPaid;
-  }
-
-  String _getRowDescription(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    final startDate = transaction.date;
-
-    // Currently using today's date as the end date
-    final endDate = DateTime.now();
-
-    final locale =
-    Localizations.localeOf(context).toLanguageTag();
-
-    final formattedStart = DateFormat(
-      "dd MMM yyyy",
-      locale,
-    ).format(startDate);
-
-    final formattedEnd = DateFormat(
-      "dd MMM yyyy",
-      locale,
-    ).format(endDate);
-
-    final rate =
-    transaction.interestRate.toStringAsFixed(0);
-
-    final frequency =
-    transaction.interestFrequency.isEmpty
-        ? l10n.monthly
-        : _localizedFrequency(
-      context,
-      transaction.interestFrequency,
-    );
-
-    final interestType =
-    transaction.interestType.isEmpty
-        ? l10n.simpleInterest
-        : _localizedInterestType(
-      context,
-      transaction.interestType,
-    );
-
-    return "$formattedStart → $formattedEnd "
-        "$rate% $frequency $interestType";
-  }
-
-  String _localizedFrequency(
-      BuildContext context,
-      String value,
-      ) {
-    final l10n = AppLocalizations.of(context);
-
-    switch (value) {
-      case 'Daily':
-        return l10n.daily;
-
-      case 'Weekly':
-        return l10n.weekly;
-
-      case 'Monthly':
-        return l10n.monthly;
-
-      case 'Yearly':
-        return l10n.yearly;
-
-      default:
-        return value;
-    }
-  }
-
-  String _localizedInterestType(
-      BuildContext context,
-      String value,
-      ) {
-    final l10n = AppLocalizations.of(context);
-
-    switch (value) {
-      case 'Simple Interest':
-        return l10n.simpleInterest;
-
-      case 'Compound Interest':
-        return l10n.compoundInterest;
-
-      default:
-        return value;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    final bool isGiven =
-        transaction.type == TransactionType.took;
+    final isGiven = transaction.type == TransactionType.took;
+    final isReceived = transaction.type == TransactionType.paid;
 
-    final bool isReceived =
-        transaction.type == TransactionType.paid;
-
-    final locale =
-    Localizations.localeOf(context).toLanguageTag();
+    final locale = Localizations.localeOf(context).toLanguageTag();
 
     return GestureDetector(
       onTap: () {
@@ -180,47 +69,93 @@ class TookLoanTransactionRow extends StatelessWidget {
           builder: (_) {
             return TransactionDetailsScreen(
               transaction: transaction,
-              customerId: customerId,
+              lenderUuid: lenderUuid,
               onChanged: onChanged,
             );
           },
         );
       },
-      child: Container(
+
+      child: AnimatedContainer(
+        // ==========================================================
+        // HIGHLIGHT ANIMATION
+        // ==========================================================
+
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+
+        width: double.infinity,
+
         margin: const EdgeInsets.only(bottom: 10),
+
         padding: const EdgeInsets.symmetric(
           horizontal: 8,
           vertical: 8,
         ),
+
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F0),
+          color: isHighlighted
+              ? const Color(0xFFE4EAF2)
+              : const Color(0xFFFFFBF6),
+
           borderRadius: BorderRadius.circular(10),
+
           border: Border.all(
-            color: const Color(0xFFAAB9CF),
+            color: isHighlighted
+                ? const Color(0xFF243B67)
+                : const Color(0xFFD4D9E2),
+            width: isHighlighted ? 1.6 : 1,
           ),
+
+          boxShadow: isHighlighted
+              ? [
+            BoxShadow(
+              color: const Color(0xFF243B67).withValues(
+                alpha: 0.14,
+              ),
+              blurRadius: 8,
+              spreadRadius: 0.5,
+              offset: const Offset(0, 2),
+            ),
+          ]
+              : [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: 0.025,
+              ),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
+
         child: Row(
-          crossAxisAlignment:
-          CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ==================================
-            // DATE + USER DESCRIPTION
-            // ==================================
+
+            // ==================================================
+            // DATE + DESCRIPTION
+            // ==================================================
+
             Expanded(
               flex: 3,
               child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
                   Text(
                     DateFormat(
-                      "dd MMM yyyy",
+                      "dd MMM yy",
                       locale,
                     ).format(transaction.date),
+
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       color: Colors.black87,
+                      fontWeight: isHighlighted
+                          ? FontWeight.w700
+                          : FontWeight.normal,
                     ),
                   ),
 
@@ -228,29 +163,43 @@ class TookLoanTransactionRow extends StatelessWidget {
 
                   Text(
                     _getDescription(context),
-                    maxLines: 1,
+
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+
                     style: GoogleFonts.manrope(
                       fontSize: 10,
-                      color: const Color(0xff8A93A6),
+                      color: isHighlighted
+                          ? Colors.black87
+                          : const Color(0xff8A93A6),
+
+                      fontWeight: isHighlighted
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ],
               ),
             ),
 
-            // ==================================
-            // GIVEN
-            // ==================================
+            // ==================================================
+            // TOOK
+            // ==================================================
+
             Expanded(
               flex: 2,
+
               child: isGiven
                   ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
                   Text(
                     "₹${transaction.amount.toStringAsFixed(0)}",
+
                     textAlign: TextAlign.center,
+
                     style: const TextStyle(
                       color: Color(0xFFC74C4C),
                       fontWeight: FontWeight.bold,
@@ -261,11 +210,13 @@ class TookLoanTransactionRow extends StatelessWidget {
                   const SizedBox(height: 2),
 
                   Text(
-                    l10n.loanGiven,
+                    l10n.loanTook,
+
                     textAlign: TextAlign.center,
+
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
+
                     style: GoogleFonts.manrope(
                       fontSize: 10,
                       color: Colors.black87,
@@ -283,21 +234,25 @@ class TookLoanTransactionRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
-            // RECEIVED / PAID
-            // ==================================
+            // ==================================================
+            // PAID
+            // ==================================================
+
             Expanded(
               flex: 2,
+
               child: isReceived
                   ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+
                   Text(
                     "₹${transaction.amount.toStringAsFixed(0)}",
+
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.manrope(
-                      color:
-                      const Color(0xFF00901B),
+
+                    style: const TextStyle(
+                      color: Color(0xFF00901B),
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -306,11 +261,13 @@ class TookLoanTransactionRow extends StatelessWidget {
                   const SizedBox(height: 2),
 
                   Text(
-                    l10n.paymentReceived,
+                    l10n.amountPaid,
+
                     textAlign: TextAlign.center,
+
                     maxLines: 1,
-                    overflow:
-                    TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
+
                     style: GoogleFonts.manrope(
                       fontSize: 9,
                       color: Colors.black87,
@@ -328,15 +285,19 @@ class TookLoanTransactionRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // BALANCE
-            // ==================================
+            // ==================================================
+
             Expanded(
               flex: 2,
+
               child: Align(
                 alignment: Alignment.centerRight,
+
                 child: Text(
                   "₹${balance.toStringAsFixed(0)}",
+
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,

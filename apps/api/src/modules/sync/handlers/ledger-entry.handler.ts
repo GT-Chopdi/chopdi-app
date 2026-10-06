@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 import { AppException, ErrorCode } from '../../../common/errors/app.exception';
 import { ChangeLogService, type TransactionClient } from '../change-log.service';
+import { MergeService } from '../merge.service';
 import type { EntitySnapshot } from '../sync.types';
+import { ledgerEntrySnapshot, type LedgerEntryRow } from './ledger-entry.snapshot';
+
+export { ledgerEntrySnapshot, type LedgerEntryRow };
 
 /** ₹100 crore, matching `ledger_entry_amount_sane`. */
 const MAX_AMOUNT_PAISE = 10_000_000_000_000n;
@@ -29,7 +33,10 @@ const FREQUENCIES = ['daily', 'weekly', 'monthly', 'yearly'] as const;
  */
 @Injectable()
 export class LedgerEntryHandler {
-  constructor(private readonly changeLog: ChangeLogService) {}
+  constructor(
+    private readonly changeLog: ChangeLogService,
+    private readonly merges: MergeService,
+  ) {}
 
   async create(
     tx: TransactionClient,
@@ -75,6 +82,8 @@ export class LedgerEntryHandler {
         entryDate: this.requireDate(payload.entryDate),
         description: this.optionalText(payload.description, 'description'),
         paymentMode: this.optionalText(payload.paymentMode, 'paymentMode'),
+        originDeviceId: meta.deviceId,
+        viaAliasId: parent.viaAliasId,
       },
     });
 
@@ -87,6 +96,15 @@ export class LedgerEntryHandler {
       deviceId: meta.deviceId,
       opId: meta.opId,
     });
+
+    // A party that absorbed a duplicate re-decides whose entries stay live
+    // each time one arrives — this one included. See MergeService.
+    const partyId = parent.customerId ?? parent.lenderId;
+    if (partyId && (await tx.partyMerge.count({ where: { userId, mainId: partyId } })) > 0) {
+      await this.merges.settleParty(tx, userId, partyId, meta);
+      const settled = await this.load(tx, userId, entityId);
+      return { snapshot: this.snapshot(settled), seq };
+    }
 
     return { snapshot: this.snapshot(row), seq };
   }
@@ -215,7 +233,7 @@ export class LedgerEntryHandler {
     tx: TransactionClient,
     userId: string,
     payload: Record<string, unknown>,
-  ): Promise<{ customerId: string | null; lenderId: string | null }> {
+  ): Promise<{ customerId: string | null; lenderId: string | null; viaAliasId: string | null }> {
     const hasCustomer = payload.customerId !== undefined && payload.customerId !== null;
     const hasLender = payload.lenderId !== undefined && payload.lenderId !== null;
 
@@ -223,25 +241,29 @@ export class LedgerEntryHandler {
       throw this.invalid('An entry needs exactly one of customerId or lenderId.', 'customerId');
     }
 
+    // A parent sent under an id that was merged into another party: the entry
+    // is stored against the survivor, remembering which copy it came from.
     if (hasLender) {
-      const lenderId = this.requireUuid(payload.lenderId, 'lenderId');
+      const sent = this.requireUuid(payload.lenderId, 'lenderId');
+      const { id: lenderId, aliasId: viaAliasId } = await this.merges.resolve(tx, userId, sent);
       const lender = await tx.lender.findFirst({
         where: { id: lenderId, userId },
         select: { deletedAt: true },
       });
-      this.assertParentLive(lender, 'lender', { lenderId });
-      return { customerId: null, lenderId };
+      this.assertParentLive(lender, 'lender', { lenderId: sent });
+      return { customerId: null, lenderId, viaAliasId };
     }
 
-    const customerId = this.requireUuid(payload.customerId, 'customerId');
+    const sent = this.requireUuid(payload.customerId, 'customerId');
+    const { id: customerId, aliasId: viaAliasId } = await this.merges.resolve(tx, userId, sent);
     const customer = await tx.customer.findFirst({
       where: { id: customerId, userId },
       select: { deletedAt: true },
     });
 
     if (customer) {
-      this.assertParentLive(customer, 'customer', { customerId });
-      return { customerId, lenderId: null };
+      this.assertParentLive(customer, 'customer', { customerId: sent });
+      return { customerId, lenderId: null, viaAliasId };
     }
 
     const lender = await tx.lender.findFirst({
@@ -250,11 +272,11 @@ export class LedgerEntryHandler {
     });
 
     if (lender) {
-      this.assertParentLive(lender, 'lender', { lenderId: customerId });
-      return { customerId: null, lenderId: customerId };
+      this.assertParentLive(lender, 'lender', { lenderId: sent });
+      return { customerId: null, lenderId: customerId, viaAliasId };
     }
 
-    this.assertParentLive(null, 'customer', { customerId });
+    this.assertParentLive(null, 'customer', { customerId: sent });
     throw new Error('unreachable');
   }
 
@@ -413,49 +435,4 @@ export class LedgerEntryHandler {
   private snapshot(row: LedgerEntryRow): EntitySnapshot {
     return ledgerEntrySnapshot(row);
   }
-}
-
-export interface LedgerEntryRow {
-  id: string;
-  customerId: string | null;
-  lenderId: string | null;
-  amountPaise: bigint;
-  direction: string;
-  ledgerSide: string;
-  interestRateBp: number;
-  interestType: string;
-  interestFrequency: string;
-  entryDate: Date;
-  description: string;
-  paymentMode: string;
-  version: number;
-  createdAt: Date;
-  updatedAt: Date;
-  voidedAt: Date | null;
-  voidedReason: string | null;
-}
-
-/** An entry as the server describes it back — in push results, the log and pulls. */
-export function ledgerEntrySnapshot(row: LedgerEntryRow): EntitySnapshot {
-  return {
-    id: row.id,
-    customerId: row.customerId,
-    lenderId: row.lenderId,
-    // A string on the wire: JSON numbers are IEEE-754, and a ledger should
-    // not depend on staying under 2^53 to stay exact.
-    amountPaise: row.amountPaise.toString(),
-    direction: row.direction,
-    ledgerSide: row.ledgerSide,
-    interestRateBp: row.interestRateBp,
-    interestType: row.interestType,
-    interestFrequency: row.interestFrequency,
-    entryDate: row.entryDate.toISOString().slice(0, 10),
-    description: row.description,
-    paymentMode: row.paymentMode,
-    version: row.version,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    voidedAt: row.voidedAt?.toISOString() ?? null,
-    voidedReason: row.voidedReason,
-  };
 }

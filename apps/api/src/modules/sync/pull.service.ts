@@ -17,7 +17,7 @@ const MAX_BIGINT = 9_223_372_036_854_775_807n;
 const DEFAULT_LIMIT = 200;
 
 /** Change-log op types a client applies. `conflict` rows are forensics only. */
-const PULLABLE_OPS: SyncOpType[] = ['create', 'update', 'void'];
+const PULLABLE_OPS: SyncOpType[] = ['create', 'update', 'void', 'merge'];
 
 /**
  * Serves a user's data back to their devices.

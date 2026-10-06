@@ -46,6 +46,12 @@ export const ErrorCode = {
   // --- sync ---
   /** A create arrived for an id that already exists under this user. */
   ID_EXISTS: 'ID_EXISTS',
+  /**
+   * An edit would give a customer or lender the same name and phone as another
+   * live one. Creates are merged instead; an edit cannot be, because both rows
+   * already have entries and history of their own.
+   */
+  PARTY_EXISTS: 'PARTY_EXISTS',
   /** The row moved on since the client last saw it; `serverState` is attached. */
   STALE_VERSION: 'STALE_VERSION',
   /** An entry arrived before the customer it belongs to. */

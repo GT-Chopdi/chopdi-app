@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/utils/app_colors.dart';
+import 'package:mychopdi/l10n/app_localizations.dart';
 
 class PhoneCallService {
   PhoneCallService._();
@@ -134,6 +135,8 @@ class PhoneCallService {
   static Future<void> _showPhoneUnavailableDialog(
     BuildContext context,
   ) async {
+    final l10n = AppLocalizations.of(context);
+
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -143,7 +146,7 @@ class PhoneCallService {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Phone Number Not Available',
+            l10n.phoneNumberNotAvailable,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -151,7 +154,7 @@ class PhoneCallService {
             ),
           ),
           content: Text(
-            'Phone number is not available for this customer.',
+            l10n.phoneNumberNotAvailableForCustomer,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -164,7 +167,7 @@ class PhoneCallService {
                 Navigator.pop(dialogContext);
               },
               child: Text(
-                'OK',
+                l10n.ok,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
@@ -184,6 +187,8 @@ class PhoneCallService {
   static Future<void> _showPermissionDeniedDialog(
     BuildContext context,
   ) async {
+    final l10n = AppLocalizations.of(context);
+
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -193,7 +198,7 @@ class PhoneCallService {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Phone Permission Required',
+            l10n.phonePermissionRequired,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -201,7 +206,7 @@ class PhoneCallService {
             ),
           ),
           content: Text(
-            'Phone permission is required to make a call.',
+            l10n.phonePermissionRequiredToMakeCall,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -214,7 +219,7 @@ class PhoneCallService {
                 Navigator.pop(dialogContext);
               },
               child: Text(
-                'OK',
+                l10n.ok,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
@@ -226,7 +231,6 @@ class PhoneCallService {
       },
     );
   }
-
   // ============================================================
   // PERMISSION PERMANENTLY DENIED
   // ============================================================
@@ -234,6 +238,8 @@ class PhoneCallService {
   static Future<bool?> _showPermanentlyDeniedDialog(
     BuildContext context,
   ) async {
+    final l10n = AppLocalizations.of(context);
+
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -243,7 +249,7 @@ class PhoneCallService {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Phone Permission Required',
+            l10n.phonePermissionRequired,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -251,8 +257,7 @@ class PhoneCallService {
             ),
           ),
           content: Text(
-            'Phone permission has been denied. '
-            'Please enable it from app settings to make a call.',
+            l10n.phonePermissionDeniedOpenSettings,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -265,7 +270,7 @@ class PhoneCallService {
                 Navigator.pop(dialogContext, false);
               },
               child: Text(
-                'Cancel',
+                l10n.cancel,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: Colors.grey.shade700,
@@ -277,7 +282,7 @@ class PhoneCallService {
                 Navigator.pop(dialogContext, true);
               },
               child: Text(
-                'Open Settings',
+                l10n.openSettings,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,
@@ -297,6 +302,8 @@ class PhoneCallService {
   static Future<void> _showUnableToOpenDialerDialog(
     BuildContext context,
   ) async {
+    final l10n = AppLocalizations.of(context);
+
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -306,7 +313,7 @@ class PhoneCallService {
             borderRadius: BorderRadius.circular(18),
           ),
           title: Text(
-            'Unable to Open Dialer',
+            l10n.unableToOpenDialer,
             style: GoogleFonts.manrope(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -314,7 +321,7 @@ class PhoneCallService {
             ),
           ),
           content: Text(
-            'Unable to open the phone dialer on this device.',
+            l10n.unableToOpenPhoneDialer,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,
@@ -327,7 +334,7 @@ class PhoneCallService {
                 Navigator.pop(dialogContext);
               },
               child: Text(
-                'OK',
+                l10n.ok,
                 style: GoogleFonts.manrope(
                   fontWeight: FontWeight.w700,
                   color: ChopdiColors.navy,

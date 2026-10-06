@@ -20,10 +20,12 @@ import 'package:mychopdi/l10n/app_localizations.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
+  final int? highlightTransactionId;
 
   const CustomerDetailsScreen({
     super.key,
     required this.customer,
+    this.highlightTransactionId,
   });
 
   @override
@@ -55,15 +57,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   // ============================================================
   // TRANSACTIONS
   // ============================================================
-
   Future<void> loadTransactions() async {
     final loadedTransactions = await IsarService.isar.transactions
         .filter()
-        .customerIdEqualTo(widget.customer.id)
+        .customerUuidEqualTo(widget.customer.uuid)
         .voidedAtIsNull()
         .findAll();
 
-    // Newest transaction first
     loadedTransactions.sort(
           (a, b) => b.date.compareTo(a.date),
     );
@@ -573,7 +573,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               TransactionTable(
                 transactions: transactions,
                 onChanged: loadTransactions,
-                customerId: customer.id,
+                customerUuid: customer.uuid,
+                highlightTransactionId: widget.highlightTransactionId,
               ),
 
               const SizedBox(height: 20),
