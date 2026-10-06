@@ -55,8 +55,8 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
   @override
   void didUpdateWidget(
-      CustomerListSection oldWidget,
-      ) {
+    CustomerListSection oldWidget,
+  ) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.customers != widget.customers) {
@@ -87,8 +87,8 @@ class _CustomerListSectionState extends State<CustomerListSection> {
       // SEARCH
       final matchesSearch =
           search.isEmpty ||
-              customer.name.toLowerCase().contains(search) ||
-              customer.phone.contains(search);
+          customer.name.toLowerCase().contains(search) ||
+          customer.phone.contains(search);
 
       if (!matchesSearch) {
         continue;
@@ -132,24 +132,24 @@ class _CustomerListSectionState extends State<CustomerListSection> {
   // ============================================================
 
   Future<void> _applySortToList(
-      List<Customer> customers,
-      ) async {
+    List<Customer> customers,
+  ) async {
     switch (selectedSort) {
       case "Most Recent":
         customers.sort(
-              (a, b) => b.updatedAt.compareTo(a.updatedAt),
+          (a, b) => b.updatedAt.compareTo(a.updatedAt),
         );
         break;
 
       case "Oldest":
         customers.sort(
-              (a, b) => a.updatedAt.compareTo(b.updatedAt),
+          (a, b) => a.updatedAt.compareTo(b.updatedAt),
         );
         break;
 
       case "By Name (A-Z)":
         customers.sort(
-              (a, b) => a.name
+          (a, b) => a.name
               .toLowerCase()
               .compareTo(b.name.toLowerCase()),
         );
@@ -160,11 +160,11 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
         for (final customer in customers) {
           balances[customer.id] =
-          await getCustomerBalance(customer.id);
+              await getCustomerBalance(customer.id);
         }
 
         customers.sort(
-              (a, b) {
+          (a, b) {
             final balanceA = balances[a.id] ?? 0;
             final balanceB = balances[b.id] ?? 0;
 
@@ -183,13 +183,13 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
           debugPrint(
             "LEAST SORT -> ${customer.name} | "
-                "ID: ${customer.id} | "
-                "BALANCE: $balance",
+            "ID: ${customer.id} | "
+            "BALANCE: $balance",
           );
         }
 
         customers.sort(
-              (a, b) {
+          (a, b) {
             final balanceA = balances[a.id] ?? 0;
             final balanceB = balances[b.id] ?? 0;
 
@@ -209,11 +209,11 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
       for (final customer in customers) {
         balances[customer.id] =
-        await getCustomerBalance(customer.id);
+            await getCustomerBalance(customer.id);
       }
 
       customers.sort(
-            (a, b) {
+        (a, b) {
           final balanceA = balances[a.id] ?? 0;
           final balanceB = balances[b.id] ?? 0;
 
@@ -231,7 +231,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
       debugPrint(
         "SORTED RESULT -> "
-            "${customers.map((e) => e.name).toList()}",
+        "${customers.map((e) => e.name).toList()}",
       );
     }
   }
@@ -241,9 +241,9 @@ class _CustomerListSectionState extends State<CustomerListSection> {
   // ============================================================
 
   String getLocalizedSortName(
-      BuildContext context,
-      String sort,
-      ) {
+    BuildContext context,
+    String sort,
+  ) {
     final l10n = AppLocalizations.of(context);
 
     switch (sort) {
@@ -281,7 +281,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
   Future<void> showFilterSheet() async {
     final result =
-    await showModalBottomSheet<Map<String, dynamic>>(
+        await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -363,7 +363,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
   Future<void> showSortSheet() async {
     final result =
-    await showModalBottomSheet<String>(
+        await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => const SortBottomSheet(),
@@ -472,7 +472,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
                       ),
                     ),
                     prefixIconConstraints:
-                    const BoxConstraints(
+                        const BoxConstraints(
                       minWidth: 44,
                       minHeight: 44,
                       maxWidth: 44,
@@ -557,7 +557,7 @@ class _CustomerListSectionState extends State<CustomerListSection> {
         else
           ...List.generate(
             filteredCustomers.length,
-                (index) {
+            (index) {
               return Padding(
                 padding: const EdgeInsets.only(
                   bottom: 10,

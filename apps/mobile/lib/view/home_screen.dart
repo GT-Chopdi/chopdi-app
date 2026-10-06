@@ -555,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? l10n
                                 .homeAddCustomer
                                 : l10n
-                                .homeAddLoan,
+                                .addLender,
                             maxLines: 1,
                             overflow:
                             TextOverflow

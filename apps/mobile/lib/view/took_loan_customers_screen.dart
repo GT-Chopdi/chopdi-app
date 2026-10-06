@@ -98,6 +98,26 @@ class _TookLoanCustomerListSectionState
   // GET LENDER BALANCE
   // ============================================================
 
+  //Lender balance calculation is wrong.
+
+  // Future<double> getLenderBalance(int lenderId) async {
+  //   final transactions = await IsarService.isar.transactions
+  //       .filter()
+  //       .customerIdEqualTo(lenderId) // Transaction table still uses customerId
+  //       .voidedAtIsNull()
+  //       .findAll();
+  //   double balance = 0;
+  //   for (final tx in transactions) {
+  //     // Replaced 'gave' with 'took' because this is the Took Loan section
+  //     if (tx.type == TransactionType.took) {
+  //       balance += tx.amount;
+  //     } else {
+  //       balance -= tx.amount;
+  //     }
+  //   }
+  //   return balance;
+  // }
+
   Future<double> getLenderBalance(int lenderId) async {
     final transactions = await IsarService.isar.transactions
         .filter()
@@ -413,27 +433,43 @@ Future<void> showFilterSheet() async {
                     color: const Color.fromRGBO(170, 185, 207, 1),
                   ),
                 ),
-                child: TextField(
-                  controller: searchController,
-                  onChanged: searchCustomer,
-                  textAlignVertical: TextAlignVertical.center,
-                  decoration: InputDecoration(
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.all(12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Search icon
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14),
                       child: Image.asset(
                         'assets/search_option.png',
-                        width: 24,
-                        height: 24,
+                        width: 18,
+                        height: 18,
                         fit: BoxFit.contain,
                       ),
                     ),
-                    hintText: l10n.searchByNameAndPhone,
-                    hintStyle: const TextStyle(
-                      fontSize: 12,
+
+                    const SizedBox(width: 10),
+
+                    // Search text
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: searchCustomer,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchByNameAndPhone,
+                          hintStyle: const TextStyle(
+                            fontSize: 12,
+                            height: 1,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+
+                    const SizedBox(width: 14),
+                  ],
                 ),
               ),
             ),
@@ -456,14 +492,22 @@ Future<void> showFilterSheet() async {
                   ),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Image.asset(
                       'assets/filter.png',
-                      height: 24,
-                      width: 24,
+                      height: 20,
+                      width: 20,
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(width: 5),
-                    Text(l10n.filter),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.filter,
+                      style: const TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),

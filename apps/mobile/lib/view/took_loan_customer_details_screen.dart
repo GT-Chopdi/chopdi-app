@@ -160,28 +160,28 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
   // INTEREST CALCULATION
   // ============================================================
 
-  double calculateInterest(Transaction tx) {
-    final days = DateTime.now().difference(tx.date).inDays;
+  // double calculateInterest(Transaction tx) {
+  //   final days = DateTime.now().difference(tx.date).inDays;
 
-    double time;
+  //   double time;
 
-    if (tx.interestFrequency == "Monthly") {
-      time = days / 30;
-    } else {
-      time = days / 365;
-    }
+  //   if (tx.interestFrequency == "Monthly") {
+  //     time = days / 30;
+  //   } else {
+  //     time = days / 365;
+  //   }
 
-    if (tx.interestType == "Simple Interest") {
-      return tx.amount * tx.interestRate * time / 100;
-    } else {
-      return tx.amount *
-          (pow(
-            1 + tx.interestRate / 100,
-            time,
-          ) -
-              1);
-    }
-  }
+  //   if (tx.interestType == "Simple Interest") {
+  //     return tx.amount * tx.interestRate * time / 100;
+  //   } else {
+  //     return tx.amount *
+  //         (pow(
+  //           1 + tx.interestRate / 100,
+  //           time,
+  //         ) -
+  //             1);
+  //   }
+  // }
 
   // ============================================================
   // LAST PAID TRANSACTION

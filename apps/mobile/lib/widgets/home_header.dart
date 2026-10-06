@@ -62,21 +62,10 @@ class HomeHeader extends StatelessWidget {
                 ),
               ],
             ),
-
-            Text(
-    AppLocalizations.of(context).homeTapToChangeChopdi,
-              style: GoogleFonts.manrope(
-                color: ChopdiColors.navy,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ],
         ),
 
         const Spacer(),
-
-
       ],
     );
   }
