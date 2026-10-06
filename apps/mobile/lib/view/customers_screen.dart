@@ -208,9 +208,23 @@ class _CustomerListSectionState
               );
             }
 
-            customers.sort((a, b) {
-              final balanceA = balances[a.id] ?? 0;
-              final balanceB = balances[b.id] ?? 0;
+    // ----------------------------------------------------------
+    // LOAN AMOUNT SORT
+    // ----------------------------------------------------------
+
+    if (selectedSort ==
+        "Loan Amount (High to Low)" ||
+        selectedSort ==
+            "Loan Amount (Low to High)") {
+      final balances = <int, double>{};
+
+      for (final customer
+      in filteredCustomers) {
+        balances[customer.id] =
+        await getCustomerBalance(
+          customer.uuid,
+        );
+      }
 
               debugPrint(
                 "COMPARE -> ${a.name}: $balanceA vs "
@@ -403,10 +417,10 @@ class _CustomerListSectionState
   // ============================================================
   // CUSTOMER BALANCE
   // ============================================================
-  Future<double> getCustomerBalance(int customerId) async {
+  Future<double> getCustomerBalance(String customerUuid) async {
     final transactions = await IsarService.isar.transactions
         .filter()
-        .customerIdEqualTo(customerId)
+        .customerUuidEqualTo(customerUuid)
         .voidedAtIsNull()
         .findAll();
 
@@ -416,23 +430,14 @@ class _CustomerListSectionState
 
     for (final tx in transactions) {
       if (tx.type == TransactionType.gave) {
-        totalGiven += tx.amount;
-
-        totalInterest += InterestCalculator.calculate(
-          principal: tx.amount,
-          rate: tx.interestRate,
-          startDate: tx.date,
-          interestType: tx.interestType,
-          frequency: tx.interestFrequency,
-        );
+        balance += tx.amount;
       } else if (tx.type == TransactionType.received) {
-        totalReceived += tx.amount;
+        balance -= tx.amount;
       }
     }
 
     return totalGiven + totalInterest - totalReceived;
   }
-
   // ============================================================
   // SORT BOTTOM SHEET
   // ============================================================

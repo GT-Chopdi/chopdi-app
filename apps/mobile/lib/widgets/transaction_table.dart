@@ -12,13 +12,13 @@ import 'package:mychopdi/widgets/transaction_raw.dart';
 class TransactionTable extends StatelessWidget {
   final List<Transaction> transactions;
   final VoidCallback onChanged;
-  final int customerId;
+  final String customerUuid;
 
   const TransactionTable({
     super.key,
     required this.transactions,
     required this.onChanged,
-    required this.customerId,
+    required this.customerUuid,
   });
 
   // ============================================================
@@ -213,7 +213,7 @@ class TransactionTable extends StatelessWidget {
         startDate: startDate,
         endDate: displayEndDate,
         interest: totalInterest,
-        customerId: customerId,
+        customerUuid: customerUuid,
         onChanged: onChanged,
       ),
     );
@@ -283,7 +283,7 @@ class TransactionTable extends StatelessWidget {
           transaction: tx,
           balance: balanceMap[tx.id] ?? 0,
           onChanged: onChanged,
-          customerId: customerId,
+          customerUuid: customerUuid,
         ),
       );
 
@@ -399,7 +399,7 @@ class _InterestRow extends StatelessWidget {
   final DateTime startDate;
   final DateTime endDate;
   final double interest;
-  final int customerId;
+  final String customerUuid;
   final VoidCallback onChanged;
 
   const _InterestRow({
@@ -407,7 +407,7 @@ class _InterestRow extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     required this.interest,
-    required this.customerId,
+    required this.customerUuid,
     required this.onChanged,
   });
 
@@ -531,7 +531,7 @@ class _InterestRow extends StatelessWidget {
         builder: (_) {
           return TransactionDetailsScreen(
             transaction: transaction,
-            customerId: customerId,
+            customerUuid: customerUuid,
             onChanged: onChanged,
             displayAmount: interest,
             isInterestRow: true,

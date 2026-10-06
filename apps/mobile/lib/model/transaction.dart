@@ -41,6 +41,12 @@ class Transaction {
   @Index()
   String customerUuid = '';
 
+
+
+
+  @Index()
+  String lenderUuid = '';
+
   /// The pre-paise value, still stored under its original column name.
   ///
   /// `@Name('amount')` is load-bearing: the generator keys properties by

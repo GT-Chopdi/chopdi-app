@@ -8,14 +8,14 @@ class TransactionRow extends StatelessWidget {
   final Transaction transaction;
   final double balance;
   final VoidCallback? onChanged;
-  final int customerId;
+  final String customerUuid;
 
   const TransactionRow({
     super.key,
     required this.transaction,
     required this.balance,
     this.onChanged,
-    required this.customerId,
+    required this.customerUuid,
   });
 
   // ================================================================
@@ -184,7 +184,7 @@ class TransactionRow extends StatelessWidget {
           builder: (_) {
             return TransactionDetailsScreen(
               transaction: transaction,
-              customerId: customerId,
+              customerUuid: customerUuid,
               onChanged: onChanged,
             );
           },
