@@ -26,8 +26,8 @@ super.initState();
 // ------------------------------------------------------------
 // Request notification permission
 // ------------------------------------------------------------
-
-LocalNotificationService.instance.requestPermission();
+//
+// LocalNotificationService.instance.requestPermission();
 
 // ------------------------------------------------------------
 // Splash animation
