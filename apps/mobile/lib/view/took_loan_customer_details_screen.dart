@@ -568,7 +568,7 @@ class _CustomerDetailsScreenState extends State<TookLoanCustomerDetailsScreen> {
               TookLoanTransactionTable(
                 transactions: transactions,
                 onChanged: loadTransactions,
-                customerId: lender.id,
+                  lenderUuid: lender.uuid,
               ),
 
               const SizedBox(height: 20),

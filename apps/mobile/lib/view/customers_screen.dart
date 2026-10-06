@@ -21,14 +21,11 @@ class CustomerListSection extends StatefulWidget {
   });
 
   @override
-  State<CustomerListSection> createState() =>
-      _CustomerListSectionState();
+  State<CustomerListSection> createState() => _CustomerListSectionState();
 }
 
-class _CustomerListSectionState
-    extends State<CustomerListSection> {
-  final TextEditingController searchController =
-  TextEditingController();
+class _CustomerListSectionState extends State<CustomerListSection> {
+  final TextEditingController searchController = TextEditingController();
 
   late List<Customer> filteredCustomers;
 
@@ -56,7 +53,7 @@ class _CustomerListSectionState
   // UPDATE WIDGET
   // ============================================================
 
- @override
+  @override
   void didUpdateWidget(
     CustomerListSection oldWidget,
   ) {
@@ -135,201 +132,109 @@ class _CustomerListSectionState
   // ============================================================
 
   Future<void> _applySortToList(
-        List<Customer> customers,
-      ) async {
-        switch (selectedSort) {
-          case "Most Recent":
-            customers.sort(
-              (a, b) => b.updatedAt.compareTo(a.updatedAt),
-            );
-            break;
+    List<Customer> customers,
+  ) async {
+    switch (selectedSort) {
+      case "Most Recent":
+        customers.sort(
+          (a, b) => b.updatedAt.compareTo(a.updatedAt),
+        );
+        break;
 
-          case "Oldest":
-            customers.sort(
-              (a, b) => a.updatedAt.compareTo(b.updatedAt),
-            );
-            break;
+      case "Oldest":
+        customers.sort(
+          (a, b) => a.updatedAt.compareTo(b.updatedAt),
+        );
+        break;
 
-          case "By Name (A-Z)":
-            customers.sort(
-              (a, b) => a.name
-                  .toLowerCase()
-                  .compareTo(b.name.toLowerCase()),
-            );
-            break;
+      case "By Name (A-Z)":
+        customers.sort(
+          (a, b) => a.name
+              .toLowerCase()
+              .compareTo(b.name.toLowerCase()),
+        );
+        break;
 
-          case "Highest Amount":
-            final balances = <int, double>{};
+      case "Highest Amount":
+        final balances = <int, double>{};
 
-            for (final customer in customers) {
-              balances[customer.id] =
-                  await getCustomerBalance(customer.id);
-            }
+        for (final customer in customers) {
+          balances[customer.id] =
+              await getCustomerBalance(customer.id);
+        }
 
-            customers.sort(
-              (a, b) {
-                final balanceA = balances[a.id] ?? 0;
-                final balanceB = balances[b.id] ?? 0;
+        customers.sort(
+          (a, b) {
+            final balanceA = balances[a.id] ?? 0;
+            final balanceB = balances[b.id] ?? 0;
 
-                return balanceB.compareTo(balanceA);
-              },
-            );
-            break;
+            return balanceB.compareTo(balanceA);
+          },
+        );
+        break;
 
-          // case "Least Amount":
-          //   final balances = <int, double>{};
+      case "Least Amount":
+        final balances = <int, double>{};
 
-          //   for (final customer in customers) {
-          //     balances[customer.id] =
-          //         await getCustomerBalance(customer.id);
-          //   }
+        for (final customer in customers) {
+          final balance = await getCustomerBalance(customer.id);
 
-          //   customers.sort(
-          //     (a, b) {
-          //       final balanceA = balances[a.id] ?? 0;
-          //       final balanceB = balances[b.id] ?? 0;
+          balances[customer.id] = balance;
 
-          //       return balanceA.compareTo(balanceB);
-          //     },
-          //   );
-          //   break;
-          case "Least Amount":
-            final balances = <int, double>{};
+          debugPrint(
+            "LEAST SORT -> ${customer.name} | "
+            "ID: ${customer.id} | "
+            "BALANCE: $balance",
+          );
+        }
 
-            for (final customer in customers) {
-              final balance = await getCustomerBalance(customer.id);
+        customers.sort(
+          (a, b) {
+            final balanceA = balances[a.id] ?? 0;
+            final balanceB = balances[b.id] ?? 0;
 
-              balances[customer.id] = balance;
+            return balanceA.compareTo(balanceB);
+          },
+        );
+        break;
+    }
 
-              debugPrint(
-                "LEAST SORT -> ${customer.name} | "
-                "ID: ${customer.id} | "
-                "BALANCE: $balance",
-              );
-            }
+    // ----------------------------------------------------------
+    // LOAN AMOUNT SORT
+    // ----------------------------------------------------------
 
-            customers.sort((a, b) {
-              final balanceA = balances[a.id] ?? 0;
-              final balanceB = balances[b.id] ?? 0;
+    if (selectedSort == "Loan Amount (High to Low)" ||
+        selectedSort == "Loan Amount (Low to High)") {
+      final balances = <int, double>{};
 
-              debugPrint(
-                "COMPARE -> ${a.name}: $balanceA vs "
-                "${b.name}: $balanceB",
-              );
-
-              return balanceA.compareTo(balanceB);
-            });
-
-            debugPrint(
-              "SORTED RESULT -> "
-              "${customers.map((e) => e.name).toList()}",
-            );
-
-            break;
-            }
+      for (final customer in customers) {
+        balances[customer.id] =
+            await getCustomerBalance(customer.id);
       }
 
-  // // ============================================================
-  // // APPLY SORT
-  // // ============================================================
+      customers.sort(
+        (a, b) {
+          final balanceA = balances[a.id] ?? 0;
+          final balanceB = balances[b.id] ?? 0;
 
-  // Future<void> applySort() async {
-  //   // ----------------------------------------------------------
-  //   // NAME A-Z
-  //   // ----------------------------------------------------------
+          debugPrint(
+            "COMPARE -> ${a.name}: $balanceA vs ${b.name}: $balanceB",
+          );
 
-  //   if (selectedSort == "Name (A-Z)") {
-  //     setState(() {
-  //       filteredCustomers.sort(
-  //             (a, b) => a.name
-  //             .toLowerCase()
-  //             .compareTo(
-  //           b.name.toLowerCase(),
-  //         ),
-  //       );
-  //     });
+          if (selectedSort == "Loan Amount (High to Low)") {
+            return balanceB.compareTo(balanceA);
+          } else {
+            return balanceA.compareTo(balanceB);
+          }
+        },
+      );
 
-  //     return;
-  //   }
-
-  //   // ----------------------------------------------------------
-  //   // NAME Z-A
-  //   // ----------------------------------------------------------
-
-  //   if (selectedSort == "Name (Z-A)") {
-  //     setState(() {
-  //       filteredCustomers.sort(
-  //             (a, b) => b.name
-  //             .toLowerCase()
-  //             .compareTo(
-  //           a.name.toLowerCase(),
-  //         ),
-  //       );
-  //     });
-
-  //     return;
-  //   }
-
-  //   // ----------------------------------------------------------
-  //   // RECENTLY ADDED
-  //   // ----------------------------------------------------------
-
-  //   if (selectedSort == "Recently Added") {
-  //     setState(() {
-  //       filteredCustomers.sort(
-  //             (a, b) => b.updatedAt.compareTo(
-  //           a.updatedAt,
-  //         ),
-  //       );
-  //     });
-
-  //     return;
-  //   }
-
-  //   // ----------------------------------------------------------
-  //   // LOAN AMOUNT SORT
-  //   // ----------------------------------------------------------
-
-  //   if (selectedSort ==
-  //       "Loan Amount (High to Low)" ||
-  //       selectedSort ==
-  //           "Loan Amount (Low to High)") {
-  //     final balances = <int, double>{};
-
-  //     for (final customer
-  //     in filteredCustomers) {
-  //       balances[customer.id] =
-  //       await getCustomerBalance(
-  //         customer.id,
-  //       );
-  //     }
-
-  //     if (!mounted) return;
-
-  //     setState(() {
-  //       filteredCustomers.sort(
-  //             (a, b) {
-  //           final balanceA =
-  //               balances[a.id] ?? 0;
-
-  //           final balanceB =
-  //               balances[b.id] ?? 0;
-
-  //           if (selectedSort ==
-  //               "Loan Amount (High to Low)") {
-  //             return balanceB.compareTo(
-  //               balanceA,
-  //             );
-  //           } else {
-  //             return balanceA.compareTo(
-  //               balanceB,
-  //             );
-  //           }
-  //         },
-  //       );
-  //     });
-  //   }
-  // }
+      debugPrint(
+        "SORTED RESULT -> "
+        "${customers.map((e) => e.name).toList()}",
+      );
+    }
+  }
 
   // ============================================================
   // LOCALIZED SORT NAME
@@ -361,6 +266,7 @@ class _CustomerListSectionState
         return sort;
     }
   }
+
   // ============================================================
   // SEARCH
   // ============================================================
@@ -398,6 +304,11 @@ class _CustomerListSectionState
 
     await applyFilters();
   }
+
+  // ============================================================
+  // CUSTOMER BALANCE
+  // ============================================================
+
   //In this function it calculates the wrong balance of a customer.
   // ============================================================
   // CUSTOMER BALANCE
@@ -434,25 +345,16 @@ class _CustomerListSectionState
 
     double totalGiven = 0;
     double totalReceived = 0;
-    double totalInterest = 0;
 
     for (final tx in transactions) {
       if (tx.type == TransactionType.gave) {
         totalGiven += tx.amount;
-
-        totalInterest += InterestCalculator.calculate(
-          principal: tx.amount,
-          rate: tx.interestRate,
-          startDate: tx.date,
-          interestType: tx.interestType,
-          frequency: tx.interestFrequency,
-        );
       } else if (tx.type == TransactionType.received) {
         totalReceived += tx.amount;
       }
     }
 
-    return totalGiven + totalInterest - totalReceived;
+    return totalGiven - totalReceived;
   }
 
   // ============================================================
@@ -461,11 +363,10 @@ class _CustomerListSectionState
 
   Future<void> showSortSheet() async {
     final result =
-    await showModalBottomSheet<String>(
+        await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-      const SortBottomSheet(),
+      builder: (_) => const SortBottomSheet(),
     );
 
     if (result == null) {
@@ -477,6 +378,10 @@ class _CustomerListSectionState
     });
 
     await _applySortToList(filteredCustomers);
+
+    if (!mounted) return;
+
+    setState(() {});
   }
 
   // ============================================================
@@ -485,11 +390,9 @@ class _CustomerListSectionState
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-    AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
-    final localizedSort =
-    getLocalizedSortName(
+    final localizedSort = getLocalizedSortName(
       context,
       selectedSort,
     );
@@ -504,32 +407,27 @@ class _CustomerListSectionState
         Row(
           children: [
             Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.customersTitle,
                   style: GoogleFonts.manrope(
                     fontSize: 22,
-                    fontWeight:
-                    FontWeight.w700,
-                    color:
-                    ChopdiColors.navy,
+                    fontWeight: FontWeight.w700,
+                    color: ChopdiColors.navy,
                   ),
                 ),
                 Text(
                   l10n.manageAllCustomers,
                   style: GoogleFonts.manrope(
                     fontSize: 12,
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       34,
                       58,
                       94,
                       0.62,
                     ),
-                    fontWeight:
-                    FontWeight.w700,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -549,15 +447,10 @@ class _CustomerListSectionState
             Expanded(
               child: Container(
                 height: 46,
-                decoration:
-                BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(
-                    30,
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       170,
                       185,
                       207,
@@ -566,18 +459,11 @@ class _CustomerListSectionState
                   ),
                 ),
                 child: TextField(
-                  controller:
-                  searchController,
-                  onChanged:
-                  searchCustomer,
-                  decoration:
-                  InputDecoration(
-                    prefixIcon:
-                    Padding(
-                      padding:
-                      const EdgeInsets.all(
-                        12,
-                      ),
+                  controller: searchController,
+                  onChanged: searchCustomer,
+                  decoration: InputDecoration(
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(12),
                       child: Image.asset(
                         'assets/search_option.png',
                         width: 24,
@@ -586,21 +472,17 @@ class _CustomerListSectionState
                       ),
                     ),
                     prefixIconConstraints:
-                    const BoxConstraints(
+                        const BoxConstraints(
                       minWidth: 44,
                       minHeight: 44,
                       maxWidth: 44,
                       maxHeight: 44,
                     ),
-                    hintText:
-                    l10n
-                        .searchByNameAndPhone,
-                    hintStyle:
-                    const TextStyle(
+                    hintText: l10n.searchByNameAndPhone,
+                    hintStyle: const TextStyle(
                       fontSize: 12,
                     ),
-                    border:
-                    InputBorder.none,
+                    border: InputBorder.none,
                   ),
                 ),
               ),
@@ -610,28 +492,17 @@ class _CustomerListSectionState
 
             // FILTER BUTTON
             InkWell(
-              onTap:
-              showFilterSheet,
-              borderRadius:
-              BorderRadius.circular(
-                25,
-              ),
+              onTap: showFilterSheet,
+              borderRadius: BorderRadius.circular(25),
               child: Container(
                 height: 46,
-                padding:
-                const EdgeInsets
-                    .symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-                decoration:
-                BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(
-                    25,
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color:
-                    const Color.fromRGBO(
+                    color: const Color.fromRGBO(
                       170,
                       185,
                       207,
@@ -646,13 +517,10 @@ class _CustomerListSectionState
                       height: 24,
                       width: 24,
                     ),
-                    const SizedBox(
-                      width: 5,
-                    ),
+                    const SizedBox(width: 5),
                     Text(
                       l10n.filter,
-                      style:
-                      const TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                       ),
                     ),
@@ -673,19 +541,15 @@ class _CustomerListSectionState
 
         if (filteredCustomers.isEmpty)
           Padding(
-            padding:
-            const EdgeInsets
-                .symmetric(
+            padding: const EdgeInsets.symmetric(
               vertical: 30,
             ),
             child: Center(
               child: Text(
                 l10n.noCustomersFound,
-                style:
-                const TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  fontWeight:
-                  FontWeight.w500,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -693,16 +557,13 @@ class _CustomerListSectionState
         else
           ...List.generate(
             filteredCustomers.length,
-                (index) {
+            (index) {
               return Padding(
-                padding:
-                const EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   bottom: 10,
                 ),
                 child: CustomerCard(
-                  customer:
-                  filteredCustomers[
-                  index],
+                  customer: filteredCustomers[index],
                 ),
               );
             },

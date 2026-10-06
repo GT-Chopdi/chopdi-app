@@ -213,6 +213,7 @@ class _MoneyReceiveBottomSheetState
 
     final tx = Transaction()
       ..customerId = widget.customer.id
+      ..customerUuid = widget.customer.uuid // authoritative Customer identity
       ..amountPaise = Money.toPaise(amount)
       ..interestRateBp = 0
       ..date = selectedDate

@@ -1334,6 +1334,7 @@ class _MoneyGaveBottomSheetState
 
       final tx = Transaction()
         ..customerId = activeCustomer.id
+        ..customerUuid = activeCustomer.uuid // authoritative identity
         ..amountPaise = Money.toPaise(
           amount,
         )
