@@ -272,11 +272,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get LenderAlreadyExists =>
-      "Customer Already Exists";
+      "Lender Already Exists";
 
   @override
   String get duplicateCustomerMessage =>
       "A customer with the same name and phone number is already added.";
+
+
+  @override
+  String get duplicateLenderMessage =>
+      "A Lender with the same name and phone number is already added.";
+
 
   @override
   String get ok => "OK";
@@ -462,9 +468,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lenderAlreadyExists =>
       'Lender Already Exists';
 
-  @override
-  String get duplicateLenderMessage =>
-      'A lender with the same name and phone number is already added.';
+
 
   @override
   String get failedToAddLender =>

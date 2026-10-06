@@ -177,6 +177,7 @@ abstract class AppLocalizations {
 // ERROR
   String get failedToAddCustomer;
   String get manageCurrentChopdi;
+  String get duplicateLenderMessage;
   String get preferences;
   String get notificationsSettings;
   String get manageAppNotifications;
@@ -230,7 +231,7 @@ abstract class AppLocalizations {
   String get get;
   String get addNewLender;
   String get lenderAlreadyExists;
-  String get duplicateLenderMessage;
+
   String get failedToAddLender;
   String get lenderDetails;
   String get lenderName;
