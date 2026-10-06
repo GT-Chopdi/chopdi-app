@@ -760,13 +760,13 @@ class _MoneyGaveBottomSheetState
                                   IsarService.isar,
                                 );
 
-                                await notificationService
-                                    .createTookLoanNotification(
-                                  chopdiId: widget.lender.chopdiId,
-                                  customerName: widget.lender.name,
-                                  amount: amount,
-                                  customerId: widget.lender.id,
-                                );
+                                // await notificationService
+                                //     .createTookLoanNotification(
+                                //   chopdiId: widget.lender.chopdiId,
+                                //   customerName: widget.lender.name,
+                                //   amount: amount,
+                                //   customerId: widget.lender.id,
+                                // );
 
                                 if (interestAmount > 0) {
                                   await notificationService

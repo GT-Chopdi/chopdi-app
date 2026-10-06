@@ -149,47 +149,47 @@ class NotificationService {
   // ============================================================
   // I TOOK LOAN
   // ============================================================
-
-  Future<int> createTookLoanNotification({
-    required int chopdiId,
-    required String customerName,
-    required double amount,
-    int? customerId,
-  }) async {
-    final enabled =
-        await LocalNotificationService.instance
-            .areNotificationsEnabled();
-
-    if (!enabled) {
-      return -1;
-    }
-
-    final notification = NotificationModel()
-      ..title = 'I Took Loan'
-      ..subtitle =
-          'You took ₹${amount.toStringAsFixed(2)} '
-          'from $customerName.'
-      ..type = 'took_loan'
-      ..createdAt = DateTime.now()
-      ..isRead = false
-      ..customerId = customerId
-      ..customerName = customerName
-      ..amount = amount
-      ..chopdiId = chopdiId;
-
-    final id = await isar.writeTxn(() async {
-      return isar.notificationModels.put(notification);
-    });
-
-    await LocalNotificationService.instance.showAppEventNotification(
-      id: id,
-      title: notification.title,
-      body: notification.subtitle,
-      payload: customerId != null ? 'took_loan:$customerId' : 'event_read:$id',
-    );
-
-    return id;
-  }
+  //
+  // Future<int> createTookLoanNotification({
+  //   required int chopdiId,
+  //   required String customerName,
+  //   required double amount,
+  //   int? customerId,
+  // }) async {
+  //   final enabled =
+  //       await LocalNotificationService.instance
+  //           .areNotificationsEnabled();
+  //
+  //   if (!enabled) {
+  //     return -1;
+  //   }
+  //
+  //   final notification = NotificationModel()
+  //     ..title = 'I Took Loan'
+  //     ..subtitle =
+  //         'You took ₹${amount.toStringAsFixed(2)} '
+  //         'from $customerName.'
+  //     ..type = 'took_loan'
+  //     ..createdAt = DateTime.now()
+  //     ..isRead = false
+  //     ..customerId = customerId
+  //     ..customerName = customerName
+  //     ..amount = amount
+  //     ..chopdiId = chopdiId;
+  //
+  //   final id = await isar.writeTxn(() async {
+  //     return isar.notificationModels.put(notification);
+  //   });
+  //
+  //   await LocalNotificationService.instance.showAppEventNotification(
+  //     id: id,
+  //     title: notification.title,
+  //     body: notification.subtitle,
+  //     payload: customerId != null ? 'took_loan:$customerId' : 'event_read:$id',
+  //   );
+  //
+  //   return id;
+  // }
 
   // ============================================================
   // PAYMENT REMINDER
