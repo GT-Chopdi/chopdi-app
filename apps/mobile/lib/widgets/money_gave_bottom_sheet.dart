@@ -621,7 +621,7 @@ class _MoneyGaveBottomSheetState
                             color: Colors.black,
                           ),
                         ).copyWith(
-                          hintText: DateFormat("dd MMM yyyy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
+                          hintText: DateFormat("dd MMM yy", Localizations.localeOf(context).toLanguageTag()).format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,

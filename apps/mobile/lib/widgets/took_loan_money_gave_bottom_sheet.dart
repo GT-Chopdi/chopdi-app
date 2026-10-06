@@ -429,7 +429,7 @@ class _MoneyGaveBottomSheetState
                             size: 20,
                           ),
                         ).copyWith(
-                          hintText: DateFormat("dd MMM yyyy", locale).format(selectedDate),
+                          hintText: DateFormat("dd MMM yy", locale).format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,

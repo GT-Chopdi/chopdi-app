@@ -596,12 +596,35 @@ abstract class AppLocalizations {
   String get addYourName;
   String get amountRequired;
   String get amountCannotBeZero;
-  String get filterBy => 'Filter by';
-  String get mostRecent => 'Most Recent';
-  String get highestAmount => 'Highest Amount';
-  String get byNameAZ => 'By Name (A-Z)';
-  String get oldest => 'Oldest';
-  String get leastAmount => 'Least Amount';
+  String get filterBy;
+  String get mostRecent;
+  String get highestAmount;
+  String get byNameAZ;
+  String get oldest;
+  String get leastAmount;
+  String get totalAmountTaken;
+  String get loanTakenOn;
+  String get paymentPaid;
+  String get statement;
+  String get generatedDate;
+
+  String get trustedDigitalLedger;
+  String pdfIncludesLenderDetails(String name);
+
+  String deleteLenderTitle(String name);
+  String get deleteActionCannotBeUndone;
+  String get allLenderDataDeleted;
+  String get understandDeleteAction;
+
+  String get phoneNumberNotAvailable;
+  String get phoneNumberNotAvailableForCustomer;
+  String get phonePermissionRequired;
+  String get phonePermissionRequiredToMakeCall;
+  String get phonePermissionDeniedOpenSettings;
+  String get unableToOpenDialer;
+  String get unableToOpenPhoneDialer;
+  String get openSettings;
+
 
 
   Null get at => null;
