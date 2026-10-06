@@ -478,20 +478,32 @@ class LocalNotificationService {
       // ==========================================================
       // CUSTOMER - INTEREST CALCULATED
       // ==========================================================
+// ==========================================================
+// CUSTOMER - INTEREST
+// ==========================================================
 
-      if (payload.startsWith('interest_calculated:customer:')) {
-        final idStr = payload.split(':').last;
-        final customerId = int.tryParse(idStr);
+      if (payload.startsWith('interest_calculated:customer:') ||
+          payload.startsWith('interest_updated:customer:')) {
+        final parts = payload.split(':');
 
-        if (customerId == null) {
+        if (parts.length < 4) {
           debugPrint(
-            '[LocalNotification] Invalid customer ID: $idStr',
+            '[LocalNotification] Invalid customer interest payload: $payload',
           );
           return;
         }
 
-        final customer =
-        await isar.customers.get(customerId);
+        final customerId = int.tryParse(parts[2]);
+        final transactionId = int.tryParse(parts[3]);
+
+        if (customerId == null) {
+          debugPrint(
+            '[LocalNotification] Invalid customer ID: ${parts[2]}',
+          );
+          return;
+        }
+
+        final customer = await isar.customers.get(customerId);
 
         if (customer == null) {
           debugPrint(
@@ -501,35 +513,47 @@ class LocalNotificationService {
         }
 
         debugPrint(
-          '[LocalNotification] Opening customer: '
-              '${customer.id}',
+          '[LocalNotification] Opening customer '
+              '${customer.id}, transaction: $transactionId',
         );
 
         nav.pushNamed(
           '/customer_details',
-          arguments: customer,
+          arguments: {
+            'customer': customer,
+            'transactionId': transactionId,
+          },
         );
 
         return;
       }
 
-      // ==========================================================
-      // LENDER - INTEREST CALCULATED
-      // ==========================================================
+// ==========================================================
+// LENDER - INTEREST
+// ==========================================================
 
-      if (payload.startsWith('interest_calculated:lender:')) {
-        final idStr = payload.split(':').last;
-        final lenderId = int.tryParse(idStr);
+      if (payload.startsWith('interest_calculated:lender:') ||
+          payload.startsWith('interest_updated:lender:')) {
+        final parts = payload.split(':');
 
-        if (lenderId == null) {
+        if (parts.length < 4) {
           debugPrint(
-            '[LocalNotification] Invalid lender ID: $idStr',
+            '[LocalNotification] Invalid lender interest payload: $payload',
           );
           return;
         }
 
-        final lender =
-        await isar.lenders.get(lenderId);
+        final lenderId = int.tryParse(parts[2]);
+        final transactionId = int.tryParse(parts[3]);
+
+        if (lenderId == null) {
+          debugPrint(
+            '[LocalNotification] Invalid lender ID: ${parts[2]}',
+          );
+          return;
+        }
+
+        final lender = await isar.lenders.get(lenderId);
 
         if (lender == null) {
           debugPrint(
@@ -539,13 +563,16 @@ class LocalNotificationService {
         }
 
         debugPrint(
-          '[LocalNotification] Opening lender: '
-              '${lender.id}',
+          '[LocalNotification] Opening lender '
+              '${lender.id}, transaction: $transactionId',
         );
 
         nav.pushNamed(
           '/took_loan_customer_details',
-          arguments: lender,
+          arguments: {
+            'lender': lender,
+            'transactionId': transactionId,
+          },
         );
 
         return;

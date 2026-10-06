@@ -1121,8 +1121,8 @@ class _EditTransactionBottomSheetState
         calculatedInterest,
         interestPeriod:
         interestPeriod,
-        customerId:
-        transaction.customerId,
+        customerId: transaction.customerId,
+        transactionId: transaction.id,
       );
     }
 

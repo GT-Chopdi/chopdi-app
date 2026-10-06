@@ -773,7 +773,7 @@ class _MoneyGaveBottomSheetState
                                     chopdiId: widget.lender.chopdiId,
                                     lenderName: widget.lender.name,
                                     interestAmount: interestAmount,
-                                    lenderId: widget.lender.id,
+                                    lenderId: widget.lender.id, transactionId: tx.id,
                                   );
                                 }
                               }

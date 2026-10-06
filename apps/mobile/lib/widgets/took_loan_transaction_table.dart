@@ -14,11 +14,18 @@ class TookLoanTransactionTable extends StatelessWidget {
   final VoidCallback onChanged;
   final String lenderUuid;
 
+  // ============================================================
+  // HIGHLIGHTED TRANSACTION
+  // ============================================================
+
+  final int? highlightTransactionId;
+
   const TookLoanTransactionTable({
     super.key,
     required this.transactions,
     required this.onChanged,
     required this.lenderUuid,
+    this.highlightTransactionId,
   });
 
   // ============================================================
@@ -64,6 +71,13 @@ class TookLoanTransactionTable extends StatelessWidget {
         interest: interest,
         lenderUuid: lenderUuid,
         onChanged: onChanged,
+
+        // ======================================================
+        // IMPORTANT
+        // ======================================================
+        // The notification transaction ID belongs to the loan
+        // transaction, but we highlight the INTEREST row.
+        isHighlighted: tx.id == highlightTransactionId,
       ),
     );
 
@@ -73,6 +87,10 @@ class TookLoanTransactionTable extends StatelessWidget {
 
     return rows;
   }
+
+  // ============================================================
+  // ADD ONE MONTH
+  // ============================================================
 
   DateTime _addOneMonth(DateTime date) {
     final nextMonth = DateTime(
@@ -107,6 +125,10 @@ class TookLoanTransactionTable extends StatelessWidget {
       ) {
     final List<Widget> rows = [];
 
+    // ----------------------------------------------------------
+    // Calculate balance OLD → NEW
+    // ----------------------------------------------------------
+
     final balanceTransactions = [...sortedTransactions]
       ..sort(
             (a, b) => a.date.compareTo(b.date),
@@ -128,7 +150,15 @@ class TookLoanTransactionTable extends StatelessWidget {
       balanceMap[tx.id] = runningBalance;
     }
 
+    // ----------------------------------------------------------
+    // Display NEW → OLD
+    // ----------------------------------------------------------
+
     for (final tx in sortedTransactions) {
+      // --------------------------------------------------------
+      // Interest row
+      // --------------------------------------------------------
+
       if (tx.type == TransactionType.took &&
           tx.interestRate > 0) {
         rows.addAll(
@@ -136,12 +166,22 @@ class TookLoanTransactionTable extends StatelessWidget {
         );
       }
 
+      // --------------------------------------------------------
+      // Normal transaction row
+      // --------------------------------------------------------
+
       rows.add(
         TookLoanTransactionRow(
           transaction: tx,
           balance: balanceMap[tx.id] ?? 0,
           onChanged: onChanged,
           lenderUuid: lenderUuid,
+
+          // IMPORTANT:
+          // Do NOT highlight the normal loan transaction.
+          //
+          // The notification ID is used above to highlight
+          // its corresponding interest row.
         ),
       );
 
@@ -181,7 +221,9 @@ class TookLoanTransactionTable extends StatelessWidget {
   // TABLE HEADER
   // ============================================================
 
-  Widget _tableHeader(BuildContext context) {
+  Widget _tableHeader(
+      BuildContext context,
+      ) {
     final l10n = AppLocalizations.of(context);
 
     return Container(
@@ -229,7 +271,9 @@ class _Header extends StatelessWidget {
   const _Header(this.title);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 12,
@@ -260,6 +304,12 @@ class _InterestRow extends StatelessWidget {
   final String lenderUuid;
   final VoidCallback onChanged;
 
+  // ============================================================
+  // HIGHLIGHT
+  // ============================================================
+
+  final bool isHighlighted;
+
   const _InterestRow({
     required this.transaction,
     required this.startDate,
@@ -267,7 +317,12 @@ class _InterestRow extends StatelessWidget {
     required this.interest,
     required this.lenderUuid,
     required this.onChanged,
+    this.isHighlighted = false,
   });
+
+  // ============================================================
+  // LOCALIZED FREQUENCY
+  // ============================================================
 
   String _localizedFrequency(
       BuildContext context,
@@ -293,6 +348,10 @@ class _InterestRow extends StatelessWidget {
     }
   }
 
+  // ============================================================
+  // LOCALIZED INTEREST TYPE
+  // ============================================================
+
   String _localizedInterestType(
       BuildContext context,
       String value,
@@ -310,6 +369,10 @@ class _InterestRow extends StatelessWidget {
         return value;
     }
   }
+
+  // ============================================================
+  // INTEREST DESCRIPTION
+  // ============================================================
 
   String _getInterestDescription(
       BuildContext context,
@@ -356,8 +419,14 @@ class _InterestRow extends StatelessWidget {
         "${l10n.interest}.";
   }
 
+  // ============================================================
+  // BUILD INTEREST ROW
+  // ============================================================
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     final locale =
     Localizations.localeOf(context).toLanguageTag();
 
@@ -365,6 +434,10 @@ class _InterestRow extends StatelessWidget {
       "dd MMM yy",
       locale,
     );
+
+    // ----------------------------------------------------------
+    // OPEN TRANSACTION DETAILS
+    // ----------------------------------------------------------
 
     void openTransactionDetails() {
       showModalBottomSheet(
@@ -377,7 +450,7 @@ class _InterestRow extends StatelessWidget {
         builder: (_) {
           return TransactionDetailsScreen(
             transaction: transaction,
-
+            lenderUuid: lenderUuid,
             onChanged: onChanged,
             displayAmount: interest,
             isInterestRow: true,
@@ -386,28 +459,80 @@ class _InterestRow extends StatelessWidget {
       );
     }
 
+    // ----------------------------------------------------------
+    // INTEREST ROW
+    // ----------------------------------------------------------
+
     return GestureDetector(
       onTap: openTransactionDetails,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+
+        margin: const EdgeInsets.only(
+          bottom: 10,
+        ),
+
         padding: const EdgeInsets.symmetric(
           horizontal: 8,
           vertical: 8,
         ),
+
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F0),
-          border: Border.all(
-            color: const Color(0xFFAAB9CF),
-          ),
+          // ======================================================
+          // INTEREST HIGHLIGHT
+          // ======================================================
+
+          color: isHighlighted
+              ? const Color(0xFFE4EAF2)
+              : const Color(0xFFFFFBF6),
+
           borderRadius: BorderRadius.circular(10),
+
+          // ======================================================
+          // BLUE / NAVY BORDER
+          // ======================================================
+
+          border: Border.all(
+            color: isHighlighted
+                ? const Color(0xFF243B67)
+                : const Color(0xFFD4D9E2),
+            width: isHighlighted ? 1.6 : 1,
+          ),
+
+          // ======================================================
+          // SOFT SHADOW
+          // ======================================================
+
+          boxShadow: isHighlighted
+              ? [
+            BoxShadow(
+              color: const Color(0xFF243B67).withValues(
+                alpha: 0.14,
+              ),
+              blurRadius: 8,
+              spreadRadius: 0.5,
+              offset: const Offset(0, 2),
+            ),
+          ]
+              : [
+            BoxShadow(
+              color: Colors.black.withValues(
+                alpha: 0.025,
+              ),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
+
         child: Row(
           crossAxisAlignment:
           CrossAxisAlignment.center,
           children: [
-            // ==================================
+            // ==================================================
             // DATE + DESCRIPTION
-            // ==================================
+            // ==================================================
 
             Expanded(
               flex: 3,
@@ -421,7 +546,9 @@ class _InterestRow extends StatelessWidget {
                         "${dateFormat.format(endDate)}",
                     style: GoogleFonts.manrope(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: isHighlighted
+                          ? FontWeight.w800
+                          : FontWeight.w600,
                       color: ChopdiColors.navy,
                     ),
                   ),
@@ -433,9 +560,14 @@ class _InterestRow extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     softWrap: true,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: Color(0xff8A93A6),
+                      color: isHighlighted
+                          ? Colors.black87
+                          : const Color(0xff8A93A6),
+                      fontWeight: isHighlighted
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       decoration:
                       TextDecoration.underline,
                     ),
@@ -444,9 +576,9 @@ class _InterestRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // TOOK
-            // ==================================
+            // ==================================================
 
             const Expanded(
               flex: 2,
@@ -461,9 +593,9 @@ class _InterestRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // PAID
-            // ==================================
+            // ==================================================
 
             const Expanded(
               flex: 2,
@@ -478,9 +610,9 @@ class _InterestRow extends StatelessWidget {
               ),
             ),
 
-            // ==================================
+            // ==================================================
             // BALANCE / INTEREST
-            // ==================================
+            // ==================================================
 
             Expanded(
               flex: 2,
@@ -488,9 +620,11 @@ class _InterestRow extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   "₹${interest.toStringAsFixed(0)}",
-                  style: const TextStyle(
-                    color: Color(0xFF00901B),
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    color: const Color(0xFF00901B),
+                    fontWeight: isHighlighted
+                        ? FontWeight.w900
+                        : FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),

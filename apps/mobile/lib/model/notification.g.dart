@@ -41,7 +41,12 @@ const NotificationModelSchema = CollectionSchema(
       type: IsarType.string,
     ),
     r'title': PropertySchema(id: 7, name: r'title', type: IsarType.string),
-    r'type': PropertySchema(id: 8, name: r'type', type: IsarType.string),
+    r'transactionId': PropertySchema(
+      id: 8,
+      name: r'transactionId',
+      type: IsarType.long,
+    ),
+    r'type': PropertySchema(id: 9, name: r'type', type: IsarType.string),
   },
 
   estimateSize: _notificationModelEstimateSize,
@@ -49,7 +54,21 @@ const NotificationModelSchema = CollectionSchema(
   deserialize: _notificationModelDeserialize,
   deserializeProp: _notificationModelDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'transactionId': IndexSchema(
+      id: 8561542235958051982,
+      name: r'transactionId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'transactionId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+  },
   links: {},
   embeddedSchemas: {},
 
@@ -91,7 +110,8 @@ void _notificationModelSerialize(
   writer.writeBool(offsets[5], object.isRead);
   writer.writeString(offsets[6], object.subtitle);
   writer.writeString(offsets[7], object.title);
-  writer.writeString(offsets[8], object.type);
+  writer.writeLong(offsets[8], object.transactionId);
+  writer.writeString(offsets[9], object.type);
 }
 
 NotificationModel _notificationModelDeserialize(
@@ -110,7 +130,8 @@ NotificationModel _notificationModelDeserialize(
   object.isRead = reader.readBool(offsets[5]);
   object.subtitle = reader.readString(offsets[6]);
   object.title = reader.readString(offsets[7]);
-  object.type = reader.readString(offsets[8]);
+  object.transactionId = reader.readLong(offsets[8]);
+  object.type = reader.readString(offsets[9]);
   return object;
 }
 
@@ -138,6 +159,8 @@ P _notificationModelDeserializeProp<P>(
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -167,6 +190,15 @@ extension NotificationModelQueryWhereSort
   QueryBuilder<NotificationModel, NotificationModel, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhere>
+  anyTransactionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'transactionId'),
+      );
     });
   }
 }
@@ -234,6 +266,109 @@ extension NotificationModelQueryWhere
           lower: lowerId,
           includeLower: includeLower,
           upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhereClause>
+  transactionIdEqualTo(int transactionId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'transactionId',
+          value: [transactionId],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhereClause>
+  transactionIdNotEqualTo(int transactionId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'transactionId',
+                lower: [],
+                upper: [transactionId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'transactionId',
+                lower: [transactionId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'transactionId',
+                lower: [transactionId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'transactionId',
+                lower: [],
+                upper: [transactionId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhereClause>
+  transactionIdGreaterThan(int transactionId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'transactionId',
+          lower: [transactionId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhereClause>
+  transactionIdLessThan(int transactionId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'transactionId',
+          lower: [],
+          upper: [transactionId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterWhereClause>
+  transactionIdBetween(
+    int lowerTransactionId,
+    int upperTransactionId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'transactionId',
+          lower: [lowerTransactionId],
+          includeLower: includeLower,
+          upper: [upperTransactionId],
           includeUpper: includeUpper,
         ),
       );
@@ -1043,6 +1178,61 @@ extension NotificationModelQueryFilter
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  transactionIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'transactionId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  transactionIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'transactionId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  transactionIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'transactionId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  transactionIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'transactionId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
   typeEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1305,6 +1495,20 @@ extension NotificationModelQuerySortBy
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  sortByTransactionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'transactionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  sortByTransactionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'transactionId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   sortByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
@@ -1447,6 +1651,20 @@ extension NotificationModelQuerySortThenBy
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  thenByTransactionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'transactionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  thenByTransactionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'transactionId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   thenByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
@@ -1519,6 +1737,13 @@ extension NotificationModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NotificationModel, NotificationModel, QDistinct>
+  distinctByTransactionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'transactionId');
+    });
+  }
+
   QueryBuilder<NotificationModel, NotificationModel, QDistinct> distinctByType({
     bool caseSensitive = true,
   }) {
@@ -1583,6 +1808,13 @@ extension NotificationModelQueryProperty
   QueryBuilder<NotificationModel, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<NotificationModel, int, QQueryOperations>
+  transactionIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'transactionId');
     });
   }
 
