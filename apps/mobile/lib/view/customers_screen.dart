@@ -335,7 +335,7 @@ class _CustomerListSectionState
   // LOCALIZED SORT NAME
   // ============================================================
 
-    String getLocalizedSortName(
+  String getLocalizedSortName(
     BuildContext context,
     String sort,
   ) {
@@ -398,11 +398,33 @@ class _CustomerListSectionState
 
     await applyFilters();
   }
-
-  /// Calculated wrong balance for a customer based on their transactions.
+  //In this function it calculates the wrong balance of a customer.
   // ============================================================
   // CUSTOMER BALANCE
   // ============================================================
+
+  // Future<double> getCustomerBalance(
+  //   int customerId,
+  // ) async {
+  //   final transactions =
+  //   await IsarService
+  //       .isar
+  //       .transactions
+  //       .filter()
+  //       .customerIdEqualTo(customerId)
+  //       .voidedAtIsNull()
+  //       .findAll();
+  //   double balance = 0;
+  //   for (final tx in transactions) {
+  //     if (tx.type == TransactionType.gave) {
+  //     balance += tx.amount;
+  //     } else {
+  //     balance -= tx.amount;
+  //     }
+  //   }
+  //   return balance;
+  // }
+
   Future<double> getCustomerBalance(int customerId) async {
     final transactions = await IsarService.isar.transactions
         .filter()
