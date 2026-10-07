@@ -36,18 +36,38 @@ class _MainScreenState extends State<MainScreen> {
     ];
   }
 
+  void _handleBack() {
+    if (selectedIndex != 0) {
+      // If user is on MyChopdi (tab 2),
+      // back button should return to Home (tab 1).
+      setState(() {
+        selectedIndex = 0;
+      });
+    }
+    // If already on Home, do nothing.
+    // Android will handle the back action normally.
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: pages[selectedIndex],
+    return PopScope(
+      canPop: selectedIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
 
-      bottomNavigationBar: BottomNavbar(
-        currentIndex: selectedIndex,
-        onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
+        _handleBack();
+      },
+      child: Scaffold(
+        body: pages[selectedIndex],
+
+        bottomNavigationBar: BottomNavbar(
+          currentIndex: selectedIndex,
+          onTap: (index) {
+            setState(() {
+              selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
