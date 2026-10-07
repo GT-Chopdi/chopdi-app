@@ -8,12 +8,13 @@ import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_raw.dart';
+import 'package:mychopdi/widgets/interest_details_bottom_sheet.dart';
+import '../utils/interest_calculator.dart';
 
 class TransactionTable extends StatelessWidget {
   final List<Transaction> transactions;
   final VoidCallback onChanged;
   final String customerUuid;
-
   final int? highlightTransactionId;
 
   const TransactionTable({
@@ -25,140 +26,13 @@ class TransactionTable extends StatelessWidget {
   });
 
   // ============================================================
-  // DAILY INTEREST CALCULATION
+  // MONTHLY INTEREST CALCULATION
   // ============================================================
 
-  double _calculateDailyInterest({
-    required Transaction tx,
-    required int days,
-  }) {
-    if (days <= 0 ||
-        tx.amount <= 0 ||
-        tx.interestRate <= 0) {
-      return 0;
-    }
-
-    final rate = tx.interestRate;
-
-    /*
-      The selected frequency defines the period for the entered rate.
-
-      Daily   -> rate is for 1 day
-      Weekly  -> rate is for 7 days
-      Monthly -> rate is for 30 days
-      Yearly  -> rate is for 365 days
-
-      We then accrue that interest DAILY.
-    */
-
-    double periodDays;
-
-    switch (tx.interestFrequency.toLowerCase()) {
-      case "daily":
-        periodDays = 1;
-        break;
-
-      case "weekly":
-        periodDays = 7;
-        break;
-
-      case "monthly":
-        periodDays = 30;
-        break;
-
-      case "yearly":
-        periodDays = 365;
-        break;
-
-      default:
-        periodDays = 30;
-    }
-
-    // Interest for the selected period.
-    final periodInterest = tx.amount * rate / 100;
-
-    // Interest accumulated one day at a time.
-    final dailyInterest = periodInterest / periodDays;
-
-    // Simple Interest
-    if (tx.interestType.toLowerCase() == "simple interest") {
-      return dailyInterest * days;
-    }
-
-    // Compound Interest
-    final periods = days / periodDays;
-
-    return tx.amount *
-        (pow(
-          1 + rate / 100,
-          periods,
-        ) -
-            1);
-  }
-
-  // ============================================================
-  // ADD ONE YEAR
-  // ============================================================
-
-  DateTime _addOneYear(DateTime date) {
-    final nextYear = date.year + 1;
-
-    // Handle Feb 29 safely.
-    if (date.month == 2 && date.day == 29) {
-      return DateTime(nextYear, 2, 28);
-    }
-
-    return DateTime(
-      nextYear,
-      date.month,
-      date.day,
-    );
-  }
-
-  // ============================================================
-  // ADD ONE MONTH
-  // ============================================================
-
-  DateTime _addOneMonth(DateTime date) {
-    final nextMonth = DateTime(
-      date.year,
-      date.month + 1,
-      1,
-    );
-
-    final lastDayOfNextMonth = DateTime(
-      nextMonth.year,
-      nextMonth.month + 1,
-      0,
-    ).day;
-
-    final day = date.day > lastDayOfNextMonth
-        ? lastDayOfNextMonth
-        : date.day;
-
-    return DateTime(
-      nextMonth.year,
-      nextMonth.month,
-      day,
-    );
-  }
-
-  // ============================================================
-  // INTEREST ROW
-  // ============================================================
-
-  List<Widget> _buildInterestRows(
-      Transaction tx,
+  List<_MonthlyInterestSummary> _buildMonthlyInterestSummaries(
+      List<Transaction> transactions,
       ) {
-    final List<Widget> rows = [];
-
     final now = DateTime.now();
-
-    final startDate = DateTime(
-      tx.date.year,
-      tx.date.month,
-      tx.date.day,
-    );
 
     final today = DateTime(
       now.year,
@@ -166,79 +40,112 @@ class TransactionTable extends StatelessWidget {
       now.day,
     );
 
-    // No interest on the transaction date.
-    if (!today.isAfter(startDate)) {
-      return rows;
-    }
+    final Map<String, _MonthlyInterestSummary> monthly = {};
 
     // ==========================================================
-    // KEEP EXISTING AMOUNT LOGIC
+    // ONLY GIVEN TRANSACTIONS WITH INTEREST
     // ==========================================================
 
-    final totalDays = today.difference(startDate).inDays;
-
-    final dailyInterest = _calculateDailyInterest(
-      tx: tx,
-      days: 1,
+    final interestTransactions = transactions.where(
+          (tx) =>
+      tx.type == TransactionType.gave &&
+          tx.interestRate > 0 &&
+          tx.amount > 0,
     );
 
-    final totalInterest = dailyInterest * totalDays;
-
     // ==========================================================
-    // DISPLAY DATE BASED ON SELECTED FREQUENCY
+    // CALCULATE EACH LOAN
     // ==========================================================
 
-    DateTime displayEndDate;
+    for (final tx in interestTransactions) {
+      final startDate = DateTime(
+        tx.date.year,
+        tx.date.month,
+        tx.date.day,
+      );
 
-    switch (tx.interestFrequency.toLowerCase()) {
-      case "daily":
-        displayEndDate = startDate.add(
-          const Duration(days: 1),
-        );
-        break;
+      // Ignore future loans.
+      if (startDate.isAfter(today)) {
+        continue;
+      }
 
-      case "weekly":
-        displayEndDate = startDate.add(
-          const Duration(days: 7),
-        );
-        break;
+      // No interest on transaction date itself.
+      if (!today.isAfter(startDate)) {
+        continue;
+      }
 
-      case "monthly":
-        displayEndDate = _addOneMonth(startDate);
-        break;
+      // ========================================================
+      // IMPORTANT:
+      // InterestCalculator remains the single source of truth.
+      // ========================================================
 
-      case "yearly":
-        displayEndDate = _addOneYear(startDate);
-        break;
-
-      default:
-        displayEndDate = _addOneMonth(startDate);
-        break;
-    }
-
-    rows.add(
-      _InterestRow(
-        transaction: tx,
+      final monthlyEntries =
+      InterestCalculator.calculateMonthlyBreakdown(
+        principal: tx.amount,
+        rate: tx.interestRate,
         startDate: startDate,
-        endDate: displayEndDate,
-        interest: totalInterest,
-        customerUuid: customerUuid,
-        onChanged: onChanged,
+        interestType: tx.interestType,
+        frequency: tx.interestFrequency,
+        endDate: today,
+        activeLoanCount: 1,
+      );
 
-        // ======================================================
-        // IMPORTANT
-        // ======================================================
-        // The notification transaction ID belongs to the loan
-        // transaction, but visually we highlight the INTEREST row.
-        isHighlighted: tx.id == highlightTransactionId,
-      ),
-    );
+      // ========================================================
+      // ADD INTEREST TO MONTH
+      // ========================================================
 
-    rows.add(
-      const SizedBox(height: 8),
-    );
+      for (final entry in monthlyEntries) {
+        if (entry.interest <= 0) {
+          continue;
+        }
 
-    return rows;
+        final monthKey =
+            '${entry.startDate.year}-${entry.startDate.month}';
+
+        final existing = monthly[monthKey];
+
+        if (existing == null) {
+          monthly[monthKey] = _MonthlyInterestSummary(
+            year: entry.startDate.year,
+            month: entry.startDate.month,
+            interest: entry.interest,
+            transactions: [tx],
+          );
+        } else {
+          existing.interest += entry.interest;
+
+          // Avoid duplicate transaction.
+          if (!existing.transactions.any(
+                (item) => item.id == tx.id,
+          )) {
+            existing.transactions.add(tx);
+          }
+        }
+      }
+    }
+
+    // ==========================================================
+    // SORT MONTHS NEWEST → OLDEST
+    // ==========================================================
+
+    final summaries = monthly.values.toList()
+      ..sort(
+            (a, b) {
+          final aDate = DateTime(
+            a.year,
+            a.month,
+          );
+
+          final bDate = DateTime(
+            b.year,
+            b.month,
+          );
+
+          return bDate.compareTo(aDate);
+        },
+      );
+
+    return summaries;
   }
 
   // ============================================================
@@ -246,14 +153,16 @@ class TransactionTable extends StatelessWidget {
   // ============================================================
 
   List<Widget> _buildTransactionRows(
+      BuildContext context,
       List<Transaction> sortedTransactions,
       ) {
     final List<Widget> rows = [];
 
-    // ----------------------------------------------------------
-    // OLD -> NEW
-    // Used only for balance calculation.
-    // ----------------------------------------------------------
+    // ==========================================================
+    // OLD → NEW
+    //
+    // Only used for balance calculation.
+    // ==========================================================
 
     final balanceTransactions = [...sortedTransactions]
       ..sort(
@@ -274,44 +183,326 @@ class TransactionTable extends StatelessWidget {
       balanceMap[tx.id] = runningBalance;
     }
 
-    // ----------------------------------------------------------
-    // NEW -> OLD
-    // ----------------------------------------------------------
+    // ==========================================================
+    // MONTHLY INTEREST
+    // ==========================================================
+
+    final interestSummaries =
+    _buildMonthlyInterestSummaries(
+      sortedTransactions,
+    );
+
+    final Map<String, _MonthlyInterestSummary>
+    interestByMonth = {};
+
+    for (final summary in interestSummaries) {
+      interestByMonth[
+      '${summary.year}-${summary.month}'
+      ] = summary;
+    }
+
+    // ==========================================================
+    // FIND FIRST LOAN / FIRST INTEREST START DATE
+    //
+    // Example:
+    //
+    // Loan 1 = 10 Feb
+    //
+    // First period:
+    // 10 Feb → 28 Feb
+    //
+    // All following months:
+    // 01 Mar → 31 Mar
+    // 01 Apr → 30 Apr
+    // 01 May → 31 May
+    // ==========================================================
+
+    DateTime? firstLoanDate;
 
     for (final tx in sortedTransactions) {
-      // --------------------------------------------------------
-      // INTEREST ROW
-      // --------------------------------------------------------
+      if (tx.type != TransactionType.gave) {
+        continue;
+      }
 
-      if (tx.type == TransactionType.gave &&
-          tx.interestRate > 0) {
-        rows.addAll(
-          _buildInterestRows(tx),
+      if (tx.interestRate <= 0) {
+        continue;
+      }
+
+      if (tx.amount <= 0) {
+        continue;
+      }
+
+      final loanDate = DateTime(
+        tx.date.year,
+        tx.date.month,
+        tx.date.day,
+      );
+
+      if (firstLoanDate == null ||
+          loanDate.isBefore(firstLoanDate)) {
+        firstLoanDate = loanDate;
+      }
+    }
+
+    // ==========================================================
+    // ALL MONTHS
+    // ==========================================================
+
+    final Set<String> monthKeys = {};
+
+    for (final tx in sortedTransactions) {
+      monthKeys.add(
+        '${tx.date.year}-${tx.date.month}',
+      );
+    }
+
+    monthKeys.addAll(
+      interestByMonth.keys,
+    );
+
+    final sortedMonthKeys = monthKeys.toList()
+      ..sort(
+            (a, b) {
+          final aParts = a.split('-');
+          final bParts = b.split('-');
+
+          final aDate = DateTime(
+            int.parse(aParts[0]),
+            int.parse(aParts[1]),
+          );
+
+          final bDate = DateTime(
+            int.parse(bParts[0]),
+            int.parse(bParts[1]),
+          );
+
+          return bDate.compareTo(aDate);
+        },
+      );
+
+    // ==========================================================
+    // LOCALE
+    // ==========================================================
+
+    final locale =
+    Localizations.localeOf(context).toLanguageTag();
+
+    final dateFormat = DateFormat(
+      'dd MMM yy',
+      locale,
+    );
+
+    final monthFormat = DateFormat(
+      'MMMM',
+      locale,
+    );
+
+    final now = DateTime.now();
+
+    // ==========================================================
+    // BUILD TIMELINE
+    // ==========================================================
+
+    for (final monthKey in sortedMonthKeys) {
+      final parts = monthKey.split('-');
+
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+
+      // ========================================================
+      // TRANSACTIONS OF THIS MONTH
+      // ========================================================
+
+      final monthTransactions = sortedTransactions
+          .where(
+            (tx) =>
+        tx.date.year == year &&
+            tx.date.month == month,
+      )
+          .toList()
+        ..sort(
+              (a, b) => b.date.compareTo(a.date),
+        );
+
+      // ========================================================
+      // 1. MONTHLY INTEREST
+      //
+      // ALWAYS BEFORE NORMAL TRANSACTIONS.
+      // ========================================================
+
+      final summary =
+      interestByMonth[monthKey];
+
+      if (summary != null) {
+        // ======================================================
+        // MONTH START
+        // ======================================================
+
+        final monthStart = DateTime(
+          year,
+          month,
+          1,
+        );
+
+        // ======================================================
+        // LAST DAY OF MONTH
+        // ======================================================
+
+        final lastDayOfMonth = DateTime(
+          year,
+          month + 1,
+          0,
+        );
+
+        // ======================================================
+        // CURRENT MONTH
+        // ======================================================
+
+        final isCurrentMonth =
+            year == now.year &&
+                month == now.month;
+
+        final monthEnd = isCurrentMonth
+            ? DateTime(
+          now.year,
+          now.month,
+          now.day,
+        )
+            : lastDayOfMonth;
+
+        // ======================================================
+        // IMPORTANT FIX
+        //
+        // FIRST INTEREST MONTH:
+        //
+        // Loan = 10 Feb
+        // 10 Feb → 28 Feb
+        //
+        // ALL NEXT MONTHS:
+        //
+        // 01 Mar → 31 Mar
+        // 01 Apr → 30 Apr
+        // 01 May → 31 May
+        // 01 Jun → 30 Jun
+        // 01 Jul → 31 Jul
+        // 01 Aug → 31 Aug
+        //
+        // Even if another loan is added on 12 Aug,
+        // August still displays:
+        //
+        // 01 Aug → 31 Aug
+        // ======================================================
+
+        DateTime displayStart;
+
+        if (firstLoanDate != null &&
+            year == firstLoanDate.year &&
+            month == firstLoanDate.month) {
+          // FIRST INTEREST PERIOD
+
+          displayStart = firstLoanDate;
+        } else {
+          // ALL FOLLOWING MONTHS
+
+          displayStart = monthStart;
+        }
+
+        // ======================================================
+        // LOAN COUNT
+        //
+        // Number of loans contributing to this month.
+        // ======================================================
+
+        final loanCount =
+            summary.transactions.length;
+
+        final loanText =
+        loanCount == 1 ? 'loan' : 'loans';
+
+        // ======================================================
+        // DESCRIPTION
+        // ======================================================
+
+        String description;
+
+        if (isCurrentMonth) {
+          description =
+          'Interest for '
+              '${monthFormat.format(monthStart)} '
+              'up to '
+              '${dateFormat.format(monthEnd)} '
+              '($loanCount $loanText)';
+        } else {
+          description =
+          'Interest for '
+              '${monthFormat.format(monthStart)} '
+              '($loanCount $loanText)';
+        }
+
+        // ======================================================
+        // HIGHLIGHT
+        // ======================================================
+
+        final isHighlighted =
+            highlightTransactionId != null &&
+                summary.transactions.any(
+                      (tx) =>
+                  tx.id ==
+                      highlightTransactionId,
+                );
+
+        // ======================================================
+        // INTEREST ROW
+        //
+        // Interest
+        // Loan
+        // ======================================================
+
+        rows.add(
+          _InterestRow(
+            transaction:
+            summary.transactions.first,
+            startDate: displayStart,
+            endDate: monthEnd,
+            interest: summary.interest,
+            customerUuid: customerUuid,
+            onChanged: onChanged,
+            isHighlighted: isHighlighted,
+            descriptionOverride: description,
+          ),
+        );
+
+        rows.add(
+          const SizedBox(
+            height: 8,
+          ),
         );
       }
 
-      // --------------------------------------------------------
-      // NORMAL TRANSACTION ROW
-      // --------------------------------------------------------
+      // ========================================================
+      // 2. NORMAL TRANSACTIONS
+      //
+      // Interest is above these rows.
+      // ========================================================
 
-      rows.add(
-        TransactionRow(
-          transaction: tx,
-          balance: balanceMap[tx.id] ?? 0,
-          onChanged: onChanged,
-          customerUuid: customerUuid,
+      for (final tx in monthTransactions) {
+        rows.add(
+          TransactionRow(
+            transaction: tx,
+            balance: balanceMap[tx.id] ?? 0,
+            onChanged: onChanged,
+            customerUuid: customerUuid,
+            isHighlighted:false,
+            // tx.id == highlightTransactionId,
+          ),
+        );
 
-          // IMPORTANT:
-          // Do NOT highlight the normal transaction here.
-          //
-          // The notification transaction ID is used above
-          // to highlight the corresponding interest row.
-        ),
-      );
-
-      rows.add(
-        const SizedBox(height: 8),
-      );
+        rows.add(
+          const SizedBox(
+            height: 8,
+          ),
+        );
+      }
     }
 
     return rows;
@@ -332,9 +523,12 @@ class TransactionTable extends StatelessWidget {
       children: [
         _tableHeader(context),
 
-        const SizedBox(height: 8),
+        const SizedBox(
+          height: 8,
+        ),
 
         ..._buildTransactionRows(
+          context,
           sortedTransactions,
         ),
       ],
@@ -348,7 +542,8 @@ class TransactionTable extends StatelessWidget {
   Widget _tableHeader(
       BuildContext context,
       ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+    AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -356,7 +551,8 @@ class TransactionTable extends StatelessWidget {
         border: Border.all(
           color: const Color(0xFFAAB9CF),
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius:
+        BorderRadius.circular(10),
       ),
       child: Table(
         border: TableBorder.symmetric(
@@ -383,6 +579,26 @@ class TransactionTable extends StatelessWidget {
       ),
     );
   }
+}
+
+// ================================================================
+// MONTHLY INTEREST SUMMARY
+// ================================================================
+
+class _MonthlyInterestSummary {
+  final int year;
+  final int month;
+
+  double interest;
+
+  final List<Transaction> transactions;
+
+  _MonthlyInterestSummary({
+    required this.year,
+    required this.month,
+    required this.interest,
+    required this.transactions,
+  });
 }
 
 // ================================================================
@@ -428,11 +644,8 @@ class _InterestRow extends StatelessWidget {
   final String customerUuid;
   final VoidCallback onChanged;
 
-  // ============================================================
-  // HIGHLIGHT
-  // ============================================================
-
   final bool isHighlighted;
+  final String? descriptionOverride;
 
   const _InterestRow({
     required this.transaction,
@@ -442,6 +655,7 @@ class _InterestRow extends StatelessWidget {
     required this.customerUuid,
     required this.onChanged,
     this.isHighlighted = false,
+    this.descriptionOverride,
   });
 
   // ============================================================
@@ -452,7 +666,8 @@ class _InterestRow extends StatelessWidget {
       BuildContext context,
       String value,
       ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+    AppLocalizations.of(context);
 
     switch (value) {
       case 'Daily':
@@ -480,7 +695,8 @@ class _InterestRow extends StatelessWidget {
       BuildContext context,
       String value,
       ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n =
+    AppLocalizations.of(context);
 
     switch (value) {
       case 'Simple Interest':
@@ -501,22 +717,30 @@ class _InterestRow extends StatelessWidget {
   String _getInterestDescription(
       BuildContext context,
       ) {
-    final l10n = AppLocalizations.of(context);
+    if (descriptionOverride != null &&
+        descriptionOverride!.isNotEmpty) {
+      return descriptionOverride!;
+    }
 
-    final locale = Localizations.localeOf(context)
+    final l10n =
+    AppLocalizations.of(context);
+
+    final locale =
+    Localizations.localeOf(context)
         .toLanguageTag();
 
     final start = DateFormat(
-      "dd MMM yyyy",
+      'dd MMM yyyy',
       locale,
     ).format(startDate);
 
     final end = DateFormat(
-      "dd MMM yyyy",
+      'dd MMM yyyy',
       locale,
     ).format(endDate);
 
-    final rate = transaction.interestRate
+    final rate =
+    transaction.interestRate
         .toStringAsFixed(0);
 
     final frequency =
@@ -535,12 +759,12 @@ class _InterestRow extends StatelessWidget {
       transaction.interestType,
     );
 
-    return "₹${interest.toStringAsFixed(2)} "
-        "${l10n.interest.toLowerCase()} "
-        "${l10n.from} $start ${l10n.to} $end "
-        "${l10n.at} $rate% "
-        "$frequency $interestType "
-        "${l10n.interest.toLowerCase()}.";
+    return '₹${interest.toStringAsFixed(2)} '
+        '${l10n.interest.toLowerCase()} '
+        '${l10n.from} $start ${l10n.to} $end '
+        '${l10n.at} $rate% '
+        '$frequency $interestType '
+        '${l10n.interest.toLowerCase()}.';
   }
 
   // ============================================================
@@ -551,19 +775,25 @@ class _InterestRow extends StatelessWidget {
   Widget build(
       BuildContext context,
       ) {
-    final locale = Localizations.localeOf(context)
+    final locale =
+    Localizations.localeOf(context)
         .toLanguageTag();
 
     final dateFormat = DateFormat(
-      "dd MMM yy",
+      'dd MMM yy',
       locale,
     );
+
+    // ==========================================================
+    // OPEN TRANSACTION DETAILS
+    // ==========================================================
 
     void openTransactionDetails() {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor:
+        Colors.transparent,
         isDismissible: true,
         enableDrag: true,
         barrierColor: Colors.black54,
@@ -579,10 +809,16 @@ class _InterestRow extends StatelessWidget {
       );
     }
 
+    // ==========================================================
+    // INTEREST ROW
+    // ==========================================================
+
     return GestureDetector(
       onTap: openTransactionDetails,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(
+          milliseconds: 400,
+        ),
         curve: Curves.easeInOut,
         margin: const EdgeInsets.only(
           bottom: 10,
@@ -592,49 +828,45 @@ class _InterestRow extends StatelessWidget {
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          // ======================================================
-          // INTEREST HIGHLIGHT
-          // ======================================================
-
           color: isHighlighted
               ? const Color(0xFFE4EAF2)
               : const Color(0xFFFFFBF6),
-
-          borderRadius: BorderRadius.circular(10),
-
-          // ======================================================
-          // BLUE / NAVY BORDER
-          // ======================================================
-
+          borderRadius:
+          BorderRadius.circular(10),
           border: Border.all(
             color: isHighlighted
                 ? const Color(0xFF243B67)
                 : const Color(0xFFD4D9E2),
-            width: isHighlighted ? 1.6 : 1,
+            width:
+            isHighlighted ? 1.6 : 1,
           ),
-
-          // ======================================================
-          // SOFT SHADOW
-          // ======================================================
-
           boxShadow: isHighlighted
               ? [
             BoxShadow(
-              color: const Color(0xFF243B67).withValues(
+              color: const Color(
+                0xFF243B67,
+              ).withValues(
                 alpha: 0.14,
               ),
               blurRadius: 8,
               spreadRadius: 0.5,
-              offset: const Offset(0, 2),
+              offset: const Offset(
+                0,
+                2,
+              ),
             ),
           ]
               : [
             BoxShadow(
-              color: Colors.black.withValues(
+              color:
+              Colors.black.withValues(
                 alpha: 0.025,
               ),
               blurRadius: 3,
-              offset: const Offset(0, 1),
+              offset: const Offset(
+                0,
+                1,
+              ),
             ),
           ],
         ),
@@ -642,26 +874,36 @@ class _InterestRow extends StatelessWidget {
           crossAxisAlignment:
           CrossAxisAlignment.center,
           children: [
+            // ==================================================
+            // DATE + DESCRIPTION
+            // ==================================================
+
             Expanded(
               flex: 3,
               child: Column(
                 crossAxisAlignment:
                 CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize:
+                MainAxisSize.min,
                 children: [
                   Text(
-                    "${dateFormat.format(startDate)} - "
-                        "${dateFormat.format(endDate)}",
-                    style: GoogleFonts.manrope(
+                    '${dateFormat.format(startDate)} - '
+                        '${dateFormat.format(endDate)}',
+                    style:
+                    GoogleFonts.manrope(
                       fontSize: 12,
-                      fontWeight: isHighlighted
+                      fontWeight:
+                      isHighlighted
                           ? FontWeight.w800
                           : FontWeight.w600,
-                      color: ChopdiColors.navy,
+                      color:
+                      ChopdiColors.navy,
                     ),
                   ),
 
-                  const SizedBox(height: 3),
+                  const SizedBox(
+                    height: 3,
+                  ),
 
                   Text(
                     _getInterestDescription(
@@ -669,28 +911,37 @@ class _InterestRow extends StatelessWidget {
                     ),
                     maxLines: 3,
                     softWrap: true,
-                    overflow: TextOverflow.ellipsis,
+                    overflow:
+                    TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
                       color: isHighlighted
                           ? Colors.black87
-                          : const Color(0xff8A93A6),
-                      fontWeight: isHighlighted
+                          : const Color(
+                        0xff8A93A6,
+                      ),
+                      fontWeight:
+                      isHighlighted
                           ? FontWeight.w600
                           : FontWeight.normal,
                       decoration:
-                      TextDecoration.underline,
+                      TextDecoration
+                          .underline,
                     ),
                   ),
                 ],
               ),
             ),
 
+            // ==================================================
+            // GIVEN
+            // ==================================================
+
             const Expanded(
               flex: 2,
               child: Center(
                 child: Text(
-                  "-",
+                  '-',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.black87,
@@ -699,11 +950,15 @@ class _InterestRow extends StatelessWidget {
               ),
             ),
 
+            // ==================================================
+            // RECEIVED
+            // ==================================================
+
             const Expanded(
               flex: 2,
               child: Center(
                 child: Text(
-                  "-",
+                  '-',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.black87,
@@ -711,16 +966,24 @@ class _InterestRow extends StatelessWidget {
                 ),
               ),
             ),
+
+            // ==================================================
+            // BALANCE / INTEREST
+            // ==================================================
 
             Expanded(
               flex: 2,
               child: Align(
-                alignment: Alignment.centerRight,
+                alignment:
+                Alignment.centerRight,
                 child: Text(
-                  "₹${interest.toStringAsFixed(2)}",
+                  '₹${interest.toStringAsFixed(2)}',
                   style: TextStyle(
-                    color: const Color(0xFF00901B),
-                    fontWeight: isHighlighted
+                    color: const Color(
+                      0xFF00901B,
+                    ),
+                    fontWeight:
+                    isHighlighted
                         ? FontWeight.w900
                         : FontWeight.bold,
                     fontSize: 14,
