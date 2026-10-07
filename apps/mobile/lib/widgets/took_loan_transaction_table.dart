@@ -249,10 +249,22 @@ class TookLoanTransactionTable extends StatelessWidget {
         children: [
           TableRow(
             children: [
-              _Header(l10n.date),
-              _Header(l10n.took),
-              _Header(l10n.paid),
-              _Header(l10n.balance),
+              _Header(
+                l10n.date,
+                verticalOffset: 2,
+              ),
+              _Header(
+                l10n.took,
+                verticalOffset: 2,
+              ),
+              _Header(
+                l10n.paid,
+                verticalOffset: 0,
+              ),
+              _Header(
+                l10n.balance,
+                verticalOffset: 0,
+              ),
             ],
           ),
         ],
@@ -267,24 +279,35 @@ class TookLoanTransactionTable extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final String title;
+  final double verticalOffset;
 
-  const _Header(this.title);
+  const _Header(
+    this.title, {
+    this.verticalOffset = 0,
+  });
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 12,
       ),
       child: Center(
-        child: Text(
-          title,
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            color: ChopdiColors.navy,
+        child: Transform.translate(
+          offset: Offset(0, verticalOffset),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              maxLines: 1,
+              softWrap: false,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.manrope(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: ChopdiColors.navy,
+              ),
+            ),
           ),
         ),
       ),

@@ -646,7 +646,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get youWillGet => 'आपको मिलेगा';
 
   @override
-  String get balance => 'बैलेंस';
+  String get balance => 'शेष राशि';
 
   @override
   String get noTransactions => 'कोई लेन-देन नहीं';
@@ -1753,6 +1753,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get phoneNumberNotAvailableForCustomer =>
       'इस ग्राहक का फ़ोन नंबर उपलब्ध नहीं है।';
+
+  @override
+  String get phoneNumberNotAvailableForLender =>
+      'इस उधारदाता का फ़ोन नंबर उपलब्ध नहीं है।';
 
   @override
   String get phonePermissionRequired => 'फ़ोन अनुमति आवश्यक है';

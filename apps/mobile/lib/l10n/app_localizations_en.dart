@@ -1627,6 +1627,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Phone number is not available for this customer.';
 
   @override
+  String get phoneNumberNotAvailableForLender =>
+      'Phone number is not available for this lender.';
+
+  @override
   String get phonePermissionRequired => 'Phone Permission Required';
 
   @override
