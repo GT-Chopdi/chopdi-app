@@ -8,8 +8,6 @@ import '../data/remote/api_client.dart';
 import '../data/remote/auth_api.dart';
 import '../data/remote/token_storage.dart';
 import '../model/user_session.dart';
-import '../main.dart';
-import '../view/login_screen.dart';
 import 'isar_service.dart';
 import 'sync_service.dart'; // Added SyncService import
 

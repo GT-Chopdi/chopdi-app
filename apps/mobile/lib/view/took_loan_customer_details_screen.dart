@@ -475,7 +475,8 @@
                       onTap: () {
                         PhoneCallService.makePhoneCall(
                           context,
-                          lender.phone, // <-- LENDER PHONE
+                          lender.phone,
+                          isLender: true, // <-- LENDER PHONE
                         );
                       },
                       child: CircleAvatar(
