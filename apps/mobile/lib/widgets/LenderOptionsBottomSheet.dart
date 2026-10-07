@@ -75,11 +75,14 @@ class LenderOptionsBottomSheet extends StatelessWidget {
                     top: 0,
                     child: Material(
                       color: Colors.transparent,
+                      shape: const CircleBorder(),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(50),
+                        splashColor: ChopdiColors.navy.withOpacity(0.15),
+                        highlightColor: ChopdiColors.navy.withOpacity(0.08),
                         onTap: () => Navigator.pop(context),
                         child: Padding(
-                          padding: const EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(7),
                           child: Icon(
                             Icons.close_rounded,
                             size: screenWidth < 360 ? 22 : 24,

@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_fonts/google_fonts.dart'; // <-- ADDED
+// <-- ADDED
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mychopdi/view/customer_details_screen.dart';
 import 'package:mychopdi/view/took_loan_customer_details_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/data/repository/repositories.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/service/isar_service.dart';
@@ -38,9 +38,13 @@ Future<void> main() async {
   // Pre-load Google Fonts
   // Resolves the first-launch font pop / style flicker on Splash
   // ------------------------------------------------------------
-  GoogleFonts.styleScript();
-  GoogleFonts.manrope();
-  await GoogleFonts.pendingFonts();
+  try {
+      GoogleFonts.styleScript();
+      GoogleFonts.manrope();
+      await GoogleFonts.pendingFonts();
+  } catch (e) {
+      debugPrint('Google Fonts preload failed: $e');
+    }
 
   // ------------------------------------------------------------
   // Initialize date formatting
