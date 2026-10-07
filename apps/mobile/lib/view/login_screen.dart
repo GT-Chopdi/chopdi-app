@@ -779,7 +779,7 @@ class _PhoneInputField extends StatelessWidget {
                   ),
                   decoration: InputDecoration(
                     counterText: '',
-                    hintText: '98765 23564',
+                    hintText: 'Enter your mobile number',
                     hintStyle: GoogleFonts.manrope(
                       color: Colors.grey,
                       fontSize: width < 360 ? 14 : 15,
