@@ -12,6 +12,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { SYNC_ENTITIES, type SyncEntity } from '../sync.types';
+
 /**
  * One change the client wants applied.
  *
@@ -34,8 +36,8 @@ export class SyncOperationDto {
   @IsUUID()
   opId!: string;
 
-  @IsIn(['customer', 'ledger_entry'])
-  entity!: 'customer' | 'ledger_entry';
+  @IsIn(SYNC_ENTITIES)
+  entity!: SyncEntity;
 
   /** The row's client-generated UUIDv7. */
   @IsUUID()

@@ -17,7 +17,8 @@ class PhoneCallService {
   static Future<void> makePhoneCall(
     BuildContext context,
     String phoneNumber,
-  ) async {
+    {bool isLender = false,
+  }) async {
     final trimmedNumber = phoneNumber.trim();
 
     // ------------------------------------------------------------
@@ -27,7 +28,7 @@ class PhoneCallService {
     if (trimmedNumber.isEmpty) {
       if (!context.mounted) return;
 
-      await _showPhoneUnavailableDialog(context);
+      await _showPhoneUnavailableDialog(context, isLender: isLender);
       return;
     }
 
@@ -134,7 +135,8 @@ class PhoneCallService {
 
   static Future<void> _showPhoneUnavailableDialog(
     BuildContext context,
-  ) async {
+    {required bool isLender,
+  }) async {
     final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
@@ -154,7 +156,7 @@ class PhoneCallService {
             ),
           ),
           content: Text(
-            l10n.phoneNumberNotAvailableForCustomer,
+            isLender ? l10n.phoneNumberNotAvailableForLender : l10n.phoneNumberNotAvailableForCustomer,
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.4,

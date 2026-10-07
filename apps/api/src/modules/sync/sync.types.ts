@@ -1,8 +1,22 @@
-/** Entities the sync protocol understands. */
-export type SyncEntity = 'customer' | 'ledger_entry';
+/**
+ * Entities the sync protocol understands.
+ *
+ * `customer` is someone the user gave a loan to, `lender` someone they took one
+ * from, `chopdi` the book both belong to. Kept as one list so the DTO, the
+ * change log and the pull response cannot disagree about the vocabulary.
+ */
+export const SYNC_ENTITIES = ['chopdi', 'customer', 'lender', 'ledger_entry'] as const;
 
-/** What an operation does to a row. */
-export type SyncOpType = 'create' | 'update' | 'void';
+export type SyncEntity = (typeof SYNC_ENTITIES)[number];
+
+/**
+ * What a change did to a row.
+ *
+ * `merge` only ever comes back from a pull — a client cannot send one. It says
+ * that `entityId` was a duplicate of `data.mergedInto`: the device should move
+ * anything it holds under the first id to the second.
+ */
+export type SyncOpType = 'create' | 'update' | 'void' | 'merge';
 
 /**
  * Outcome of one operation.
@@ -30,11 +44,39 @@ export interface SyncOperationResult {
   };
   /** Attached on a conflict so the client can show the user both versions. */
   serverState?: Record<string, unknown>;
+  /**
+   * Set when a customer or lender create matched one that already exists
+   * (same name and phone, created on another device). Nothing was inserted:
+   * the client should re-key its row, and everything pointing at it, to this
+   * id. Operations still sent with the old id keep working regardless.
+   */
+  mergedInto?: string;
 }
 
 export interface SyncPushResponse {
   results: SyncOperationResult[];
   /** This user's highest change-log sequence after the batch. */
+  serverCursor: string;
+}
+
+/** One change as `GET /v1/sync/pull` reports it. */
+export interface SyncChange {
+  /** Change-log position, as a string because it is a 64-bit value. */
+  seq: string;
+  entity: SyncEntity;
+  entityId: string;
+  opType: SyncOpType;
+  /** The full row after the change — apply it, don't merge it. */
+  data: Record<string, unknown>;
+}
+
+export interface SyncPullResponse {
+  changes: SyncChange[];
+  /** Pass back as `cursor` on the next page. Store it only once the page is applied. */
+  nextCursor: string;
+  /** More changes exist past `nextCursor`; request again straight away. */
+  hasMore: boolean;
+  /** This user's highest change-log sequence right now. */
   serverCursor: string;
 }
 

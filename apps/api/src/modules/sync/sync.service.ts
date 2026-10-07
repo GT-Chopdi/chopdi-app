@@ -4,13 +4,24 @@ import { AppException, ErrorCode } from '../../common/errors/app.exception';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import type { PushBatchDto, SyncOperationDto } from './dto/push.dto';
+import { ChopdiHandler } from './handlers/chopdi.handler';
 import { CustomerHandler } from './handlers/customer.handler';
 import { LedgerEntryHandler } from './handlers/ledger-entry.handler';
+import { LenderHandler } from './handlers/lender.handler';
 import { IdempotencyService } from './idempotency.service';
-import type { SyncOperationResult, SyncPushResponse } from './sync.types';
+import { MergeService } from './merge.service';
+import type { SyncEntity, SyncOperationResult, SyncPushResponse } from './sync.types';
 
-/** Customers must be applied before the entries that reference them. */
-const ENTITY_ORDER: Record<string, number> = { customer: 1, ledger_entry: 2 };
+/**
+ * Parents are applied before the rows that reference them: a book before its
+ * customers and lenders, those before their entries.
+ */
+const ENTITY_ORDER: Record<SyncEntity, number> = {
+  chopdi: 0,
+  customer: 1,
+  lender: 1,
+  ledger_entry: 2,
+};
 
 @Injectable()
 export class SyncService {
@@ -19,8 +30,11 @@ export class SyncService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly idempotency: IdempotencyService,
+    private readonly chopdis: ChopdiHandler,
     private readonly customers: CustomerHandler,
+    private readonly lenders: LenderHandler,
     private readonly entries: LedgerEntryHandler,
+    private readonly merges: MergeService,
   ) {}
 
   /**
@@ -69,13 +83,13 @@ export class SyncService {
   }
 
   /**
-   * Sorts customers ahead of entries, preserving client order within a kind.
+   * Sorts parents ahead of children, preserving client order within a kind.
    *
    * The client already orders its outbox correctly; this exists because a
    * client bug shipped months ago should not become server-side data loss. The
-   * ranking assumes an FK graph exactly one level deep — true for
-   * customer → ledger_entry and nothing more. A deeper hierarchy would need a
-   * real topological sort.
+   * ranking is a fixed depth — chopdi → customer/lender → ledger_entry — which
+   * is the whole FK graph; a hierarchy with cycles would need a real
+   * topological sort.
    */
   private sortByDependency(operations: SyncOperationDto[]): SyncOperationDto[] {
     return operations
@@ -90,11 +104,21 @@ export class SyncService {
   private async applyOne(
     user: AuthenticatedUser,
     operation: SyncOperationDto,
+    attempt = 0,
   ): Promise<SyncOperationResult> {
     const payloadHash = this.idempotency.fingerprint(operation.payload);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
+        // The user's row lock first, before any domain row is touched. Every
+        // write ends up taking it anyway (the change-log sequence lives on that
+        // row), but a merge settle then goes on to update entries and the party
+        // after holding it. Taking it last in one transaction and first in
+        // another is a deadlock between two devices syncing at once; taking it
+        // first everywhere is one fixed order. It also serialises a retried
+        // operation against its own first attempt before the idempotency read.
+        await this.merges.lockUser(tx, user.userId);
+
         // Claimed inside the same transaction as the write, so the record and
         // the row commit together or not at all.
         const recorded = await this.idempotency.findRecorded(
@@ -108,14 +132,17 @@ export class SyncService {
           return { ...recorded.result, status: 'duplicate' as const };
         }
 
-        const { snapshot, seq } = await this.dispatch(tx, user, operation);
+        const applied: { snapshot: { version: number }; seq: bigint; mergedInto?: string } =
+          await this.dispatch(tx, user, operation);
+        const { snapshot, seq, mergedInto } = applied;
 
         const result: SyncOperationResult = {
           opId: operation.opId,
           status: 'applied',
-          entityId: operation.entityId,
+          entityId: mergedInto ?? operation.entityId,
           version: snapshot.version,
           seq: seq.toString(),
+          ...(mergedInto ? { mergedInto } : {}),
         };
 
         await this.idempotency.record(tx, {
@@ -132,8 +159,24 @@ export class SyncService {
         return result;
       });
     } catch (error) {
+      // A unique-index violation on a customer or lender means another write
+      // inserted the same person between this one's check and its insert. The
+      // user lock makes that unreachable through this service; the index is the
+      // backstop for anything else. Running the operation again finds the row
+      // and merges into it, so once is enough.
+      if (attempt === 0 && this.isUniqueViolation(error)) {
+        return this.applyOne(user, operation, attempt + 1);
+      }
       return this.toResult(operation, error);
     }
+  }
+
+  private isUniqueViolation(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { code?: unknown }).code === 'P2002'
+    );
   }
 
   private dispatch(
@@ -142,7 +185,12 @@ export class SyncService {
     operation: SyncOperationDto,
   ) {
     const meta = { deviceId: user.deviceId, opId: operation.opId };
-    const handler = operation.entity === 'customer' ? this.customers : this.entries;
+    const handler = {
+      chopdi: this.chopdis,
+      customer: this.customers,
+      lender: this.lenders,
+      ledger_entry: this.entries,
+    }[operation.entity];
 
     switch (operation.opType) {
       case 'create':

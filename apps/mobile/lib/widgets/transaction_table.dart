@@ -373,10 +373,10 @@ class TransactionTable extends StatelessWidget {
         children: [
           TableRow(
             children: [
-              _Header(l10n.date),
-              _Header(l10n.given),
-              _Header(l10n.received),
-              _Header(l10n.balance),
+              _Header(l10n.date, verticalOffset: 2),
+              _Header(l10n.given, verticalOffset: 2),
+              _Header(l10n.received, verticalOffset: 0),
+              _Header(l10n.balance, verticalOffset: 0),
             ],
           ),
         ],
@@ -391,8 +391,8 @@ class TransactionTable extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final String title;
-
-  const _Header(this.title);
+  final double verticalOffset;
+  const _Header(this.title, {this.verticalOffset = 0});
 
   @override
   Widget build(

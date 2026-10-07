@@ -121,3 +121,6 @@ flutter:
     - assets/add_chopdi_icon.png
     - assets/edit_chopdi_book.png
     - assets/chopdibook.png
+    - env/local.env
+    - env/staging.env
+#    - env/production.env

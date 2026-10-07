@@ -46,6 +46,12 @@ export const ErrorCode = {
   // --- sync ---
   /** A create arrived for an id that already exists under this user. */
   ID_EXISTS: 'ID_EXISTS',
+  /**
+   * An edit would give a customer or lender the same name and phone as another
+   * live one. Creates are merged instead; an edit cannot be, because both rows
+   * already have entries and history of their own.
+   */
+  PARTY_EXISTS: 'PARTY_EXISTS',
   /** The row moved on since the client last saw it; `serverState` is attached. */
   STALE_VERSION: 'STALE_VERSION',
   /** An entry arrived before the customer it belongs to. */
@@ -56,6 +62,12 @@ export const ErrorCode = {
   IDEMPOTENCY_KEY_REUSE: 'IDEMPOTENCY_KEY_REUSE',
   /** More operations or bytes than one request may carry. */
   BATCH_TOO_LARGE: 'BATCH_TOO_LARGE',
+  /**
+   * A pull cursor beyond anything this user's log has reached. The device's
+   * sync state belongs to a different account or database; it must reset to 0
+   * and pull everything again.
+   */
+  CURSOR_AHEAD: 'CURSOR_AHEAD',
 
   // --- generic ---
   NOT_FOUND: 'NOT_FOUND',

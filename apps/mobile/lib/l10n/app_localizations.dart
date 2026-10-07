@@ -618,6 +618,7 @@ abstract class AppLocalizations {
 
   String get phoneNumberNotAvailable;
   String get phoneNumberNotAvailableForCustomer;
+  String get phoneNumberNotAvailableForLender;
   String get phonePermissionRequired;
   String get phonePermissionRequiredToMakeCall;
   String get phonePermissionDeniedOpenSettings;

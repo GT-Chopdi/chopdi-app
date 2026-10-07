@@ -79,8 +79,8 @@
                         shape: const CircleBorder(),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(50),
-                          splashColor: ChopdiColors.navy.withOpacity(0.15),
-                          highlightColor: ChopdiColors.navy.withOpacity(0.08),
+                          splashColor: ChopdiColors.navy.withValues(alpha: 0.15),
+                          highlightColor: ChopdiColors.navy.withValues(alpha: 0.08),
                           onTap: () => Navigator.pop(context),
                           child: Padding(
                             padding: const EdgeInsets.all(7),
@@ -1412,7 +1412,7 @@
                     pw.Text(
                       l10n.asOf(
                         DateFormat(
-                          "dd MMM yyyy, hh:mm a",
+                          "dd MMM yy, hh:mm a",
                           l10n.locale.languageCode,
                         ).format(DateTime.now()),
                       ),

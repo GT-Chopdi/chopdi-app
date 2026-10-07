@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type { PrismaClient } from '../../generated/prisma/client';
+import type { SyncEntity } from './sync.types';
 
 /**
  * A Prisma client scoped to an open transaction.
@@ -16,9 +17,9 @@ export type TransactionClient = Omit<
 
 export interface ChangeLogEntry {
   userId: string;
-  entity: 'customer' | 'ledger_entry';
+  entity: SyncEntity;
   entityId: string;
-  opType: 'create' | 'update' | 'void' | 'conflict';
+  opType: 'create' | 'update' | 'void' | 'conflict' | 'merge';
   /** The row as it stands after the change. */
   snapshot: unknown;
   /** The row before it. Required for anything that is not a create. */
