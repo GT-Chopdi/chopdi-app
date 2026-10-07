@@ -442,62 +442,8 @@ class AuthService {
   // Local session cleanup
   // ---------------------------------------------------------------------------
 
-  // Future<void> _clearLocalSession() async {
-  //   _log('Clearing local authentication session');
-
-  //   // Clear all local ledger data and session data.
-  //   await IsarService.isar.writeTxn(() async {
-  //     await IsarService.isar.clear();
-  //   });
-
-  //   // Navigate the user out of the app to the Onboarding screen
-  //   final context = appNavigatorKey.currentContext;
-  //   if (context != null) {
-  //     Navigator.of(context).pushAndRemoveUntil(
-  //       MaterialPageRoute(
-  //         builder: (_) => const ChopdiOnboardingScreen(),
-  //       ),
-  //       (route) => false,
-  //     );
-  //   }
-  // }
-
-  //     await _tokens.clearSession();
-
-  //     _log('TokenStorage cleared');
-
-  //     _log('Clearing Sync cursor...');
-
-  //     await SyncService.instance.clearLocalCursor();
-
-  //     _log('Sync cursor cleared');
-
-  //     _log('Clearing Isar user session...');
-
-  //     await IsarService.isar.writeTxn(Function()  async {
-  //       await IsarService.isar.userSessions.clear();
-  //     });
-
-  //     _log('Isar user session cleared');
-  //     _log('Local authentication session cleared');
-  //   } void catch (e, stackTrace) {
-  //     _log('Failed to clear local authentication session');
-  //     _log('Error: $e');
-
-  //     developer.log(
-  //       'Local session cleanup error',
-  //       name: 'AuthService',
-  //       error: e,
-  //       stackTrace: stackTrace,
-  //     );
-
-  //     rethrow;
-  //   }
-  // }
-
   Future<void> _clearLocalSession() async {
     _log('Clearing local authentication session');
-
     try {
       _log('Clearing TokenStorage...');
 
