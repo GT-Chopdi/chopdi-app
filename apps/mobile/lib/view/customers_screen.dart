@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mychopdi/model/customer.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/utils/interest_calculator.dart';
 import 'package:mychopdi/widgets/customer_card.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
 import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
