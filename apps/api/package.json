@@ -28,6 +28,7 @@
     "verify:change-log": "node test/verify-change-log.mjs",
     "verify:db": "npm run verify:schema && npm run verify:change-log",
     "verify:sync": "node test/verify-sync.mjs",
+    "verify:merge": "node test/verify-merge.mjs",
     "verify:all": "npm run verify:schema && npm run verify:change-log && npm run verify:auth && npm run verify:sync"
   },
   "dependencies": {

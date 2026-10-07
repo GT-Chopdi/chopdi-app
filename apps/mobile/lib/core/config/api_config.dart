@@ -31,7 +31,7 @@ class ApiConfig {
   ///
   /// Production does **not** get this convenience; see
   /// [misconfigurationReason].
-  static const String defaultBaseUrl = 'https://api.chopdi.geloratech.com/v1';
+  static const String defaultBaseUrl = 'https://api.chopdi.geloratech.com/api';
 
   /// Exactly what was passed at build time — empty when nothing was.
   ///
