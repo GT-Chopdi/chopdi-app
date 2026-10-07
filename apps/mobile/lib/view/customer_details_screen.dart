@@ -20,10 +20,12 @@ import 'package:mychopdi/l10n/app_localizations.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
+  final int? highlightTransactionId;
 
   const CustomerDetailsScreen({
     super.key,
     required this.customer,
+    this.highlightTransactionId,
   });
 
   @override
@@ -572,6 +574,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 transactions: transactions,
                 onChanged: loadTransactions,
                 customerUuid: customer.uuid,
+                highlightTransactionId: widget.highlightTransactionId,
               ),
 
               const SizedBox(height: 20),

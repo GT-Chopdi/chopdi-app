@@ -595,7 +595,7 @@ class _EditTransactionReceivedBottomSheetState
           children: [
             Text(
               DateFormat(
-                'dd MMM yyyy',
+                'dd MMM yy',
                 locale,
               ).format(selectedDate),
               style:

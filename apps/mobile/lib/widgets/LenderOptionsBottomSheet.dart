@@ -32,71 +32,121 @@ class LenderOptionsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // Responsive horizontal padding.
+    final horizontalPadding = screenWidth < 360
+        ? 14.0
+        : screenWidth < 600
+            ? 18.0
+            : 24.0;
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
+        padding: EdgeInsets.fromLTRB(
+          horizontalPadding,
+          12,
+          horizontalPadding,
+          18,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 55,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade400,
-                borderRadius: BorderRadius.circular(20),
+            // Top row: drag handle + close button
+            SizedBox(
+              height: 32,
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Drag handle
+                  Container(
+                    width: screenWidth < 360 ? 45 : 55,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+
+                  // Close button
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Material(
+                      color: Colors.transparent,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(50),
+                        splashColor: ChopdiColors.navy.withOpacity(0.15),
+                        highlightColor: ChopdiColors.navy.withOpacity(0.08),
+                        onTap: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: screenWidth < 360 ? 22 : 24,
+                            color: ChopdiColors.navy,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Lender Options", // Fallback if l10n.lenderOptions doesn't exist yet
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color.fromRGBO(34, 58, 94, 0.62),
-                ),
-              ),
+
+            SizedBox(
+              height: screenWidth < 360 ? 12 : 16,
             ),
-            const SizedBox(height: 12),
+
+            // Edit
             _OptionTile(
               image: 'assets/edit_customer_logo.png',
-              title: "Edit Lender",
+              title: l10n.editLender,
               subtitle: l10n.editNamePhoneOrLoanDetails,
               onTap: onEdit,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Account Summary
             _OptionTile(
               image: 'assets/summary.png',
               title: l10n.accountSummary,
               subtitle: l10n.overviewAndSummary,
               onTap: onSummary,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Export PDF
             _OptionTile(
               image: 'assets/export_pdf.png',
               title: l10n.exportPdf,
               subtitle: l10n.downloadLedgerAsPdf,
               onTap: onExport,
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(
+              height: screenWidth < 360 ? 8 : 10,
+            ),
+
+            // Delete
             _OptionTile(
               image: 'assets/delete_logo.png',
-              title: "Delete Lender",
-              subtitle: "Delete lender permanently",
+              title: l10n.deleteLender,
+              subtitle: l10n.deleteLenderPermanently,
               titleColor: Colors.red,
               onTap: onDelete,
             ),
-            const SizedBox(height: 18),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                l10n.cancel,
-                style: GoogleFonts.manrope(
-                  color: ChopdiColors.navy,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+
+            SizedBox(
+              height: screenWidth < 360 ? 4 : 8,
             ),
           ],
         ),
@@ -122,68 +172,101 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 62,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color.fromRGBO(255, 248, 240, 1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color.fromRGBO(170, 185, 207, 1),
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    final iconSize = screenWidth < 360 ? 32.0 : 36.0;
+    final imageSize = screenWidth < 360 ? 17.0 : 19.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(
+            minHeight: 62,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              height: 34,
-              width: 34,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.fromRGBO(255, 248, 240, 1),
-              ),
-              child: Center(
-                child: Image.asset(
-                  image,
-                  height: 18,
-                  width: 18,
-                  fit: BoxFit.contain,
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth < 360 ? 10 : 12,
+            vertical: 9,
+          ),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(255, 248, 240, 1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color.fromRGBO(170, 185, 207, 1),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Icon container
+              Container(
+                height: iconSize,
+                width: iconSize,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromRGBO(255, 248, 240, 1),
+                ),
+                child: Center(
+                  child: Image.asset(
+                    image,
+                    height: imageSize,
+                    width: imageSize,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: titleColor,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      color: const Color.fromRGBO(34, 58, 94, 0.86),
-                    ),
-                  ),
-                ],
+
+              SizedBox(
+                width: screenWidth < 360 ? 9 : 12,
               ),
-            ),
-            Image.asset(
-              "assets/right_arrow.png",
-              width: 18,
-              height: 18,
-            ),
-          ],
+
+              // Text
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontSize: screenWidth < 360 ? 14 : 15,
+                        fontWeight: FontWeight.w600,
+                        color: titleColor,
+                      ),
+                    ),
+
+                    const SizedBox(height: 2),
+
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.manrope(
+                        fontSize: screenWidth < 360 ? 11 : 12,
+                        height: 1.2,
+                        color: const Color.fromRGBO(34, 58, 94, 0.86),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              // Arrow
+              Image.asset(
+                "assets/right_arrow.png",
+                width: screenWidth < 360 ? 16 : 18,
+                height: screenWidth < 360 ? 16 : 18,
+                fit: BoxFit.contain,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -322,6 +405,7 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Container(
         decoration: const BoxDecoration(
@@ -359,13 +443,13 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                 const SizedBox(height: 14),
                 Center(
                   child: Text(
-                    "Edit Lender Details",
+                    l10n.editLenderDetails,
                     style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  "Name",
+                  l10n.name,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     color: const Color.fromRGBO(34, 58, 94, 0.62),
@@ -375,15 +459,15 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                 TextFormField(
                   controller: nameController,
                   textInputAction: TextInputAction.next,
-                  decoration: inputDecoration("Lender Name"),
+                  decoration: inputDecoration(l10n.lenderName),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) return "Lender name is required";
+                    if (value == null || value.trim().isEmpty) return l10n.lenderNameRequired;
                     return null;
                   },
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  "Phone Number",
+                  l10n.mobileNumber,
                   style: GoogleFonts.manrope(
                     fontWeight: FontWeight.w700,
                     color: const Color.fromRGBO(34, 58, 94, 0.62),
@@ -419,7 +503,7 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                         textInputAction: TextInputAction.done,
                         maxLength: 10,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        decoration: inputDecoration("Mobile Number").copyWith(counterText: ""),
+                        decoration: inputDecoration(l10n.mobileNumber).copyWith(counterText: ""),
                         validator: _phoneValidator,
                       ),
                     ),
@@ -436,8 +520,8 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: _isSaving ? null : () => Navigator.pop(context),
-                        child: const Text(
-                          "Cancel",
+                        child: Text(
+                          l10n.cancel,
                           style: TextStyle(color: Color(0xff2F477A), fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -458,8 +542,8 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                            : const Text(
-                          "Save Changes",
+                            : Text(
+                          l10n.saveChanges,
                           style: TextStyle(color: ChopdiColors.cream, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -534,7 +618,7 @@ class AccountSummaryBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              "Overview of Account",
+              l10n.overviewOfLenderAccount,
               style: GoogleFonts.manrope(
                 fontSize: 12,
                 color: const Color(0xff6E7A8A),
@@ -565,18 +649,18 @@ class AccountSummaryBottomSheet extends StatelessWidget {
               title: l10n.lastPayment,
               value: lastPayment == null
                   ? "-"
-                  : DateFormat("dd MMM yyyy").format(lastPayment!.date),
+                  : DateFormat("dd MMM yy",l10n.locale.languageCode).format(lastPayment!.date),
               subtitle: lastPayment == null
                   ? null
-                  : "(₹${lastPayment!.amount.toStringAsFixed(0)} received)",
+                  : "(₹${lastPayment!.amount.toStringAsFixed(0)} ${l10n.paymentReceived})",
               valueColor: const Color(0xff223A5E),
             ),
             SummaryTile(
               icon: Icons.calendar_today_outlined,
-              title: "Loan Given On",
+              title: l10n.loanGivenOn,
               value: firstLoan == null
                   ? "-"
-                  : DateFormat("dd MMM yyyy").format(firstLoan!.date),
+                  : DateFormat("dd MMM yy",l10n.locale.languageCode).format(firstLoan!.date),
               valueColor: const Color(0xff223A5E),
             ),
             const SizedBox(height: 10),
@@ -613,16 +697,22 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
     return tx.amount * (pow(1 + tx.interestRate / 100, time) - 1);
   }
 
-  String transactionTypeText(TransactionType type) {
+  String transactionTypeText(
+    TransactionType type,
+    AppLocalizations l10n,
+  ) {
     switch (type) {
       case TransactionType.gave:
-        return "Given";
+        return l10n.transactionTypeGiven;
+
       case TransactionType.received:
-        return "Received";
+        return l10n.transactionTypeReceived;
+
       case TransactionType.took:
-        return "Took";
+        return l10n.transactionTypeTook;
+
       case TransactionType.paid:
-        return "Paid";
+        return l10n.transactionTypePaid;
     }
   }
 
@@ -673,14 +763,15 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
     }).toList();
   }
 
-  Future<Uint8List> generatePdf() async {
+  Future<Uint8List> generatePdf(BuildContext context) async {
     final pdf = pw.Document();
     final regularFont = await PdfGoogleFonts.notoSansDevanagariRegular();
     final boldFont = await PdfGoogleFonts.notoSansDevanagariBold();
     final logo = await loadLogo();
+    final l10n = AppLocalizations.of(context);
 
     final sortedTransactions = [...pdfTransactions]..sort((a, b) => b.date.compareTo(a.date));
-    final generatedDate = DateFormat("dd MMM yyyy, hh:mm a").format(DateTime.now());
+    final generatedDate = DateFormat("dd MMM yy, hh:mm a").format(DateTime.now());
 
     const navy = PdfColor.fromInt(0xff223A5E);
     const blue = PdfColor.fromInt(0xff2F5D9F);
@@ -711,14 +802,14 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                     children: [
                       pw.Text("Chopdi", style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: navy)),
                       pw.SizedBox(height: 2),
-                      pw.Text("Your trusted digital ledger", style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
+                      pw.Text(l10n.trustedDigitalLedger, style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
                     ],
                   ),
                   pw.Spacer(),
                   pw.Container(
                     padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: pw.BoxDecoration(color: lightBlue, borderRadius: pw.BorderRadius.circular(7)),
-                    child: pw.Text("ACCOUNT STATEMENT", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: navy)),
+                    child: pw.Text(l10n.accountStatement, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: navy)),
                   ),
                 ],
               ),
@@ -733,13 +824,18 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
             decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300))),
             child: pw.Row(
               children: [
-                pw.Text("Generated by Chopdi", style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
+                pw.Text(l10n.generatedByChopdi, style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
                 pw.SizedBox(width: 5),
                 pw.Text("•", style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey400)),
                 pw.SizedBox(width: 5),
                 pw.Text(generatedDate, style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
                 pw.Spacer(),
-                pw.Text("Page ${context.pageNumber} of ${context.pagesCount}", style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
+                pw.Text(
+                  l10n.pageOf(
+                    context.pageNumber,
+                    context.pagesCount,
+                  ),
+                ),
               ],
             ),
           );
@@ -751,19 +847,26 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
               child: pw.Column(
                 children: [
                   pw.Text(
-                    isTookLoan ? "Took Loan Statement" : "Lender Statement",
+                    isTookLoan
+                      ? l10n.lenderStatement
+                      : l10n.customerStatement,
                     style: pw.TextStyle(fontSize: 21, fontWeight: pw.FontWeight.bold, color: navy),
                   ),
                   pw.SizedBox(height: 5),
                   pw.Text(
-                    isTookLoan ? "Loan summary and repayment history" : "Account summary and transaction history",
-                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.blueGrey500),
+                    isTookLoan
+                        ? l10n.loanSummaryAndRepaymentHistory
+                        : l10n.accountSummaryAndTransactionHistory,
                   ),
                   pw.SizedBox(height: 4),
                   pw.Text(
-                    "As of ${DateFormat("dd MMM yyyy, hh:mm a").format(DateTime.now())}",
-                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.blueGrey500),
-                  ),
+                    l10n.asOf(
+                      DateFormat(
+                        "dd MMM yyyy, hh:mm a",
+                        l10n.locale.languageCode,
+                      ).format(DateTime.now()),
+                    ),
+                  )
                 ],
               ),
             ),
@@ -805,41 +908,75 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text("CURRENT BALANCE", style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.grey600)),
+                      pw.Text(l10n.currentBalance, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.grey600)),
                       pw.SizedBox(height: 5),
                       pw.Text(
                         money(outstanding),
                         style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold, color: outstanding > 0 ? PdfColors.red800 : PdfColors.green800),
                       ),
                       pw.SizedBox(height: 3),
-                      pw.Text(outstanding > 0 ? "Outstanding" : "Settled", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                      pw.Text(outstanding > 0 ? l10n.outstanding : l10n.settled, style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
                     ],
                   ),
                 ],
               ),
             ),
             pw.SizedBox(height: 22),
-            pw.Text("Account Overview", style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, color: navy)),
-            pw.SizedBox(height: 10),
-            pw.Row(
-              children: [
-                summaryCard(title: isTookLoan ? "YOU TOOK" : "YOU GAVE", value: money(pdfPrincipal), subtitle: isTookLoan ? "Total loan taken" : "Total given", valueColor: navy),
-                pw.SizedBox(width: 9),
-                summaryCard(title: isTookLoan ? "YOU PAID" : "YOU RECEIVED", value: money(pdfPaid), subtitle: isTookLoan ? "Total repaid" : "Total received", valueColor: PdfColors.green800),
-                pw.SizedBox(width: 9),
-                summaryCard(title: "INTEREST", value: money(totalInterest), subtitle: "Calculated interest", valueColor: PdfColors.orange800),
-              ],
+            pw.Text(
+              l10n.accountOverview,
+              style: pw.TextStyle(
+                fontSize: 15,
+                fontWeight: pw.FontWeight.bold,
+                color: navy,
+              ),
             ),
+            pw.SizedBox(height: 10),
+                pw.Row(
+                  children: [
+                    summaryCard(
+                      title: isTookLoan
+                          ? l10n.youTook
+                          : l10n.youGave,
+                      value: money(pdfPrincipal),
+                      subtitle: isTookLoan
+                          ? l10n.totalLoanTaken
+                          : l10n.totalGiven,
+                      valueColor: navy,
+                    ),
+
+                    pw.SizedBox(width: 9),
+
+                    summaryCard(
+                      title: isTookLoan
+                          ? l10n.youPaid
+                          : l10n.youReceived,
+                      value: money(pdfPaid),
+                      subtitle: isTookLoan
+                          ? l10n.totalRepaid
+                          : l10n.totalReceived,
+                      valueColor: PdfColors.green800,
+                    ),
+
+                    pw.SizedBox(width: 9),
+
+                    summaryCard(
+                      title: l10n.interest,
+                      value: money(totalInterest),
+                      subtitle: l10n.calculatedInterest,
+                      valueColor: PdfColors.orange800,
+                    ),
+                  ],
+                ),
             pw.SizedBox(height: 24),
             pw.Row(
               children: [
-                pw.Text("Transaction History", style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, color: navy)),
+                pw.Text(l10n.transactionHistory, style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, color: navy)),
                 pw.Spacer(),
-                pw.Text("${transactions.length} records", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                pw.Text("${transactions.length} ${l10n.records}", style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
               ],
             ),
             pw.SizedBox(height: 10),
-            sortedTransactions.isEmpty ? emptyTransactions() : transactionTable(sortedTransactions),
+            sortedTransactions.isEmpty ? emptyTransactions(l10n) : transactionTable(sortedTransactions,l10n),
             pw.SizedBox(height: 22),
             pw.Container(
               width: double.infinity,
@@ -853,22 +990,37 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                 children: [
                   pw.Row(
                     children: [
-                      pw.Text("Account Summary", style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: navy)),
+                      pw.Text(l10n.accountSummary, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: navy)),
                       pw.Spacer(),
-                      pw.Text("FINAL BALANCE", style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+                      pw.Text(l10n.finalBalance, style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
                     ],
                   ),
                   pw.SizedBox(height: 12),
-                  finalSummaryRow(isTookLoan ? "Total Taken" : "Total Given", money(pdfPrincipal)),
-                  finalSummaryRow(isTookLoan ? "Total Paid" : "Total Received", money(pdfPaid)),
-                  finalSummaryRow("Total Interest", money(totalInterest)),
+                  finalSummaryRow(
+                    isTookLoan
+                        ? l10n.totalTaken
+                        : l10n.totalGiven,
+                    money(pdfPrincipal),
+                  ),
+
+                  finalSummaryRow(
+                    isTookLoan
+                        ? l10n.totalPaid
+                        : l10n.totalReceived,
+                    money(pdfPaid),
+                  ),
+
+                  finalSummaryRow(
+                    l10n.totalInterest,
+                    money(totalInterest),
+                  ),
                   pw.SizedBox(height: 6),
                   pw.Container(
                     padding: const pw.EdgeInsets.only(top: 11),
                     decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300))),
                     child: pw.Row(
                       children: [
-                        pw.Text("Outstanding Balance", style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: navy)),
+                        pw.Text(l10n.outstandingBalance, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: navy)),
                         pw.Spacer(),
                         pw.Text(
                           money(pdfOutstanding),
@@ -894,9 +1046,9 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                     child: pw.Image(logo, fit: pw.BoxFit.contain),
                   ),
                   pw.SizedBox(height: 7),
-                  pw.Text("Thank you for using Chopdi", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: navy)),
+                  pw.Text(l10n.thankYouForUsingChopdi, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: navy)),
                   pw.SizedBox(height: 3),
-                  pw.Text("Keep your records simple. Keep them with Chopdi.", style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
+                  pw.Text(l10n.keepRecordsSimple, style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey600)),
                 ],
               ),
             ),
@@ -927,7 +1079,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
     );
   }
 
-  pw.Widget transactionTable(List<Transaction> sortedTransactions) {
+  pw.Widget transactionTable(List<Transaction> sortedTransactions, AppLocalizations l10n) {
     return pw.Table(
       border: pw.TableBorder(
         top: const pw.BorderSide(color: PdfColors.grey300),
@@ -945,18 +1097,18 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey100),
           children: [
-            tableHeader("DATE"),
-            tableHeader("TYPE"),
-            tableHeader("AMOUNT", align: pw.TextAlign.right),
-            tableHeader("MODE"),
-            tableHeader("DESCRIPTION"),
+            tableHeader(l10n.date),
+            tableHeader(l10n.type),
+            tableHeader(l10n.amount, align: pw.TextAlign.right),
+            tableHeader(l10n.mode),
+            tableHeader(l10n.description),
           ],
         ),
         ...sortedTransactions.map((tx) {
           return pw.TableRow(
             children: [
-              tableCell(DateFormat("dd MMM yyyy").format(tx.date)),
-              transactionTypeCell(tx.type),
+              tableCell(DateFormat("dd MMM yy", l10n.locale.languageCode).format(tx.date)),
+              transactionTypeCell(tx.type, l10n),
               tableCell(money(tx.amount), align: pw.TextAlign.right, bold: true),
               tableCell(tx.paymentMode.isEmpty ? "-" : tx.paymentMode),
               tableCell(tx.description.isEmpty ? "-" : tx.description),
@@ -967,12 +1119,12 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
     );
   }
 
-  pw.Widget emptyTransactions() {
+  pw.Widget emptyTransactions(AppLocalizations l10n) {
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.symmetric(vertical: 30),
       decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.grey300), borderRadius: pw.BorderRadius.circular(10)),
-      child: pw.Center(child: pw.Text("No transactions available", style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600))),
+      child: pw.Center(child: pw.Text(l10n.noTransactionsAvailable, style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600))),
     );
   }
 
@@ -990,7 +1142,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
     );
   }
 
-  pw.Widget transactionTypeCell(TransactionType type) {
+  pw.Widget transactionTypeCell(TransactionType type, AppLocalizations l10n) {
     PdfColor background;
     PdfColor textColor;
     switch (type) {
@@ -1016,7 +1168,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
       child: pw.Container(
         padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: pw.BoxDecoration(color: background, borderRadius: pw.BorderRadius.circular(5)),
-        child: pw.Text(transactionTypeText(type), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: textColor)),
+        child: pw.Text(transactionTypeText(type, l10n), textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: textColor)),
       ),
     );
   }
@@ -1036,7 +1188,8 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
 
   Future<void> viewPdf(BuildContext context) async {
     try {
-      final bytes = await generatePdf();
+      final bytes = await generatePdf(context);
+      final l10n = AppLocalizations.of(context);
       if (!context.mounted) return;
       const previewColor = Color(0xff223A5E);
 
@@ -1045,7 +1198,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => Scaffold(
             appBar: AppBar(
-              title: const Text("PDF Preview", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+              title: Text(l10n.pdfPreview, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
               backgroundColor: previewColor,
               foregroundColor: Colors.white,
               elevation: 0,
@@ -1070,23 +1223,30 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Unable to generate PDF: $e")));
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.unableToGeneratePdf(e.toString())),
+      ));
     }
   }
 
   Future<void> downloadPdf(BuildContext context) async {
     try {
-      final bytes = await generatePdf();
+      final bytes = await generatePdf(context);
       final safeName = lender.name.replaceAll(RegExp(r'[^\w\s-]'), '').trim().replaceAll(' ', '_');
       await Printing.sharePdf(bytes: bytes, filename: "${safeName.isEmpty ? 'Lender' : safeName}_Chopdi.pdf");
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Unable to export PDF: $e")));
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.unableToExportPdf(e.toString())),
+      ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Container(
         decoration: const BoxDecoration(
@@ -1101,9 +1261,9 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
               const SizedBox(height: 24),
               CircleAvatar(radius: 30, backgroundColor: const Color(0xffDCE4F2), child: Image.asset("assets/export_pdf.png", width: 32, height: 32)),
               const SizedBox(height: 14),
-              Text("Export PDF", style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.w700, color: ChopdiColors.navy)),
+              Text(l10n.exportPdf, style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.w700, color: ChopdiColors.navy)),
               const SizedBox(height: 6),
-              Text("Create a professional statement for ${lender.name}", textAlign: TextAlign.center, style: GoogleFonts.manrope(fontSize: 12, color: ChopdiColors.navy)),
+              Text(l10n.createProfessionalStatement(lender.name),),
               const SizedBox(height: 24),
               Container(
                 width: double.infinity,
@@ -1116,7 +1276,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "The PDF includes ${lender.name}'s details, complete transaction history and account summary.",
+                        l10n.pdfIncludesLenderDetails(lender.name),
                         style: GoogleFonts.manrope(fontSize: 12, fontWeight: FontWeight.w600, color: ChopdiColors.navy),
                       ),
                     ),
@@ -1130,7 +1290,7 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => viewPdf(context),
                   icon: const Icon(Icons.visibility_outlined, color: ChopdiColors.navy),
-                  label: Text("View PDF", style: GoogleFonts.manrope(color: ChopdiColors.navy, fontWeight: FontWeight.w700)),
+                  label: Text(l10n.viewPdf, style: GoogleFonts.manrope(color: ChopdiColors.navy, fontWeight: FontWeight.w700)),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: ChopdiColors.navy), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
               ),
@@ -1141,14 +1301,14 @@ class ExportLenderPdfBottomSheet extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => downloadPdf(context),
                   icon: const Icon(Icons.download_outlined, color: ChopdiColors.cream),
-                  label: Text("Download PDF", style: GoogleFonts.manrope(color: ChopdiColors.cream, fontWeight: FontWeight.w700)),
+                  label: Text(l10n.downloadPdf, style: GoogleFonts.manrope(color: ChopdiColors.cream, fontWeight: FontWeight.w700)),
                   style: ElevatedButton.styleFrom(backgroundColor: ChopdiColors.navy, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text("Cancel", style: GoogleFonts.manrope(color: ChopdiColors.navy, fontWeight: FontWeight.w600)),
+                child: Text(l10n.cancel, style: GoogleFonts.manrope(color: ChopdiColors.navy, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
@@ -1177,6 +1337,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child :Container(
         decoration: const BoxDecoration(
@@ -1216,7 +1377,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
               const SizedBox(height: 18),
 
               Text(
-                "Delete ${widget.lenderName}?",
+                l10n.deleteLenderTitle(widget.lenderName),
                 style: GoogleFonts.manrope(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -1227,7 +1388,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
               const SizedBox(height: 6),
 
               Text(
-                "This action cannot be undone",
+                l10n.deleteActionCannotBeUndone,
                 style: GoogleFonts.manrope(
                   color: ChopdiColors.navy,
                   fontSize: 12,
@@ -1270,7 +1431,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                         children: [
 
                           Text(
-                            "All lender data will be permanently deleted including:",
+                            l10n.allLenderDataDeleted,
                             style: GoogleFonts.manrope(
                               color: const Color(0xffE4554B),
                               fontWeight: FontWeight.w600,
@@ -1280,7 +1441,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                           const SizedBox(height: 10),
 
                           Text(
-                            "• Lender Details",
+                            "• ${l10n.lenderDetails}",
                             style: GoogleFonts.manrope(
                               color: const Color(0xffE4554B),
                             ),
@@ -1289,7 +1450,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                           const SizedBox(height: 5),
 
                           Text(
-                            "• Ledger and Transactions",
+                            "• ${l10n.ledgerAndTransactions}",
                             style: GoogleFonts.manrope(
                               color: const Color(0xffE4554B),
                             ),
@@ -1298,7 +1459,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                           const SizedBox(height: 5),
 
                           Text(
-                            "• Notes and reminders",
+                            "• ${l10n.notesAndReminders}",
                             style: GoogleFonts.manrope(
                               color: const Color(0xffE4554B),
                             ),
@@ -1307,7 +1468,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                           const SizedBox(height: 5),
 
                           Text(
-                            "• Loan information",
+                            "• ${l10n.loanInformation}",
                             style: GoogleFonts.manrope(
                               color: const Color(0xffE4554B),
                             ),
@@ -1347,7 +1508,7 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     title: Text(
-                      "I understand this action cannot be undone.",
+                      l10n.understandDeleteAction,
                       style: GoogleFonts.manrope(
                           fontWeight: FontWeight.w700,
                           color: ChopdiColors.navy,
@@ -1384,8 +1545,8 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text(
-                        "Cancel",
+                      child: Text(
+                        l10n.cancel,
                         style: TextStyle(
                           color: Color(0xff2F477A),
                           fontWeight: FontWeight.w600,
@@ -1411,8 +1572,8 @@ class _DeleteLenderBottomSheetState extends State<DeleteLenderBottomSheet> {
                       onPressed: agreed
                           ? widget.onDelete
                           : null,
-                      child: const Text(
-                        "Delete Lender",
+                      child: Text(
+                        l10n.deleteLender,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

@@ -19,6 +19,7 @@ import 'package:mychopdi/view/took_loan_home_screen.dart';
 import 'package:mychopdi/widgets/home_header.dart';
 import 'package:mychopdi/widgets/summary_card.dart';
 
+import '../service/local_notification_service.dart';
 import 'customer_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -60,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    LocalNotificationService.instance.requestPermission();
+
 
     _selectedTabIndex =
     widget.initialGaveLoanSelected ? 0 : 1;
@@ -192,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       Row(
                         children: [
+
                           // Cancel
                           Expanded(
                             child: SizedBox(
@@ -551,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? l10n
                                 .homeAddCustomer
                                 : l10n
-                                .homeAddLoan,
+                                .addLender,
                             maxLines: 1,
                             overflow:
                             TextOverflow

@@ -151,7 +151,7 @@ class _AddNewLenderScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      l10n.customerAlreadyExists,
+                      l10n.LenderAlreadyExists,
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -162,7 +162,7 @@ class _AddNewLenderScreenState
                 ],
               ),
               content: Text(
-                l10n.duplicateCustomerMessage,
+                l10n.duplicateLenderMessage,
                 style: GoogleFonts.manrope(
                   fontSize: 13,
                   color: const Color(0xff6E7D93),

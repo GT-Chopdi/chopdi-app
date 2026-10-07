@@ -422,13 +422,14 @@ class _MoneyGaveBottomSheetState
                       TextField(
                         readOnly: true,
                         onTap: _pickDate,
-                        decoration: decoration().copyWith(
+                        decoration: decoration(
                           suffix: const Icon(
                             Icons.calendar_today_outlined,
                             color: Colors.black,
+                            size: 20,
                           ),
-                          hintText: DateFormat("dd MMM yyyy", locale)
-                              .format(selectedDate),
+                        ).copyWith(
+                          hintText: DateFormat("dd MMM yy", locale).format(selectedDate),
                           hintStyle: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.w500,
@@ -760,21 +761,20 @@ class _MoneyGaveBottomSheetState
                                   IsarService.isar,
                                 );
 
-                                await notificationService
-                                    .createTookLoanNotification(
-                                  chopdiId: widget.lender.chopdiId,
-                                  customerName: widget.lender.name,
-                                  amount: amount,
-                                  customerId: widget.lender.id,
-                                );
+                                // await notificationService
+                                //     .createTookLoanNotification(
+                                //   chopdiId: widget.lender.chopdiId,
+                                //   customerName: widget.lender.name,
+                                //   amount: amount,
+                                //   customerId: widget.lender.id,
+                                // );
 
                                 if (interestAmount > 0) {
-                                  await notificationService
-                                      .createInterestNotification(
+                                  await notificationService.createLenderInterestNotification(
                                     chopdiId: widget.lender.chopdiId,
-                                    customerName: widget.lender.name,
+                                    lenderName: widget.lender.name,
                                     interestAmount: interestAmount,
-                                    customerId: widget.lender.id,
+                                    lenderId: widget.lender.id, transactionId: tx.id,
                                   );
                                 }
                               }
