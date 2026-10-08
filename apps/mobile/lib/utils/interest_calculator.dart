@@ -38,63 +38,52 @@ class InterestCalculator {
   }) {
     final end = endDate ?? DateTime.now();
 
-    final days = daysBetween(
-      startDate,
-      end,
-    );
-
-    if (days <= 0 ||
-        principal <= 0 ||
-        rate <= 0) {
+    if (principal <= 0 || rate <= 0) {
       return 0;
     }
 
-    // Normalize values so old data such as
-    // "monthly" or "Monthly" also works.
-    final normalizedFrequency =
-    frequency.trim().toLowerCase();
-
-    final normalizedInterestType =
-    interestType.trim().toLowerCase();
+    final normalizedFrequency = frequency.trim().toLowerCase();
 
     // ============================================================
-    // SIMPLE INTEREST
+    // MONTHLY INTEREST
     // ============================================================
+    //
+    // IMPORTANT:
+    // Use the same calendar-month calculation as
+    // calculateMonthlyBreakdown().
+    //
+    // This keeps SummaryCard, CustomerCard,
+    // CustomerDetailsScreen and TransactionTable consistent.
+    //
+    if (normalizedFrequency == "monthly") {
+      final monthlyEntries = calculateMonthlyBreakdown(
+        principal: principal,
+        rate: rate,
+        startDate: startDate,
+        interestType: interestType,
+        frequency: frequency,
+        endDate: end,
+        activeLoanCount: 1,
+      );
 
-    if (normalizedInterestType == "simple interest" ||
-        normalizedInterestType == "simple") {
-      double periods;
-
-      switch (normalizedFrequency) {
-        case "daily":
-          periods = days.toDouble();
-          break;
-
-        case "weekly":
-          periods = days / 7.0;
-          break;
-
-        case "monthly":
-          periods = days / 30.0;
-          break;
-
-        case "yearly":
-          periods = days / 365.0;
-          break;
-
-        default:
-          periods = days / 30.0;
-      }
-
-      return principal *
-          rate *
-          periods /
-          100.0;
+      return monthlyEntries.fold<double>(
+        0.0,
+        (sum, entry) => sum + entry.interest,
+      );
     }
 
     // ============================================================
-    // COMPOUND INTEREST
+    // OTHER FREQUENCIES
     // ============================================================
+
+    final days = daysBetween(startDate, end);
+
+    if (days <= 0) {
+      return 0;
+    }
+
+    final normalizedInterestType =
+        interestType.trim().toLowerCase();
 
     double periods;
 
@@ -107,20 +96,28 @@ class InterestCalculator {
         periods = days / 7.0;
         break;
 
-      case "monthly":
-        periods = days / 30.0;
-        break;
-
       case "yearly":
         periods = days / 365.0;
         break;
 
       default:
-        periods = days / 30.0;
+        periods = days / 365.0;
     }
 
-    final periodicRate =
-        rate / 100.0;
+    // ============================================================
+    // SIMPLE INTEREST
+    // ============================================================
+
+    if (normalizedInterestType == "simple interest" ||
+        normalizedInterestType == "simple") {
+      return principal * rate * periods / 100.0;
+    }
+
+    // ============================================================
+    // COMPOUND INTEREST
+    // ============================================================
+
+    final periodicRate = rate / 100.0;
 
     return principal *
         (pow(

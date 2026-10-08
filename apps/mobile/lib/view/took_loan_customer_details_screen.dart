@@ -524,7 +524,7 @@
                         child: _infoItem(
                           'assets/total_given.png',
                           l10n.totalTaken,
-                          "₹${totalGiven.toStringAsFixed(0)}",
+                          "₹${totalGiven.toStringAsFixed(2)}",
                           ChopdiColors.navy,
                         ),
                       ),
@@ -539,7 +539,7 @@
                         child: _infoItem(
                           'assets/total_interest.png',
                           l10n.interestDue,
-                          "₹${totalInterest.toStringAsFixed(0)}",
+                          "₹${totalInterest.toStringAsFixed(2)}",
                           const Color(0xFF00901B),
                         ),
                       ),
@@ -554,7 +554,7 @@
                         child: _infoItem(
                           'assets/outstanding.png',
                           l10n.outstanding,
-                          "₹${outstanding.toStringAsFixed(0)}",
+                          "₹${outstanding.toStringAsFixed(2)}",
                           const Color(0xFFC74C4C),
                         ),
                       ),
