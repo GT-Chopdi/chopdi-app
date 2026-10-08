@@ -9,6 +9,7 @@ import 'package:mychopdi/utils/app_colors.dart';
 import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_raw.dart';
 import 'package:mychopdi/widgets/interest_details_bottom_sheet.dart';
+
 import '../utils/interest_calculator.dart';
 
 class TransactionTable extends StatelessWidget {
@@ -74,11 +75,7 @@ class TransactionTable extends StatelessWidget {
         continue;
       }
 
-      // ========================================================
-      // IMPORTANT:
       // InterestCalculator remains the single source of truth.
-      // ========================================================
-
       final monthlyEntries =
       InterestCalculator.calculateMonthlyBreakdown(
         principal: tx.amount,
@@ -160,8 +157,7 @@ class TransactionTable extends StatelessWidget {
 
     // ==========================================================
     // OLD → NEW
-    //
-    // Only used for balance calculation.
+    // Used only for balance calculation.
     // ==========================================================
 
     final balanceTransactions = [...sortedTransactions]
@@ -203,18 +199,6 @@ class TransactionTable extends StatelessWidget {
 
     // ==========================================================
     // FIND FIRST LOAN / FIRST INTEREST START DATE
-    //
-    // Example:
-    //
-    // Loan 1 = 10 Feb
-    //
-    // First period:
-    // 10 Feb → 28 Feb
-    //
-    // All following months:
-    // 01 Mar → 31 Mar
-    // 01 Apr → 30 Apr
-    // 01 May → 31 May
     // ==========================================================
 
     DateTime? firstLoanDate;
@@ -326,37 +310,24 @@ class TransactionTable extends StatelessWidget {
 
       // ========================================================
       // 1. MONTHLY INTEREST
-      //
-      // ALWAYS BEFORE NORMAL TRANSACTIONS.
+      // ALWAYS BEFORE NORMAL TRANSACTIONS
       // ========================================================
 
       final summary =
       interestByMonth[monthKey];
 
       if (summary != null) {
-        // ======================================================
-        // MONTH START
-        // ======================================================
-
         final monthStart = DateTime(
           year,
           month,
           1,
         );
 
-        // ======================================================
-        // LAST DAY OF MONTH
-        // ======================================================
-
         final lastDayOfMonth = DateTime(
           year,
           month + 1,
           0,
         );
-
-        // ======================================================
-        // CURRENT MONTH
-        // ======================================================
 
         final isCurrentMonth =
             year == now.year &&
@@ -371,26 +342,12 @@ class TransactionTable extends StatelessWidget {
             : lastDayOfMonth;
 
         // ======================================================
-        // IMPORTANT FIX
-        //
-        // FIRST INTEREST MONTH:
-        //
-        // Loan = 10 Feb
+        // FIRST MONTH:
         // 10 Feb → 28 Feb
         //
-        // ALL NEXT MONTHS:
-        //
+        // NEXT MONTHS:
         // 01 Mar → 31 Mar
         // 01 Apr → 30 Apr
-        // 01 May → 31 May
-        // 01 Jun → 30 Jun
-        // 01 Jul → 31 Jul
-        // 01 Aug → 31 Aug
-        //
-        // Even if another loan is added on 12 Aug,
-        // August still displays:
-        //
-        // 01 Aug → 31 Aug
         // ======================================================
 
         DateTime displayStart;
@@ -398,19 +355,13 @@ class TransactionTable extends StatelessWidget {
         if (firstLoanDate != null &&
             year == firstLoanDate.year &&
             month == firstLoanDate.month) {
-          // FIRST INTEREST PERIOD
-
           displayStart = firstLoanDate;
         } else {
-          // ALL FOLLOWING MONTHS
-
           displayStart = monthStart;
         }
 
         // ======================================================
         // LOAN COUNT
-        //
-        // Number of loans contributing to this month.
         // ======================================================
 
         final loanCount =
@@ -453,15 +404,14 @@ class TransactionTable extends StatelessWidget {
 
         // ======================================================
         // INTEREST ROW
-        //
-        // Interest
-        // Loan
         // ======================================================
 
         rows.add(
           _InterestRow(
             transaction:
             summary.transactions.first,
+            transactions:
+            summary.transactions,
             startDate: displayStart,
             endDate: monthEnd,
             interest: summary.interest,
@@ -481,8 +431,6 @@ class TransactionTable extends StatelessWidget {
 
       // ========================================================
       // 2. NORMAL TRANSACTIONS
-      //
-      // Interest is above these rows.
       // ========================================================
 
       for (final tx in monthTransactions) {
@@ -492,8 +440,7 @@ class TransactionTable extends StatelessWidget {
             balance: balanceMap[tx.id] ?? 0,
             onChanged: onChanged,
             customerUuid: customerUuid,
-            isHighlighted:false,
-            // tx.id == highlightTransactionId,
+            isHighlighted: false,
           ),
         );
 
@@ -569,10 +516,22 @@ class TransactionTable extends StatelessWidget {
         children: [
           TableRow(
             children: [
-              _Header(l10n.date, verticalOffset: 2),
-              _Header(l10n.given, verticalOffset: 2),
-              _Header(l10n.received, verticalOffset: 0),
-              _Header(l10n.balance, verticalOffset: 0),
+              _Header(
+                l10n.date,
+                verticalOffset: 2,
+              ),
+              _Header(
+                l10n.given,
+                verticalOffset: 2,
+              ),
+              _Header(
+                l10n.received,
+                verticalOffset: 0,
+              ),
+              _Header(
+                l10n.balance,
+                verticalOffset: 0,
+              ),
             ],
           ),
         ],
@@ -608,7 +567,11 @@ class _MonthlyInterestSummary {
 class _Header extends StatelessWidget {
   final String title;
   final double verticalOffset;
-  const _Header(this.title, {this.verticalOffset = 0});
+
+  const _Header(
+      this.title, {
+        this.verticalOffset = 0,
+      });
 
   @override
   Widget build(
@@ -638,6 +601,11 @@ class _Header extends StatelessWidget {
 
 class _InterestRow extends StatelessWidget {
   final Transaction transaction;
+
+  // IMPORTANT:
+  // All loans contributing to this month's interest.
+  final List<Transaction> transactions;
+
   final DateTime startDate;
   final DateTime endDate;
   final double interest;
@@ -649,6 +617,7 @@ class _InterestRow extends StatelessWidget {
 
   const _InterestRow({
     required this.transaction,
+    required this.transactions,
     required this.startDate,
     required this.endDate,
     required this.interest,
@@ -657,58 +626,6 @@ class _InterestRow extends StatelessWidget {
     this.isHighlighted = false,
     this.descriptionOverride,
   });
-
-  // ============================================================
-  // LOCALIZED FREQUENCY
-  // ============================================================
-
-  String _localizedFrequency(
-      BuildContext context,
-      String value,
-      ) {
-    final l10n =
-    AppLocalizations.of(context);
-
-    switch (value) {
-      case 'Daily':
-        return l10n.daily;
-
-      case 'Weekly':
-        return l10n.weekly;
-
-      case 'Monthly':
-        return l10n.monthly;
-
-      case 'Yearly':
-        return l10n.yearly;
-
-      default:
-        return value;
-    }
-  }
-
-  // ============================================================
-  // LOCALIZED INTEREST TYPE
-  // ============================================================
-
-  String _localizedInterestType(
-      BuildContext context,
-      String value,
-      ) {
-    final l10n =
-    AppLocalizations.of(context);
-
-    switch (value) {
-      case 'Simple Interest':
-        return l10n.simpleInterest;
-
-      case 'Compound Interest':
-        return l10n.compoundInterest;
-
-      default:
-        return value;
-    }
-  }
 
   // ============================================================
   // INTEREST DESCRIPTION
@@ -739,36 +656,13 @@ class _InterestRow extends StatelessWidget {
       locale,
     ).format(endDate);
 
-    final rate =
-    transaction.interestRate
-        .toStringAsFixed(0);
-
-    final frequency =
-    transaction.interestFrequency.isEmpty
-        ? l10n.monthly
-        : _localizedFrequency(
-      context,
-      transaction.interestFrequency,
-    );
-
-    final interestType =
-    transaction.interestType.isEmpty
-        ? l10n.simpleInterest
-        : _localizedInterestType(
-      context,
-      transaction.interestType,
-    );
-
     return '₹${interest.toStringAsFixed(2)} '
         '${l10n.interest.toLowerCase()} '
-        '${l10n.from} $start ${l10n.to} $end '
-        '${l10n.at} $rate% '
-        '$frequency $interestType '
-        '${l10n.interest.toLowerCase()}.';
+        '${l10n.from} $start ${l10n.to} $end.';
   }
 
   // ============================================================
-  // BUILD INTEREST ROW
+  // BUILD
   // ============================================================
 
   @override
@@ -785,25 +679,24 @@ class _InterestRow extends StatelessWidget {
     );
 
     // ==========================================================
-    // OPEN TRANSACTION DETAILS
+    // OPEN INTEREST DETAILS SHEET
     // ==========================================================
 
-    void openTransactionDetails() {
+    void openInterestDetails() {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor:
-        Colors.transparent,
+        backgroundColor: Colors.transparent,
         isDismissible: true,
         enableDrag: true,
         barrierColor: Colors.black54,
         builder: (_) {
-          return TransactionDetailsScreen(
-            transaction: transaction,
-            customerUuid: customerUuid,
+          return InterestDetailsBottomSheet(
+            transactions: transactions,
+            startDate: startDate,
+            endDate: endDate,
+            totalInterest: interest,
             onChanged: onChanged,
-            displayAmount: interest,
-            isInterestRow: true,
           );
         },
       );
@@ -814,7 +707,7 @@ class _InterestRow extends StatelessWidget {
     // ==========================================================
 
     return GestureDetector(
-      onTap: openTransactionDetails,
+      onTap: openInterestDetails,
       child: AnimatedContainer(
         duration: const Duration(
           milliseconds: 400,
@@ -850,10 +743,8 @@ class _InterestRow extends StatelessWidget {
               ),
               blurRadius: 8,
               spreadRadius: 0.5,
-              offset: const Offset(
-                0,
-                2,
-              ),
+              offset:
+              const Offset(0, 2),
             ),
           ]
               : [
@@ -863,10 +754,8 @@ class _InterestRow extends StatelessWidget {
                 alpha: 0.025,
               ),
               blurRadius: 3,
-              offset: const Offset(
-                0,
-                1,
-              ),
+              offset:
+              const Offset(0, 1),
             ),
           ],
         ),
