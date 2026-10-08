@@ -6,6 +6,7 @@ import 'package:mychopdi/widgets/customer_card.dart';
 import 'package:mychopdi/widgets/customer_filter_bottom_sheet.dart';
 import 'package:mychopdi/widgets/sort_bottom_sheet.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mychopdi/utils/interest_calculator.dart';
 
 import '../model/transaction.dart';
 import '../service/isar_service.dart';
@@ -344,16 +345,27 @@ class _CustomerListSectionState extends State<CustomerListSection> {
 
     double totalGiven = 0;
     double totalReceived = 0;
+    double totalInterest = 0;
 
     for (final tx in transactions) {
       if (tx.type == TransactionType.gave) {
         totalGiven += tx.amount;
+
+        if (tx.interestRate > 0 && tx.amount > 0) {
+          totalInterest += InterestCalculator.calculate(
+            principal: tx.amount,
+            rate: tx.interestRate,
+            startDate: tx.date,
+            interestType: tx.interestType,
+            frequency: tx.interestFrequency,
+          );
+        }
       } else if (tx.type == TransactionType.received) {
         totalReceived += tx.amount;
       }
     }
 
-    return totalGiven - totalReceived;
+    return totalGiven + totalInterest - totalReceived;
   }
 
   // ============================================================

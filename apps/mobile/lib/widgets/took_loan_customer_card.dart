@@ -129,7 +129,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${l10n.loan}: ₹${totalLoanTaken.toStringAsFixed(0)}',
+                          '${l10n.loan}: ₹${totalLoanTaken.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -146,7 +146,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₹${outstanding.toStringAsFixed(0)}',
+                      '₹${outstanding.toStringAsFixed(2)}',
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
@@ -157,7 +157,7 @@ class TookLoanCustomerCard extends StatelessWidget {
                     if (totalInterest > 0) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '${l10n.interest}: ₹${totalInterest.toStringAsFixed(0)}',
+                        '${l10n.interest}: ₹${totalInterest.toStringAsFixed(2)}',
                         style: GoogleFonts.manrope(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,

@@ -143,7 +143,7 @@ class CustomerCard extends StatelessWidget {
                         runSpacing: 6,
                         children: [
                           _chip(
-                            "${l10n.loan}: ₹${outstanding.toStringAsFixed(0)}",
+                            "${l10n.loan}: ₹${outstanding.toStringAsFixed(2)}",
                             const Color(0xffEEF3FA),
                           ),
                         ],
@@ -159,7 +159,7 @@ class CustomerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      "₹${outstanding.toStringAsFixed(0)}",
+                      "₹${outstanding.toStringAsFixed(2)}",
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,

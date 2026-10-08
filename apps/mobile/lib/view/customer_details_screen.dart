@@ -154,32 +154,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     return totalGiven + totalInterest - totalReceived;
   }
 
-  // ============================================================
-  // INTEREST CALCULATION
-  // ============================================================
-
-  double calculateInterest(Transaction tx) {
-    final days = DateTime.now().difference(tx.date).inDays;
-
-    double time;
-
-    if (tx.interestFrequency == "Monthly") {
-      time = days / 30;
-    } else {
-      time = days / 365;
-    }
-
-    if (tx.interestType == "Simple Interest") {
-      return tx.amount * tx.interestRate * time / 100;
-    } else {
-      return tx.amount *
-          (pow(
-            1 + tx.interestRate / 100,
-            time,
-          ) -
-              1);
-    }
-  }
 
   // ============================================================
   // LAST RECEIVED TRANSACTION
@@ -523,7 +497,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       child: _infoItem(
                         'assets/total_given.png',
                         l10n.totalGiven,
-                        "₹${totalGiven.toStringAsFixed(0)}",
+                        "₹${totalGiven.toStringAsFixed(2)}",
                         ChopdiColors.navy,
                       ),
                     ),
@@ -538,7 +512,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       child: _infoItem(
                         'assets/total_interest.png',
                         l10n.totalInterest,
-                        "₹${totalInterest.toStringAsFixed(0)}",
+                        "₹${totalInterest.toStringAsFixed(2)}",
                         const Color(0xFF00901B),
                       ),
                     ),
@@ -553,7 +527,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       child: _infoItem(
                         'assets/outstanding.png',
                         l10n.outstanding,
-                        "₹${outstanding.toStringAsFixed(0)}",
+                        "₹${outstanding.toStringAsFixed(2)}",
                         const Color(0xFFC74C4C),
                       ),
                     ),
