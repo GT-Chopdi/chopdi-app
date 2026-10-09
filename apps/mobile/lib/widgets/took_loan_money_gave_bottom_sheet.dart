@@ -454,31 +454,57 @@ class _MoneyGaveBottomSheetState
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          
                           decoration: decoration(
                             hint: l10n.enterInterestRate,
                           ).copyWith(
                             errorText: _interestRateError
                                 ? l10n.interestRateRequired
                                 : null,
+
                             errorStyle: const TextStyle(
-                              color: Colors.red,
+                              color: Color(0xFFD9534F),
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
+
+                            // Border when the field is empty and unfocused
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFD9534F),
+                                width: 1.5,
+                              ),
+                            ),
+
+                            // Border when the field is empty and focused
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFD9534F),
+                                width: 1.5,
+                              ),
+                            ),
+
+                            // Normal unfocused border
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
                                 color: _interestRateError
-                                    ? Colors.red
-                                    : const Color(0xffC9D2E3),
+                                    ? const Color(0xFFD9534F)
+                                    : const Color(0xFFC9D2E3),
+                                width: 1.2,
                               ),
                             ),
+
+                            // Normal focused border
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
                                 color: _interestRateError
-                                    ? Colors.red
-                                    : const Color(0xff29406B),
-                                width: 1.3,
+                                    ? const Color(0xFFD9534F)
+                                    : const Color(0xFF29406B),
+                                width: 1.5,
                               ),
                             ),
                           ),

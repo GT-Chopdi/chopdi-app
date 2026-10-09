@@ -69,30 +69,6 @@
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-
-                    // Close icon
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Material(
-                        color: Colors.transparent,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(50),
-                          splashColor: ChopdiColors.navy.withValues(alpha: 0.15),
-                          highlightColor: ChopdiColors.navy.withValues(alpha: 0.08),
-                          onTap: () => Navigator.pop(context),
-                          child: Padding(
-                            padding: const EdgeInsets.all(7),
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: screenWidth < 360 ? 22 : 24,
-                              color: ChopdiColors.navy,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -425,6 +401,14 @@
       final l10n = AppLocalizations.of(context);
       final phone = value?.trim() ?? '';
 
+      final originalPhone = widget.customer.phone
+          .trim()
+          .replaceAll(RegExp(r'[^0-9]'), '');
+
+      if (phone.isEmpty && originalPhone.isEmpty) {
+        return null;
+      }
+
       if (phone.isEmpty) {
         return l10n.phoneNumberRequired;
       }
@@ -444,29 +428,57 @@
   
       return RegExp(r'^[0-9]{10}$').hasMatch(phone);
     }
+    
+    
+  bool get _hasChanges {
+    String originalPhone = widget.customer.phone
+        .trim()
+        .replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (originalPhone.startsWith('91') &&
+        originalPhone.length == 12) {
+      originalPhone = originalPhone.substring(2);
+    }
+
+    final nameChanged =
+        nameController.text.trim() != widget.customer.name.trim();
+
+    final phoneChanged =
+        phoneController.text.trim() != originalPhone;
+
+    return nameChanged || phoneChanged;
+  }
+
   
     Future<void> _saveChanges() async {
-      if (_isSaving) return;
+      if (_isSaving || !_hasChanges) return;
   
       // Validate before saving.
       if (!_formKey.currentState!.validate()) {
         return;
       }
+      final phone = phoneController.text.trim();
   
-      if (!_isPhoneValid) {
-        return;
-      }
+      // Validate the phone only when a number is entered.
+      if (phone.isNotEmpty && !_isPhoneValid) return;
   
       setState(() {
         _isSaving = true;
       });
   
       try {
+        // final phone = phoneController.text.trim();
+  
+        // // Store the complete number with +91.
+        // final fullPhoneNumber = '+91$phone';
         final phone = phoneController.text.trim();
-  
-        // Store the complete number with +91.
-        final fullPhoneNumber = '+91$phone';
-  
+
+        final originalPhone = widget.customer.phone.trim();
+
+        final fullPhoneNumber = phone.isEmpty
+            ? originalPhone
+            : '+91$phone';
+
         await Repositories.customers.update(
           widget.customer,
           name: nameController.text.trim(),
@@ -581,6 +593,7 @@
                   TextFormField(
                     controller: nameController,
                     textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
                     decoration: inputDecoration(
                       widget.isTookLoan
                         ? l10n.lenderName
@@ -717,10 +730,11 @@
                               BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed:
-                          (_isPhoneValid && !_isSaving)
-                              ? _saveChanges
-                              : null,
+                          
+                          onPressed: (_hasChanges && !_isSaving)
+                            ? _saveChanges
+                            : null,
+
                           child: _isSaving
                               ? const SizedBox(
                             width: 20,
