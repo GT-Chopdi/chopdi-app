@@ -68,30 +68,6 @@ class LenderOptionsBottomSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-
-                  // Close button
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Material(
-                      color: Colors.transparent,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(50),
-                        splashColor: ChopdiColors.navy.withValues(alpha: 0.15),
-                        highlightColor: ChopdiColors.navy.withValues(alpha: 0.08),
-                        onTap: () => Navigator.pop(context),
-                        child: Padding(
-                          padding: const EdgeInsets.all(7),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: screenWidth < 360 ? 22 : 24,
-                            color: ChopdiColors.navy,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -362,9 +338,27 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
   String? _phoneValidator(String? value) {
     final l10n = AppLocalizations.of(context);
     final phone = value?.trim() ?? '';
-    if (phone.isEmpty) return l10n.phoneNumberRequired;
-    if (!RegExp(r'^[0-9]+$').hasMatch(phone)) return l10n.onlyNumbersAllowed;
-    if (phone.length != 10) return l10n.enterValid10DigitPhone;
+
+    final originalPhone = widget.lender.phone
+        .trim()
+        .replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (phone.isEmpty && originalPhone.isEmpty) {
+      return null;
+    }
+
+    if (phone.isEmpty) {
+      return l10n.phoneNumberRequired;
+    }
+
+    if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      return l10n.onlyNumbersAllowed;
+    }
+
+    if (phone.length != 10) {
+      return l10n.enterValid10DigitPhone;
+    }
+
     return null;
   }
 
@@ -372,25 +366,57 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
     final phone = phoneController.text.trim();
     return RegExp(r'^[0-9]{10}$').hasMatch(phone);
   }
+  
+  
+  
+  bool get _hasChanges {
+    String originalPhone = widget.lender.phone
+        .trim()
+        .replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (originalPhone.startsWith('91') &&
+        originalPhone.length == 12) {
+      originalPhone = originalPhone.substring(2);
+    }
+
+    final nameChanged =
+        nameController.text.trim() != widget.lender.name.trim();
+
+    final phoneChanged =
+        phoneController.text.trim() != originalPhone;
+
+    return nameChanged || phoneChanged;
+  }
+
 
   Future<void> _saveChanges() async {
-    if (_isSaving) return;
+    if (_isSaving || !_hasChanges) return;
     if (!_formKey.currentState!.validate()) return;
-    if (!_isPhoneValid) return;
+     final phone = phoneController.text.trim();
+  
+      // Validate the phone only when a number is entered.
+      if (phone.isNotEmpty && !_isPhoneValid) return;
 
     setState(() {
       _isSaving = true;
     });
 
     try {
-      final phone = phoneController.text.trim();
-      final fullPhoneNumber = '+91$phone';
+      // final phone = phoneController.text.trim();
+      // final fullPhoneNumber = '+91$phone';
+     final phone = phoneController.text.trim();
 
-      await Repositories.lenders.update(
-        widget.lender,
-        name: nameController.text.trim(),
-        phone: fullPhoneNumber,
-      );
+    final originalPhone = widget.lender.phone.trim();
+
+    final fullPhoneNumber = phone.isEmpty
+        ? originalPhone
+        : '+91$phone';
+
+    await Repositories.lenders.update(
+      widget.lender,
+      name: nameController.text.trim(),
+      phone: fullPhoneNumber,
+    );
 
       if (!mounted) return;
       widget.onSaved();
@@ -459,6 +485,7 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                 TextFormField(
                   controller: nameController,
                   textInputAction: TextInputAction.next,
+                  onChanged: (_) => setState(() {}),
                   decoration: inputDecoration(l10n.lenderName),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return l10n.lenderNameRequired;
@@ -535,7 +562,11 @@ class _EditLenderBottomSheetState extends State<EditLenderBottomSheet> {
                           minimumSize: const Size.fromHeight(55),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        onPressed: (_isPhoneValid && !_isSaving) ? _saveChanges : null,
+                        
+                        onPressed: (_hasChanges && !_isSaving)
+                        ? _saveChanges
+                        : null,
+
                         child: _isSaving
                             ? const SizedBox(
                           width: 20,

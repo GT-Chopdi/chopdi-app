@@ -1109,72 +1109,73 @@
 
               setState(() {});
             },
-
-            decoration:
-            decoration(
-              hint:
-              l10n.enterInterestRate,
+            
+            decoration: decoration(
+              hint: l10n.enterInterestRate,
             ).copyWith(
-              enabledBorder:
-              OutlineInputBorder(
-                borderRadius:
-                BorderRadius.circular(
-                  12,
-                ),
-                borderSide:
-                BorderSide(
-                  color:
-                  _interestRateError
-                      ? Colors.red
-                      : const Color(
-                    0xffC9D2E3,
-                  ),
+              filled: true,
+              fillColor: Colors.white,
+
+              errorText: _interestRateError
+                  ? l10n.interestRateRequired
+                  : null,
+
+              errorStyle: const TextStyle(
+                color: Color(0xFFD9534F),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+
+              // Default border
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(
+                  color: Color(0xFFC9D2E3),
+                  width: 1.5,
                 ),
               ),
 
-              focusedBorder:
-              OutlineInputBorder(
-                borderRadius:
-                BorderRadius.circular(
-                  12,
+              // Normal border when unfocused
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(
+                  color: _interestRateError
+                      ? const Color(0xFFD9534F)
+                      : const Color(0xFFC9D2E3),
+                  width: 1.5,
                 ),
-                borderSide:
-                BorderSide(
-                  color:
-                  _interestRateError
-                      ? Colors.red
-                      : const Color(
-                    0xff29406B,
-                  ),
-                  width: 1.3,
+              ),
+
+              // Normal border when focused
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(
+                  color: _interestRateError
+                      ? const Color(0xFFD9534F)
+                      : const Color(0xFF29406B),
+                  width: 1.5,
+                ),
+              ),
+
+              // Error border when unfocused
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(
+                  color: Color(0xFFD9534F),
+                  width: 1.5,
+                ),
+              ),
+
+              // Error border when focused
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(
+                  color: Color(0xFFD9534F),
+                  width: 1.5,
                 ),
               ),
             ),
           ),
-
-          // ==========================================================
-          // ERROR MESSAGE
-          // ==========================================================
-
-          if (_interestRateError)
-            Padding(
-              padding:
-              const EdgeInsets.only(
-                left: 4,
-                top: 5,
-              ),
-              child: Text(
-                "Interest rate is required",
-                style:
-                GoogleFonts.manrope(
-                  color:
-                  Colors.red,
-                  fontSize: 12,
-                  fontWeight:
-                  FontWeight.w500,
-                ),
-              ),
-            ),
         ],
       );
     }
