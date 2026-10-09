@@ -1110,8 +1110,7 @@
               setState(() {});
             },
 
-            decoration:
-            decoration(
+            decoration: decoration(
               hint:
               l10n.enterInterestRate,
             ).copyWith(

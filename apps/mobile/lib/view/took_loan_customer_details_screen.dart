@@ -71,83 +71,96 @@
             (a, b) => b.date.compareTo(a.date),
       );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
       setState(() {
         transactions = loadedTransactions;
       });
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
+  // ============================================================
+  // INIT
+  // ============================================================
 
     @override
     void initState() {
       super.initState();
 
-      lender = widget.lender;
+    lender = widget.lender;
 
-      loadLender();
-      loadTransactions();
-    }
+    loadLender();
+    loadTransactions();
+  }
 
-    // ============================================================
-    // CHECK WHETHER MONEY WAS EVER TAKEN
-    // ============================================================
+  // ============================================================
+  // CHECK WHETHER MONEY WAS EVER TAKEN
+  // ============================================================
 
-    bool get hasTakenLoan {
-      return transactions.any(
-            (tx) => tx.type == TransactionType.took,
+  bool get hasTakenLoan {
+    return transactions.any(
+          (tx) => tx.type == TransactionType.took,
+    );
+  }
+
+  // ============================================================
+  // TOTAL TAKEN
+  // ============================================================
+
+  double get totalGiven {
+    return transactions
+        .where((e) => e.type == TransactionType.took)
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
+  }
+
+  // ============================================================
+  // TOTAL PAID
+  // ============================================================
+
+  double get totalReceived {
+    return transactions
+        .where((e) => e.type == TransactionType.paid)
+        .fold(
+      0.0,
+          (sum, e) => sum + e.amount,
+    );
+  }
+
+  // ============================================================
+  // TOTAL INTEREST
+  // ============================================================
+
+  double get totalInterest {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return transactions
+        .where((tx) => tx.type == TransactionType.took)
+        .fold<double>(0.0, (sum, tx) {
+      final startDate = DateTime(
+        tx.date.year,
+        tx.date.month,
+        tx.date.day,
       );
-    }
 
-    // ============================================================
-    // TOTAL TAKEN
-    // ============================================================
+      // No interest on the transaction date or on a future date.
+      if (!today.isAfter(startDate)) {
+        return sum;
+      }
 
-    double get totalGiven {
-      return transactions
-          .where((e) => e.type == TransactionType.took)
-          .fold(
-        0.0,
-            (sum, e) => sum + e.amount,
-      );
-    }
-
-    // ============================================================
-    // TOTAL PAID
-    // ============================================================
-
-    double get totalReceived {
-      return transactions
-          .where((e) => e.type == TransactionType.paid)
-          .fold(
-        0.0,
-            (sum, e) => sum + e.amount,
-      );
-    }
-
-    // ============================================================
-    // TOTAL INTEREST
-    // ============================================================
-
-    double get totalInterest {
-      return transactions
-          .where((e) => e.type == TransactionType.took)
-          .fold(
-        0.0,
-            (sum, tx) =>
-        sum +
-            InterestCalculator.calculate(
-              principal: tx.amount,
-              rate: tx.interestRate,
-              startDate: tx.date,
-              interestType: tx.interestType,
-              frequency: tx.interestFrequency,
-            ),
-      );
-    }
+      return sum +
+          InterestCalculator.calculate(
+            principal: tx.amount,
+            rate: tx.interestRate,
+            startDate: startDate,
+            interestType: tx.interestType,
+            frequency: tx.interestFrequency,
+            endDate: today,
+          );
+    });
+  }
 
     // ============================================================
     // OUTSTANDING
@@ -162,107 +175,107 @@
     // INTEREST CALCULATION
     // ============================================================
 
-    // double calculateInterest(Transaction tx) {
-    //   final days = DateTime.now().difference(tx.date).inDays;
+  // double calculateInterest(Transaction tx) {
+  //   final days = DateTime.now().difference(tx.date).inDays;
+  //
+  //   double time;
+  //
+  //   if (tx.interestFrequency == "Monthly") {
+  //     time = days / 30;
+  //   } else {
+  //     time = days / 365;
+  //   }
+  //
+  //   if (tx.interestType == "Simple Interest") {
+  //     return tx.amount * tx.interestRate * time / 100;
+  //   } else {
+  //     return tx.amount *
+  //         (pow(
+  //           1 + tx.interestRate / 100,
+  //           time,
+  //         ) -
+  //             1);
+  //   }
+  // }
 
-    //   double time;
+  // ============================================================
+  // LAST PAID TRANSACTION
+  // ============================================================
 
-    //   if (tx.interestFrequency == "Monthly") {
-    //     time = days / 30;
-    //   } else {
-    //     time = days / 365;
-    //   }
+  Transaction? get lastReceivedTransaction {
+    final received = transactions
+        .where((e) => e.type == TransactionType.paid)
+        .toList();
 
-    //   if (tx.interestType == "Simple Interest") {
-    //     return tx.amount * tx.interestRate * time / 100;
-    //   } else {
-    //     return tx.amount *
-    //         (pow(
-    //           1 + tx.interestRate / 100,
-    //           time,
-    //         ) -
-    //             1);
-    //   }
-    // }
+    if (received.isEmpty) return null;
 
-    // ============================================================
-    // LAST PAID TRANSACTION
-    // ============================================================
+    received.sort(
+          (a, b) => b.date.compareTo(a.date),
+    );
 
-    Transaction? get lastReceivedTransaction {
-      final received = transactions
-          .where((e) => e.type == TransactionType.paid)
-          .toList();
+    return received.first;
+  }
 
-      if (received.isEmpty) return null;
+  // ============================================================
+  // FIRST TAKEN LOAN TRANSACTION
+  // ============================================================
 
-      received.sort(
-            (a, b) => b.date.compareTo(a.date),
-      );
+  Transaction? get firstLoanTransaction {
+    final took = transactions
+        .where((e) => e.type == TransactionType.took)
+        .toList();
 
-      return received.first;
-    }
+    if (took.isEmpty) return null;
 
-    // ============================================================
-    // FIRST TAKEN LOAN TRANSACTION
-    // ============================================================
+    took.sort(
+          (a, b) => a.date.compareTo(b.date),
+    );
 
-    Transaction? get firstLoanTransaction {
-      final took = transactions
-          .where((e) => e.type == TransactionType.took)
-          .toList();
+    return took.first;
+  }
 
-      if (took.isEmpty) return null;
+  // ============================================================
+  // LOAN DAYS
+  // ============================================================
 
-      took.sort(
-            (a, b) => a.date.compareTo(b.date),
-      );
+  int get loanDays {
+    if (firstLoanTransaction == null) return 0;
 
-      return took.first;
-    }
+    return DateTime.now()
+        .difference(firstLoanTransaction!.date)
+        .inDays;
+  }
 
-    // ============================================================
-    // LOAN DAYS
-    // ============================================================
+  // ============================================================
+  // COMMON BACK NAVIGATION
+  // ============================================================
 
-    int get loanDays {
-      if (firstLoanTransaction == null) return 0;
+  void _goToHome() {
+    if (!mounted) return;
 
-      return DateTime.now()
-          .difference(firstLoanTransaction!.date)
-          .inDays;
-    }
-
-    // ============================================================
-    // COMMON BACK NAVIGATION
-    // ============================================================
-
-    void _goToHome() {
-      if (!mounted) return;
-
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const MainScreen(
-            initialIndex: 0,
-            initialGaveLoanSelected: false,
-          ),
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const MainScreen(
+          initialIndex: 0,
+          initialGaveLoanSelected: false,
         ),
-            (route) => false,
-      );
-    }
+      ),
+          (route) => false,
+    );
+  }
 
-    // ============================================================
-    // BUILD
-    // ============================================================
+  // ============================================================
+  // BUILD
+  // ============================================================
 
-    @override
-    Widget build(BuildContext context) {
-      final l10n = AppLocalizations.of(context);
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
-      final size = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
 
-      final width = size.width;
-      final height = size.height;
+    final width = size.width;
+    final height = size.height;
 
       return PopScope(
         canPop: false,
@@ -292,7 +305,7 @@
                   onPressed: _goToHome,
                 ),
 
-                const Spacer(),
+              const Spacer(),
 
                 IconButton(
                   icon: const Icon(
@@ -307,9 +320,9 @@
             ),
           ),
 
-          // ==========================================================
-          // BOTTOM ACTION BUTTONS
-          // ==========================================================
+        // ==========================================================
+        // BOTTOM ACTION BUTTONS
+        // ==========================================================
 
           bottomNavigationBar: SafeArea(
             child: Container(
@@ -360,13 +373,13 @@
                     ),
                   ),
 
-                  // ====================================================
-                  // YOU PAID
-                  // SHOW ONLY AFTER FIRST TOOK TRANSACTION
-                  // ====================================================
+                // ====================================================
+                // YOU PAID
+                // SHOW ONLY AFTER FIRST TOOK TRANSACTION
+                // ====================================================
 
-                  if (hasTakenLoan) ...[
-                    const SizedBox(width: 14),
+                if (hasTakenLoan) ...[
+                  const SizedBox(width: 14),
 
                     Expanded(
                       child: ElevatedButton(
@@ -440,7 +453,7 @@
                       ),
                     ),
 
-                    const SizedBox(width: 14),
+                  const SizedBox(width: 14),
 
                     Expanded(
                       child: Column(
@@ -456,7 +469,7 @@
                             ),
                           ),
 
-                          const SizedBox(height: 1),
+                        const SizedBox(height: 1),
 
                           Text(
                             lender.phone, // <-- LENDER PHONE
@@ -469,269 +482,269 @@
                       ),
                     ),
 
-                    const SizedBox(width: 8),
+                  const SizedBox(width: 8),
 
-                    GestureDetector(
-                      onTap: () {
-                        PhoneCallService.makePhoneCall(
-                          context,
-                          lender.phone,
-                          isLender: true, // <-- LENDER PHONE
-                        );
-                      },
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: const Color.fromRGBO(
-                          141,
-                          208,
-                          113,
-                          0.34,
-                        ),
-                        child: Image.asset(
-                          'assets/call_logo.png',
-                        ),
+                  GestureDetector(
+                    onTap: () {
+                      PhoneCallService.makePhoneCall(
+                        context,
+                        lender.phone,
+                        isLender: true, // <-- LENDER PHONE
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: const Color.fromRGBO(
+                        141,
+                        208,
+                        113,
+                        0.34,
+                      ),
+                      child: Image.asset(
+                        'assets/call_logo.png',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              // ======================================================
+              // SUMMARY
+              // ======================================================
+
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.05,
+                  vertical: height * 0.02,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(
+                    255,
+                    248,
+                    240,
+                    1,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFAAB9CF),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_given.png',
+                        l10n.totalTaken,
+                        "₹${totalGiven.toStringAsFixed(2)}",
+                        ChopdiColors.navy,
+                      ),
+                    ),
+
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/total_interest.png',
+                        l10n.interestDue,
+                        "₹${totalInterest.toStringAsFixed(2)}",
+                        const Color(0xFF00901B),
+                      ),
+                    ),
+
+                    Container(
+                      width: 1,
+                      height: 55,
+                      color: Colors.grey.shade300,
+                    ),
+
+                    Expanded(
+                      child: _infoItem(
+                        'assets/outstanding.png',
+                        l10n.outstanding,
+                        "₹${outstanding.toStringAsFixed(2)}",
+                        const Color(0xFFC74C4C),
                       ),
                     ),
                   ],
                 ),
+              ),
 
-                const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
-                // ======================================================
-                // SUMMARY
-                // ======================================================
+              // ======================================================
+              // TRANSACTION TABLE
+              // ======================================================
 
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: width * 0.05,
-                    vertical: height * 0.02,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color.fromRGBO(
-                      255,
-                      248,
-                      240,
-                      1,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFFAAB9CF),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _infoItem(
-                          'assets/total_given.png',
-                          l10n.totalTaken,
-                          "₹${totalGiven.toStringAsFixed(2)}",
-                          ChopdiColors.navy,
-                        ),
-                      ),
+              TookLoanTransactionTable(
+                transactions: transactions,
+                onChanged: loadTransactions,
+                lenderUuid: lender.uuid,
+                highlightTransactionId:
+                widget.highlightTransactionId,
+              ),
 
-                      Container(
-                        width: 1,
-                        height: 55,
-                        color: Colors.grey.shade300,
-                      ),
-
-                      Expanded(
-                        child: _infoItem(
-                          'assets/total_interest.png',
-                          l10n.interestDue,
-                          "₹${totalInterest.toStringAsFixed(2)}",
-                          const Color(0xFF00901B),
-                        ),
-                      ),
-
-                      Container(
-                        width: 1,
-                        height: 55,
-                        color: Colors.grey.shade300,
-                      ),
-
-                      Expanded(
-                        child: _infoItem(
-                          'assets/outstanding.png',
-                          l10n.outstanding,
-                          "₹${outstanding.toStringAsFixed(2)}",
-                          const Color(0xFFC74C4C),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // ======================================================
-                // TRANSACTION TABLE
-                // ======================================================
-
-                TookLoanTransactionTable(
-                  transactions: transactions,
-                  onChanged: loadTransactions,
-                    lenderUuid: lender.uuid,
-                  highlightTransactionId:
-                  widget.highlightTransactionId,
-                ),
-
-                const SizedBox(height: 20),
-              ],
-            ),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    // ============================================================
-    // INFO ITEM
-    // ============================================================
+  // ============================================================
+  // INFO ITEM
+  // ============================================================
 
-    Widget _infoItem(
-        String imagePath,
-        String title,
-        String value,
-        Color valueColor,
-        ) {
-      return SizedBox(
-        height: 90,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 15,
-              backgroundColor: const Color(0xFFFFD7BE),
-              child: Image.asset(
-                imagePath,
-                width: 17,
-                height: 17,
-                fit: BoxFit.contain,
-              ),
+  Widget _infoItem(
+      String imagePath,
+      String title,
+      String value,
+      Color valueColor,
+      ) {
+    return SizedBox(
+      height: 90,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 15,
+            backgroundColor: const Color(0xFFFFD7BE),
+            child: Image.asset(
+              imagePath,
+              width: 17,
+              height: 17,
+              fit: BoxFit.contain,
             ),
+          ),
 
-            const SizedBox(height: 5),
+          const SizedBox(height: 5),
 
-            SizedBox(
-              height: 25,
-              child: Center(
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.manrope(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: ChopdiColors.navy,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 2),
-
-            Flexible(
+          SizedBox(
+            height: 25,
+            child: Center(
               child: Text(
-                value,
+                title,
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.manrope(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: valueColor,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: ChopdiColors.navy,
+                  height: 1.1,
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    // ============================================================
-    // CUSTOMER OPTIONS (RE-ROUTED TO LENDER BOTTOM SHEETS)
-    // ============================================================
-
-    void showCustomerOptionsBottomSheet(
-        BuildContext context,
-        ) {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor:
-        const Color.fromRGBO(253, 237, 217, 1),
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(28),
           ),
+
+          const SizedBox(height: 2),
+
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.manrope(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // CUSTOMER OPTIONS (RE-ROUTED TO LENDER BOTTOM SHEETS)
+  // ============================================================
+
+  void showCustomerOptionsBottomSheet(
+      BuildContext context,
+      ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor:
+      const Color.fromRGBO(253, 237, 217, 1),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(28),
         ),
-        builder: (_) {
-          return LenderOptionsBottomSheet( // <-- CALLING NEW LENDER OPTIONS SHEET
-            onEdit: () {
-              Navigator.pop(context);
+      ),
+      builder: (_) {
+        return LenderOptionsBottomSheet( // <-- CALLING NEW LENDER OPTIONS SHEET
+          onEdit: () {
+            Navigator.pop(context);
 
-              Future.delayed(
-                const Duration(milliseconds: 200),
-                    () {
-                  showEditLenderBottomSheet(context);
-                },
-              );
-            },
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                showEditLenderBottomSheet(context);
+              },
+            );
+          },
 
-            onSummary: () {
-              Navigator.pop(context);
+          onSummary: () {
+            Navigator.pop(context);
 
-              Future.delayed(
-                const Duration(milliseconds: 200),
-                    () {
-                  return showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) =>
-                        AccountSummaryBottomSheet(
-                          totalGiven: totalGiven,
-                          totalOutstanding: outstanding,
-                          totalInterest: totalInterest,
-                          lastPayment: lastReceivedTransaction,
-                          firstLoan: firstLoanTransaction,
-                        ),
-                  );
-                },
-              );
-            },
+            Future.delayed(
+              const Duration(milliseconds: 200),
+                  () {
+                return showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) =>
+                      AccountSummaryBottomSheet(
+                        totalGiven: totalGiven,
+                        totalOutstanding: outstanding,
+                        totalInterest: totalInterest,
+                        lastPayment: lastReceivedTransaction,
+                        firstLoan: firstLoanTransaction,
+                      ),
+                );
+              },
+            );
+          },
 
-            onExport: () {
-              Navigator.pop(context);
+          onExport: () {
+            Navigator.pop(context);
 
-              Future.delayed(
-                const Duration(milliseconds: 250),
-                    () {
-                  showExportPdfBottomSheet(context);
-                },
-              );
-            },
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showExportPdfBottomSheet(context);
+              },
+            );
+          },
 
-            onDelete: () {
-              Navigator.pop(context);
+          onDelete: () {
+            Navigator.pop(context);
 
-              Future.delayed(
-                const Duration(milliseconds: 250),
-                    () {
-                  showDeleteLenderBottomSheet(context);
-                },
-              );
-            },
-          );
-        },
-      );
-    }
+            Future.delayed(
+              const Duration(milliseconds: 250),
+                  () {
+                showDeleteLenderBottomSheet(context);
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
-    // ============================================================
-    // EDIT LENDER
-    // ============================================================
+  // ============================================================
+  // EDIT LENDER
+  // ============================================================
 
     void showEditLenderBottomSheet(BuildContext context) {
       showModalBottomSheet(
