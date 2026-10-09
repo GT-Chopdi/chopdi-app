@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isar_community/isar.dart';
@@ -155,12 +156,15 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
   // LOGOUT
   // ===========================================================================
 
+
   Future<void> _handleLogout() async {
-    final l10n = AppLocalizations.of(context);
+    if (_isLoggingOut) return;
 
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext);
+
         return AlertDialog(
           backgroundColor: const Color(0xFFFFF8F0),
           shape: RoundedRectangleBorder(
@@ -184,25 +188,16 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                l10n.cancel,
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: darkBlue,
-                ),
-              ),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, true),
               child: Text(
                 l10n.logout,
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.red,
-                ),
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ],
@@ -212,49 +207,80 @@ class _MyChopdiScreenState extends State<MyChopdiScreen> {
 
     if (shouldLogout != true || !mounted) return;
 
-    // Start logout loader
+    // Check network before showing the logout loader.
+    try {
+      final connectivityResults =
+      await Connectivity().checkConnectivity();
+
+      if (!mounted) return;
+
+      if (connectivityResults.isEmpty ||
+          connectivityResults.every(
+                (result) => result == ConnectivityResult.none,
+          )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please connect to the internet to log out.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to check your network. Please try again.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoggingOut = true;
     });
 
     try {
-      // Wait until logout is completely successful
+      // Server logout must succeed before local cleanup.
       await AuthService.instance.logout();
 
       if (!mounted) return;
 
-      // Navigate only after logout succeeds
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (_) => const ChopdiOnboardingScreen(),
         ),
-        (route) => false,
+            (route) => false,
       );
     } catch (error, stackTrace) {
       debugPrint(
         '[MyChopdiScreen] Logout failed: '
-        '$error\n$stackTrace',
+            '$error\n$stackTrace',
       );
 
       if (!mounted) return;
 
-      // Stop loader if logout fails
       setState(() {
         _isLoggingOut = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            l10n.unableToLogout,
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.w600,
-            ),
+            'Unable to log out. Check your internet connection and try again.',
           ),
+          backgroundColor: Colors.red,
         ),
       );
     }
   }
+
 
   // ===========================================================================
   // BUILD
