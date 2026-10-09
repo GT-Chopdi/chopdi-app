@@ -390,6 +390,8 @@ class AuthService {
   // ---------------------------------------------------------------------------
 
   /// Signs out.
+
+  /// Signs out only after the server confirms logout.
   Future<void> logout() async {
     _log('========================================');
     _log('logout() STARTED');
@@ -409,9 +411,7 @@ class AuthService {
       _log('Server logout successful');
     } catch (e, stackTrace) {
       _log('API FAILED: POST /v1/auth/logout');
-      _log('Server logout failed');
-      _log('Continuing with local cleanup');
-      _log('Error: $e');
+      _log('Server logout failed: $e');
 
       developer.log(
         'Logout API error',
@@ -419,22 +419,20 @@ class AuthService {
         error: e,
         stackTrace: stackTrace,
       );
+
+      // Do not clear tokens or local data when server logout fails.
+      rethrow;
     }
 
-    // -------------------------------------------------------
-    // Local cleanup
-    // -------------------------------------------------------
-
+    // Clear local data ONLY after server logout succeeds.
     _log('Clearing local session...');
 
     await _clearLocalSession();
 
     _log('Local session cleared');
-
-    _log('========================================');
     _log('logout() COMPLETED');
-    _log('========================================');
   }
+
 
   // ---------------------------------------------------------------------------
   // Local session cleanup

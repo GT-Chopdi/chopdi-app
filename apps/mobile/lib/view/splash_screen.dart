@@ -80,37 +80,42 @@ super.dispose();
 // CHECK LOGIN
 // ============================================================
 
+  // ============================================================
+// CHECK LOGIN
+// ============================================================
+
   Future<void> checkLogin() async {
-    final loggedIn = await AuthService.instance.isLoggedIn();
+    try {
+      debugPrint('[SplashScreen] Checking login session...');
 
-    if (!mounted) return;
+      final loggedIn = await AuthService.instance.isLoggedIn();
 
-    if (loggedIn) {
-      final pendingPayload =
-          LocalNotificationService.pendingNotificationPayload;
+      if (!mounted) return;
 
-      if (pendingPayload != null &&
-          pendingPayload.isNotEmpty) {
-        debugPrint(
-          '[LocalNotification] Pending cold-start payload: '
-              '$pendingPayload',
+      debugPrint('[SplashScreen] isLoggedIn: $loggedIn');
+
+      if (loggedIn) {
+        final pendingPayload =
+            LocalNotificationService.pendingNotificationPayload;
+
+        if (pendingPayload != null && pendingPayload.isNotEmpty) {
+          debugPrint(
+            '[LocalNotification] Pending cold-start payload: '
+                '$pendingPayload',
+          );
+
+          LocalNotificationService.pendingNotificationPayload = null;
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const MainScreen(),
+          ),
         );
 
-        LocalNotificationService.pendingNotificationPayload = null;
-      }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const MainScreen(),
-        ),
-      );
-
-      // Wait until MainScreen is mounted.
-      if (pendingPayload != null &&
-          pendingPayload.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback(
-              (_) async {
+        if (pendingPayload != null && pendingPayload.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
             await Future.delayed(
               const Duration(milliseconds: 500),
             );
@@ -120,27 +125,40 @@ super.dispose();
                   '$pendingPayload',
             );
 
-            await LocalNotificationService
-                .handleNotificationRouting(
+            await LocalNotificationService.handleNotificationRouting(
               pendingPayload,
             );
-          },
-        );
+          });
+        }
+
+        return;
       }
 
-      return;
+      // No active login session.
+      // Do not call the server logout API.
+      debugPrint(
+        '[SplashScreen] No active session. Navigating to onboarding.',
+      );
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+            (route) => false,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('[SplashScreen] Login check failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChopdiOnboardingScreen(),
+        ),
+            (route) => false,
+      );
     }
-
-    await AuthService.instance.logout();
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const ChopdiOnboardingScreen(),
-      ),
-          (route) => false,
-    );
   }
 // ============================================================
 // BUILD
