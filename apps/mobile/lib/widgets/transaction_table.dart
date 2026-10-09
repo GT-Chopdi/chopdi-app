@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:mychopdi/l10n/app_localizations.dart';
 import 'package:mychopdi/model/transaction.dart';
 import 'package:mychopdi/utils/app_colors.dart';
-import 'package:mychopdi/widgets/transaction_details_bottom_sheet.dart';
 import 'package:mychopdi/widgets/transaction_raw.dart';
 import 'package:mychopdi/widgets/interest_details_bottom_sheet.dart';
 

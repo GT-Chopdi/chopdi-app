@@ -547,7 +547,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get interestRateRequired =>
-      'Interest rate is required';
+      'Interest cannot be empty';
 
   @override
   String get pleaseEnterValidAmount =>
