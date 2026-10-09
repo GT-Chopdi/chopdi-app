@@ -414,24 +414,17 @@ class InterestCalculator {
 
       int calculationDays;
 
-      if (isFirstMonth &&
-          loanStartDate.day > 1) {
-        // Mid-month loan.
-        //
-        // Example:
-        // 15 Sep -> 30 Sep
-        // 30 - 15 = 15 days
-        calculationDays =
-            daysInMonth - loanStartDate.day;
+      if (isCurrentMonth && isFirstMonth) {
+
+        calculationDays = today.day - loanStartDate.day;
       } else if (isCurrentMonth) {
-        // Current month.
-        //
-        // Example:
-        // 01 Oct -> 05 Oct
-        // = 5 days
-        calculationDays = today.day;
+
+        calculationDays = today.day - 1;
+      } else if (isFirstMonth && loanStartDate.day > 1) {
+
+        calculationDays = daysInMonth - loanStartDate.day;
       } else {
-        // Full past month.
+
         calculationDays = daysInMonth;
       }
 
