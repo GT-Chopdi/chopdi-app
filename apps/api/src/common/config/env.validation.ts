@@ -35,6 +35,17 @@ export const envValidationSchema = Joi.object({
     .default(() => process.env.NODE_ENV ?? 'development'),
   PORT: Joi.number().port().default(3000),
 
+  /**
+   * How many reverse proxies sit in front of the app (Express `trust proxy`).
+   *
+   * Vercel and Render each put exactly one in front, so the real client IP is
+   * the last address that proxy appends to X-Forwarded-For. Without this,
+   * `req.ip` is the proxy's own address — identical for every user — and every
+   * per-IP rate limit becomes one global limit shared by the whole user base.
+   * 0 only for a process exposed directly to clients, with no proxy at all.
+   */
+  TRUST_PROXY_HOPS: Joi.number().integer().min(0).max(5).default(1),
+
   // --------------------------------------------------------------- database
   // Pooled Neon endpoint (`...-pooler...`) — used by the running application.
   DATABASE_URL: Joi.string()
@@ -71,6 +82,13 @@ export const envValidationSchema = Joi.object({
   OTP_TTL_SECONDS: Joi.number().integer().min(60).default(300),
   OTP_MAX_ATTEMPTS: Joi.number().integer().min(1).default(5),
   OTP_RESEND_COOLDOWN_SECONDS: Joi.number().integer().min(0).default(60),
+  /**
+   * OTP requests per client IP per hour — the coarse backstop on
+   * POST /v1/auth/otp/request. Raise it for a staging deployment where a whole
+   * team tests from one office NAT; the per-phone cooldown above is the
+   * precise control and is unaffected.
+   */
+  OTP_REQUEST_LIMIT_PER_HOUR: Joi.number().integer().min(1).default(20),
 
   // --------------------------------------------------------------- dev mode
   /**

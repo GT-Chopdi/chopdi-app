@@ -18,4 +18,7 @@ export const appConfig = registerAs('app', () => ({
   env: process.env.APP_ENV ?? process.env.NODE_ENV ?? 'development',
 
   port: parseInt(process.env.PORT ?? '3000', 10),
+
+  /** Reverse proxies in front of the app — see TRUST_PROXY_HOPS. */
+  trustProxyHops: parseInt(process.env.TRUST_PROXY_HOPS ?? '1', 10),
 }));

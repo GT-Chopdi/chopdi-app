@@ -13,6 +13,16 @@ import type { OtpChallengeIssued } from './otp.service';
 
 const HOUR = 3_600_000;
 
+/**
+ * Read per request rather than at import: decorators run before the config
+ * module has loaded `.env`, and the validated value (with its default) is
+ * only in `process.env` once it has.
+ */
+const otpRequestLimit = () => {
+  const limit = Number(process.env.OTP_REQUEST_LIMIT_PER_HOUR);
+  return Number.isInteger(limit) && limit > 0 ? limit : 20;
+};
+
 @Controller('v1/auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
@@ -38,7 +48,7 @@ export class AuthController {
    */
   @Public()
   @UseGuards(DevKeyGuard)
-  @Throttle({ default: { limit: 20, ttl: HOUR } })
+  @Throttle({ default: { limit: otpRequestLimit, ttl: HOUR } })
   @Post('otp/request')
   @HttpCode(200)
   requestOtp(@Body() dto: RequestOtpDto): Promise<OtpChallengeIssued> {
