@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -73,6 +74,24 @@ class SyncService {
 
   void _logSeparator() {
     _log('========================================');
+  }
+
+  /// Prints JSON request/response data only in debug builds.
+  /// Never log access tokens or authorization headers.
+  void _logJson(String title, dynamic data) {
+    if (!kDebugMode) return;
+
+    try {
+      _log('$title\\n${const JsonEncoder.withIndent('  ').convert(data)}');
+    } catch (error, stackTrace) {
+      developer.log(
+        '$title (JSON encoding failed)',
+        name: 'SyncService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _log('$title: $data');
+    }
   }
 
   // ===========================================================================
@@ -455,17 +474,38 @@ class SyncService {
 
       final stopwatch = Stopwatch()..start();
 
-      final data =
-      await AuthService.instance.client.get(
-        endpoint,
-      );
+      dynamic data;
 
-      stopwatch.stop();
+      try {
+        _log('========== CLOUD PULL REQUEST ==========');
+        _log('HTTP method: GET');
+        _log('Endpoint: $endpoint');
+        _log('Cursor sent: ${currentCursor ?? "INITIAL"}');
+        _log('Request time UTC: ${DateTime.now().toUtc().toIso8601String()}');
 
-      _log(
-        'Sync pull API response received '
-            'in ${stopwatch.elapsedMilliseconds} ms',
-      );
+        data = await AuthService.instance.client.get(endpoint);
+
+        stopwatch.stop();
+
+        _log(
+          'Sync pull API response received '
+              'in ${stopwatch.elapsedMilliseconds} ms',
+        );
+        _log('========== CLOUD PULL RESPONSE ==========');
+        _logJson('FULL DATA RECEIVED FROM CLOUD', data);
+      } catch (error, stackTrace) {
+        stopwatch.stop();
+
+        developer.log(
+          'CLOUD PULL REQUEST FAILED after '
+              '${stopwatch.elapsedMilliseconds} ms',
+          name: 'SyncService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+
+        rethrow;
+      }
 
       // -----------------------------------------------------------------------
       // RESPONSE
@@ -473,6 +513,11 @@ class SyncService {
 
       final changes =
           data['changes'] as List<dynamic>? ?? [];
+
+      _log('Cloud changes received: ${changes.length}');
+      for (var i = 0; i < changes.length; i++) {
+        _logJson('CLOUD CHANGE ${i + 1}/${changes.length}', changes[i]);
+      }
 
       final nextCursor =
       data['nextCursor'] as String?;
