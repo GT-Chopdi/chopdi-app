@@ -32,6 +32,18 @@ export async function createApp(): Promise<INestApplication> {
   // Namespace every route under /api so the mobile client has a stable base path.
   app.setGlobalPrefix('api');
 
+  // Behind Vercel or Render, the socket peer is the platform's proxy, so
+  // without this `req.ip` is the same address for every user and each per-IP
+  // throttle (e.g. 20 OTP requests/hour) is silently shared by all of them —
+  // one user gets RATE_LIMITED on their first try because others used the
+  // budget. Trusting exactly the configured number of hops makes `req.ip` the
+  // client address the proxy recorded, without letting a client spoof one by
+  // sending its own X-Forwarded-For.
+  (app.getHttpAdapter().getInstance() as express.Express).set(
+    'trust proxy',
+    config.get<number>('app.trustProxyHops', 1),
+  );
+
   // Correlation id first, so everything downstream — including the exception
   // filter — can reference it.
   app.use(requestIdMiddleware);
