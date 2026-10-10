@@ -32,8 +32,9 @@ class ChopdiService {
     // FIND PERSISTED ACTIVE CHOPDI
     // -------------------------------------------------------------------------
 
+
     final activeChopdis =
-        allChopdis.where((chopdi) => chopdi.isActive).toList();
+    allChopdis.where((chopdi) => chopdi.isActive).toList();
 
     if (activeChopdis.isNotEmpty) {
       return activeChopdis.first;
@@ -95,7 +96,7 @@ class ChopdiService {
     // -------------------------------------------------------------------------
 
     final activeChopdis =
-        allChopdis.where((chopdi) => chopdi.isActive).toList();
+    allChopdis.where((chopdi) => chopdi.isActive).toList();
 
     if (activeChopdis.isNotEmpty) {
       return activeChopdis.first;
@@ -113,15 +114,15 @@ class ChopdiService {
   // ===========================================================================
 
   static Future<Chopdi> createChopdi(
-    String name, {
-    String? description,
-  }) async {
+      String name, {
+        String? description,
+      }) async {
     final chopdi = Chopdi()
       ..name = name.trim()
       ..description =
-          description?.trim().isNotEmpty == true
-              ? description!.trim()
-              : defaultDescription
+      description?.trim().isNotEmpty == true
+          ? description!.trim()
+          : defaultDescription
       ..createdAt = DateTime.now()
       ..isActive = false;
 
@@ -153,9 +154,9 @@ class ChopdiService {
     chopdi
       ..name = name.trim()
       ..description =
-          description.trim().isEmpty
-              ? defaultDescription
-              : description.trim();
+      description.trim().isEmpty
+          ? defaultDescription
+          : description.trim();
 
     await IsarService.isar.writeTxn(() async {
       await IsarService.isar.chopdis.put(chopdi);
@@ -169,8 +170,8 @@ class ChopdiService {
   // ===========================================================================
 
   static Future<Chopdi> setActiveChopdi(
-    Chopdi selectedChopdi,
-  ) async {
+      Chopdi selectedChopdi,
+      ) async {
     await IsarService.isar.writeTxn(() async {
       // First deactivate all Chopdis.
       final allChopdis = await IsarService.isar.chopdis
@@ -227,8 +228,8 @@ class ChopdiService {
   // ===========================================================================
 
   static Future<Chopdi> deleteChopdi(
-    int chopdiId,
-  ) async {
+      int chopdiId,
+      ) async {
     final allChopdis = await getAllChopdis();
 
     final chopdiToDelete = await getChopdi(chopdiId);
@@ -258,7 +259,7 @@ class ChopdiService {
         .toList();
 
     final deletedIndex = allChopdis.indexWhere(
-      (chopdi) => chopdi.id == chopdiId,
+          (chopdi) => chopdi.id == chopdiId,
     );
 
     Chopdi nextActiveChopdi;
