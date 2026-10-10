@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
+import { SyncModule } from '../sync/sync.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { DeviceGuard } from './guards/device.guard';
@@ -23,7 +24,7 @@ import { TokenService } from './token.service';
  * here, because access and refresh use different secrets.
  */
 @Module({
-  imports: [PassportModule, JwtModule.register({})],
+  imports: [PassportModule, JwtModule.register({}), SyncModule],
   controllers: [AuthController],
   providers: [
     AuthService,

@@ -19,6 +19,20 @@ const DEFAULT_LIMIT = 200;
 /** Change-log op types a client applies. `conflict` rows are forensics only. */
 const PULLABLE_OPS: SyncOpType[] = ['create', 'update', 'void', 'merge'];
 
+/** A page of change-log rows, as both pull versions read it. */
+export interface ChangePage {
+  rows: {
+    seq: bigint;
+    entity: string;
+    entityId: string;
+    opType: string;
+    snapshot: unknown;
+  }[];
+  nextCursor: bigint;
+  hasMore: boolean;
+  serverCursor: bigint;
+}
+
 /**
  * Serves a user's data back to their devices.
  *
@@ -53,6 +67,38 @@ export class PullService {
     user: AuthenticatedUser,
     query: PullQueryDto,
   ): Promise<SyncPullResponse> {
+    const page = await this.readPage(user, query);
+
+    const changes: SyncChange[] = page.rows
+      // Defensive: the DB CHECK already limits entity, but an unknown value
+      // must not reach an installed app that would choke on it.
+      .filter((r) => (SYNC_ENTITIES as readonly string[]).includes(r.entity))
+      .map((r) => ({
+        seq: r.seq.toString(),
+        entity: r.entity as SyncEntity,
+        entityId: r.entityId,
+        opType: r.opType as SyncOpType,
+        data: r.snapshot as Record<string, unknown>,
+      }));
+
+    return {
+      changes,
+      nextCursor: page.nextCursor.toString(),
+      hasMore: page.hasMore,
+      serverCursor: page.serverCursor.toString(),
+    };
+  }
+
+  /**
+   * One page of this user's change log after `cursor`, with the cursors that
+   * describe it. Shared by v1 (which returns the rows as they are) and v2
+   * (which loads the current rows they name and nests them by book), so both
+   * page, validate and advance in exactly the same way.
+   */
+  async readPage(
+    user: AuthenticatedUser,
+    query: PullQueryDto,
+  ): Promise<ChangePage> {
     const cursor = this.parseCursor(query.cursor);
     const limit = this.effectiveLimit(query.limit);
 
@@ -111,20 +157,8 @@ export class PullService {
     const hasMore = rows.length > limit;
     const page = hasMore ? rows.slice(0, limit) : rows;
 
-    const changes: SyncChange[] = page
-      // Defensive: the DB CHECK already limits entity, but an unknown value
-      // must not reach an installed app that would choke on it.
-      .filter((r) => (SYNC_ENTITIES as readonly string[]).includes(r.entity))
-      .map((r) => ({
-        seq: r.seq.toString(),
-        entity: r.entity as SyncEntity,
-        entityId: r.entityId,
-        opType: r.opType as SyncOpType,
-        data: r.snapshot as Record<string, unknown>,
-      }));
-
-    // Advance past everything examined, including any row filtered out above,
-    // so a skipped row cannot pin the cursor and loop the client forever.
+    // Advance past everything examined, including any row a caller filters
+    // out, so a skipped row cannot pin the cursor and loop the client forever.
     const nextCursor = page.length > 0 ? page[page.length - 1].seq : cursor;
 
     // Writes can commit between the two reads; never report a server cursor
@@ -132,12 +166,7 @@ export class PullService {
     const serverCursor =
       account.changeSeq > nextCursor ? account.changeSeq : nextCursor;
 
-    return {
-      changes,
-      nextCursor: nextCursor.toString(),
-      hasMore,
-      serverCursor: serverCursor.toString(),
-    };
+    return { rows: page, nextCursor, hasMore, serverCursor };
   }
 
   private parseCursor(value: string | undefined): bigint {

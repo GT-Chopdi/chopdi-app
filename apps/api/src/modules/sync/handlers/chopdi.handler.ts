@@ -11,16 +11,27 @@ import type { Applied, Meta } from './party.handler';
 const MAX_NAME = 120;
 const MAX_DESCRIPTION = 500;
 
+/**
+ * The book every user starts with. Created by the server — at sign-in, and for
+ * users that predate it by the default_chopdi migration, whose SQL repeats
+ * these values — never by the app, so two devices cannot each make one.
+ */
+export const DEFAULT_CHOPDI = {
+  name: 'My Chopdi',
+  description: 'My personal lending ledger\nto track loans and interest.',
+} as const;
+
 interface ChopdiPayload {
   name?: unknown;
   description?: unknown;
   reason?: unknown;
 }
 
-interface ChopdiRow {
+export interface ChopdiRow {
   id: string;
   name: string;
   description: string;
+  isDefault: boolean;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -226,14 +237,20 @@ export class ChopdiHandler {
   }
 
   private snapshot(row: ChopdiRow): EntitySnapshot {
-    return {
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      version: row.version,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-      deletedAt: row.deletedAt?.toISOString() ?? null,
-    };
+    return chopdiSnapshot(row);
   }
+}
+
+/** A book as the server describes it back — in push results, the log and pulls. */
+export function chopdiSnapshot(row: ChopdiRow): EntitySnapshot {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    isDefault: row.isDefault,
+    version: row.version,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    deletedAt: row.deletedAt?.toISOString() ?? null,
+  };
 }

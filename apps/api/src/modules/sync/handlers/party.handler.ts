@@ -6,6 +6,10 @@ import {
 import type { MergeService } from '../merge.service';
 import { partyKeys } from '../party-keys';
 import type { EntitySnapshot } from '../sync.types';
+import { ledgerEntrySnapshot } from './ledger-entry.snapshot';
+
+/** `voided_reason` on entries voided because their customer or lender was deleted. */
+export const PARTY_DELETED = 'Party deleted';
 
 export type PartyEntity = 'customer' | 'lender';
 
@@ -293,6 +297,8 @@ export abstract class PartyHandler {
 
     const previous = this.snapshot(current);
 
+    await this.voidLiveEntries(tx, userId, current.id, meta);
+
     const row = await this.table(tx).update({
       where: { id: current.id },
       data: { deletedAt: new Date(), version: { increment: 1 } },
@@ -313,6 +319,55 @@ export abstract class PartyHandler {
   }
 
   // ------------------------------------------------------------------ internals
+
+  /**
+   * Voids the entries still live under a party being deleted.
+   *
+   * The app is meant to send a void for each entry alongside the party's, but
+   * the server must not depend on it: a deleted customer with live entries
+   * still counts in balances and comes back on every restore. Entries the app
+   * does void arrive after this (parties sort before entries in a batch), find
+   * themselves already voided, and succeed without writing — see
+   * LedgerEntryHandler.void.
+   */
+  private async voidLiveEntries(
+    tx: TransactionClient,
+    userId: string,
+    partyId: string,
+    meta: Meta,
+  ): Promise<void> {
+    const parent =
+      this.entity === 'customer'
+        ? { customerId: partyId }
+        : { lenderId: partyId };
+
+    const live = await tx.ledgerEntry.findMany({
+      where: { userId, ...parent, voidedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    for (const entry of live) {
+      const row = await tx.ledgerEntry.update({
+        where: { id: entry.id },
+        data: {
+          voidedAt: new Date(),
+          voidedReason: PARTY_DELETED,
+          version: { increment: 1 },
+        },
+      });
+
+      await this.changeLog.append(tx, {
+        userId,
+        entity: 'ledger_entry',
+        entityId: entry.id,
+        opType: 'void',
+        snapshot: ledgerEntrySnapshot(row),
+        previous: ledgerEntrySnapshot(entry),
+        deviceId: meta.deviceId,
+        opId: meta.opId,
+      });
+    }
+  }
 
   /**
    * The row an id refers to — following a merge, so an edit or delete a device

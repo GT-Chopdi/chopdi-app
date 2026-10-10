@@ -29,7 +29,9 @@
     "verify:db": "npm run verify:schema && npm run verify:change-log",
     "verify:sync": "node test/verify-sync.mjs",
     "verify:merge": "node test/verify-merge.mjs",
-    "verify:all": "npm run verify:schema && npm run verify:change-log && npm run verify:auth && npm run verify:sync"
+    "verify:pull": "node test/verify-pull.mjs",
+    "verify:pull-v2": "node test/verify-pull-v2.mjs",
+    "verify:all": "npm run verify:schema && npm run verify:change-log && npm run verify:auth && npm run verify:sync && npm run verify:pull && npm run verify:pull-v2"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

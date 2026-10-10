@@ -1,0 +1,197 @@
+{
+  "nextCursor": "12",
+  "hasMore": false,
+  "serverCursor": "12",
+  "chopdis": [
+    {
+      "id": "01a12170-0a11-7000-8000-00000000c001",
+      "name": "My Chopdi",
+      "description": "My personal lending ledger",
+      "isDefault": true,
+      "version": 1,
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "updatedAt": "2026-10-09T10:00:00.000Z",
+      "deletedAt": null,
+      "customers": [
+        {
+          "id": "01a12171-1a00-7000-8000-0000000a0001",
+          "name": "Ravi Kumar",
+          "phone": "9045164399",
+          "notes": "",
+          "version": 1,
+          "createdAt": "2026-10-09T10:05:00.000Z",
+          "updatedAt": "2026-10-09T10:05:00.000Z",
+          "deletedAt": null,
+          "mergedIds": [],
+          "entries": [
+            {
+              "id": "01a12171-2b00-7000-8000-0000000e0001",
+              "amountPaise": "500000",
+              "direction": "gave",
+              "interestRateBp": 2300,
+              "interestType": "simple",
+              "interestFrequency": "monthly",
+              "entryDate": "2026-10-09",
+              "description": "Loan for shop",
+              "paymentMode": "cash",
+              "version": 1,
+              "createdAt": "2026-10-09T10:06:00.000Z",
+              "updatedAt": "2026-10-09T10:06:00.000Z",
+              "voidedAt": null,
+              "voidedReason": null
+            }
+          ]
+        }
+      ],
+      "lenders": [
+        {
+          "id": "01a12171-3c00-7000-8000-0000000b0001",
+          "name": "Suresh Patel",
+          "phone": "9876500002",
+          "notes": "",
+          "version": 1,
+          "createdAt": "2026-10-09T10:10:00.000Z",
+          "updatedAt": "2026-10-09T10:10:00.000Z",
+          "deletedAt": null,
+          "mergedIds": [],
+          "entries": [
+            {
+              "id": "01a12171-4d00-7000-8000-0000000e0002",
+              "amountPaise": "2000000",
+              "direction": "received",
+              "interestRateBp": 1200,
+              "interestType": "simple",
+              "interestFrequency": "monthly",
+              "entryDate": "2026-10-09",
+              "description": "",
+              "paymentMode": "upi",
+              "version": 1,
+              "createdAt": "2026-10-09T10:11:00.000Z",
+              "updatedAt": "2026-10-09T10:11:00.000Z",
+              "voidedAt": null,
+              "voidedReason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01a12170-0a11-7000-8000-00000000c002",
+      "name": "Teat",
+      "description": "",
+      "isDefault": false,
+      "version": 1,
+      "createdAt": "2026-10-09T10:15:00.000Z",
+      "updatedAt": "2026-10-09T10:15:00.000Z",
+      "deletedAt": null,
+      "customers": [
+        {
+          "id": "01a12171-5e00-7000-8000-0000000a0002",
+          "name": "Amit Sharma",
+          "phone": "9123400003",
+          "notes": "Pays monthly",
+          "version": 1,
+          "createdAt": "2026-10-09T10:20:00.000Z",
+          "updatedAt": "2026-10-09T10:20:00.000Z",
+          "deletedAt": null,
+          "mergedIds": [],
+          "entries": [
+            {
+              "id": "01a12171-6f00-7000-8000-0000000e0003",
+              "amountPaise": "1000000",
+              "direction": "gave",
+              "interestRateBp": 0,
+              "interestType": "none",
+              "interestFrequency": "monthly",
+              "entryDate": "2026-10-08",
+              "description": "",
+              "paymentMode": "cash",
+              "version": 1,
+              "createdAt": "2026-10-09T10:21:00.000Z",
+              "updatedAt": "2026-10-09T10:21:00.000Z",
+              "voidedAt": null,
+              "voidedReason": null
+            }
+          ]
+        }
+      ],
+      "lenders": [
+        {
+          "id": "01a12171-7a00-7000-8000-0000000b0002",
+          "name": "Mahesh Gupta",
+          "phone": null,
+          "notes": "",
+          "version": 1,
+          "createdAt": "2026-10-09T10:25:00.000Z",
+          "updatedAt": "2026-10-09T10:25:00.000Z",
+          "deletedAt": null,
+          "mergedIds": [],
+          "entries": [
+            {
+              "id": "01a12171-8b00-7000-8000-0000000e0004",
+              "amountPaise": "5000000",
+              "direction": "received",
+              "interestRateBp": 1800,
+              "interestType": "compound",
+              "interestFrequency": "yearly",
+              "entryDate": "2026-10-07",
+              "description": "Business loan",
+              "paymentMode": "bank",
+              "version": 1,
+              "createdAt": "2026-10-09T10:26:00.000Z",
+              "updatedAt": "2026-10-09T10:26:00.000Z",
+              "voidedAt": null,
+              "voidedReason": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01a12170-0a11-7000-8000-00000000c003",
+      "name": "Harsh",
+      "description": "",
+      "isDefault": false,
+      "version": 1,
+      "createdAt": "2026-10-09T10:30:00.000Z",
+      "updatedAt": "2026-10-09T10:30:00.000Z",
+      "deletedAt": null,
+      "customers": [
+        {
+          "id": "01a12171-9c00-7000-8000-0000000a0003",
+          "name": "Neha Verma",
+          "phone": "9988700004",
+          "notes": "",
+          "version": 1,
+          "createdAt": "2026-10-09T10:35:00.000Z",
+          "updatedAt": "2026-10-09T10:35:00.000Z",
+          "deletedAt": null,
+          "mergedIds": [],
+          "entries": [
+            {
+              "id": "01a12171-ad00-7000-8000-0000000e0005",
+              "amountPaise": "250000",
+              "direction": "gave",
+              "interestRateBp": 2400,
+              "interestType": "simple",
+              "interestFrequency": "monthly",
+              "entryDate": "2026-10-09",
+              "description": "",
+              "paymentMode": "cash",
+              "version": 1,
+              "createdAt": "2026-10-09T10:36:00.000Z",
+              "updatedAt": "2026-10-09T10:36:00.000Z",
+              "voidedAt": null,
+              "voidedReason": null
+            }
+          ]
+        }
+      ],
+      "lenders": []
+    }
+  ],
+  "unassigned": {
+    "customers": [],
+    "lenders": []
+  }
+}

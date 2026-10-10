@@ -85,3 +85,71 @@ export interface EntitySnapshot extends Record<string, unknown> {
   id: string;
   version: number;
 }
+
+// ------------------------------------------------------------- pull v2 (tree)
+//
+// `GET /v2/sync/pull`: the same pages as v1, nested by book for the app. Key
+// order in these interfaces is the order on the wire — PullTreeBuilder builds
+// each object in it — and is part of the contract shared with the Flutter app.
+// A record absent from a page means "unchanged"; a deleted one is present with
+// `deletedAt` / `voidedAt` set.
+
+/** One movement of money. Its party, and so its book, is whatever it is nested under. */
+export interface PullTreeEntry {
+  id: string;
+  /** Paise, as a string: 64-bit. */
+  amountPaise: string;
+  direction: string;
+  interestRateBp: number;
+  interestType: string;
+  interestFrequency: string;
+  /** YYYY-MM-DD */
+  entryDate: string;
+  description: string;
+  paymentMode: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  voidedAt: string | null;
+  voidedReason: string | null;
+}
+
+/** A customer (entries are I Gave) or a lender (entries are I Took). */
+export interface PullTreeParty {
+  id: string;
+  name: string;
+  phone: string | null;
+  notes: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  /** Earlier ids of this same person, merged into it. Re-key them to `id`. */
+  mergedIds: string[];
+  entries: PullTreeEntry[];
+}
+
+export interface PullTreeChopdi {
+  id: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  customers: PullTreeParty[];
+  lenders: PullTreeParty[];
+}
+
+export interface SyncPullTreeResponse {
+  nextCursor: string;
+  hasMore: boolean;
+  serverCursor: string;
+  chopdis: PullTreeChopdi[];
+  /** Parties synced before books were; the app files them in its default book. */
+  unassigned: {
+    customers: PullTreeParty[];
+    lenders: PullTreeParty[];
+  };
+}

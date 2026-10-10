@@ -4,9 +4,14 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { PullQueryDto } from './dto/pull.dto';
 import { PushBatchDto } from './dto/push.dto';
+import { PullTreeService } from './pull-tree.service';
 import { PullService } from './pull.service';
 import { SyncService } from './sync.service';
-import type { SyncPullResponse, SyncPushResponse } from './sync.types';
+import type {
+  SyncPullResponse,
+  SyncPullTreeResponse,
+  SyncPushResponse,
+} from './sync.types';
 
 /**
  * Sync endpoints.
@@ -58,5 +63,26 @@ export class SyncController {
     @Body() batch: PushBatchDto,
   ): Promise<SyncPushResponse> {
     return this.sync.push(user, batch);
+  }
+}
+
+/**
+ * Version 2 of pull: the same pages, nested by book (chopdi → customers /
+ * lenders → entries) so the app can file every record under its book directly.
+ *
+ * v1 stays as it is for installed builds. Cursors are shared: a device can
+ * switch versions without re-pulling.
+ */
+@Controller('v2/sync')
+export class SyncV2Controller {
+  constructor(private readonly pulls: PullTreeService) {}
+
+  @Get('pull')
+  @Header('Cache-Control', 'no-store')
+  pull(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PullQueryDto,
+  ): Promise<SyncPullTreeResponse> {
+    return this.pulls.pull(user, query);
   }
 }

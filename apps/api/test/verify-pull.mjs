@@ -81,6 +81,7 @@ const signIn = async (phone) => {
     token: verify.json.accessToken,
     userId: verify.json.user.id,
     deviceId: verify.json.deviceId,
+    defaultChopdiId: verify.json.defaultChopdiId,
   };
 };
 
@@ -133,17 +134,26 @@ const phone = `+9191000${stamp}`;
 const deviceA = await signIn(phone);
 
 // ---------------------------------------------------------------------------
-console.log('\n1. A brand-new account pulls nothing, cleanly');
+console.log('\n1. A brand-new account pulls only its default book, cleanly');
 {
   const res = await pull(deviceA, '?cursor=0');
   ok('200', res.status === 200, `${res.status} ${JSON.stringify(res.json)}`);
-  ok('no changes', Array.isArray(res.json.changes) && res.json.changes.length === 0);
-  ok('nextCursor stays 0', res.json.nextCursor === '0');
+  const only = res.json.changes?.[0];
+  ok(
+    'exactly the server-created default book',
+    res.json.changes?.length === 1 &&
+      only.entity === 'chopdi' &&
+      only.opType === 'create' &&
+      only.entityId === deviceA.defaultChopdiId &&
+      only.data.isDefault === true,
+    JSON.stringify(res.json.changes),
+  );
+  ok('nextCursor is 1', res.json.nextCursor === '1');
   ok('hasMore false', res.json.hasMore === false);
   ok('Cache-Control: no-store', res.headers.get('cache-control') === 'no-store');
 
   const bare = await pull(deviceA);
-  ok('cursor may be omitted', bare.status === 200 && bare.json.nextCursor === '0');
+  ok('cursor may be omitted', bare.status === 200 && bare.json.nextCursor === '1');
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +188,8 @@ let cursorB;
   cursorB = cursor;
 
   ok('more than one page (server cap is small)', pages > 1, `pages=${pages}`);
-  ok('six changes', changes.length === 6, `got ${changes.length}`);
+  // The six pushed, plus the default book the server made at first sign-in.
+  ok('seven changes', changes.length === 7, `got ${changes.length}`);
 
   const seqs = changes.map((c) => BigInt(c.seq));
   ok(
@@ -241,10 +252,21 @@ console.log('\n4. Catching up returns only what changed since');
   ]);
   ok('edit + void applied', edit.json.results?.every((r) => r.status === 'applied'), JSON.stringify(edit.json));
 
+  // The update, then the lender's void — preceded by the server voiding the
+  // lender's two live entries (tookEntry and legacyTookEntry) itself.
   const { changes } = await pullAll(deviceB, cursorB);
-  ok('exactly two changes', changes.length === 2, `got ${changes.length}`);
+  ok('exactly four changes', changes.length === 4, `got ${changes.length}`);
   ok('update carries the new name', changes[0]?.opType === 'update' && changes[0].data.name === 'Ramesh Kumar');
-  ok('void carries deletedAt', changes[1]?.opType === 'void' && typeof changes[1].data.deletedAt === 'string');
+  ok(
+    "the lender's entries are voided with it",
+    changes.slice(1, 3).every(
+      (c) => c.entity === 'ledger_entry' && c.opType === 'void' && c.data.voidedReason === 'Party deleted',
+    ) &&
+      new Set(changes.slice(1, 3).map((c) => c.entityId)).size === 2 &&
+      changes.slice(1, 3).every((c) => [tookEntry, legacyTookEntry].includes(c.entityId)),
+    JSON.stringify(changes.slice(1, 3).map((c) => [c.entity, c.opType, c.entityId])),
+  );
+  ok('void carries deletedAt', changes[3]?.opType === 'void' && changes[3].entity === 'lender' && typeof changes[3].data.deletedAt === 'string');
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +274,11 @@ console.log('\n5. Another account sees none of it');
 {
   const stranger = await signIn(`+9192000${stamp}`);
   const { changes } = await pullAll(stranger);
-  ok('stranger pulls nothing', changes.length === 0, `got ${changes.length}`);
+  ok(
+    'stranger pulls nothing but their own default book',
+    changes.length === 1 && changes[0].entityId === stranger.defaultChopdiId,
+    `got ${changes.length}`,
+  );
 
   const hijack = await push(stranger, [
     op('ledger_entry', uuid7(), entry({ lenderId }, 'received', 'borrowed')),

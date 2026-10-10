@@ -8,12 +8,18 @@ import type { AuthenticatedUser, TokenPair } from './auth.types';
 import type { RefreshDto } from './dto/refresh.dto';
 import type { RequestOtpDto } from './dto/request-otp.dto';
 import type { VerifyOtpDto } from './dto/verify-otp.dto';
+import { DefaultChopdiService } from '../sync/default-chopdi.service';
 import { OtpService, type OtpChallengeIssued } from './otp.service';
 import { TokenService } from './token.service';
 
 export interface AuthSession extends TokenPair {
   user: { id: string; phone: string; displayName: string | null };
   deviceId: string;
+  /**
+   * The user's "My Chopdi" book, created by the server. The app uses this id
+   * for its default book instead of making one, so devices never disagree.
+   */
+  defaultChopdiId: string;
   /** Cursor to start syncing from. Always 0 until Phase 1 wires the change log. */
   syncCursor: number;
   isNewUser: boolean;
@@ -28,6 +34,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly otp: OtpService,
     private readonly tokens: TokenService,
+    private readonly defaultChopdis: DefaultChopdiService,
   ) {}
 
   requestOtp(dto: RequestOtpDto): Promise<OtpChallengeIssued> {
@@ -94,6 +101,11 @@ export class AuthService {
       select: { id: true },
     });
 
+    const defaultChopdiId = await this.defaultChopdis.ensure(
+      user.id,
+      device.id,
+    );
+
     const pair = await this.tokens.issuePair(user.id, device.id);
 
     if (this.config.get<boolean>('auth.dev.enabled')) {
@@ -110,6 +122,7 @@ export class AuthService {
         displayName: user.displayName,
       },
       deviceId: device.id,
+      defaultChopdiId,
       syncCursor: 0,
       isNewUser: !existing,
     };

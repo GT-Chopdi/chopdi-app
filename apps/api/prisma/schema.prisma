@@ -98,8 +98,8 @@ model Device {
   user          AppUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
 
+  /// Also serves lookups by userId alone (leading column).
   @@unique([userId, installId])
-  @@index([userId])
   @@map("device")
 }
 
@@ -175,6 +175,12 @@ model Chopdi {
   name        String
   description String @default("")
 
+  /// The book every user starts with ("My Chopdi"), created by the server at
+  /// sign-in rather than by the app, so two devices can never each make one.
+  /// At most one live default per user — a partial unique index in migration
+  /// SQL, since Prisma cannot express the WHERE clause.
+  isDefault Boolean @default(false) @map("is_default")
+
   version Int @default(1)
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -231,7 +237,7 @@ model Customer {
   chopdi  Chopdi?       @relation(fields: [chopdiId], references: [id], onDelete: Restrict)
   entries LedgerEntry[]
 
-  @@index([userId])
+  // No separate userId index: customer_match_key_idx leads with user_id.
   @@index([chopdiId])
   @@index([userId, nameKey, phoneKey], map: "customer_match_key_idx")
   @@map("customer")
@@ -270,7 +276,7 @@ model Lender {
   chopdi  Chopdi?       @relation(fields: [chopdiId], references: [id], onDelete: Restrict)
   entries LedgerEntry[]
 
-  @@index([userId])
+  // No separate userId index: lender_match_key_idx leads with user_id.
   @@index([chopdiId])
   @@index([userId, nameKey, phoneKey], map: "lender_match_key_idx")
   @@map("lender")
@@ -478,7 +484,7 @@ model SyncChangeLog {
   entity   String
   entityId String @map("entity_id") @db.Uuid
 
-  /// create | update | void | conflict
+  /// create | update | void | merge | conflict
   opType String @map("op_type")
 
   /// Full row after the change.
@@ -506,7 +512,7 @@ model SyncChangeLog {
   /// it is not.
   user AppUser @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  /// Also the pull index: (user_id, seq > cursor) ordered by seq.
   @@unique([userId, seq])
-  @@index([userId, seq])
   @@map("sync_change_log")
 }
